@@ -10,12 +10,12 @@ ob_start();
     <h3 style="font-size:16px; font-weight:800; margin-bottom:16px; color:#111827;">Filter By Category</h3>
     <ul style="list-style:none; margin-bottom:24px;">
       <li style="margin-bottom:8px;">
-        <a href="/catalog" style="font-size:13px; font-weight:<?= empty($filters['category_id']) ? '700; color:#f05a29' : '500; color:#4b5563' ?>;">All Categories</a>
+        <a href="<?= url('catalog') ?>" style="font-size:13px; font-weight:<?= empty($filters['category_id']) ? '700; color:#f05a29' : '500; color:#4b5563' ?>;">All Categories</a>
       </li>
       <?php if (!empty($categories)): ?>
         <?php foreach ($categories as $cat): ?>
           <li style="margin-bottom:8px;">
-            <a href="/catalog?category_id=<?= $cat['id'] ?>" style="font-size:13px; font-weight:<?= ($filters['category_id'] == $cat['id']) ? '700; color:#f05a29' : '500; color:#4b5563' ?>;">
+            <a href="<?= url('catalog?category_id=' . $cat['id']) ?>" style="font-size:13px; font-weight:<?= ($filters['category_id'] == $cat['id']) ? '700; color:#f05a29' : '500; color:#4b5563' ?>;">
               <?= htmlspecialchars($cat['name']) ?>
             </a>
           </li>
@@ -24,7 +24,7 @@ ob_start();
     </ul>
 
     <h3 style="font-size:16px; font-weight:800; margin-bottom:16px; color:#111827;">Sort Products</h3>
-    <form action="/catalog" method="GET">
+    <form action="<?= url('catalog') ?>" method="GET">
       <?php if (!empty($q)): ?><input type="hidden" name="q" value="<?= htmlspecialchars($q) ?>"><?php endif; ?>
       <?php if (!empty($filters['category_id'])): ?><input type="hidden" name="category_id" value="<?= $filters['category_id'] ?>"><?php endif; ?>
       
@@ -60,14 +60,14 @@ ob_start();
               <span class="product-badge-moq">MOQ: <?= $product['moq'] ?> pcs</span>
             </div>
             <div class="product-card-body">
-              <a href="/product/<?= htmlspecialchars($product['slug']) ?>">
+              <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>">
                 <h3 class="product-title"><?= htmlspecialchars($product['title']) ?></h3>
               </a>
               <div class="product-price-row">
                 <span class="product-unit-price">$<?= number_format($product['base_price'], 2) ?></span>
                 <span class="product-moq-label">/ piece</span>
               </div>
-              <a href="/product/<?= htmlspecialchars($product['slug']) ?>" class="btn-add-cart-card" style="text-align:center; display:block;">View Wholesale Tiers</a>
+              <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>" class="btn-add-cart-card" style="text-align:center; display:block;">View Wholesale Tiers</a>
             </div>
           </div>
         <?php endforeach; ?>

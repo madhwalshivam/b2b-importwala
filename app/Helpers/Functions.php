@@ -13,7 +13,13 @@ if (!function_exists('sanitize_input')) {
 if (!function_exists('url')) {
     function url(string $path = ''): string
     {
-        $baseUrl = rtrim($GLOBALS['app_config']['url'] ?? 'http://localhost/ecommerce', '/');
+        if (isset($_SERVER['HTTP_HOST'])) {
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+            $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $scriptDir;
+            return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
+        }
+        $baseUrl = rtrim($GLOBALS['app_config']['url'] ?? 'http://localhost/importwala/public', '/');
         return $baseUrl . '/' . ltrim($path, '/');
     }
 }

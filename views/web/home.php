@@ -10,7 +10,7 @@ ob_start();
     <h1 class="hero-title">Trending Wholesale Accessories & Apparel</h1>
     <p class="hero-subtitle">Factory-direct prices, low MOQ, global express shipping. Save up to 40% on bulk volume orders.</p>
     <div>
-      <a href="/catalog" class="btn-primary-orange">Shop Wholesale Catalog &rarr;</a>
+      <a href="<?= url('catalog') ?>" class="btn-primary-orange">Shop Wholesale Catalog &rarr;</a>
     </div>
   </div>
 
@@ -21,7 +21,7 @@ ob_start();
       <p style="font-size:13px; color:#4b5563;">Buy more, save more automatically at checkout. Instant MOQ tier calculations.</p>
     </div>
     <div style="margin-top:20px;">
-      <a href="/catalog?sort=popular" style="color:#f05a29; font-weight:700; font-size:14px;">Browse Best Sellers &rarr;</a>
+      <a href="<?= url('catalog?sort=popular') ?>" style="color:#f05a29; font-weight:700; font-size:14px;">Browse Best Sellers &rarr;</a>
     </div>
   </div>
 </div>
@@ -29,7 +29,7 @@ ob_start();
 <!-- Featured Products Section -->
 <div class="section-header-title">
   <span>Featured Wholesale Products</span>
-  <a href="/catalog" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
+  <a href="<?= url('catalog') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
 </div>
 
 <div class="product-grid">
@@ -44,7 +44,7 @@ ob_start();
           <?php endif; ?>
         </div>
         <div class="product-card-body">
-          <a href="/product/<?= htmlspecialchars($product['slug']) ?>">
+          <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>">
             <h3 class="product-title"><?= htmlspecialchars($product['title']) ?></h3>
           </a>
           <div class="product-price-row">
@@ -54,7 +54,7 @@ ob_start();
           <div class="product-tiered-summary">
             Tier Discounts Available
           </div>
-          <a href="/product/<?= htmlspecialchars($product['slug']) ?>" class="btn-add-cart-card" style="text-align:center; display:block;">View Wholesale Tiers</a>
+          <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>" class="btn-add-cart-card" style="text-align:center; display:block;">View Wholesale Tiers</a>
         </div>
       </div>
     <?php endforeach; ?>
@@ -64,7 +64,7 @@ ob_start();
 <!-- Best Sellers Section -->
 <div class="section-header-title">
   <span>High-Volume Best Sellers</span>
-  <a href="/catalog?sort=popular" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
+  <a href="<?= url('catalog?sort=popular') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
 </div>
 
 <div class="product-grid">
@@ -76,14 +76,14 @@ ob_start();
           <span class="product-badge-moq">MOQ: <?= $product['moq'] ?> pcs</span>
         </div>
         <div class="product-card-body">
-          <a href="/product/<?= htmlspecialchars($product['slug']) ?>">
+          <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>">
             <h3 class="product-title"><?= htmlspecialchars($product['title']) ?></h3>
           </a>
           <div class="product-price-row">
             <span class="product-unit-price">$<?= number_format($product['base_price'], 2) ?></span>
             <span class="product-moq-label">/ piece</span>
           </div>
-          <a href="/product/<?= htmlspecialchars($product['slug']) ?>" class="btn-add-cart-card" style="text-align:center; display:block;">View Wholesale Tiers</a>
+          <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>" class="btn-add-cart-card" style="text-align:center; display:block;">View Wholesale Tiers</a>
         </div>
       </div>
     <?php endforeach; ?>

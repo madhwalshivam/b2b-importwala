@@ -112,7 +112,7 @@ ob_start();
     msgDiv.innerHTML = '<span style="color:#6b7280;">Adding to cart...</span>';
 
     try {
-      const res = await fetch('/api/cart/add', {
+      const res = await fetch('<?= url('api/cart/add') ?>', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

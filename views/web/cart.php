@@ -59,7 +59,7 @@ ob_start();
 <script>
   async function loadCartPage() {
     try {
-      const res = await fetch('/api/cart');
+      const res = await fetch('<?= url('api/cart') ?>');
       const data = await res.json();
       if (!data.success || !data.cart) return;
 
@@ -83,7 +83,7 @@ ob_start();
       // Render Cart Items
       const itemsContainer = document.getElementById('cartItemsList');
       if (!cart.items || cart.items.length === 0) {
-        itemsContainer.innerHTML = '<div style="text-align:center; padding:32px;"><h4 style="font-size:16px; color:#374151;">Your cart is empty</h4><a href="/catalog" style="color:#f05a29; font-weight:700; margin-top:8px; display:inline-block;">Browse Wholesale Catalog &rarr;</a></div>';
+        itemsContainer.innerHTML = '<div style="text-align:center; padding:32px;"><h4 style="font-size:16px; color:#374151;">Your cart is empty</h4><a href="<?= url('catalog') ?>" style="color:#f05a29; font-weight:700; margin-top:8px; display:inline-block;">Browse Wholesale Catalog &rarr;</a></div>';
         return;
       }
 
@@ -116,7 +116,7 @@ ob_start();
 
   async function updateQty(productId, variationId, newQty) {
     try {
-      await fetch('/api/cart/update', {
+      await fetch('<?= url('api/cart/update') ?>', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product_id: productId, variation_id: variationId, quantity: newQty })
@@ -131,7 +131,7 @@ ob_start();
     msgDiv.innerHTML = '<span style="color:#6b7280;">Processing idempotent order reservation...</span>';
 
     try {
-      const res = await fetch('/api/checkout/process', {
+      const res = await fetch('<?= url('api/checkout/process') ?>', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

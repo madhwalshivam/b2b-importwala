@@ -1,9 +1,9 @@
 <?php
 // Application Configuration
 return [
-    'name' => 'Mudsor',
-    'tagline' => 'Electric Scooter Accessories & Parts',
-    'url' => 'http://localhost/ecommerce',
+    'name' => 'ImportWala',
+    'tagline' => 'World-Scale B2B Wholesale Platform',
+    'url' => 'http://localhost/importwala/public',
     'timezone' => 'Asia/Kolkata',
     'currency' => '₹',
     'tax_rate' => 18,
