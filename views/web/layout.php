@@ -183,6 +183,11 @@
     </div>
   </footer>
 
+  <!-- Floating Need Help Widget -->
+  <a href="<?= url('support') ?>" class="floating-need-help-btn" id="needHelpBtn">
+    Need Help?
+  </a>
+
   <script>
     // Country to Currency Mapping
     const countryToCurrencyMap = {
