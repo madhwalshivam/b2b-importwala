@@ -776,13 +776,13 @@ a {
   position: fixed;
   bottom: 24px;
   right: 24px;
-  background: #C04938;
+  background: var(--primary-color);
   color: #FFFFFF;
   font-size: 14px;
   font-weight: 700;
   padding: 12px 22px;
   border-radius: 9999px;
-  box-shadow: 0 8px 24px rgba(192, 73, 56, 0.35);
+  box-shadow: 0 8px 24px rgba(240, 90, 41, 0.35);
   border: none;
   cursor: pointer;
   z-index: 999;
@@ -794,8 +794,8 @@ a {
 }
 
 .floating-need-help-btn:hover {
-  background: #A83D2E;
+  background: var(--primary-hover);
   color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(192, 73, 56, 0.45);
+  box-shadow: 0 12px 28px rgba(240, 90, 41, 0.45);
 }
