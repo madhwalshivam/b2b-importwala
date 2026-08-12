@@ -46,11 +46,53 @@
       </form>
 
       <div class="header-actions">
-        <select class="currency-selector">
-          <option value="USD">EN - USD ˅</option>
-          <option value="INR">HI - INR ˅</option>
-          <option value="EUR">EU - EUR ˅</option>
-        </select>
+        <!-- Ship to / Language / Currency Popover Wrapper -->
+        <div class="ship-to-popover-wrapper">
+          <button type="button" class="ship-to-trigger-btn" onclick="toggleShipToPopover(event)" id="shipToTriggerBtn">
+            <span id="triggerLangText">EN</span> - <span id="triggerCurrText">USD</span> ˅
+          </button>
+
+          <!-- Popover Dropdown Menu -->
+          <div class="ship-to-popover-menu" id="shipToPopoverMenu">
+            <div class="popover-field-group">
+              <label class="popover-label">Ship to:</label>
+              <select id="popoverCountrySelect" class="popover-select" onchange="onShipToCountryChange(this.value)">
+                <option value="US">🇺🇸 United States</option>
+                <option value="IN">🇮🇳 India</option>
+                <option value="GB">🇬🇧 United Kingdom</option>
+                <option value="EU">🇪🇺 European Union</option>
+                <option value="CA">🇨🇦 Canada</option>
+                <option value="AU">🇦🇺 Australia</option>
+              </select>
+            </div>
+
+            <div class="popover-field-group">
+              <label class="popover-label">Language:</label>
+              <select id="popoverLanguageSelect" class="popover-select" onchange="onLanguageChange(this.value)">
+                <option value="EN">English</option>
+                <option value="HI">Hindi</option>
+                <option value="ES">Spanish</option>
+                <option value="FR">French</option>
+                <option value="DE">German</option>
+              </select>
+            </div>
+
+            <div class="popover-field-group">
+              <label class="popover-label">Currency:</label>
+              <select id="popoverCurrencySelect" class="popover-select">
+                <option value="USD">USD ($)</option>
+                <option value="INR">INR (₹)</option>
+                <option value="GBP">GBP (£)</option>
+                <option value="EUR">EUR (€)</option>
+                <option value="CAD">CAD ($)</option>
+                <option value="AUD">AUD ($)</option>
+              </select>
+            </div>
+
+            <button type="button" class="btn-save-popover" onclick="saveShipToPreference()">Save</button>
+          </div>
+        </div>
+
         <a href="<?= url('account') ?>" class="header-icon-item" title="Account">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
         </a>
@@ -135,6 +177,58 @@
   </footer>
 
   <script>
+    // Country to Currency Mapping
+    const countryToCurrencyMap = {
+      'US': 'USD',
+      'IN': 'INR',
+      'GB': 'GBP',
+      'EU': 'EUR',
+      'CA': 'CAD',
+      'AU': 'AUD'
+    };
+
+    // Auto-update Currency dropdown when "Ship to" Country changes!
+    function onShipToCountryChange(countryCode) {
+      const targetCurrency = countryToCurrencyMap[countryCode] || 'USD';
+      const currencySelect = document.getElementById('popoverCurrencySelect');
+      if (currencySelect) {
+        currencySelect.value = targetCurrency;
+      }
+    }
+
+    function toggleShipToPopover(e) {
+      e.stopPropagation();
+      const menu = document.getElementById('shipToPopoverMenu');
+      menu.classList.toggle('active');
+    }
+
+    document.addEventListener('click', function(e) {
+      const wrapper = document.querySelector('.ship-to-popover-wrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        const menu = document.getElementById('shipToPopoverMenu');
+        if (menu) menu.classList.remove('active');
+      }
+    });
+
+    async function saveShipToPreference() {
+      const country = document.getElementById('popoverCountrySelect').value;
+      const language = document.getElementById('popoverLanguageSelect').value;
+      const currency = document.getElementById('popoverCurrencySelect').value;
+
+      document.getElementById('triggerLangText').innerText = language;
+      document.getElementById('triggerCurrText').innerText = currency;
+
+      try {
+        await fetch('<?= url('api/currency/set') ?>', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ country, language, currency })
+        });
+      } catch(e) {}
+
+      document.getElementById('shipToPopoverMenu').classList.remove('active');
+    }
+
     // Global Cart Pill Updater
     async function updateHeaderCartCount() {
       try {

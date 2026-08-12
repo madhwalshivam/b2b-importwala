@@ -209,7 +209,12 @@ a {
   gap: 20px;
 }
 
-.currency-selector {
+/* Ship-To / Currency Popover Menu */
+.ship-to-popover-wrapper {
+  position: relative;
+}
+
+.ship-to-trigger-btn {
   font-size: 13px;
   font-weight: 600;
   color: #333;
@@ -217,6 +222,101 @@ a {
   background: transparent;
   cursor: pointer;
   outline: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.ship-to-trigger-btn:hover {
+  background: #F4F4F5;
+}
+
+.ship-to-popover-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 310px;
+  background: #FFFFFF;
+  border: 1px solid #E4E4E7;
+  border-radius: 12px;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.14);
+  padding: 20px;
+  z-index: 1000;
+  display: none;
+  animation: popoverFadeIn 0.2s ease;
+}
+
+.ship-to-popover-menu.active {
+  display: block;
+}
+
+/* Arrow triangle */
+.ship-to-popover-menu::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 24px;
+  width: 10px;
+  height: 10px;
+  background: #FFFFFF;
+  border-left: 1px solid #E4E4E7;
+  border-top: 1px solid #E4E4E7;
+  transform: rotate(45deg);
+}
+
+.popover-field-group {
+  margin-bottom: 16px;
+}
+
+.popover-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.popover-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #D4D4D8;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #FFFFFF;
+  outline: none;
+  cursor: pointer;
+  color: #18181B;
+  transition: border-color 0.2s;
+}
+
+.popover-select:focus {
+  border-color: var(--primary-color);
+}
+
+.btn-save-popover {
+  width: 100%;
+  background: #09090B;
+  color: #FFFFFF;
+  border: none;
+  padding: 11px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 4px;
+}
+
+.btn-save-popover:hover {
+  background: var(--primary-color);
+}
+
+@keyframes popoverFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .header-icon-item {

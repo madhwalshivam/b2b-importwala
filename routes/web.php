@@ -19,6 +19,8 @@ $router->get('/api/cart', 'Api\CartApiController@getCart');
 $router->post('/api/cart/add', 'Api\CartApiController@addItem');
 $router->post('/api/cart/update', 'Api\CartApiController@updateItem');
 $router->post('/api/checkout/process', 'Api\CheckoutApiController@process');
+$router->post('/api/currency/set', 'Api\CurrencyApiController@setPreference');
+$router->get('/api/currency/map', 'Api\CurrencyApiController@getMap');
 
 
 
