@@ -1,59 +1,28 @@
 <?php
-$title = "Everful Wholesale | Back To School Campus Trends";
+$title = "ImportWale Wholesale | Direct Global B2B Platform";
 ob_start();
 ?>
 
-<!-- Soft Blush-Pink Hero Banner Section (Everful Reference Style) -->
-<div class="hero-banner-wrapper">
+<!-- Hero Banner Section (Using Official Custom Banner Image) -->
+<div class="hero-banner-wrapper" style="margin:20px 0 36px 0; border-radius:16px; overflow:hidden; position:relative; background:#FAF4F2;">
   
-  <!-- Navigation Slider Arrows -->
+  <!-- Subtle Sleek Slider Arrows -->
   <button type="button" class="hero-arrow-btn hero-arrow-prev" aria-label="Previous Slide">
-    <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
   </button>
   <button type="button" class="hero-arrow-btn hero-arrow-next" aria-label="Next Slide">
-    <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
   </button>
 
-  <div class="hero-banner-inner">
-    <!-- Left Column (40% Text Content) -->
-    <div class="hero-text-col">
-      <h1 class="hero-headline-eyebrow">Back to school:</h1>
-      <div class="hero-headline-italic">top-selling</div>
-      <div class="hero-headline-italic">campus trends</div>
-
-      <p class="hero-subtext">
-        Discover our curated collection of aesthetic stationeries, pastel notebooks, and trendy accessories with low MOQs and factory-direct pricing.
-      </p>
-
-      <a href="<?= url('catalog') ?>" class="btn-hero-cta">
-        EXPLORE CATALOG &rarr;
-      </a>
-    </div>
-
-    <!-- Right Column (60% Asymmetric Product Collage) -->
-    <div class="hero-collage-col">
-      <div class="collage-container">
-        <!-- Main Large Cutout (Notebook) -->
-        <div class="collage-item-main">
-          <img src="https://images.unsplash.com/photo-1583485088034-697b5bc54ccd?auto=format&fit=crop&w=600&q=80" alt="Pastel Notebook Planner" title="Pastel Notebook Planner">
-        </div>
-        <!-- Top Right Sub-Item (Pens / Accessories) -->
-        <div class="collage-item-sub">
-          <img src="https://images.unsplash.com/photo-1586350977771-b3b0abd50c82?auto=format&fit=crop&w=500&q=80" alt="Gel Pens & Highlighters" title="Gel Pens Set">
-        </div>
-        <!-- Bottom Right Sub-Item (Pouch / Backpack Accessories) -->
-        <div class="collage-item-sub">
-          <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=500&q=80" alt="Accessories & Pouch" title="Accessories">
-        </div>
-      </div>
-    </div>
-  </div>
+  <a href="<?= url('catalog?q=halloween') ?>" style="display:block; width:100%;">
+    <img src="<?= asset('images/hero-spooky-banner.png') ?>" alt="Classic Spooky Mask Collection - Shop Wholesale" style="width:100%; height:auto; display:block; object-fit:cover; border-radius:16px;">
+  </a>
 
 </div>
 
 <!-- Featured Products Section -->
 <div class="section-header-title">
-  <span>Trending Campus Wholesale Items</span>
+  <span>Featured Wholesale Products</span>
   <a href="<?= url('catalog') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
 </div>
 

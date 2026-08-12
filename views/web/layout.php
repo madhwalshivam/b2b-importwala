@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?= htmlspecialchars($title ?? 'ImportWala | World-Scale B2B Wholesale Platform') ?></title>
+  <title><?= htmlspecialchars($title ?? 'ImportWale | World-Scale B2B Wholesale Platform') ?></title>
   <link rel="stylesheet" href="<?= asset('css/everful-theme.css') ?>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,12 +25,14 @@
   <!-- Header Main -->
   <header class="header-container">
     <div class="header-main">
+      <!-- Official ImportWale Logo -->
       <a href="<?= url('') ?>" class="brand-logo">
-        <span style="letter-spacing:1px;">EVERFUL</span>
+        <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" style="height:38px; width:auto; display:block; object-fit:contain;">
       </a>
 
+      <!-- Search Bar -->
       <form action="<?= url('catalog') ?>" method="GET" class="search-bar-wrapper">
-        <input type="text" name="q" class="search-input" placeholder="crew socks" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+        <input type="text" name="q" class="search-input" placeholder="Search 50,000+ wholesale items by name, SKU, or keyword..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
         <button type="button" style="background:none; border:none; color:#888; cursor:pointer; padding:0 8px;" title="Search by image">
           <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
         </button>
@@ -61,15 +63,13 @@
     <!-- Category Sub-Nav Bar -->
     <nav class="nav-categories-bar">
       <div class="nav-categories-inner">
-        <a href="<?= url('catalog?category_id=1') ?>" class="nav-category-link">Category ˅</a>
+        <a href="<?= url('') ?>" class="nav-category-link active">Home</a>
+        <a href="<?= url('catalog') ?>" class="nav-category-link">Categories ˅</a>
         <a href="<?= url('catalog?sort=newest') ?>" class="nav-category-link">New Arrivals</a>
         <a href="<?= url('catalog?sort=popular') ?>" class="nav-category-link">Best Sellers</a>
         <a href="<?= url('catalog?free_shipping=1') ?>" class="nav-category-link">Free Air Shipping</a>
         <a href="<?= url('catalog?price_drops=1') ?>" class="nav-category-link">Price Drops</a>
-        <a href="<?= url('catalog?tag=halloween') ?>" class="nav-category-link">Halloween</a>
-        <a href="<?= url('catalog?tag=trends') ?>" class="nav-category-link">2026 Autumn Trends</a>
-        <a href="<?= url('catalog?type=solutions') ?>" class="nav-category-link">Solutions ˅</a>
-        <a href="<?= url('catalog?type=business') ?>" class="nav-category-link">Business Types ˅</a>
+        <a href="<?= url('catalog?q=halloween') ?>" class="nav-category-link">Halloween</a>
         <a href="<?= url('blog') ?>" class="nav-category-link">Blog</a>
         <a href="<?= url('support') ?>" class="nav-category-link">Support ˅</a>
       </div>
@@ -85,13 +85,14 @@
   <footer class="footer-container">
     <div class="footer-inner">
       <div class="footer-col">
-        <h4>Everful Wholesale</h4>
+        <h4>ImportWale Wholesale</h4>
         <p style="font-size:13px; color:#9ca3af; margin-bottom:12px;">World-Scale B2B Wholesale Platform connecting international buyers directly with global manufacturers.</p>
-        <p style="font-size:13px; color:#9ca3af;">Email: helpdesk@everfulwholesale.com</p>
+        <p style="font-size:13px; color:#9ca3af;">Email: support@importwale.com</p>
       </div>
       <div class="footer-col">
         <h4>Customer Care</h4>
         <ul>
+          <li><a href="<?= url('') ?>">Home</a></li>
           <li><a href="<?= url('catalog') ?>">All Products</a></li>
           <li><a href="<?= url('cart') ?>">Shopping Cart</a></li>
           <li><a href="#">Shipping Information</a></li>
@@ -109,7 +110,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      &copy; <?= date('Y') ?> Everful Wholesale Inc. All rights reserved. High-Scale B2B Architecture.
+      &copy; <?= date('Y') ?> ImportWale Wholesale Inc. All rights reserved. High-Scale B2B Architecture.
     </div>
   </footer>
 
