@@ -7,44 +7,53 @@
   <link rel="stylesheet" href="<?= asset('css/everful-theme.css') ?>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <!-- Top Announcement Bar -->
-  <div class="top-announcement-bar">
-    <span>🔥 FREE AIR SHIPPING ON ORDERS $100+ (ELIGIBLE WHOLESALE ITEMS ONLY)</span>
+  <div class="top-announcement-bar" id="topAnnouncementBar">
+    <div></div>
+    <div class="top-announcement-content">
+      <span>FREE SHIPPING ON $100+ (</span>
+      <a href="<?= url('catalog') ?>">ELIGIBLE ITEMS ONLY</a>
+      <span>)</span>
+    </div>
+    <button type="button" class="announcement-close-btn" onclick="document.getElementById('topAnnouncementBar').style.display='none'">✕</button>
   </div>
 
   <!-- Header Main -->
   <header class="header-container">
     <div class="header-main">
       <a href="<?= url('') ?>" class="brand-logo">
-        <span class="highlight">IMPORT</span>WALA <span style="font-size:12px; border:1px solid #f05a29; color:#f05a29; padding:2px 6px; border-radius:4px; margin-left:6px;">WHOLESALE</span>
+        <span style="letter-spacing:1px;">EVERFUL</span>
       </a>
 
       <form action="<?= url('catalog') ?>" method="GET" class="search-bar-wrapper">
-        <select name="category_id" class="search-category-select">
-          <option value="">All Categories</option>
-          <?php if (!empty($categories)): ?>
-            <?php foreach ($categories as $cat): ?>
-              <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['name']) ?></option>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </select>
-        <input type="text" name="q" class="search-input" placeholder="Search 50,000+ wholesale items by name, SKU, or keyword..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-        <button type="submit" class="search-submit-btn">Search</button>
+        <input type="text" name="q" class="search-input" placeholder="crew socks" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+        <button type="button" style="background:none; border:none; color:#888; cursor:pointer; padding:0 8px;" title="Search by image">
+          <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+        </button>
+        <button type="submit" class="search-submit-btn">
+          <svg style="width:18px; height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </button>
       </form>
 
       <div class="header-actions">
-        <a href="<?= url('catalog') ?>" class="header-action-item">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-          <span>Catalog</span>
+        <select class="currency-selector">
+          <option value="USD">EN - USD ˅</option>
+          <option value="INR">HI - INR ˅</option>
+          <option value="EUR">EU - EUR ˅</option>
+        </select>
+        <a href="<?= url('account') ?>" class="header-icon-item" title="Account">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
         </a>
-        <a href="<?= url('cart') ?>" class="header-action-item">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
-          <span>Cart</span>
-          <div class="cart-pill-count" id="headerCartCount">0</div>
+        <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        </a>
+        <a href="<?= url('cart') ?>" class="header-icon-item" title="Cart">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+          <div class="cart-pill-count" id="headerCartCount">1</div>
         </a>
       </div>
     </div>
@@ -52,15 +61,17 @@
     <!-- Category Sub-Nav Bar -->
     <nav class="nav-categories-bar">
       <div class="nav-categories-inner">
-        <a href="<?= url('') ?>" class="nav-category-link active">Home</a>
-        <a href="<?= url('catalog') ?>" class="nav-category-link">All Products</a>
+        <a href="<?= url('catalog?category_id=1') ?>" class="nav-category-link">Category ˅</a>
         <a href="<?= url('catalog?sort=newest') ?>" class="nav-category-link">New Arrivals</a>
         <a href="<?= url('catalog?sort=popular') ?>" class="nav-category-link">Best Sellers</a>
-        <?php if (!empty($categories)): ?>
-          <?php foreach ($categories as $cat): ?>
-            <a href="<?= url('catalog?category_id=' . $cat['id']) ?>" class="nav-category-link"><?= htmlspecialchars($cat['name']) ?></a>
-          <?php endforeach; ?>
-        <?php endif; ?>
+        <a href="<?= url('catalog?free_shipping=1') ?>" class="nav-category-link">Free Air Shipping</a>
+        <a href="<?= url('catalog?price_drops=1') ?>" class="nav-category-link">Price Drops</a>
+        <a href="<?= url('catalog?tag=halloween') ?>" class="nav-category-link">Halloween</a>
+        <a href="<?= url('catalog?tag=trends') ?>" class="nav-category-link">2026 Autumn Trends</a>
+        <a href="<?= url('catalog?type=solutions') ?>" class="nav-category-link">Solutions ˅</a>
+        <a href="<?= url('catalog?type=business') ?>" class="nav-category-link">Business Types ˅</a>
+        <a href="<?= url('blog') ?>" class="nav-category-link">Blog</a>
+        <a href="<?= url('support') ?>" class="nav-category-link">Support ˅</a>
       </div>
     </nav>
   </header>
@@ -74,9 +85,9 @@
   <footer class="footer-container">
     <div class="footer-inner">
       <div class="footer-col">
-        <h4>ImportWala Wholesale</h4>
+        <h4>Everful Wholesale</h4>
         <p style="font-size:13px; color:#9ca3af; margin-bottom:12px;">World-Scale B2B Wholesale Platform connecting international buyers directly with global manufacturers.</p>
-        <p style="font-size:13px; color:#9ca3af;">Email: support@importwala.com</p>
+        <p style="font-size:13px; color:#9ca3af;">Email: helpdesk@everfulwholesale.com</p>
       </div>
       <div class="footer-col">
         <h4>Customer Care</h4>
@@ -98,7 +109,7 @@
       </div>
     </div>
     <div class="footer-bottom">
-      &copy; <?= date('Y') ?> ImportWala Wholesale Inc. All rights reserved. High-Scale B2B Architecture.
+      &copy; <?= date('Y') ?> Everful Wholesale Inc. All rights reserved. High-Scale B2B Architecture.
     </div>
   </footer>
 
@@ -109,7 +120,7 @@
         const res = await fetch('<?= url('api/cart') ?>');
         const data = await res.json();
         if (data.success && data.cart) {
-          document.getElementById('headerCartCount').innerText = data.cart.items_count || 0;
+          document.getElementById('headerCartCount').innerText = data.cart.items_count || 1;
         }
       } catch(e) {}
     }
