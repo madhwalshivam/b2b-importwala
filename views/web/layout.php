@@ -109,15 +109,21 @@
     <!-- Category Sub-Nav Bar -->
     <nav class="nav-categories-bar">
       <div class="nav-categories-inner">
-        <a href="<?= url('') ?>" class="nav-category-link active">Home</a>
-        <a href="<?= url('catalog') ?>" class="nav-category-link">Categories ˅</a>
-        <a href="<?= url('catalog?sort=newest') ?>" class="nav-category-link">New Arrivals</a>
-        <a href="<?= url('catalog?sort=popular') ?>" class="nav-category-link">Best Sellers</a>
-        <a href="<?= url('catalog?free_shipping=1') ?>" class="nav-category-link">Free Air Shipping</a>
-        <a href="<?= url('catalog?price_drops=1') ?>" class="nav-category-link">Price Drops</a>
-        <a href="<?= url('catalog?q=halloween') ?>" class="nav-category-link">Halloween</a>
-        <a href="<?= url('blog') ?>" class="nav-category-link">Blog</a>
-        <a href="<?= url('support') ?>" class="nav-category-link">Support ˅</a>
+        <div class="nav-categories-left">
+          <a href="<?= url('') ?>" class="nav-category-link active">Home</a>
+          <a href="<?= url('catalog') ?>" class="nav-category-link">Category ˅</a>
+          <a href="<?= url('catalog?sort=newest') ?>" class="nav-category-link">New Arrivals</a>
+          <a href="<?= url('catalog?sort=popular') ?>" class="nav-category-link">Best Sellers</a>
+          <a href="<?= url('catalog?free_shipping=1') ?>" class="nav-category-link">Free Air Shipping</a>
+          <a href="<?= url('catalog?price_drops=1') ?>" class="nav-category-link">Price Drops</a>
+          <a href="<?= url('catalog?q=halloween') ?>" class="nav-category-link">Halloween</a>
+        </div>
+        <div class="nav-categories-right">
+          <a href="<?= url('solutions') ?>" class="nav-category-link">Solutions ˅</a>
+          <a href="<?= url('business-types') ?>" class="nav-category-link">Business Types ˅</a>
+          <a href="<?= url('blog') ?>" class="nav-category-link">Blog</a>
+          <a href="<?= url('support') ?>" class="nav-category-link">Support ˅</a>
+        </div>
       </div>
     </nav>
   </header>
