@@ -14,6 +14,9 @@ class Application {
 
         date_default_timezone_set($GLOBALS['app_config']['timezone'] ?? 'Asia/Kolkata');
 
+        $dbConfig = require __DIR__ . '/../../config/database.php';
+        Database::init(['connections' => ['mysql' => $dbConfig]]);
+
         $this->request = new Request();
         $this->response = new Response();
         $this->session = new Session();

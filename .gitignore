@@ -8,6 +8,7 @@ react-storefront/node_modules/
 
 # Storage and logs
 storage/logs/*.log
+storage/cache/
 *.log
 
 # Dependencies

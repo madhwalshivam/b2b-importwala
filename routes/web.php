@@ -7,15 +7,19 @@ use App\Middleware\PermissionMiddleware;
 use App\Middleware\CsrfMiddleware;
 
 // ----------------------------------------------------
-// Storefront Public Routes
+// Storefront Public Routes (Everful Wholesale Architecture)
 // ----------------------------------------------------
-$router->get('/', 'HomeController@index');
-$router->get('/shop', 'ShopController@index');
-$router->get('/product/{slug}', 'ProductDetailController@show');
-$router->get('/brands', 'BrandFrontendController@index');
-$router->get('/brand/{slug}', 'BrandFrontendController@products');
-$router->get('/categories', 'CategoryFrontendController@index');
-$router->get('/category/{slug}', 'CategoryFrontendController@show');
+$router->get('/', 'Web\HomeController@index');
+$router->get('/catalog', 'Web\CatalogController@index');
+$router->get('/product/{slug}', 'Web\ProductDetailController@show');
+$router->get('/cart', 'Web\CartViewController@index');
+
+// High-Scale Ephemeral REST Cart & Checkout APIs
+$router->get('/api/cart', 'Api\CartApiController@getCart');
+$router->post('/api/cart/add', 'Api\CartApiController@addItem');
+$router->post('/api/cart/update', 'Api\CartApiController@updateItem');
+$router->post('/api/checkout/process', 'Api\CheckoutApiController@process');
+
 
 
 // Customer Auth Routes (Session-based)
