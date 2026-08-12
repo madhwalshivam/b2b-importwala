@@ -49,7 +49,8 @@
         <!-- Ship to / Language / Currency Popover Wrapper -->
         <div class="ship-to-popover-wrapper">
           <button type="button" class="ship-to-trigger-btn" onclick="toggleShipToPopover(event)" id="shipToTriggerBtn">
-            <span id="triggerLangText">EN</span> - <span id="triggerCurrText">USD</span> ˅
+            <span id="triggerLangText">EN</span> - <span id="triggerCurrText">USD</span>
+            <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px; display:inline-block; vertical-align:middle;"><path d="M6 9l6 6 6-6"/></svg>
           </button>
 
           <!-- Popover Dropdown Menu -->
@@ -109,21 +110,21 @@
     <!-- Category Sub-Nav Bar -->
     <nav class="nav-categories-bar">
       <div class="nav-categories-inner">
-        <div class="nav-categories-left">
-          <a href="<?= url('') ?>" class="nav-category-link active">Home</a>
-          <a href="<?= url('catalog') ?>" class="nav-category-link">Category ˅</a>
-          <a href="<?= url('catalog?sort=newest') ?>" class="nav-category-link">New Arrivals</a>
-          <a href="<?= url('catalog?sort=popular') ?>" class="nav-category-link">Best Sellers</a>
-          <a href="<?= url('catalog?free_shipping=1') ?>" class="nav-category-link">Free Air Shipping</a>
-          <a href="<?= url('catalog?price_drops=1') ?>" class="nav-category-link">Price Drops</a>
-          <a href="<?= url('catalog?q=halloween') ?>" class="nav-category-link">Halloween</a>
-        </div>
-        <div class="nav-categories-right">
-          <a href="<?= url('solutions') ?>" class="nav-category-link">Solutions ˅</a>
-          <a href="<?= url('business-types') ?>" class="nav-category-link">Business Types ˅</a>
-          <a href="<?= url('blog') ?>" class="nav-category-link">Blog</a>
-          <a href="<?= url('support') ?>" class="nav-category-link">Support ˅</a>
-        </div>
+        <a href="<?= url('') ?>" class="nav-category-link active">Home</a>
+        <a href="<?= url('catalog') ?>" class="nav-category-link">
+          Categories
+          <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px; display:inline-block; vertical-align:middle;"><path d="M6 9l6 6 6-6"/></svg>
+        </a>
+        <a href="<?= url('catalog?sort=newest') ?>" class="nav-category-link">New Arrivals</a>
+        <a href="<?= url('catalog?sort=popular') ?>" class="nav-category-link">Best Sellers</a>
+        <a href="<?= url('catalog?free_shipping=1') ?>" class="nav-category-link">Free Air Shipping</a>
+        <a href="<?= url('catalog?price_drops=1') ?>" class="nav-category-link">Price Drops</a>
+        <a href="<?= url('catalog?q=halloween') ?>" class="nav-category-link">Halloween</a>
+        <a href="<?= url('blog') ?>" class="nav-category-link">Blog</a>
+        <a href="<?= url('support') ?>" class="nav-category-link">
+          Support
+          <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px; display:inline-block; vertical-align:middle;"><path d="M6 9l6 6 6-6"/></svg>
+        </a>
       </div>
     </nav>
   </header>

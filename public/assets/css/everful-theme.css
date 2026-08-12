@@ -97,53 +97,46 @@ a {
 .header-main {
   max-width: 1440px;
   margin: 0 auto;
-  padding: 14px 28px;
+  padding: 18px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 32px;
+  gap: 28px;
 }
 
-/* Official Brand Logo */
+/* Double Sized Brand Logo */
 .brand-logo {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
 }
 
 .brand-logo-img {
-  height: 40px;
+  height: 60px; /* Doubled from 30-38px */
   width: auto;
   display: block;
   object-fit: contain;
 }
 
-/* Wide Search Bar & Camera Tooltip */
+/* Search Bar & Camera Tooltip */
 .search-bar-wrapper {
   flex: 1;
-  max-width: 780px; /* Wide search bar matching reference */
+  max-width: 580px;
   display: flex;
   align-items: center;
   background: #F4F4F5;
   border-radius: var(--radius-full);
-  padding: 4px 6px 4px 20px;
+  padding: 4px 6px 4px 16px;
   position: relative;
-  height: 44px;
 }
 
 .search-input {
   flex: 1;
   border: none;
   background: transparent;
-  padding: 8px 12px;
+  padding: 10px 12px;
   font-size: 14px;
   outline: none;
-  color: #27272A;
-}
-
-.search-input::placeholder {
-  color: #9CA3AF;
-  font-size: 13.5px;
+  color: #333;
 }
 
 .camera-search-trigger {
@@ -158,7 +151,6 @@ a {
   position: relative;
   border-radius: 50%;
   transition: all 0.2s;
-  margin-right: 4px;
 }
 
 .camera-search-trigger:hover {
@@ -170,14 +162,14 @@ a {
 .camera-tooltip {
   position: absolute;
   bottom: -38px;
-  right: -10px;
+  right: 40px;
   background: var(--white);
   color: #333;
   font-size: 12px;
   font-weight: 600;
   padding: 6px 12px;
   border-radius: 6px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   border: 1px solid #E4E4E7;
   white-space: nowrap;
   opacity: 0;
@@ -197,15 +189,14 @@ a {
   background: #27272A;
   color: var(--white);
   border: none;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: background 0.2s;
-  flex-shrink: 0;
 }
 
 .search-submit-btn:hover {
@@ -215,8 +206,7 @@ a {
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 24px; /* Exact icon spacing */
-  flex-shrink: 0;
+  gap: 20px;
 }
 
 /* Ship-To / Currency Popover Menu */
@@ -226,7 +216,7 @@ a {
 
 .ship-to-trigger-btn {
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: #333;
   border: none;
   background: transparent;
@@ -235,7 +225,7 @@ a {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 6px 8px;
+  padding: 6px 10px;
   border-radius: 6px;
   transition: background 0.2s;
 }
