@@ -1,0 +1,20 @@
+# Node.js dependencies
+node_modules/
+react-storefront/node_modules/
+
+# Environment variables and local configs
+.env
+.env.local
+
+# Storage and logs
+storage/logs/*.log
+*.log
+
+# Dependencies
+vendor/
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

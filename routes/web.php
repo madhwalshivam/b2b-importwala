@@ -1,0 +1,277 @@
+<?php
+
+/** @var App\Core\Router $router */
+
+use App\Middleware\AdminMiddleware;
+use App\Middleware\PermissionMiddleware;
+use App\Middleware\CsrfMiddleware;
+
+// ----------------------------------------------------
+// Storefront Public Routes
+// ----------------------------------------------------
+$router->get('/', 'HomeController@index');
+$router->get('/shop', 'ShopController@index');
+$router->get('/product/{slug}', 'ProductDetailController@show');
+$router->get('/brands', 'BrandFrontendController@index');
+$router->get('/brand/{slug}', 'BrandFrontendController@products');
+$router->get('/categories', 'CategoryFrontendController@index');
+$router->get('/category/{slug}', 'CategoryFrontendController@show');
+
+
+// Customer Auth Routes (Session-based)
+$router->get('/login', 'AuthController@customerLogin');
+$router->post('/login', 'AuthController@customerLogin', [CsrfMiddleware::class]);
+$router->get('/signup', 'AuthController@customerSignup');
+$router->post('/signup', 'AuthController@customerSignup', [CsrfMiddleware::class]);
+$router->get('/forgot-password', 'AuthController@customerForgotPassword');
+$router->post('/forgot-password', 'AuthController@processCustomerForgotPassword', [CsrfMiddleware::class]);
+$router->get('/reset-password', 'AuthController@customerResetPassword');
+$router->post('/reset-password', 'AuthController@processCustomerResetPassword', [CsrfMiddleware::class]);
+$router->get('/logout', 'AuthController@customerLogout');
+$router->get('/account', 'AuthController@account');
+
+// Wishlist Routes (AJAX & Page View)
+$router->get('/wishlist', 'WishlistController@index');
+$router->post('/wishlist/toggle', 'WishlistController@toggle', [CsrfMiddleware::class]);
+
+// Compare Routes (AJAX & Page View)
+$router->get('/compare', 'CompareController@index');
+$router->post('/compare/toggle', 'CompareController@toggle', [CsrfMiddleware::class]);
+$router->get('/compare/clear', 'CompareController@clear');
+$router->post('/compare/clear', 'CompareController@clear');
+
+// Cart & Checkout
+$router->get('/cart', 'CartController@index');
+$router->post('/cart/add', 'CartController@add', [CsrfMiddleware::class]);
+$router->post('/cart/update', 'CartController@update', [CsrfMiddleware::class]);
+$router->post('/cart/remove', 'CartController@remove', [CsrfMiddleware::class]);
+$router->get('/cart/data', 'CartController@getCartData');
+$router->post('/cart/apply-coupon', 'CartController@applyCoupon', [CsrfMiddleware::class]);
+
+$router->get('/checkout', 'CheckoutController@index');
+$router->post('/checkout/process', 'CheckoutController@processCheckout', [CsrfMiddleware::class]);
+$router->post('/checkout/address/save', 'CheckoutController@saveAddressAjax', [CsrfMiddleware::class]);
+$router->get('/order-success/{orderNumber}', 'CheckoutController@success');
+
+// Cart Coupon Actions
+$router->post('/cart/apply-coupon', 'CartController@applyCoupon', [CsrfMiddleware::class]);
+$router->post('/cart/remove-coupon', 'CartController@removeCoupon', [CsrfMiddleware::class]);
+
+// Blog & Articles Routes
+$router->get('/blog', 'BlogFrontendController@index');
+$router->get('/blog/{slug}', 'BlogFrontendController@show');
+
+// CMS Pages
+$router->get('/page/{slug}', 'PageController@show');
+$router->get('/about-us', fn() => (new App\Controllers\PageController())->show('about-us'));
+$router->get('/contact-us', fn() => (new App\Controllers\PageController())->show('contact-us'));
+$router->get('/privacy-policy', fn() => (new App\Controllers\PageController())->show('privacy-policy'));
+$router->get('/terms-and-conditions', fn() => (new App\Controllers\PageController())->show('terms-and-conditions'));
+$router->get('/refund-policy', fn() => (new App\Controllers\PageController())->show('refund-policy'));
+$router->get('/shipping-policy', fn() => (new App\Controllers\PageController())->show('shipping-policy'));
+$router->get('/cancellation-policy', fn() => (new App\Controllers\PageController())->show('cancellation-policy'));
+$router->post('/wholesale/inquire', 'WholesaleController@submit');
+
+// Storefront Customer Product Review Submission
+$router->post('/product/review/add', 'ReviewController@submitStorefront', [CsrfMiddleware::class]);
+
+// API Autocomplete, Heartbeat & Refresh Token
+$router->get('/api/search', 'ApiController@searchAutocomplete');
+$router->get('/api/scooter-models', 'ApiController@getModelsByBrand');
+$router->get('/api/heartbeat', 'HeartbeatController@update');
+$router->post('/api/heartbeat', 'HeartbeatController@update');
+$router->post('/api/refresh-token', 'AuthController@refreshToken');
+$router->get('/api/refresh-token', 'AuthController@refreshToken');
+
+// ----------------------------------------------------
+// Admin Employee Auth Routes
+// ----------------------------------------------------
+$router->get('/admin/login', 'AuthController@login');
+$router->post('/admin/login', 'AuthController@processLogin', [CsrfMiddleware::class]);
+$router->get('/admin/forgot-password', 'AuthController@adminForgotPassword');
+$router->post('/admin/forgot-password', 'AuthController@processAdminForgotPassword', [CsrfMiddleware::class]);
+$router->get('/admin/reset-password', 'AuthController@adminResetPassword');
+$router->post('/admin/reset-password', 'AuthController@processAdminResetPassword', [CsrfMiddleware::class]);
+$router->get('/admin/logout', 'AuthController@logout');
+
+// ----------------------------------------------------
+// Admin Protected Panel Routes (Guarded by RBAC & Session)
+// ----------------------------------------------------
+$router->get('/admin', fn() => (new App\Core\Response())->redirect(url('admin/dashboard')));
+$router->get('/admin/dashboard', 'Admin\DashboardController@index', [AdminMiddleware::class]);
+
+// Live Analytics
+$router->get('/admin/analytics', 'Admin\AnalyticsController@index', [AdminMiddleware::class]);
+$router->get('/admin/analytics/user-orders/{id}', 'Admin\AnalyticsController@userOrders', [AdminMiddleware::class]);
+
+// Notification Settings
+$router->get('/admin/notification-settings', 'Admin\NotificationSettingsController@index', [AdminMiddleware::class]);
+$router->post('/admin/notification-settings/update', 'Admin\NotificationSettingsController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/notification-settings/test', 'Admin\NotificationSettingsController@testSend', [AdminMiddleware::class]);
+
+// Spare Parts Specs & Compatibility Manager
+$router->get('/admin/product-compatibility', 'Admin\ProductCompatibilityController@index', [AdminMiddleware::class]);
+$router->post('/admin/product-compatibility/update/{id}', 'Admin\ProductCompatibilityController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Announcement Bar Manager
+$router->get('/admin/announcement', 'Admin\AnnouncementController@index', [AdminMiddleware::class]);
+$router->post('/admin/announcement/update', 'Admin\AnnouncementController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Hero Banner Manager
+$router->get('/admin/banners', 'Admin\BannerController@index', [AdminMiddleware::class]);
+$router->post('/admin/banners/store', 'Admin\BannerController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/banners/edit/{id}', 'Admin\BannerController@edit', [AdminMiddleware::class]);
+$router->post('/admin/banners/update/{id}', 'Admin\BannerController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/banners/toggle/{id}', 'Admin\BannerController@toggleStatus', [AdminMiddleware::class]);
+$router->get('/admin/banners/delete/{id}', 'Admin\BannerController@delete', [AdminMiddleware::class]);
+$router->post('/admin/banners/delete/{id}', 'Admin\BannerController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Homepage Compare Products Manager
+$router->get('/admin/homepage-compare', 'Admin\HomepageCompareController@index', [AdminMiddleware::class]);
+$router->post('/admin/homepage-compare/add', 'Admin\HomepageCompareController@add', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/homepage-compare/remove', 'Admin\HomepageCompareController@remove', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Homepage Sections Manager (Featured, Deals, Best Sellers, New Arrivals, Flash Sale)
+$router->get('/admin/homepage-sections', 'Admin\HomepageSectionsController@index', [AdminMiddleware::class]);
+$router->get('/admin/homepage-sections/search-products', 'Admin\HomepageSectionsController@searchProducts', [AdminMiddleware::class]);
+$router->post('/admin/homepage-sections/update/{key}', 'Admin\HomepageSectionsController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/homepage-sections/update-promo', 'Admin\HomepageSectionsController@updatePromo', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// API Endpoints for Homepage Sections
+$router->get('/api/homepage-sections', 'Admin\HomepageSectionsController@apiIndex');
+$router->get('/api/homepage-sections/{key}', 'Admin\HomepageSectionsController@apiShow');
+
+// Homepage Videos Manager
+$router->get('/admin/videos', 'Admin\VideoController@index', [AdminMiddleware::class]);
+$router->post('/admin/videos/store', 'Admin\VideoController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/videos/update/{id}', 'Admin\VideoController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/videos/delete/{id}', 'Admin\VideoController@delete', [AdminMiddleware::class]);
+
+// Google Customer Reviews Manager
+$router->get('/admin/google-reviews', 'Admin\GoogleReviewController@index', [AdminMiddleware::class]);
+$router->post('/admin/google-reviews/store', 'Admin\GoogleReviewController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/google-reviews/update/{id}', 'Admin\GoogleReviewController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/google-reviews/delete/{id}', 'Admin\GoogleReviewController@delete', [AdminMiddleware::class]);
+
+// Discount Coupons & Offers Manager
+$router->get('/admin/coupons', 'Admin\CouponController@index', [AdminMiddleware::class]);
+$router->get('/admin/coupons/create', 'Admin\CouponController@create', [AdminMiddleware::class]);
+$router->post('/admin/coupons/store', 'Admin\CouponController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/coupons/edit/{id}', 'Admin\CouponController@edit', [AdminMiddleware::class]);
+$router->post('/admin/coupons/update/{id}', 'Admin\CouponController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/coupons/delete/{id}', 'Admin\CouponController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/coupons/toggle/{id}', 'Admin\CouponController@toggleStatus', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/coupons/usage/{id}', 'Admin\CouponController@usage', [AdminMiddleware::class]);
+
+// Products Management
+$router->get('/admin/products', 'Admin\ProductController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('products.view'))->execute()]);
+$router->get('/admin/products/create', 'Admin\ProductController@create', [AdminMiddleware::class, fn() => (new PermissionMiddleware('products.add'))->execute()]);
+$router->post('/admin/products/store', 'Admin\ProductController@store', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.add'))->execute()]);
+$router->get('/admin/products/edit/{id}', 'Admin\ProductController@edit', [AdminMiddleware::class, fn() => (new PermissionMiddleware('products.edit'))->execute()]);
+$router->post('/admin/products/update/{id}', 'Admin\ProductController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.edit'))->execute()]);
+$router->get('/admin/products/delete/{id}', 'Admin\ProductController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('products.delete'))->execute()]);
+$router->post('/admin/products/delete/{id}', 'Admin\ProductController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.delete'))->execute()]);
+
+// Gallery Image AJAX Endpoints
+$router->post('/admin/products/gallery-upload/{id}', 'Admin\ProductController@galleryUpload', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/gallery-delete/{id}', 'Admin\ProductController@galleryDelete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/gallery-set-primary/{id}', 'Admin\ProductController@gallerySetPrimary', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/gallery-reorder/{id}', 'Admin\ProductController@galleryReorder', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+
+
+// Brands Management
+$router->get('/admin/brands', 'Admin\BrandController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('brands.view'))->execute()]);
+$router->post('/admin/brands/store', 'Admin\BrandController@store', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('brands.add'))->execute()]);
+$router->post('/admin/brands/update/{id}', 'Admin\BrandController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('brands.edit'))->execute()]);
+$router->get('/admin/brands/delete/{id}', 'Admin\BrandController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('brands.delete'))->execute()]);
+$router->post('/admin/brands/delete/{id}', 'Admin\BrandController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('brands.delete'))->execute()]);
+$router->post('/admin/brands/toggle-status/{id}', 'Admin\BrandController@toggleStatus', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('brands.edit'))->execute()]);
+$router->post('/admin/brands/reorder', 'Admin\BrandController@reorder', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('brands.edit'))->execute()]);
+$router->post('/admin/brands/bulk-action', 'Admin\BrandController@bulkAction', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('brands.edit'))->execute()]);
+
+
+// Categories Management
+$router->get('/admin/categories', 'Admin\CategoryController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('categories.view'))->execute()]);
+$router->get('/admin/categories/get/{id}', 'Admin\CategoryController@get', [AdminMiddleware::class, fn() => (new PermissionMiddleware('categories.view'))->execute()]);
+$router->post('/admin/categories/store', 'Admin\CategoryController@store', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.add'))->execute()]);
+$router->post('/admin/categories/update/{id}', 'Admin\CategoryController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.edit'))->execute()]);
+$router->get('/admin/categories/delete/{id}', 'Admin\CategoryController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
+$router->post('/admin/categories/delete/{id}', 'Admin\CategoryController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
+$router->post('/admin/categories/reassign-delete/{id}', 'Admin\CategoryController@reassignAndDelete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
+
+// Orders Management
+$router->get('/admin/orders', 'Admin\OrderController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
+$router->get('/admin/orders/{id}', 'Admin\OrderController@show', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
+$router->post('/admin/orders/update-status/{id}', 'Admin\OrderController@updateStatus', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('orders.edit'))->execute()]);
+$router->get('/admin/orders/invoice/{id}', 'Admin\OrderController@invoice', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
+
+// Sales & Tax Reports
+$router->get('/admin/reports/sales-tax', 'Admin\ReportController@salesTax', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
+$router->get('/admin/reports/sales-tax/pdf', 'Admin\ReportController@salesTaxPdf', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
+$router->get('/admin/reports/sales-tax/csv', 'Admin\ReportController@salesTaxCsv', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
+
+// Inventory Management
+$router->get('/admin/inventory', 'Admin\InventoryController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('inventory.view'))->execute()]);
+$router->post('/admin/inventory/update', 'Admin\InventoryController@updateStock', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('inventory.edit'))->execute()]);
+
+// Employees & Roles Management
+$router->get('/admin/employees', 'Admin\EmployeeController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('employees.view'))->execute()]);
+$router->post('/admin/employees/store', 'Admin\EmployeeController@store', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('employees.add'))->execute()]);
+$router->post('/admin/employees/update/{id}', 'Admin\EmployeeController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('employees.edit'))->execute()]);
+$router->get('/admin/employees/delete/{id}', 'Admin\EmployeeController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('employees.delete'))->execute()]);
+$router->post('/admin/employees/delete/{id}', 'Admin\EmployeeController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('employees.delete'))->execute()]);
+
+
+$router->get('/admin/roles', 'Admin\RoleController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('employees.view'))->execute()]);
+$router->post('/admin/roles/store', 'Admin\RoleController@store', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('employees.add'))->execute()]);
+$router->get('/admin/roles/edit/{id}', 'Admin\RoleController@edit', [AdminMiddleware::class, fn() => (new PermissionMiddleware('employees.edit'))->execute()]);
+$router->post('/admin/roles/update/{id}', 'Admin\RoleController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('employees.edit'))->execute()]);
+
+// Product Reviews Management
+$router->get('/admin/reviews', 'Admin\ReviewController@index', [AdminMiddleware::class]);
+$router->post('/admin/reviews/store', 'Admin\ReviewController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/reviews/delete/{id}', 'Admin\ReviewController@delete', [AdminMiddleware::class]);
+$router->post('/admin/reviews/delete/{id}', 'Admin\ReviewController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/reviews/update-status/{id}', 'Admin\ReviewController@updateStatus', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Settings & Activity Logs
+$router->get('/admin/settings', 'Admin\SettingsController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('settings.view'))->execute()]);
+$router->post('/admin/settings/update', 'Admin\SettingsController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('settings.edit'))->execute()]);
+$router->get('/admin/settings/payment-shipping', 'Admin\PaymentShippingSettingsController@index', [AdminMiddleware::class]);
+$router->post('/admin/settings/payment-shipping/razorpay', 'Admin\PaymentShippingSettingsController@updateRazorpay', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/settings/payment-shipping/razorpay', fn() => header('Location: ' . url('admin/settings/payment-shipping')) . exit);
+$router->post('/admin/settings/payment-shipping/shiprocket', 'Admin\PaymentShippingSettingsController@updateShiprocket', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/settings/payment-shipping/shiprocket', fn() => header('Location: ' . url('admin/settings/payment-shipping')) . exit);
+$router->post('/admin/settings/payment-shipping/test-razorpay', 'Admin\PaymentShippingSettingsController@testRazorpay', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/settings/payment-shipping/test-shiprocket', 'Admin\PaymentShippingSettingsController@testShiprocket', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/settings/payment-shipping/reveal-secrets', 'Admin\PaymentShippingSettingsController@revealSecrets', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Admin Order Actions
+$router->post('/admin/orders/retry-shiprocket/{id}', 'Admin\OrderController@retryShiprocket', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/orders/cancel-shipment/{id}', 'Admin\OrderController@cancelShipment', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+$router->get('/admin/logs', 'Admin\ActivityLogController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('logs.view'))->execute()]);
+$router->get('/admin/activity-logs', 'Admin\ActivityLogController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('logs.view'))->execute()]);
+
+// Razorpay & Shiprocket Webhook API Routes
+$router->post('/api/checkout/create-order', 'CheckoutApiController@createOrder');
+$router->post('/api/checkout/verify-payment', 'CheckoutApiController@verifyPayment');
+$router->post('/api/webhooks/razorpay', 'CheckoutApiController@razorpayWebhook');
+$router->get('/api/webhooks/razorpay', 'CheckoutApiController@razorpayWebhook');
+$router->post('/api/webhooks/shiprocket', 'CheckoutApiController@shiprocketWebhook');
+$router->get('/api/webhooks/shiprocket', 'CheckoutApiController@shiprocketWebhook');
+$router->get('/api/orders/track', 'CheckoutApiController@trackOrder');
+$router->post('/api/orders/track', 'CheckoutApiController@trackOrder');
+
+// Blogs & Articles Management
+$router->get('/admin/blogs', 'Admin\BlogController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('blogs.view'))->execute()]);
+$router->get('/admin/blogs/create', 'Admin\BlogController@create', [AdminMiddleware::class, fn() => (new PermissionMiddleware('blogs.add'))->execute()]);
+$router->post('/admin/blogs/store', 'Admin\BlogController@store', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('blogs.add'))->execute()]);
+$router->get('/admin/blogs/edit/{id}', 'Admin\BlogController@edit', [AdminMiddleware::class, fn() => (new PermissionMiddleware('blogs.edit'))->execute()]);
+$router->post('/admin/blogs/update/{id}', 'Admin\BlogController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('blogs.edit'))->execute()]);
+$router->get('/admin/blogs/delete/{id}', 'Admin\BlogController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('blogs.delete'))->execute()]);
+$router->post('/admin/blogs/delete/{id}', 'Admin\BlogController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('blogs.delete'))->execute()]);
+$router->post('/admin/blogs/upload-image', 'Admin\BlogController@uploadImage', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+
