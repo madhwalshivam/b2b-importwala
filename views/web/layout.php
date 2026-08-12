@@ -25,17 +25,21 @@
   <!-- Header Main -->
   <header class="header-container">
     <div class="header-main">
-      <!-- Official ImportWale Logo -->
+      <!-- Official ImportWale Logo (Double Sized) -->
       <a href="<?= url('') ?>" class="brand-logo">
-        <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" style="height:38px; width:auto; display:block; object-fit:contain;">
+        <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" class="brand-logo-img">
       </a>
 
       <!-- Search Bar -->
       <form action="<?= url('catalog') ?>" method="GET" class="search-bar-wrapper">
         <input type="text" name="q" class="search-input" placeholder="Search 50,000+ wholesale items by name, SKU, or keyword..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
-        <button type="button" style="background:none; border:none; color:#888; cursor:pointer; padding:0 8px;" title="Search by image">
-          <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+        
+        <!-- Camera Search Icon Button + Tooltip -->
+        <button type="button" class="camera-search-trigger" onclick="openImageSearchModal()" aria-label="Search by Image">
+          <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><circle cx="12" cy="13" r="3"/></svg>
+          <div class="camera-tooltip">Search by Image</div>
         </button>
+
         <button type="submit" class="search-submit-btn">
           <svg style="width:18px; height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         </button>
@@ -80,6 +84,22 @@
   <main class="main-container">
     <?= $content ?>
   </main>
+
+  <!-- Image Search Modal Popup -->
+  <div class="image-search-overlay" id="imageSearchModalOverlay" onclick="if(event.target === this) closeImageSearchModal()">
+    <div class="image-search-modal">
+      <button type="button" class="image-search-modal-close" onclick="closeImageSearchModal()" aria-label="Close Modal">✕</button>
+      <h2 class="image-search-title">See something you love? Search by image!</h2>
+      
+      <div class="image-search-dropzone" id="dropzoneArea" onclick="document.getElementById('imageSearchFileInput').click()">
+        <svg class="dropzone-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <p class="dropzone-text">Paste an image, drag & drop, or upload an image to find similar products.</p>
+        <button type="button" class="btn-upload-image">Upload image</button>
+        <input type="file" id="imageSearchFileInput" accept="image/*" style="display:none;" onchange="handleFileSelect(this)">
+        <img id="imageSearchPreview" class="image-search-preview" alt="Preview">
+      </div>
+    </div>
+  </div>
 
   <!-- Footer -->
   <footer class="footer-container">
@@ -126,6 +146,74 @@
       } catch(e) {}
     }
     updateHeaderCartCount();
+
+    // Image Search Modal Functions
+    function openImageSearchModal() {
+      document.getElementById('imageSearchModalOverlay').classList.add('active');
+    }
+
+    function closeImageSearchModal() {
+      document.getElementById('imageSearchModalOverlay').classList.remove('active');
+    }
+
+    function handleFileSelect(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const preview = document.getElementById('imageSearchPreview');
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          
+          setTimeout(() => {
+            closeImageSearchModal();
+            window.location.href = '<?= url('catalog?q=spooky') ?>';
+          }, 800);
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    // Drag and drop & paste event listeners
+    const dropzone = document.getElementById('dropzoneArea');
+    if (dropzone) {
+      ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); }, false);
+      });
+      ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); }, false);
+      });
+      dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        if (files.length) {
+          document.getElementById('imageSearchFileInput').files = files;
+          handleFileSelect(document.getElementById('imageSearchFileInput'));
+        }
+      });
+    }
+
+    document.addEventListener('paste', (e) => {
+      if (document.getElementById('imageSearchModalOverlay').classList.contains('active')) {
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (let index in items) {
+          const item = items[index];
+          if (item.kind === 'file') {
+            const blob = item.getAsFile();
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+              const preview = document.getElementById('imageSearchPreview');
+              preview.src = evt.target.result;
+              preview.style.display = 'block';
+              setTimeout(() => {
+                closeImageSearchModal();
+                window.location.href = '<?= url('catalog?q=spooky') ?>';
+              }, 800);
+            };
+            reader.readAsDataURL(blob);
+          }
+        }
+      }
+    });
   </script>
 </body>
 </html>
