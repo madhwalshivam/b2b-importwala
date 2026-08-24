@@ -16,10 +16,13 @@ if (!function_exists('url')) {
         if (isset($_SERVER['HTTP_HOST'])) {
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+            if (str_ends_with($scriptDir, '/public') || str_ends_with($scriptDir, '\\public')) {
+                $scriptDir = substr($scriptDir, 0, -7);
+            }
             $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $scriptDir;
             return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
         }
-        $baseUrl = rtrim($GLOBALS['app_config']['url'] ?? 'http://localhost/importwala/public', '/');
+        $baseUrl = rtrim($GLOBALS['app_config']['url'] ?? 'http://localhost/importwala', '/');
         return $baseUrl . '/' . ltrim($path, '/');
     }
 }
@@ -186,6 +189,13 @@ if (!function_exists('admin_audit_log')) {
         } catch (\Throwable $e) {
             error_log("Audit log failure: " . $e->getMessage());
         }
+    }
+}
+
+if (!function_exists('activity_log')) {
+    function activity_log(string $action, string $module = '', mixed $recordId = null, ?string $details = null): void {
+        $logDetails = ($module ? "[$module] " : "") . ($recordId ? "Record #$recordId: " : "") . ($details ?? '');
+        admin_audit_log($action, $logDetails);
     }
 }
 

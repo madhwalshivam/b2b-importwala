@@ -3,7 +3,7 @@
 return [
     'name' => 'ImportWala',
     'tagline' => 'World-Scale B2B Wholesale Platform',
-    'url' => 'http://localhost/importwala/public',
+    'url' => 'http://localhost/importwala',
     'timezone' => 'Asia/Kolkata',
     'currency' => '₹',
     'tax_rate' => 18,

@@ -317,8 +317,9 @@ class Product extends Model {
         $this->db->prepare("DELETE FROM coupon_products WHERE product_id = ?")->execute([$id]);
         $this->db->prepare("DELETE FROM reviews WHERE product_id = ?")->execute([$id]);
         $this->db->prepare("DELETE FROM product_specifications WHERE product_id = ?")->execute([$id]);
-        $this->db->prepare("DELETE FROM product_faqs WHERE product_id = ?")->execute([$id]);
-        $this->db->prepare("DELETE FROM product_related WHERE product_id = ? OR related_product_id = ?")->execute([$id, $id]);
+        try {
+            $this->db->prepare("DELETE FROM product_related WHERE product_id = ? OR related_product_id = ?")->execute([$id, $id]);
+        } catch (\Throwable $e) {}
 
         return parent::delete($id);
     }

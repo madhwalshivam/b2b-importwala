@@ -25,8 +25,12 @@ if (APP_ENV === 'development') {
     error_reporting(E_ALL);
 }
 
+$logDir = __DIR__ . '/../storage/logs';
+if (!is_dir($logDir)) {
+    @mkdir($logDir, 0755, true);
+}
 ini_set('log_errors', '1');
-ini_set('error_log', __DIR__ . '/../storage/logs/error.log');
+ini_set('error_log', $logDir . '/error.log');
 
 // Global Exception Handler
 set_exception_handler(function (\Throwable $e) {
@@ -40,7 +44,7 @@ set_exception_handler(function (\Throwable $e) {
         if (APP_ENV === 'development') {
             echo "<h1>Application Error</h1><p>" . htmlspecialchars($e->getMessage()) . "</p><pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
         } else {
-            echo '<div style="font-family:sans-serif; text-align:center; padding:60px; color:#333;"><h2 style="font-size:24px; font-weight:bold;">Something went wrong</h2><p style="color:#666;">We are experiencing a brief system issue. Please refresh or return to the homepage.</p><a href="/ecommerce/" style="display:inline-block; margin-top:15px; padding:10px 20px; background:#A8111C; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold;">Return to Homepage</a></div>';
+            echo '<div style="font-family:sans-serif; text-align:center; padding:60px; color:#333;"><h2 style="font-size:24px; font-weight:bold;">Something went wrong</h2><p style="color:#666;">We are experiencing a brief system issue. Please refresh or return to the homepage.</p><a href="/importwala/" style="display:inline-block; margin-top:15px; padding:10px 20px; background:#A8111C; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold;">Return to Homepage</a></div>';
         }
     }
     exit;

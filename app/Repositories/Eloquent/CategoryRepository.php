@@ -13,7 +13,7 @@ class CategoryRepository extends BaseRepository implements CategoryRepositoryInt
     {
         $cacheKey = 'catalog:categories:tree';
         return CacheManager::getInstance()->remember($cacheKey, 86400, function () {
-            $categories = $this->findAll(['is_active' => 1], ['sort_order' => 'ASC']);
+            $categories = $this->findAll(['status' => 'active'], ['sort_order' => 'ASC']);
             return $this->buildTree($categories);
         });
     }
@@ -22,7 +22,7 @@ class CategoryRepository extends BaseRepository implements CategoryRepositoryInt
     {
         $cacheKey = "catalog:category:slug:{$slug}";
         return CacheManager::getInstance()->remember($cacheKey, 3600, function () use ($slug) {
-            $stmt = $this->getReadDb()->prepare("SELECT * FROM `categories` WHERE `slug` = :slug AND `is_active` = 1 LIMIT 1");
+            $stmt = $this->getReadDb()->prepare("SELECT * FROM `categories` WHERE `slug` = :slug AND `status` = 'active' LIMIT 1");
             $stmt->execute(['slug' => $slug]);
             $res = $stmt->fetch();
             return $res ?: null;

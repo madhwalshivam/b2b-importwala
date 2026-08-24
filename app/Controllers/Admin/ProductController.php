@@ -183,6 +183,10 @@ class ProductController extends Controller {
             $videoThumbnail = trim($_POST['video_thumbnail_url']);
         }
 
+        $subcategoryId = !empty($_POST['subcategory_id']) ? (int)$_POST['subcategory_id'] : null;
+        $basePrice = isset($_POST['base_price']) && $_POST['base_price'] !== '' ? (float)$_POST['base_price'] : $price;
+        $moq = isset($_POST['moq']) && (int)$_POST['moq'] > 0 ? (int)$_POST['moq'] : 1;
+
         $productId = $this->productModel->insert([
             'name'                 => $name,
             'slug'                 => $slug,
@@ -190,9 +194,12 @@ class ProductController extends Controller {
             'barcode'              => $this->request->input('barcode'),
             'hsn_code'             => $this->request->input('hsn_code'),
             'category_id'          => $primaryCategoryId,
+            'subcategory_id'       => $subcategoryId,
             'brand_id'             => $primaryBrandId,
             'price'                => $price,
             'sale_price'           => $salePrice,
+            'base_price'           => $basePrice,
+            'moq'                  => $moq,
             'tax_percent'          => (float)$this->request->input('tax_percent', 18),
             'stock'                => $stock,
             'main_image'           => $mainImage,
@@ -221,6 +228,9 @@ class ProductController extends Controller {
         // Sync Categories & Brands
         $this->productModel->syncProductCategories($productId, $categoryIds);
         $this->productModel->syncProductBrands($productId, $brandIds);
+
+        // Save Wholesale Tiered Prices
+        $this->saveTieredPrices($productId, $_POST['tier_min_qty'] ?? [], $_POST['tier_max_qty'] ?? [], $_POST['tier_unit_price'] ?? []);
 
         // Main Image into product_images as primary
         $this->imageModel->insert([
@@ -312,9 +322,19 @@ class ProductController extends Controller {
         $galleryImages    = $this->imageModel->getByProduct($id);
         $frequentlyBought = $this->productModel->getRelatedProducts($id, 'frequently_bought', 10);
 
+        $db = \App\Core\Database::getInstance();
+        $tierStmt = $db->prepare("SELECT * FROM tiered_prices WHERE product_id = ? ORDER BY min_qty ASC");
+        $tierStmt->execute([$id]);
+        $tieredPrices = $tierStmt->fetchAll();
+
+        $subcatModel = new \App\Models\Subcategory();
+        $subcategories = !empty($product['category_id']) ? $subcatModel->getByCategoryId((int)$product['category_id']) : [];
+
         return $this->render('admin/products/edit', [
             'product'             => $product,
             'categories'          => $categoryModel->all('name ASC'),
+            'subcategories'       => $subcategories,
+            'tieredPrices'        => $tieredPrices,
             'brands'              => $brandModel->all('name ASC'),
             'scooterModels'       => $scooterModel->getAllWithBrand(),
             'selectedModelIds'    => $selectedModelIds,
@@ -407,15 +427,22 @@ class ProductController extends Controller {
             $videoThumbnail = trim($_POST['video_thumbnail_url']);
         }
 
+        $subcategoryId = !empty($_POST['subcategory_id']) ? (int)$_POST['subcategory_id'] : null;
+        $basePrice = isset($_POST['base_price']) && $_POST['base_price'] !== '' ? (float)$_POST['base_price'] : $price;
+        $moq = isset($_POST['moq']) && (int)$_POST['moq'] > 0 ? (int)$_POST['moq'] : 1;
+
         $data = [
             'name'                 => $name,
             'sku'                  => $sku,
             'barcode'              => $this->request->input('barcode'),
             'hsn_code'             => $this->request->input('hsn_code'),
             'category_id'          => $primaryCategoryId,
+            'subcategory_id'       => $subcategoryId,
             'brand_id'             => $primaryBrandId,
             'price'                => $price,
             'sale_price'           => $salePrice,
+            'base_price'           => $basePrice,
+            'moq'                  => $moq,
             'tax_percent'          => (float)$this->request->input('tax_percent', 18),
             'stock'                => (int)$this->request->input('stock', 0),
             'video_url'            => $videoUrl,
@@ -454,6 +481,9 @@ class ProductController extends Controller {
         $this->productModel->update($id, $data);
         $this->productModel->syncProductCategories($id, $categoryIds);
         $this->productModel->syncProductBrands($id, $brandIds);
+
+        // Save Wholesale Tiered Prices
+        $this->saveTieredPrices($id, $_POST['tier_min_qty'] ?? [], $_POST['tier_max_qty'] ?? [], $_POST['tier_unit_price'] ?? []);
 
         // 1. Handle Primary Image Radio selection from single image section
         $primaryImageId = (int)($this->request->input('primary_image_id', 0));
@@ -606,5 +636,25 @@ class ProductController extends Controller {
         if (!is_array($ids)) $ids = json_decode($ids, true) ?: [];
         $this->imageModel->reorder(array_map('intval', $ids));
         $this->jsonResponse(['success' => true]);
+    }
+
+    /**
+     * Save wholesale tiered volume prices for product
+     */
+    protected function saveTieredPrices(int $productId, array $minQtys, array $maxQtys, array $unitPrices): void {
+        $db = \App\Core\Database::getInstance();
+        $db->prepare("DELETE FROM tiered_prices WHERE product_id = ?")->execute([$productId]);
+        
+        if (empty($minQtys)) return;
+
+        $stmt = $db->prepare("INSERT INTO tiered_prices (product_id, min_qty, max_qty, unit_price) VALUES (?, ?, ?, ?)");
+        foreach ($minQtys as $idx => $minQty) {
+            $min = (int)$minQty;
+            $max = isset($maxQtys[$idx]) && $maxQtys[$idx] !== '' ? (int)$maxQtys[$idx] : null;
+            $unit = (float)($unitPrices[$idx] ?? 0);
+            if ($min > 0 && $unit > 0) {
+                $stmt->execute([$productId, $min, $max, $unit]);
+            }
+        }
     }
 }

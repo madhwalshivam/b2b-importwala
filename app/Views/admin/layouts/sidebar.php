@@ -14,12 +14,12 @@ $isActive = function(string $path) use ($currentUri): bool {
 ?>
 <aside class="w-72 bg-slate-900 text-slate-200 min-h-screen flex flex-col border-r border-slate-800 shrink-0 font-sans shadow-md">
 
-    <!-- Sidebar Header - Official Mudsor Logo -->
-    <div class="h-[76px] px-5 border-b border-slate-800 flex items-center justify-start bg-slate-900 shrink-0">
-        <a href="<?= url('admin/dashboard') ?>" class="flex items-center">
-            <img src="<?= asset('images/mudsor-logo.png') ?>" alt="Mudsor Logo"
-                class="h-10 w-auto max-w-[170px] object-contain"
-                onerror="this.onerror=null; this.src='https://via.placeholder.com/160x44?text=MUDSOR+CMS';">
+    <!-- Sidebar Header - Official ImportWala Logo Only -->
+    <div class="h-[76px] px-5 border-b border-slate-800 flex items-center justify-center bg-slate-950 shrink-0">
+        <a href="<?= url('admin/dashboard') ?>" class="flex items-center justify-center">
+            <div class="px-3 py-1.5 bg-white rounded-xl shadow-sm inline-block">
+                <img src="<?= url('assets/images/importwale-logo.png') ?>" alt="IMPORTWALA" class="h-8 w-auto object-contain">
+            </div>
         </a>
     </div>
 
@@ -62,6 +62,13 @@ $isActive = function(string $path) use ($currentUri): bool {
                     title="Hero Banners">
                     <i data-lucide="image" class="w-4 h-4 shrink-0"></i>
                     <span class="truncate">Banners</span>
+                </a>
+
+                <a href="<?= url('admin/featured-categories') ?>"
+                    class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/featured-categories') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
+                    title="Featured Categories">
+                    <i data-lucide="layers" class="w-4 h-4 shrink-0"></i>
+                    <span class="truncate">Feat. Cats</span>
                 </a>
 
                 <a href="<?= url('admin/homepage-sections') ?>"
@@ -130,10 +137,17 @@ $isActive = function(string $path) use ($currentUri): bool {
                     </a>
 
                     <a href="<?= url('admin/categories') ?>"
-                        class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/categories') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
+                        class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/categories') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
                         title="Categories">
                         <i data-lucide="layers" class="w-4 h-4 shrink-0"></i>
                         <span class="truncate">Categories</span>
+                    </a>
+
+                    <a href="<?= url('admin/subcategories') ?>"
+                        class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/subcategories') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
+                        title="Sub-categories">
+                        <i data-lucide="folder-tree" class="w-4 h-4 shrink-0"></i>
+                        <span class="truncate">Sub-cats</span>
                     </a>
                 <?php endif; ?>
 

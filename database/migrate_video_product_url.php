@@ -1,15 +1,8 @@
 <?php
-$config = require __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../app/Core/Database.php';
 
 try {
-    $dsn = sprintf(
-        "mysql:host=%s;port=%s;dbname=%s;charset=%s",
-        $config['host'],
-        $config['port'],
-        $config['dbname'],
-        $config['charset']
-    );
-    $pdo = new PDO($dsn, $config['username'], $config['password'], $config['options']);
+    $pdo = App\Core\Database::getInstance();
     
     // Check if column product_url exists
     $stmt = $pdo->query("SHOW COLUMNS FROM homepage_videos LIKE 'product_url'");

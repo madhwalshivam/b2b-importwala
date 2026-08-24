@@ -1,14 +1,8 @@
 <?php
 require_once __DIR__ . '/../app/Core/Database.php';
 
-$config = require __DIR__ . '/../config/database.php';
-
 try {
-    $dsn = "mysql:host={$config['host']};dbname={$config['dbname']};charset={$config['charset']}";
-    $pdo = new PDO($dsn, $config['username'], $config['password'], [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-    ]);
+    $pdo = App\Core\Database::getInstance();
     
     echo "Updating categories table structure...\n";
 

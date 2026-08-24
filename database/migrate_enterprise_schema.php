@@ -1,16 +1,10 @@
 <?php
 // Migration script for Enterprise Production Schema
 
-require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../app/Core/Database.php';
 
 try {
-    $dbConfig = require __DIR__ . '/../config/database.php';
-    $pdo = new PDO(
-        "mysql:host={$dbConfig['host']};port={$dbConfig['port']};dbname={$dbConfig['dbname']};charset={$dbConfig['charset']}",
-        $dbConfig['username'],
-        $dbConfig['password'],
-        $dbConfig['options']
-    );
+    $pdo = App\Core\Database::getInstance();
 
     echo "Running Enterprise Database Schema Migration...\n";
 

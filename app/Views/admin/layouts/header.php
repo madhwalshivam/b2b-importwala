@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mudsor Admin Panel CMS</title>
+    <title>ImportWala Admin Panel</title>
 
     <!-- Central Theme Design Tokens & Fonts -->
+    <link rel="stylesheet" href="<?= asset('assets/css/everful-theme.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/theme.css') ?>">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,18 +21,18 @@
                     },
                     colors: {
                         theme: {
-                            primary: 'var(--color-primary)',
-                            'primary-dark': 'var(--color-primary-dark)',
-                            secondary: 'var(--color-secondary)',
-                            accent: 'var(--color-accent)',
-                            bg: 'var(--color-bg)',
-                            'bg-soft': 'var(--color-bg-soft)',
-                            text: 'var(--color-text)',
-                            'text-muted': 'var(--color-text-muted)',
-                            success: 'var(--color-success)',
-                            warning: 'var(--color-warning)',
-                            danger: 'var(--color-danger)',
-                            gold: 'var(--color-highlight-gold)'
+                            primary: '#f05a29',
+                            'primary-dark': '#d8481b',
+                            secondary: '#111827',
+                            accent: '#f05a29',
+                            bg: '#ffffff',
+                            'bg-soft': '#f9fafb',
+                            text: '#111827',
+                            'text-muted': '#6b7280',
+                            success: '#10b981',
+                            warning: '#f59e0b',
+                            danger: '#ef4444',
+                            gold: '#f59e0b'
                         }
                     }
                 }
@@ -43,15 +44,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style id="mudsor-brand-overrides">
+    <style id="importwala-brand-overrides">
         [x-cloak] {
             display: none !important;
         }
 
         body {
             font-family: var(--font-sans);
-            background-color: var(--color-bg-soft);
-            color: var(--color-text);
+            background-color: var(--color-bg-soft, #f9fafb);
+            color: var(--color-text, #111827);
         }
 
         .line-clamp-1 {
@@ -69,123 +70,95 @@
         }
 
         html:not(.dark) .bg-red-50 {
-            background-color: rgba(168, 17, 28, .06) !important
+            background-color: rgba(240, 90, 41, 0.08) !important;
         }
 
         html:not(.dark) .bg-red-100 {
-            background-color: rgba(168, 17, 28, .10) !important
+            background-color: rgba(240, 90, 41, 0.12) !important;
         }
 
         html:not(.dark) .bg-red-200 {
-            background-color: rgba(168, 17, 28, .18) !important
+            background-color: rgba(240, 90, 41, 0.20) !important;
         }
 
-        .bg-red-500 {
-            background-color: #A8111C !important
+        .bg-red-500, .bg-red-600 {
+            background-color: #f05a29 !important;
         }
 
-        .bg-red-600 {
-            background-color: #A8111C !important
-        }
-
-        .bg-red-700 {
-            background-color: #6E0D14 !important
-        }
-
-        .bg-red-800 {
-            background-color: #6E0D14 !important
+        .bg-red-700, .bg-red-800 {
+            background-color: #d8481b !important;
         }
 
         .hover\:bg-red-600:hover {
-            background-color: #A8111C !important
+            background-color: #f05a29 !important;
         }
 
         .hover\:bg-red-700:hover {
-            background-color: #6E0D14 !important
+            background-color: #d8481b !important;
         }
 
         .text-red-400 {
-            color: rgba(168, 17, 28, .70) !important
+            color: rgba(240, 90, 41, 0.8) !important;
         }
 
-        .text-red-500 {
-            color: #A8111C !important
-        }
-
-        .text-red-600 {
-            color: #A8111C !important
+        .text-red-500, .text-red-600 {
+            color: #f05a29 !important;
         }
 
         .text-red-700 {
-            color: #6E0D14 !important
+            color: #d8481b !important;
         }
 
         .hover\:text-red-600:hover {
-            color: #A8111C !important
+            color: #f05a29 !important;
         }
 
         .hover\:text-red-700:hover {
-            color: #6E0D14 !important
+            color: #d8481b !important;
         }
 
-        .border-red-500 {
-            border-color: #A8111C !important
-        }
-
-        .border-red-600 {
-            border-color: #A8111C !important
+        .border-red-500, .border-red-600 {
+            border-color: #f05a29 !important;
         }
 
         .border-red-700 {
-            border-color: #6E0D14 !important
+            border-color: #d8481b !important;
         }
 
         .hover\:border-red-600:hover {
-            border-color: #A8111C !important
+            border-color: #f05a29 !important;
         }
 
         .focus\:border-red-600:focus {
-            border-color: #A8111C !important
+            border-color: #f05a29 !important;
         }
 
-        .focus\:ring-red-500:focus {
-            --tw-ring-color: #A8111C !important
+        .focus\:ring-red-500:focus, .focus\:ring-red-600:focus {
+            --tw-ring-color: #f05a29 !important;
         }
 
-        .focus\:ring-red-600:focus {
-            --tw-ring-color: #A8111C !important
+        .fill-red-500, .fill-red-600 {
+            fill: #f05a29 !important;
         }
 
-        .fill-red-500 {
-            fill: #A8111C !important
-        }
-
-        .fill-red-600 {
-            fill: #A8111C !important
-        }
-
-        .text-amber-400,
-        .text-amber-500 {
-            color: #D4A017 !important
+        .text-amber-400, .text-amber-500 {
+            color: #f05a29 !important;
         }
 
         .fill-amber-400 {
-            fill: #D4A017 !important
+            fill: #f05a29 !important;
         }
 
-        .bg-purple-600,
-        .bg-indigo-600 {
-            background-color: #A8111C !important
+        .bg-purple-600, .bg-indigo-600 {
+            background-color: #f05a29 !important;
         }
 
-        .hover\:bg-purple-700:hover,
-        .hover\:bg-indigo-700:hover {
-            background-color: #6E0D14 !important
+        .hover\:bg-purple-700:hover, .hover\:bg-indigo-700:hover {
+            background-color: #d8481b !important;
         }
 
-        .text-purple-600,
-        .text-indigo-600 {
-            color: #A8111C !important
+        .text-purple-600, .text-indigo-600 {
+            color: #f05a29 !important;
         }
     </style>
 
@@ -225,7 +198,7 @@
         });
     </script>
 
-    <!-- Central Mudsor Toast & Logout Modal Systems -->
+    <!-- Central Toast & Logout Modal Systems -->
     <script src="<?= asset('js/toast.js') ?>"></script>
     <script src="<?= asset('js/logout-modal.js') ?>"></script>
 </head>
@@ -240,8 +213,11 @@
 
         <!-- Fixed Top Header with Theme Switcher -->
         <header
-            class="bg-white border-b border-gray-900 px-6 py-4 flex items-center justify-between shadow-xs shrink-0 sticky top-0 z-30">
-            <h1 class="text-base font-semibold text-gray-900 tracking-tight">Mudsor Enterprise E-Commerce CMS</h1>
+            class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-xs shrink-0 sticky top-0 z-30">
+            <h1 class="text-base font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#f05a29]"></span>
+               Wholesale Admin Panel
+            </h1>
 
             <div class="flex items-center space-x-3">
                 <button type="button" onclick="toggleMudsorTheme()"

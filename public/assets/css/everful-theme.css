@@ -49,40 +49,109 @@ a {
   text-decoration: none;
 }
 
-/* --- Top Announcement Bar --- */
+/* --- Top Announcement Bar Zero-Gap Continuous Ticker --- */
 .top-announcement-bar {
-  background-color: #FBF8F6;
-  color: #6B1F2A;
-  text-align: center;
-  padding: 8px 24px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  background: #FFF2ED;
+  color: #D8481B;
+  height: 38px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #EFE8E3;
+  border-bottom: 1px solid #FFE2E2;
+  overflow: hidden;
+  position: relative;
+  font-size: 12.5px;
+  font-weight: 500; /* Sleek thinner font weight */
+  line-height: 1;
 }
 
-.top-announcement-content {
-  margin: 0 auto;
+.announcement-ticker-wrapper {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  margin-right: 12px;
+  mask-image: linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 12px, black calc(100% - 12px), transparent);
 }
 
-.top-announcement-content a {
-  text-decoration: underline;
-  color: #6B1F2A;
+.announcement-ticker-track {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  animation: zero-gap-ticker 24s linear infinite;
+  will-change: transform;
+}
+
+.announcement-ticker-wrapper:hover .announcement-ticker-track {
+  animation-play-state: paused;
+}
+
+.ticker-text {
+  font-size: 12.5px;
+  font-weight: 500; /* Thinner font weight */
+  color: #D8481B;
+  white-space: nowrap;
+  display: inline-block;
+  letter-spacing: 0.1px;
+}
+
+.announcement-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 12px;
+  padding-right: 16px;
+  background: #FFF2ED;
+  z-index: 5;
+  height: 100%;
+  flex-shrink: 0;
+  box-shadow: -8px 0 12px rgba(255, 242, 237, 0.9);
+}
+
+.announcement-fixed-cta {
+  background: #F05A29;
+  color: #ffffff !important;
+  border: 1px solid #D8481B;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-decoration: none !important;
+  letter-spacing: 0.5px;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.announcement-fixed-cta:hover {
+  background: #D8481B;
+  border-color: #B33610;
 }
 
 .announcement-close-btn {
   background: none;
   border: none;
-  font-size: 16px;
-  color: #888;
+  font-size: 14px;
+  color: #9CA3AF;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.announcement-close-btn:hover {
+  color: #111827;
+}
+
+@keyframes zero-gap-ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* --- Header & Navigation --- */
@@ -156,6 +225,47 @@ a {
 .camera-search-trigger:hover {
   background: rgba(0,0,0,0.06);
   color: #111;
+}
+
+/* Voice Search Microphone Trigger & Listening Animation */
+.voice-search-trigger {
+  background: none !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: #71717A;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 50%;
+  transition: all 0.2s;
+  margin-right: 2px;
+}
+
+.voice-search-trigger:hover {
+  background: rgba(240, 90, 41, 0.12);
+  color: #F05A29;
+}
+
+.voice-search-trigger.mic-listening {
+  color: #ffffff !important;
+  background: #F05A29 !important;
+  animation: mic-pulse 1.2s infinite ease-in-out;
+}
+
+@keyframes mic-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(240, 90, 41, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(240, 90, 41, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(240, 90, 41, 0);
+  }
 }
 
 /* Floating "Search by Image" Tooltip */

@@ -34,12 +34,16 @@ class TokenService {
         $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
 
-        // Store hashed refresh token in DB
-        $stmt = $db->prepare("
-            INSERT INTO refresh_tokens (user_id, user_type, token_hash, expires_at, ip_address, user_agent)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([$userId, $userType, $tokenHash, $expiresAt, $ipAddress, $userAgent]);
+        // Store hashed refresh token in DB if table exists
+        try {
+            $stmt = $db->prepare("
+                INSERT INTO refresh_tokens (user_id, user_type, token_hash, expires_at, ip_address, user_agent)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ");
+            $stmt->execute([$userId, $userType, $tokenHash, $expiresAt, $ipAddress, $userAgent]);
+        } catch (\Throwable $e) {
+            // Silently ignore DB errors if table doesn't exist
+        }
 
         // 3. Set HttpOnly, Secure, SameSite Cookies
         self::setTokenCookies($accessToken, $rawRefreshToken);
@@ -105,9 +109,11 @@ class TokenService {
      * Revoke all active refresh tokens for a user
      */
     public static function revokeUserTokens(int $userId, string $userType = 'customer'): void {
-        $db = Database::getInstance();
-        $stmt = $db->prepare("UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND user_type = ? AND revoked_at IS NULL");
-        $stmt->execute([$userId, $userType]);
+        try {
+            $db = Database::getInstance();
+            $stmt = $db->prepare("UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = ? AND user_type = ? AND revoked_at IS NULL");
+            $stmt->execute([$userId, $userType]);
+        } catch (\Throwable $e) {}
         
         self::clearCookies();
         self::logAuth('logout', $userId, $userType, 'User logged out and tokens revoked');

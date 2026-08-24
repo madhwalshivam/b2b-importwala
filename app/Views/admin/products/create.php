@@ -45,8 +45,8 @@ include __DIR__ . '/../layouts/header.php';
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Primary Category *</label>
-                    <select name="category_id" required
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-red-600">
+                    <select id="mainCategorySelect" name="category_id" required onchange="loadSubcategories(this.value)"
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
                         <option value="">-- Select Primary Category --</option>
                         <?php foreach ($categories as $cat): ?>
                             <option value="<?= $cat['id'] ?>"><?= htmlspecialchars(htmlspecialchars_decode($cat['name'])) ?>
@@ -56,9 +56,17 @@ include __DIR__ . '/../layouts/header.php';
                 </div>
 
                 <div>
+                    <label class="block font-semibold text-gray-700 uppercase mb-1">Sub-category</label>
+                    <select id="subCategorySelect" name="subcategory_id"
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
+                        <option value="">-- Select Sub-category (Optional) --</option>
+                    </select>
+                </div>
+
+                <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Primary Scooter Brand</label>
                     <select name="brand_id"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
                         <option value="">-- Select Primary Brand --</option>
                         <?php foreach ($brands as $b): ?>
                             <option value="<?= $b['id'] ?>"><?= htmlspecialchars(htmlspecialchars_decode($b['name'])) ?>
@@ -68,27 +76,27 @@ include __DIR__ . '/../layouts/header.php';
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-gray-700 uppercase mb-1">Regular Price (₹) *</label>
+                    <label class="block font-semibold text-gray-700 uppercase mb-1">Retail Single-Piece Price (₹) *</label>
                     <input type="number" step="0.01" name="price" required placeholder="999"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-gray-700 uppercase mb-1">Sale Discounted Price (₹)</label>
+                    <label class="block font-semibold text-gray-700 uppercase mb-1">Retail Discounted Sale Price (₹)</label>
                     <input type="number" step="0.01" name="sale_price" placeholder="449"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Inventory Stock Units *</label>
                     <input type="number" name="stock" required value="100" min="0"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Status</label>
                     <select name="status"
-                        class="w-full h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                     </select>
@@ -97,13 +105,13 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">HSN Code</label>
                     <input type="text" name="hsn_code" value="8714.99.90" placeholder="e.g. 8714.99.90"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-mono font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-mono font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">GST Rate (%) *</label>
                     <select name="tax_percent" required
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
                         <option value="0">0% (Exempt / Nil Rated)</option>
                         <option value="5">5% GST</option>
                         <option value="12">12% GST</option>
@@ -113,8 +121,69 @@ include __DIR__ . '/../layouts/header.php';
                 </div>
             </div>
             <p class="text-[11px] text-gray-500 font-medium italic mt-2">
-                * All product prices on Mudsor are treated as <strong>GST INCLUSIVE</strong>. GST % is used to calculate base price and GST breakdown for tax invoices.
+                * All product prices are treated as <strong>GST INCLUSIVE</strong>.
             </p>
+        </div>
+
+        <!-- SECTION 1B: B2B WHOLESALE PRICING & TIER DISCOUNTS -->
+        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-5 shadow-xs">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="tag" class="w-4 h-4 text-[#f05a29]"></i>
+                    <h3 class="font-bold text-sm text-gray-900">B2B Wholesale Pricing &amp; Volume Discounts</h3>
+                </div>
+                <button type="button" onclick="addTierRow()"
+                    class="px-3.5 py-1.5 bg-orange-50 text-[#f05a29] border border-orange-200 font-bold text-xs rounded-xl hover:bg-orange-100 transition flex items-center space-x-1 cursor-pointer">
+                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                    <span>Add Tier Row</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+                <div>
+                    <label class="block font-semibold text-gray-700 uppercase mb-1">Wholesale Base Price (₹) *</label>
+                    <input type="number" step="0.01" name="base_price" placeholder="e.g. 350.00"
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity (MOQ) *</label>
+                    <input type="number" name="moq" value="1" min="1"
+                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-gray-700 uppercase mb-2 text-xs">Volume Discount Tiers (Min Qty &rarr; Unit Price)</label>
+                <div class="overflow-x-auto border border-gray-200 rounded-xl">
+                    <table class="w-full text-xs text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-gray-700 font-bold uppercase tracking-wider text-[10px] border-b border-gray-200">
+                                <th class="py-2.5 px-3">Min Qty</th>
+                                <th class="py-2.5 px-3">Max Qty (Blank for &infin;)</th>
+                                <th class="py-2.5 px-3">Wholesale Unit Price (₹)</th>
+                                <th class="py-2.5 px-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tieredPricesBody" class="divide-y divide-gray-100">
+                            <tr>
+                                <td class="py-2 px-3">
+                                    <input type="number" name="tier_min_qty[]" value="1" min="1" required class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+                                </td>
+                                <td class="py-2 px-3">
+                                    <input type="number" name="tier_max_qty[]" value="10" placeholder="10" class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+                                </td>
+                                <td class="py-2 px-3">
+                                    <input type="number" step="0.01" name="tier_unit_price[]" placeholder="350.00" class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+                                </td>
+                                <td class="py-2 px-3 text-right">
+                                    <button type="button" onclick="this.closest('tr').remove()" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <!-- SECTION 1B: WARRANTY & OEM COMPARISON DATA -->
@@ -480,6 +549,53 @@ include __DIR__ . '/../layouts/header.php';
         </div>
     </form>
 </div>
+
+<script>
+    function loadSubcategories(categoryId) {
+        const select = document.getElementById('subCategorySelect');
+        if (!select) return;
+        select.innerHTML = '<option value="">Loading...</option>';
+        if (!categoryId) {
+            select.innerHTML = '<option value="">-- Select Sub-category (Optional) --</option>';
+            return;
+        }
+        fetch('<?= url("admin/subcategories/by-category/") ?>' + categoryId)
+            .then(res => res.json())
+            .then(data => {
+                select.innerHTML = '<option value="">-- Select Sub-category (Optional) --</option>';
+                if (data.success && data.subcategories) {
+                    data.subcategories.forEach(sub => {
+                        select.innerHTML += `<option value="${sub.id}">${sub.name}</option>`;
+                    });
+                }
+            })
+            .catch(() => {
+                select.innerHTML = '<option value="">-- Select Sub-category (Optional) --</option>';
+            });
+    }
+
+    function addTierRow() {
+        const tbody = document.getElementById('tieredPricesBody');
+        if (!tbody) return;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="py-2 px-3">
+                <input type="number" name="tier_min_qty[]" required min="1" placeholder="e.g. 10" class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+            </td>
+            <td class="py-2 px-3">
+                <input type="number" name="tier_max_qty[]" placeholder="e.g. 50 (or leave blank)" class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+            </td>
+            <td class="py-2 px-3">
+                <input type="number" step="0.01" name="tier_unit_price[]" required placeholder="e.g. 320.00" class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+            </td>
+            <td class="py-2 px-3 text-right">
+                <button type="button" onclick="this.closest('tr').remove()" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        if (window.lucide) lucide.createIcons();
+    }
+</script>
 
 <?php
 include __DIR__ . '/../layouts/footer.php';

@@ -62,7 +62,6 @@ include __DIR__ . '/../layouts/header.php';
                         <th class="py-3 px-4 text-center w-16">Image</th>
                         <th class="py-3 px-4">Category Name</th>
                         <th class="py-3 px-4">Slug</th>
-                        <th class="py-3 px-4">Parent Category</th>
                         <th class="py-3 px-4 text-center">Linked Products</th>
                         <th class="py-3 px-4 text-center">Sort Order</th>
                         <th class="py-3 px-4 text-center">Status</th>
@@ -72,7 +71,7 @@ include __DIR__ . '/../layouts/header.php';
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                     <?php if (empty($categories)): ?>
                         <tr>
-                            <td colspan="8" class="p-8 text-center text-slate-500">
+                            <td colspan="7" class="p-8 text-center text-slate-500">
                                 <div class="flex flex-col items-center justify-center space-y-2">
                                     <i data-lucide="folder-open" class="w-8 h-8 text-slate-300"></i>
                                     <span class="font-medium text-slate-600">No categories found</span>
@@ -122,19 +121,6 @@ include __DIR__ . '/../layouts/header.php';
                                 <td class="py-3 px-4">
                                     <span
                                         class="font-mono text-[11px] text-slate-500 bg-slate-100/70 px-2 py-0.5 rounded-md border border-slate-200/50"><?= htmlspecialchars($cat['slug']) ?></span>
-                                </td>
-
-                                <!-- Parent Category -->
-                                <td class="py-3 px-4">
-                                    <?php if (!empty($cat['parent_name'])): ?>
-                                        <span
-                                            class="inline-flex items-center space-x-1.5 text-xs text-slate-700 font-medium bg-slate-50 border border-slate-200/70 px-2 py-1 rounded-lg">
-                                            <i data-lucide="corner-down-right" class="w-3 h-3 text-slate-400"></i>
-                                            <span><?= htmlspecialchars($cat['parent_name']) ?></span>
-                                        </span>
-                                    <?php else: ?>
-                                        <span class="text-slate-400 text-[11px] font-mono">—</span>
-                                    <?php endif; ?>
                                 </td>
 
                                 <!-- Linked Products Count -->
@@ -249,21 +235,6 @@ include __DIR__ . '/../layouts/header.php';
                         <input type="text" x-model="formData.slug" placeholder="footrests-crash-guards"
                             class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-600 focus:outline-none focus:border-red-600 focus:bg-white transition text-xs">
                     </div>
-                </div>
-
-                <!-- Parent Category Selection -->
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Parent Category</label>
-                    <select x-model="formData.parent_id"
-                        class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-red-600 focus:bg-white transition text-xs">
-                        <option value="">None (Root Category)</option>
-                        <?php foreach ($categories as $pCat): ?>
-                            <option value="<?= $pCat['id'] ?>" :disabled="formData.id == <?= $pCat['id'] ?>">
-                                <?= htmlspecialchars($pCat['name']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <p class="text-[10px] text-slate-400 mt-1">Select a parent category if this is a sub-category.</p>
                 </div>
 
                 <!-- CATEGORY IMAGE SELECTION (File Upload or Image URL) -->

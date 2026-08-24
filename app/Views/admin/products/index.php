@@ -6,26 +6,25 @@ include __DIR__ . '/../layouts/header.php';
 
     <!-- Top Header -->
     <div
-        class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+        class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
         <div>
             <div class="flex items-center space-x-2">
                 <span
-                    class="px-2.5 py-1 text-[11px] font-semibold uppercase bg-red-50 text-red-600 rounded-lg tracking-wider border border-red-100">
+                    class="px-2.5 py-1 text-[11px] font-bold uppercase bg-orange-50 text-[#f05a29] rounded-lg tracking-wider border border-orange-200">
                     Inventory & Catalog
                 </span>
-                <span class="text-slate-400 text-xs">•</span>
-                <span class="text-xs text-slate-500 font-medium">All Products</span>
+                <span class="text-gray-300 text-xs">•</span>
+                <span class="text-xs text-gray-500 font-semibold">All Products</span>
             </div>
-            <h1 class="text-2xl font-semibold text-slate-900 mt-1 tracking-tight">Products & Accessories Catalog</h1>
-            <p class="text-xs text-slate-500 mt-0.5 font-medium max-w-2xl">
-                Manage catalog items, prices, inventory stock levels, category assignments, and EV scooter model fitment
-                specifications.
+            <h1 class="text-2xl font-black text-gray-900 mt-1 tracking-tight">Products Catalog</h1>
+            <p class="text-xs text-gray-500 mt-0.5 font-medium max-w-2xl">
+                Manage wholesale &amp; retail products, prices, volume discount tiers, stock levels, and category assignments.
             </p>
         </div>
         <?php if (\App\Core\Auth::hasPermission('products.add')): ?>
             <div class="flex items-center space-x-2">
                 <a href="<?= url('admin/products/create') ?>"
-                    class="h-10 px-5 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl transition shadow-xs flex items-center space-x-2 cursor-pointer">
+                    class="h-10 px-5 bg-[#f05a29] hover:bg-[#d8481b] text-white font-bold text-xs rounded-xl transition shadow-lg shadow-[#f05a29]/30 flex items-center space-x-2 cursor-pointer">
                     <i data-lucide="plus" class="w-4 h-4 text-white"></i>
                     <span>Add Product</span>
                 </a>

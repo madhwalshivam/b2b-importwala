@@ -7,7 +7,7 @@ class Category extends Model {
     protected string $table = 'categories';
 
     public function getActiveCategories(): array {
-        return $this->where("status = 'active'", [], "sort_order ASC, name ASC");
+        return $this->where("status = 'active' AND parent_id IS NULL", [], "sort_order ASC, name ASC");
     }
 
     public function getFeaturedCategories(): array {
@@ -29,6 +29,7 @@ class Category extends Model {
                        (SELECT COUNT(*) FROM products pr WHERE pr.category_id = c.id) AS product_count
                 FROM categories c
                 LEFT JOIN categories p ON c.parent_id = p.id
+                WHERE c.parent_id IS NULL
                 ORDER BY c.sort_order ASC, c.name ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll();

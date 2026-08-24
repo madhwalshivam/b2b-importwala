@@ -50,11 +50,15 @@ class AuthController extends Controller {
             $_SESSION['admin_email'] = $admin['email'];
             $_SESSION['admin_role_id'] = $admin['role_id'];
 
-            // Issue JWT Access Token & Refresh Token
-            TokenService::issueTokens($admin['id'], 'admin');
+            // Issue JWT Access Token & Refresh Token (optional)
+            try {
+                TokenService::issueTokens($admin['id'], 'admin');
+            } catch (\Throwable $e) {}
 
-            // Update last login
-            $db->prepare("UPDATE admin_users SET last_login_at = NOW() WHERE id = ?")->execute([$admin['id']]);
+            // Update last login (optional column)
+            try {
+                $db->prepare("UPDATE admin_users SET last_login_at = NOW() WHERE id = ?")->execute([$admin['id']]);
+            } catch (\Throwable $e) {}
 
             $this->response->redirect(url('admin/dashboard') . '?success=Logged+in+successfully');
         } else {
@@ -69,7 +73,9 @@ class AuthController extends Controller {
             session_start();
         }
         if (!empty($_SESSION['admin_user_id'])) {
-            TokenService::revokeUserTokens((int)$_SESSION['admin_user_id'], 'admin');
+            try {
+                TokenService::revokeUserTokens((int)$_SESSION['admin_user_id'], 'admin');
+            } catch (\Throwable $e) {}
         }
         unset($_SESSION['admin_user_id']);
         unset($_SESSION['admin_name']);

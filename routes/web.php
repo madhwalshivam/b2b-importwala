@@ -137,6 +137,20 @@ $router->get('/admin/homepage-compare', 'Admin\HomepageCompareController@index',
 $router->post('/admin/homepage-compare/add', 'Admin\HomepageCompareController@add', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/homepage-compare/remove', 'Admin\HomepageCompareController@remove', [AdminMiddleware::class, CsrfMiddleware::class]);
 
+// Homepage Featured Categories Manager (EverfulWholesale UI)
+$router->get('/admin/featured-categories', 'Admin\FeaturedCategoryController@index', [AdminMiddleware::class]);
+$router->post('/admin/featured-categories/store-category', 'Admin\FeaturedCategoryController@storeCategory', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/featured-categories/update-category/{id}', 'Admin\FeaturedCategoryController@updateCategory', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/featured-categories/delete-category/{id}', 'Admin\FeaturedCategoryController@deleteCategory', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/featured-categories/reorder-categories', 'Admin\FeaturedCategoryController@reorderCategories', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/featured-categories/store-subcategory', 'Admin\FeaturedCategoryController@storeSubcategory', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/featured-categories/update-subcategory/{id}', 'Admin\FeaturedCategoryController@updateSubcategory', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/featured-categories/delete-subcategory/{id}', 'Admin\FeaturedCategoryController@deleteSubcategory', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/featured-categories/reorder-subcategories', 'Admin\FeaturedCategoryController@reorderSubcategories', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Public API Endpoints for Featured Categories
+$router->get('/api/featured-categories', 'Admin\FeaturedCategoryController@apiIndex');
+
 // Homepage Sections Manager (Featured, Deals, Best Sellers, New Arrivals, Flash Sale)
 $router->get('/admin/homepage-sections', 'Admin\HomepageSectionsController@index', [AdminMiddleware::class]);
 $router->get('/admin/homepage-sections/search-products', 'Admin\HomepageSectionsController@searchProducts', [AdminMiddleware::class]);
@@ -205,6 +219,16 @@ $router->post('/admin/categories/update/{id}', 'Admin\CategoryController@update'
 $router->get('/admin/categories/delete/{id}', 'Admin\CategoryController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
 $router->post('/admin/categories/delete/{id}', 'Admin\CategoryController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
 $router->post('/admin/categories/reassign-delete/{id}', 'Admin\CategoryController@reassignAndDelete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
+
+// Sub-categories Management
+$router->get('/admin/subcategories', 'Admin\SubcategoryController@index', [AdminMiddleware::class]);
+$router->get('/admin/subcategories/get/{id}', 'Admin\SubcategoryController@get', [AdminMiddleware::class]);
+$router->get('/admin/subcategories/by-category/{categoryId}', 'Admin\SubcategoryController@getByCategory', [AdminMiddleware::class]);
+$router->post('/admin/subcategories/store', 'Admin\SubcategoryController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/subcategories/update/{id}', 'Admin\SubcategoryController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/subcategories/delete/{id}', 'Admin\SubcategoryController@delete', [AdminMiddleware::class]);
+$router->post('/admin/subcategories/delete/{id}', 'Admin\SubcategoryController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+
 
 // Orders Management
 $router->get('/admin/orders', 'Admin\OrderController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
