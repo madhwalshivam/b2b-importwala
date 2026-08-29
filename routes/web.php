@@ -14,6 +14,15 @@ $router->get('/catalog', 'Web\CatalogController@index');
 $router->get('/product/{slug}', 'Web\ProductDetailController@show');
 $router->get('/cart', 'Web\CartViewController@index');
 
+// Multi-Product B2B Inquiry Routes
+$router->get('/inquiry', 'Web\InquiryViewController@index');
+$router->get('/api/inquiry', 'Api\InquiryApiController@getInquiry');
+$router->post('/api/inquiry/add', 'Api\InquiryApiController@addItem');
+$router->post('/api/inquiry/toggle', 'Api\InquiryApiController@toggleItem');
+$router->post('/api/inquiry/update', 'Api\InquiryApiController@updateItem');
+$router->post('/api/inquiry/remove', 'Api\InquiryApiController@removeItem');
+$router->post('/api/inquiry/submit', 'Api\InquiryApiController@submit');
+
 // High-Scale Ephemeral REST Cart & Checkout APIs
 $router->get('/api/cart', 'Api\CartApiController@getCart');
 $router->post('/api/cart/add', 'Api\CartApiController@addItem');
@@ -46,8 +55,7 @@ $router->post('/compare/toggle', 'CompareController@toggle', [CsrfMiddleware::cl
 $router->get('/compare/clear', 'CompareController@clear');
 $router->post('/compare/clear', 'CompareController@clear');
 
-// Cart & Checkout
-$router->get('/cart', 'CartController@index');
+// Cart & Checkout Actions
 $router->post('/cart/add', 'CartController@add', [CsrfMiddleware::class]);
 $router->post('/cart/update', 'CartController@update', [CsrfMiddleware::class]);
 $router->post('/cart/remove', 'CartController@remove', [CsrfMiddleware::class]);
@@ -78,6 +86,16 @@ $router->get('/shipping-policy', fn() => (new App\Controllers\PageController())-
 $router->get('/cancellation-policy', fn() => (new App\Controllers\PageController())->show('cancellation-policy'));
 $router->post('/wholesale/inquire', 'WholesaleController@submit');
 
+// RFQ (Request For Quote) Public Submission
+$router->post('/api/rfq/submit', 'Api\RfqApiController@submit');
+
+// Visual Search & Image Similarity API
+$router->get('/api/visual-search', 'Api\VisualSearchController@search');
+$router->post('/api/visual-search', 'Api\VisualSearchController@search');
+$router->post('/visual_search.php', 'Api\VisualSearchController@search');
+$router->get('/visual_search.php', 'Api\VisualSearchController@search');
+$router->get('/api/visual-search/reindex', 'Api\VisualSearchController@reindex');
+
 // Storefront Customer Product Review Submission
 $router->post('/product/review/add', 'ReviewController@submitStorefront', [CsrfMiddleware::class]);
 
@@ -105,6 +123,20 @@ $router->get('/admin/logout', 'AuthController@logout');
 // ----------------------------------------------------
 $router->get('/admin', fn() => (new App\Core\Response())->redirect(url('admin/dashboard')));
 $router->get('/admin/dashboard', 'Admin\DashboardController@index', [AdminMiddleware::class]);
+
+// Admin B2B Inquiry Manager
+$router->get('/admin/inquiries', 'Admin\InquiryController@index', [AdminMiddleware::class]);
+$router->get('/admin/inquiries/{id}', 'Admin\InquiryController@show', [AdminMiddleware::class]);
+$router->post('/admin/inquiries/update-status/{id}', 'Admin\InquiryController@updateStatus', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/inquiries/update-notes/{id}', 'Admin\InquiryController@updateNotes', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/inquiries/delete/{id}', 'Admin\InquiryController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Admin RFQ (Request For Quote) Manager
+$router->get('/admin/rfq', 'Admin\RfqController@index', [AdminMiddleware::class]);
+$router->get('/admin/rfq/export-csv', 'Admin\RfqController@exportCsv', [AdminMiddleware::class]);
+$router->get('/admin/rfq/{id}', 'Admin\RfqController@show', [AdminMiddleware::class]);
+$router->post('/admin/rfq/update-status/{id}', 'Admin\RfqController@updateStatus', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/rfq/delete/{id}', 'Admin\RfqController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
 
 // Live Analytics
 $router->get('/admin/analytics', 'Admin\AnalyticsController@index', [AdminMiddleware::class]);
@@ -151,6 +183,21 @@ $router->post('/admin/featured-categories/reorder-subcategories', 'Admin\Feature
 // Public API Endpoints for Featured Categories
 $router->get('/api/featured-categories', 'Admin\FeaturedCategoryController@apiIndex');
 
+// ============================================================
+// Product Collection Cards Manager
+// ============================================================
+$router->get('/admin/collection-cards', 'Admin\CollectionCardController@index', [AdminMiddleware::class]);
+$router->post('/admin/collection-cards/store', 'Admin\CollectionCardController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/collection-cards/update/{id}', 'Admin\CollectionCardController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/collection-cards/delete/{id}', 'Admin\CollectionCardController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/collection-cards/delete/{id}', 'Admin\CollectionCardController@delete', [AdminMiddleware::class]);
+$router->post('/admin/collection-cards/update-products/{id}', 'Admin\CollectionCardController@updateProducts', [AdminMiddleware::class]);
+$router->get('/admin/collection-cards/search-products', 'Admin\CollectionCardController@searchProducts', [AdminMiddleware::class]);
+$router->post('/admin/collection-cards/reorder', 'Admin\CollectionCardController@reorder', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Public API for Collection Cards (storefront)
+$router->get('/api/collection-cards', 'Admin\CollectionCardController@apiIndex');
+
 // Homepage Sections Manager (Featured, Deals, Best Sellers, New Arrivals, Flash Sale)
 $router->get('/admin/homepage-sections', 'Admin\HomepageSectionsController@index', [AdminMiddleware::class]);
 $router->get('/admin/homepage-sections/search-products', 'Admin\HomepageSectionsController@searchProducts', [AdminMiddleware::class]);
@@ -189,6 +236,7 @@ $router->get('/admin/products/create', 'Admin\ProductController@create', [AdminM
 $router->post('/admin/products/store', 'Admin\ProductController@store', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.add'))->execute()]);
 $router->get('/admin/products/edit/{id}', 'Admin\ProductController@edit', [AdminMiddleware::class, fn() => (new PermissionMiddleware('products.edit'))->execute()]);
 $router->post('/admin/products/update/{id}', 'Admin\ProductController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.edit'))->execute()]);
+$router->post('/admin/products/toggle-flag', 'Admin\ProductController@toggleFlag', [AdminMiddleware::class]);
 $router->get('/admin/products/delete/{id}', 'Admin\ProductController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('products.delete'))->execute()]);
 $router->post('/admin/products/delete/{id}', 'Admin\ProductController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.delete'))->execute()]);
 

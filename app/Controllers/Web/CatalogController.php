@@ -21,19 +21,34 @@ class CatalogController extends BaseController
     {
         $q = trim($_GET['q'] ?? '');
         $catId = (int)($_GET['category_id'] ?? 0);
+        $collectionId = (int)($_GET['collection_id'] ?? $_GET['collection'] ?? 0);
         $minPrice = isset($_GET['min_price']) ? (float)$_GET['min_price'] : null;
         $maxPrice = isset($_GET['max_price']) ? (float)$_GET['max_price'] : null;
         $sort = $_GET['sort'] ?? 'relevance';
         $page = max(1, (int)($_GET['page'] ?? 1));
         $limit = 24;
         $offset = ($page - 1) * $limit;
+        $similarToId = (int)($_GET['similar_to'] ?? 0);
+        $similarProduct = null;
+        if ($similarToId > 0) {
+            $productRepo = new \App\Repositories\Eloquent\ProductRepository();
+            $similarProduct = $productRepo->getProductWithDetails($similarToId);
+        }
 
         $filters = [
             'category_id' => $catId,
+            'collection_id' => $collectionId,
+            'similar_to' => $similarToId,
             'min_price' => $minPrice,
             'max_price' => $maxPrice,
             'sort' => $sort,
         ];
+
+        $collectionCard = null;
+        if ($collectionId > 0) {
+            $cardModel = new \App\Models\CollectionCard();
+            $collectionCard = $cardModel->findById($collectionId);
+        }
 
         $searchResults = $this->searchService->search($q, $filters, $limit, $offset);
         $categories = $this->categoryRepo->getTree();
@@ -43,6 +58,8 @@ class CatalogController extends BaseController
             'filters' => $filters,
             'results' => $searchResults,
             'categories' => $categories,
+            'collectionCard' => $collectionCard,
+            'similarProduct' => $similarProduct,
             'currentPage' => $page,
             'totalPages' => ceil(($searchResults['total'] ?? 0) / $limit),
         ]);

@@ -4,14 +4,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<?= csrf_token() ?>">
   <title><?= htmlspecialchars($title ?? 'ImportWale | World-Scale B2B Wholesale Platform') ?></title>
-  <link rel="stylesheet" href="<?= asset('css/everful-theme.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/everful-theme.css') ?>?v=<?= time() ?>">
+  <link rel="stylesheet" href="<?= asset('css/product-card-unified.css') ?>?v=<?= time() ?>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@400;500;600;700;800;900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
 </head>
+
+<?php
+$db = \App\Core\Database::getInstance();
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
+$userId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
+$sessionId = $_SESSION['guest_wishlist_session_id'] ?? session_id();
+if ($userId) {
+    $wStmt = $db->prepare("SELECT COUNT(*) FROM wishlist WHERE user_id = ?");
+    $wStmt->execute([$userId]);
+} else {
+    $wStmt = $db->prepare("SELECT COUNT(*) FROM wishlist WHERE session_id = ?");
+    $wStmt->execute([$sessionId]);
+}
+$initialWishlistCount = (int)$wStmt->fetchColumn();
+?>
 
 <body>
 
@@ -107,7 +126,7 @@
         </button>
 
         <!-- Camera Search Icon Button + Tooltip -->
-        <button type="button" class="camera-search-trigger" onclick="openImageSearchModal()"
+        <button type="button" class="camera-search-trigger" onclick="triggerVisualSearchModal()"
           aria-label="Search by Image">
           <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
@@ -124,6 +143,15 @@
           </svg>
         </button>
       </form>
+
+      <!-- RFQ Get a Custom Quote Button -->
+      <button type="button" id="rfqOpenBtn" onclick="openRfqModal()"
+        style="display:inline-flex; align-items:center; gap:7px; background:var(--primary-color,#f05a29); color:#fff; font-family:var(--font-sans); font-size:13px; font-weight:700; padding:9px 18px; border:none; border-radius:8px; cursor:pointer; white-space:nowrap; transition:background .2s,transform .15s;"
+        onmouseover="this.style.background='#d8481b'; this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.background='#f05a29'; this.style.transform='translateY(0)'">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Get a Custom Quote
+      </button>
 
       <div class="header-actions">
         <!-- Ship to / Language / Currency Popover Wrapper -->
@@ -184,18 +212,19 @@
               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </a>
-        <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist">
+        <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist" style="position:relative;">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
+          <div class="cart-pill-count" id="headerWishlistCount" style="background:#f05a29; display:<?= $initialWishlistCount > 0 ? 'flex' : 'none' ?>;"><?= $initialWishlistCount ?></div>
         </a>
-        <a href="<?= url('cart') ?>" class="header-icon-item" title="Cart">
+        <a href="<?= url('inquiry') ?>" class="header-icon-item" title="My Inquiry" style="position:relative;">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <div class="cart-pill-count" id="headerCartCount">1</div>
+          <div class="cart-pill-count" id="headerInquiryCount" style="background:#f05a29; display:none;">0</div>
         </a>
       </div>
     </div>
@@ -505,6 +534,991 @@
         console.error("Speech recognition start error:", err);
       }
     }
+
+    // Interactive Toggle Inquiry List Handler (Add & Remove with Animation)
+    window.toggleCardInquiry = async function(productId, moq, btn) {
+      if (!productId || !btn) return;
+
+      // Trigger pop animation
+      btn.classList.remove('ef-btn-pop');
+      void btn.offsetWidth; // trigger reflow
+      btn.classList.add('ef-btn-pop');
+
+      try {
+        const res = await fetch('<?= url("api/inquiry/toggle") ?>', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId, quantity: moq || 1 })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          if (data.status === 'added') {
+            btn.classList.add('active');
+            btn.setAttribute('title', 'In Inquiry (Click to remove)');
+            btn.innerHTML = '<svg class="ef-inquiry-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+          } else if (data.status === 'removed') {
+            btn.classList.remove('active');
+            btn.setAttribute('title', 'Add to Inquiry');
+            btn.innerHTML = '<svg class="ef-inquiry-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>';
+          }
+          if (typeof updateHeaderInquiryCount === 'function') {
+            updateHeaderInquiryCount(data.total_products);
+          }
+        } else {
+          alert(data.message || 'Could not update inquiry.');
+        }
+      } catch(e) {
+        console.error("Inquiry toggle error:", e);
+      }
+    };
+
+    window.quickAddToInquiry = function(productId, moq, btn) {
+      return toggleCardInquiry(productId, moq, btn);
+    };
+
+    window.updateHeaderInquiryCount = async function(overrideCount) {
+      const badge = document.getElementById('headerInquiryCount');
+      if (!badge) return;
+      if (typeof overrideCount === 'number') {
+        badge.innerText = overrideCount;
+        badge.style.display = overrideCount > 0 ? 'flex' : 'none';
+        return;
+      }
+      try {
+        const res = await fetch('<?= url("api/inquiry") ?>');
+        const data = await res.json();
+        const cnt = data.total_products || 0;
+        badge.innerText = cnt;
+        badge.style.display = cnt > 0 ? 'flex' : 'none';
+      } catch(e){}
+    };
+    document.addEventListener('DOMContentLoaded', () => updateHeaderInquiryCount());
+
+    window.quickAddToCart = async function(productId, moq, btn) {
+      if (!productId) return;
+      const originalHtml = btn.innerHTML;
+      btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="10"/></svg>';
+      try {
+        const res = await fetch('<?= url("api/cart/add") ?>', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ product_id: productId, quantity: moq || 1 })
+        });
+        const data = await res.json();
+        if (data.success) {
+          btn.style.background = '#10b981';
+          btn.style.color = '#ffffff';
+          btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+          if (typeof updateHeaderCartCount === 'function') updateHeaderCartCount();
+          setTimeout(() => {
+            btn.style.background = '';
+            btn.style.color = '';
+            btn.innerHTML = originalHtml;
+          }, 1500);
+        } else {
+          alert(data.message || 'Could not add product to cart.');
+          btn.innerHTML = originalHtml;
+        }
+      } catch(e) {
+        btn.innerHTML = originalHtml;
+      }
+    };
+
+    window.toggleCardWishlist = async function(productId, btn) {
+      if (!productId) return;
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+      try {
+        const res = await fetch('<?= url("wishlist/toggle") ?>', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: new URLSearchParams({
+            product_id: productId,
+            _csrf_token: csrfToken
+          })
+        });
+        const data = await res.json();
+        
+        if (data.status === 'limit_reached') {
+          alert(data.message || 'You can add a maximum of 100 products to your wishlist.');
+          return;
+        }
+
+        if (data.status === 'added') {
+          btn.classList.add('active');
+          btn.style.transform = 'scale(1.25)';
+          setTimeout(() => btn.style.transform = '', 200);
+        } else if (data.status === 'removed') {
+          btn.classList.remove('active');
+        }
+
+        if (typeof updateHeaderWishlistCount === 'function') {
+          updateHeaderWishlistCount(data.count);
+        }
+      } catch(e) {
+        btn.classList.toggle('active');
+      }
+    };
+
+    window.updateHeaderWishlistCount = function(count) {
+      const badge = document.getElementById('headerWishlistCount');
+      if (!badge) return;
+      badge.innerText = count || 0;
+      badge.style.display = (count && count > 0) ? 'flex' : 'none';
+    };
+  </script>
+  <!-- Global Gallery Lightbox Modal -->
+  <?php require __DIR__ . '/partials/gallery_modal.php'; ?>
+  <!-- Global Visual Search Modal -->
+  <?php require __DIR__ . '/partials/visual_search_modal.php'; ?>
+
+  <!-- ============================================================
+       RFQ Modal — Importwala Unique Design
+       ============================================================ -->
+  <style>
+    /* ---- Overlay ---- */
+    #rfqModalOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.6);
+      backdrop-filter: blur(6px);
+      z-index: 99999;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    #rfqModalOverlay.rfq-open { display: flex; }
+
+    /* ---- Dialog ---- */
+    #rfqModal {
+      background: #fff;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 92vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: rfqPop .25s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes rfqPop {
+      from { opacity:0; transform: scale(.92); }
+      to   { opacity:1; transform: scale(1); }
+    }
+
+    /* ---- Header ---- */
+    .rfq-hd {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 22px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      flex-shrink: 0;
+    }
+    .rfq-hd-badge {
+      background: linear-gradient(135deg,#f05a29,#ff8c5a);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .rfq-hd-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #0f172a;
+      flex: 1;
+      line-height: 1.2;
+    }
+    .rfq-hd-sub {
+      font-size: 11px;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+    .rfq-hd-close {
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items:center; justify-content:center;
+      transition: background .15s, color .15s;
+      flex-shrink: 0;
+    }
+    .rfq-hd-close:hover { background: #fee2e2; color: #ef4444; }
+
+    /* ---- Progress Bar Stepper ---- */
+    .rfq-progress-wrap {
+      padding: 14px 22px 0;
+      flex-shrink: 0;
+    }
+    .rfq-progress-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .rfq-progress-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color .3s;
+    }
+    .rfq-progress-label.active { color: #f05a29; }
+    .rfq-progress-label.done   { color: #10b981; }
+    .rfq-progress-num {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #94a3b8;
+      font-size: 10px;
+      font-weight: 800;
+      display: inline-flex; align-items:center; justify-content:center;
+      transition: all .3s;
+    }
+    .rfq-progress-label.active .rfq-progress-num { background: #f05a29; color: #fff; }
+    .rfq-progress-label.done   .rfq-progress-num { background: #10b981; color: #fff; }
+    .rfq-progress-bar-track {
+      height: 5px;
+      background: #f1f5f9;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+    .rfq-progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #f05a29, #ff8c5a);
+      border-radius: 10px;
+      transition: width .4s cubic-bezier(.4,0,.2,1);
+    }
+    /* Mobile: hide labels, keep bar */
+    @media (max-width:500px) {
+      .rfq-progress-labels { display:none; }
+      .rfq-progress-bar-track { margin-bottom: 8px; }
+    }
+    .rfq-mobile-step {
+      display: none;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f05a29;
+      padding: 6px 22px 10px;
+    }
+    @media (max-width:500px) { .rfq-mobile-step { display:block; } }
+
+    /* ---- Form Wrapper ---- */
+    #rfqForm {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ---- Scrollable Body ---- */
+    .rfq-body {
+      padding: 6px 22px 20px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .rfq-body::-webkit-scrollbar {
+      width: 6px;
+    }
+    .rfq-body::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+    .rfq-body::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+    .rfq-body::-webkit-scrollbar-thumb:hover {
+      background: #f05a29;
+    }
+
+    /* ---- Section heading ---- */
+    .rfq-section-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #334155;
+      padding: 12px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1.5px dashed #e2e8f0;
+      margin-bottom: 16px;
+    }
+    .rfq-section-icon {
+      width: 28px; height: 28px;
+      background: #fff7ed;
+      border-radius: 8px;
+      display: flex; align-items:center; justify-content:center;
+      color: #f05a29;
+      flex-shrink: 0;
+    }
+
+    /* ---- Fields ---- */
+    .rfq-field { margin-bottom: 14px; }
+    .rfq-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #475569;
+      margin-bottom: 5px;
+      letter-spacing: .2px;
+    }
+    .rfq-req { color: #f05a29; }
+    .rfq-opt { color: #94a3b8; font-weight: 500; font-size: 11px; }
+    .rfq-input, .rfq-select, .rfq-textarea {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #1e293b;
+      background: #f8fafc;
+      outline: none;
+      transition: border-color .2s, background .2s;
+      box-sizing: border-box;
+    }
+    .rfq-input:focus, .rfq-select:focus, .rfq-textarea:focus {
+      border-color: #f05a29;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(240,90,41,.08);
+    }
+    .rfq-input.rfq-err, .rfq-select.rfq-err, .rfq-textarea.rfq-err {
+      border-color: #ef4444;
+      background: #fff5f5;
+    }
+    .rfq-errmsg { font-size:11px; color:#ef4444; margin-top:4px; display:none; }
+    .rfq-textarea { resize:vertical; min-height:76px; }
+
+    .rfq-g2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .rfq-g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+    @media (max-width:480px) { .rfq-g2,.rfq-g3 { grid-template-columns:1fr; } }
+
+    /* Phone + Price prefix inputs */
+    .rfq-prefix-wrap {
+      display: flex;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #f8fafc;
+      transition: border-color .2s;
+    }
+    .rfq-prefix-wrap:focus-within { border-color: #f05a29; background: #fff; box-shadow: 0 0 0 3px rgba(240,90,41,.08); }
+    .rfq-prefix-wrap.rfq-err { border-color: #ef4444; }
+    .rfq-prefix-tag {
+      padding: 10px 12px;
+      background: #f1f5f9;
+      font-size: 13px;
+      font-weight: 700;
+      color: #475569;
+      border-right: 1.5px solid #e2e8f0;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .rfq-prefix-input {
+      flex: 1;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-family: inherit;
+      color: #1e293b;
+    }
+
+    /* Dropzone */
+    .rfq-dz {
+      border: 2px dashed #e2e8f0;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      cursor: pointer;
+      background: #f8fafc;
+      transition: all .2s;
+    }
+    .rfq-dz:hover, .rfq-dz.rfq-dz-over {
+      border-color: #f05a29;
+      background: #fff8f5;
+    }
+    .rfq-dz-icon { color: #f05a29; margin-bottom: 6px; }
+    .rfq-dz-txt  { font-size: 13px; color: #64748b; }
+    .rfq-dz-txt b { color: #f05a29; }
+    .rfq-dz-hint { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+    #rfqFileInput { display:none; }
+    .rfq-thumbs { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .rfq-thumb {
+      position:relative; width:68px; height:68px;
+      border-radius:10px; overflow:hidden;
+      border: 2px solid #e2e8f0;
+    }
+    .rfq-thumb img { width:100%; height:100%; object-fit:cover; }
+    .rfq-thumb-del {
+      position:absolute; top:2px; right:2px;
+      background:rgba(0,0,0,.55); color:#fff;
+      border:none; width:17px; height:17px; border-radius:50%;
+      font-size:10px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* GST toggle */
+    .rfq-toggle-row { display:flex; gap:10px; }
+    .rfq-toggle-btn {
+      flex:1; padding:9px 10px;
+      border: 1.5px solid #e2e8f0;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:12px; font-weight:700;
+      color:#64748b;
+      display:flex; align-items:center; gap:6px; justify-content:center;
+      transition: all .15s;
+      background: #f8fafc;
+    }
+    .rfq-toggle-btn:has(input:checked) {
+      border-color: #f05a29;
+      background: #fff8f5;
+      color: #f05a29;
+    }
+    .rfq-toggle-btn input { accent-color: #f05a29; }
+
+    /* ---- Footer ---- */
+    .rfq-ft {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 22px;
+      border-top: 1px solid #f1f5f9;
+      background: #f8fafc;
+      flex-shrink: 0;
+      border-radius: 0 0 20px 20px;
+    }
+    .rfq-btn {
+      display: inline-flex; align-items:center; gap:7px;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 700; font-family:inherit;
+      border: none; cursor: pointer;
+      transition: background .18s, transform .12s;
+    }
+    .rfq-btn:disabled { opacity:.55; cursor:not-allowed; }
+    .rfq-btn-primary  { background:#f05a29; color:#fff; }
+    .rfq-btn-primary:hover:not(:disabled)  { background:#d8481b; }
+    .rfq-btn-ghost    { background:#fff; color:#64748b; border:1.5px solid #e2e8f0; }
+    .rfq-btn-ghost:hover { background:#f1f5f9; }
+
+    /* ---- Success ---- */
+    .rfq-success-wrap {
+      display:none;
+      padding: 44px 22px;
+      text-align:center;
+    }
+    .rfq-success-ring {
+      width:80px; height:80px; border-radius:50%;
+      border: 3px solid #10b981;
+      display:flex; align-items:center; justify-content:center;
+      margin: 0 auto 20px;
+      animation: rfqRing .5s ease forwards;
+    }
+    @keyframes rfqRing {
+      0%   { transform:scale(0); opacity:0; }
+      70%  { transform:scale(1.1); }
+      100% { transform:scale(1); opacity:1; }
+    }
+    .rfq-success-h { font-size:19px; font-weight:800; color:#0f172a; margin-bottom:8px; }
+    .rfq-success-p { font-size:13px; color:#64748b; line-height:1.7; }
+    .rfq-success-tag {
+      display:inline-block; margin-top:16px;
+      background:#fff7ed; color:#f05a29;
+      font-size:12px; font-weight:700;
+      padding:6px 16px; border-radius:20px;
+      border:1.5px solid #fed7aa;
+    }
+  </style>
+
+  <!-- RFQ Modal Markup -->
+  <div id="rfqModalOverlay" onclick="if(event.target===this)closeRfqModal()" role="dialog" aria-modal="true">
+    <div id="rfqModal">
+
+      <!-- Header -->
+      <div class="rfq-hd">
+        <div style="flex:1;">
+          <div class="rfq-hd-title">Custom Sourcing Request</div>
+          <div class="rfq-hd-sub">Fill 3 quick steps — our team will get back within 24hrs</div>
+        </div>
+        <button class="rfq-hd-close" onclick="closeRfqModal()" aria-label="Close">&#x2715;</button>
+      </div>
+
+      <!-- Progress bar stepper -->
+      <div class="rfq-progress-wrap" id="rfqProgressWrap">
+        <div class="rfq-progress-labels">
+          <span class="rfq-progress-label active" id="rfqLbl1">
+            <span class="rfq-progress-num" id="rfqNum1">1</span> Product Info
+          </span>
+          <span class="rfq-progress-label" id="rfqLbl2">
+            <span class="rfq-progress-num" id="rfqNum2">2</span> Your Details
+          </span>
+          <span class="rfq-progress-label" id="rfqLbl3">
+            <span class="rfq-progress-num" id="rfqNum3">3</span> Business
+          </span>
+        </div>
+        <div class="rfq-progress-bar-track">
+          <div class="rfq-progress-bar-fill" id="rfqBarFill" style="width:33%;"></div>
+        </div>
+      </div>
+      <div class="rfq-mobile-step" id="rfqMobileLbl">Step 1 of 3 — Product Info</div>
+
+      <!-- Scrollable form body -->
+      <form id="rfqForm" novalidate>
+        <div class="rfq-body" id="rfqBodyScroll">
+
+          <!-- ===== STEP 1 ===== -->
+          <div id="rfqStep1">
+            <div class="rfq-section-title">
+              <div class="rfq-section-icon">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
+              </div>
+              What product are you looking for?
+            </div>
+
+            <div class="rfq-field">
+              <label class="rfq-label">Product Name <span class="rfq-req">*</span></label>
+              <input class="rfq-input" id="rfq_product_name" name="product_name" type="text"
+                placeholder="e.g. Bluetooth Earbuds, Stainless Steel Bottles, LED Strip Lights…">
+              <div class="rfq-errmsg" id="err_product_name"></div>
+            </div>
+
+            <div class="rfq-field">
+              <label class="rfq-label">Reference Link <span class="rfq-opt">(Optional)</span></label>
+              <input class="rfq-input" id="rfq_ref_link" name="product_reference_link" type="url"
+                placeholder="Amazon, AliExpress, Instagram, or any product URL">
+            </div>
+
+            <div class="rfq-field">
+              <label class="rfq-label">Reference Photos <span class="rfq-opt">(Optional — max 4)</span></label>
+              <div class="rfq-dz" id="rfqDz"
+                   onclick="document.getElementById('rfqFileInput').click()"
+                   ondragover="rfqDragOver(event)" ondragleave="rfqDragLeave(event)" ondrop="rfqDrop(event)">
+                <div class="rfq-dz-icon">
+                  <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                </div>
+                <div class="rfq-dz-txt"><b>Click to browse</b> or drop images here</div>
+                <div class="rfq-dz-hint">PNG · JPG · WEBP &nbsp;|&nbsp; Max 5 MB each</div>
+              </div>
+              <input type="file" id="rfqFileInput" name="reference_photos[]" accept="image/png,image/jpeg,image/webp" multiple>
+              <div class="rfq-thumbs" id="rfqThumbs"></div>
+              <div class="rfq-errmsg" id="err_photos"></div>
+            </div>
+
+            <div class="rfq-g2">
+              <div class="rfq-field" style="margin-bottom:0">
+                <label class="rfq-label">Quantity <span class="rfq-req">*</span></label>
+                <input class="rfq-input" id="rfq_quantity" name="quantity" type="number" min="1" placeholder="e.g. 500">
+                <div class="rfq-errmsg" id="err_quantity"></div>
+              </div>
+              <div class="rfq-field" style="margin-bottom:0">
+                <label class="rfq-label">Unit <span class="rfq-req">*</span></label>
+                <select class="rfq-select" id="rfq_unit" name="unit">
+                  <option value="">Select Unit</option>
+                  <option>Pcs</option><option>Dozen</option><option>Box</option>
+                  <option>Carton</option><option>Kg</option><option>Set</option>
+                  <option>Meter</option><option>Litre</option>
+                </select>
+                <div class="rfq-errmsg" id="err_unit"></div>
+              </div>
+            </div>
+
+            <div class="rfq-g3" style="margin-top:14px;">
+              <div class="rfq-field" style="margin-bottom:0">
+                <label class="rfq-label">Target Price / Unit <span class="rfq-req">*</span></label>
+                <div class="rfq-prefix-wrap" id="rfqPriceW">
+                  <div class="rfq-prefix-tag">&#8377;</div>
+                  <input class="rfq-prefix-input" id="rfq_target_price" name="target_price" type="number" min="0" step="0.01" placeholder="e.g. 450">
+                </div>
+                <div class="rfq-errmsg" id="err_target_price"></div>
+              </div>
+              <div class="rfq-field" style="margin-bottom:0">
+                <label class="rfq-label">Total Budget <span class="rfq-req">*</span></label>
+                <select class="rfq-select" id="rfq_budget" name="overall_budget">
+                  <option value="">Select Range</option>
+                  <option>Under &#8377;50,000</option>
+                  <option>&#8377;50K – 2 Lakh</option>
+                  <option>&#8377;2 – 10 Lakh</option>
+                  <option>&#8377;10 – 50 Lakh</option>
+                  <option>Above &#8377;50 Lakh</option>
+                </select>
+                <div class="rfq-errmsg" id="err_budget"></div>
+              </div>
+              <div class="rfq-field" style="margin-bottom:0">
+                <label class="rfq-label">Purpose <span class="rfq-req">*</span></label>
+                <select class="rfq-select" id="rfq_purpose" name="sourcing_purpose">
+                  <option value="">Select</option>
+                  <option>Resale</option><option>Personal Use</option>
+                  <option>Gifting</option><option>Business Bulk Order</option>
+                  <option>Export</option><option>Other</option>
+                </select>
+                <div class="rfq-errmsg" id="err_purpose"></div>
+              </div>
+            </div>
+
+            <div class="rfq-field" style="margin-top:14px;">
+              <label class="rfq-label">Specifications <span class="rfq-opt">(Optional)</span></label>
+              <textarea class="rfq-textarea" id="rfq_specs" name="specifications"
+                placeholder="Color, material, print, packaging, certifications…"></textarea>
+            </div>
+          </div>
+
+          <!-- ===== STEP 2 ===== -->
+          <div id="rfqStep2" style="display:none;">
+            <div class="rfq-section-title">
+              <div class="rfq-section-icon">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              </div>
+              How can we reach you?
+            </div>
+
+            <div class="rfq-g2">
+              <div class="rfq-field">
+                <label class="rfq-label">Full Name <span class="rfq-req">*</span></label>
+                <input class="rfq-input" id="rfq_full_name" name="full_name" type="text" placeholder="Your name">
+                <div class="rfq-errmsg" id="err_full_name"></div>
+              </div>
+              <div class="rfq-field">
+                <label class="rfq-label">WhatsApp Number <span class="rfq-req">*</span></label>
+                <div class="rfq-prefix-wrap" id="rfqPhoneW">
+                  <div class="rfq-prefix-tag">+91</div>
+                  <input class="rfq-prefix-input" id="rfq_phone" name="phone" type="tel" maxlength="10"
+                    placeholder="10-digit number" oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)">
+                </div>
+                <div class="rfq-errmsg" id="err_phone"></div>
+              </div>
+            </div>
+            <div class="rfq-g2">
+              <div class="rfq-field">
+                <label class="rfq-label">Email Address <span class="rfq-req">*</span></label>
+                <input class="rfq-input" id="rfq_email" name="email" type="email" placeholder="you@example.com">
+                <div class="rfq-errmsg" id="err_email"></div>
+              </div>
+              <div class="rfq-field">
+                <label class="rfq-label">Pincode <span class="rfq-req">*</span></label>
+                <input class="rfq-input" id="rfq_pincode" name="pincode" type="text" maxlength="6"
+                  placeholder="6-digit pincode" oninput="this.value=this.value.replace(/\D/g,'').slice(0,6)">
+                <div class="rfq-errmsg" id="err_pincode"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ===== STEP 3 ===== -->
+          <div id="rfqStep3" style="display:none;">
+            <div class="rfq-section-title">
+              <div class="rfq-section-icon">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+              </div>
+              A bit about your business
+            </div>
+
+            <div class="rfq-g2">
+              <div class="rfq-field">
+                <label class="rfq-label">Business Type <span class="rfq-req">*</span></label>
+                <select class="rfq-select" id="rfq_biz_type" name="business_type">
+                  <option value="">Select Type</option>
+                  <option>Reseller</option><option>Retailer</option>
+                  <option>Wholesaler</option><option>D2C Brand</option>
+                  <option>Startup</option><option>Manufacturer</option>
+                  <option>Distributor</option><option>Other</option>
+                </select>
+                <div class="rfq-errmsg" id="err_biz_type"></div>
+              </div>
+              <div class="rfq-field">
+                <label class="rfq-label">GST Registered? <span class="rfq-req">*</span></label>
+                <div class="rfq-toggle-row">
+                  <label class="rfq-toggle-btn">
+                    <input type="radio" name="has_gst" value="yes">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Yes, I have GST
+                  </label>
+                  <label class="rfq-toggle-btn">
+                    <input type="radio" name="has_gst" value="no">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    No GST yet
+                  </label>
+                </div>
+                <div class="rfq-errmsg" id="err_has_gst"></div>
+              </div>
+            </div>
+
+            <div class="rfq-field">
+              <label class="rfq-label">Additional Instructions <span class="rfq-opt">(Optional)</span></label>
+              <textarea class="rfq-textarea" id="rfq_comments" name="additional_comments"
+                placeholder="Timeline, branding requirements, any other details…"></textarea>
+            </div>
+          </div>
+
+          <!-- ===== SUCCESS ===== -->
+          <div class="rfq-success-wrap" id="rfqSuccess">
+            <div class="rfq-success-ring">
+              <svg width="32" height="32" fill="none" stroke="#10b981" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="rfq-success-h">Request Submitted! 🎉</div>
+            <div class="rfq-success-p">
+              Our sourcing team will review your request and reach out on<br>
+              <strong>WhatsApp / Email within 24 hours</strong> with a custom quote.
+            </div>
+            <div class="rfq-success-tag">📦 Importwala — Sourcing Made Easy</div>
+            <br>
+            <button type="button" class="rfq-btn rfq-btn-primary" style="margin-top:10px;" onclick="closeRfqModal()">Close Window</button>
+          </div>
+
+        </div><!-- /rfq-body -->
+
+        <!-- Footer -->
+        <div class="rfq-ft" id="rfqFt">
+          <button type="button" class="rfq-btn rfq-btn-ghost" id="rfqBackBtn" style="display:none;" onclick="rfqBack()">
+            &#8592; Back
+          </button>
+          <button type="button" class="rfq-btn rfq-btn-primary" id="rfqNextBtn" onclick="rfqNext()">
+            Continue &nbsp;&#8594;
+          </button>
+          <button type="submit" class="rfq-btn rfq-btn-primary" id="rfqSubmitBtn" style="display:none;">
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            Submit Request
+          </button>
+        </div>
+
+      </form>
+    </div><!-- /rfqModal -->
+  </div><!-- /rfqModalOverlay -->
+
+  <script>
+  // Ensure global modal functions are defined on window immediately
+  window.openRfqModal = function () {
+    var overlay = document.getElementById('rfqModalOverlay');
+    if (!overlay) return;
+    overlay.classList.add('rfq-open');
+    document.body.style.overflow = 'hidden';
+    if (typeof window.rfqResetModal === 'function') window.rfqResetModal();
+  };
+  window.closeRfqModal = function () {
+    var overlay = document.getElementById('rfqModalOverlay');
+    if (overlay) overlay.classList.remove('rfq-open');
+    document.body.style.overflow = '';
+  };
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeRfqModal(); });
+
+  (function () {
+    var step = 1, rfqFiles = [], MAX_P = 4, MAX_S = 5*1024*1024;
+    var mobileLabels = ['Product Info','Your Details','Business'];
+
+    window.rfqResetModal = function() {
+      step = 1; rfqFiles = [];
+      var form = document.getElementById('rfqForm');
+      if (form) form.reset();
+      var thumbs = document.getElementById('rfqThumbs');
+      if (thumbs) thumbs.innerHTML = '';
+      var pw = document.getElementById('rfqProgressWrap'); if (pw) pw.style.display = 'block';
+      var ml = document.getElementById('rfqMobileLbl');    if (ml) ml.style.display = '';
+      var sc = document.getElementById('rfqSuccess');       if (sc) sc.style.display = 'none';
+      renderStep();
+    };
+
+    window.rfqNext = function () {
+      if (!validateStep(step)) return;
+      if (step < 3) { step++; renderStep(); }
+    };
+    window.rfqBack = function () {
+      if (step > 1) { step--; renderStep(); }
+    };
+
+    function renderStep() {
+      // Panels
+      [1,2,3].forEach(function(i){
+        var el = document.getElementById('rfqStep'+i);
+        if (el) el.style.display = (i===step)?'block':'none';
+      });
+      var sc = document.getElementById('rfqSuccess'); if (sc) sc.style.display = 'none';
+
+      // Buttons
+      var ft = document.getElementById('rfqFt');         if (ft) ft.style.display = 'flex';
+      var bb = document.getElementById('rfqBackBtn');   if (bb) bb.style.display = step > 1 ? 'inline-flex' : 'none';
+      var nb = document.getElementById('rfqNextBtn');   if (nb) nb.style.display = step < 3 ? 'inline-flex' : 'none';
+      var sb = document.getElementById('rfqSubmitBtn'); if (sb) sb.style.display = step === 3 ? 'inline-flex' : 'none';
+
+      // Progress bar
+      var pct = { 1:'33%', 2:'66%', 3:'100%' };
+      var bf = document.getElementById('rfqBarFill'); if (bf) bf.style.width = pct[step];
+
+      // Labels
+      [1,2,3].forEach(function(i){
+        var lbl = document.getElementById('rfqLbl'+i);
+        var num = document.getElementById('rfqNum'+i);
+        if (lbl) {
+          lbl.className = 'rfq-progress-label';
+          if (i < step)  { lbl.classList.add('done');   if (num) num.innerHTML = '&#10003;'; }
+          else if (i === step) { lbl.classList.add('active'); if (num) num.innerHTML = i; }
+          else           { if (num) num.innerHTML = i; }
+        }
+      });
+
+      // Mobile label
+      var ml = document.getElementById('rfqMobileLbl');
+      if (ml) ml.textContent = 'Step '+step+' of 3 \u2014 '+mobileLabels[step-1];
+
+      // Scroll body to top
+      var b = document.getElementById('rfqBodyScroll');
+      if (b) b.scrollTop = 0;
+    }
+
+    /* ---- Validation ---- */
+    function validateStep(s) {
+      clearErrors();
+      var ok = true;
+
+      if (s===1) {
+        var pn = g('rfq_product_name');
+        if (!pn || !pn.value.trim())                  { err('product_name','Product name is required.'); ok=false; }
+        var qEl = g('rfq_quantity');
+        var q = qEl ? parseInt(qEl.value) : 0;
+        if (!q||q<1)                                  { err('quantity','Enter a valid quantity.'); ok=false; }
+        var uEl = g('rfq_unit');
+        if (!uEl || !uEl.value)                       { err('unit','Please select a unit.'); ok=false; }
+        var tpEl = g('rfq_target_price');
+        var tp = tpEl ? tpEl.value : '';
+        if (tp===''||isNaN(parseFloat(tp)))           { err('target_price','Enter target price.'); ww('rfqPriceW'); ok=false; }
+        var bEl = g('rfq_budget');
+        if (!bEl || !bEl.value)                       { err('budget','Select a budget range.'); ok=false; }
+        var purEl = g('rfq_purpose');
+        if (!purEl || !purEl.value)                   { err('purpose','Select a purpose.'); ok=false; }
+      }
+      if (s===2) {
+        var fnEl = g('rfq_full_name');
+        if (!fnEl || !fnEl.value.trim())              { err('full_name','Full name is required.'); ok=false; }
+        var pEl = g('rfq_phone');
+        var ph = pEl ? pEl.value.replace(/\D/g,'') : '';
+        if (ph.length!==10)                           { err('phone','Enter a valid 10-digit number.'); ww('rfqPhoneW'); ok=false; }
+        var eEl = g('rfq_email');
+        var em = eEl ? eEl.value.trim() : '';
+        if (!em||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { err('email','Enter a valid email.'); ok=false; }
+        var pinEl = g('rfq_pincode');
+        var pin = pinEl ? pinEl.value.trim() : '';
+        if (!/^\d{6}$/.test(pin))                    { err('pincode','Enter a valid 6-digit pincode.'); ok=false; }
+      }
+      if (s===3) {
+        var btEl = g('rfq_biz_type');
+        if (!btEl || !btEl.value)                     { err('biz_type','Select your business type.'); ok=false; }
+        if (!document.querySelector('input[name="has_gst"]:checked')) { err('has_gst','Please select GST status.'); ok=false; }
+      }
+      return ok;
+    }
+    function g(id){ return document.getElementById(id); }
+    function err(k,m){
+      var el=document.getElementById('err_'+k);
+      if(el){ el.textContent=m; el.style.display='block'; }
+      var inp=document.getElementById('rfq_'+k);
+      if(inp) inp.classList.add('rfq-err');
+    }
+    function ww(id){ var el=document.getElementById(id); if(el) el.classList.add('rfq-err'); }
+    function clearErrors(){
+      document.querySelectorAll('.rfq-errmsg').forEach(function(e){ e.style.display='none'; });
+      document.querySelectorAll('.rfq-err').forEach(function(e){ e.classList.remove('rfq-err'); });
+    }
+
+    /* ---- File upload ---- */
+    var fileInput = g('rfqFileInput');
+    if (fileInput) {
+      fileInput.addEventListener('change', function(){ addFiles(this.files); this.value=''; });
+    }
+    window.rfqDragOver = function(e){ e.preventDefault(); var dz = g('rfqDz'); if (dz) dz.classList.add('rfq-dz-over'); };
+    window.rfqDragLeave= function(){ var dz = g('rfqDz'); if (dz) dz.classList.remove('rfq-dz-over'); };
+    window.rfqDrop     = function(e){ e.preventDefault(); var dz = g('rfqDz'); if (dz) dz.classList.remove('rfq-dz-over'); addFiles(e.dataTransfer.files); };
+
+    function addFiles(list) {
+      var eEl = g('err_photos'); if (eEl) eEl.style.display='none';
+      for (var i=0;i<list.length;i++) {
+        if (rfqFiles.length>=MAX_P){ if (eEl) { eEl.textContent='Max 4 photos allowed.'; eEl.style.display='block'; } break; }
+        var f=list[i];
+        if (f.size>MAX_S){ if (eEl) { eEl.textContent='"'+f.name+'" exceeds 5 MB.'; eEl.style.display='block'; } continue; }
+        if (!/^image\/(jpeg|png|webp)$/.test(f.type)){ if (eEl) { eEl.textContent='"'+f.name+'" must be PNG/JPG/WEBP.'; eEl.style.display='block'; } continue; }
+        rfqFiles.push(f);
+      }
+      renderThumbs();
+    }
+    function renderThumbs(){
+      var c=g('rfqThumbs'); if (!c) return;
+      c.innerHTML='';
+      rfqFiles.forEach(function(f,i){
+        var url=URL.createObjectURL(f);
+        var d=document.createElement('div'); d.className='rfq-thumb';
+        d.innerHTML='<img src="'+url+'" alt="Photo '+(i+1)+'">'
+          +'<button type="button" class="rfq-thumb-del" onclick="rfqDel('+i+')" title="Remove">&#x2715;</button>';
+        c.appendChild(d);
+      });
+    }
+    window.rfqDel=function(i){ rfqFiles.splice(i,1); renderThumbs(); };
+
+    /* ---- Submit ---- */
+    var rfqFormEl = g('rfqForm');
+    if (rfqFormEl) {
+      rfqFormEl.addEventListener('submit', async function(e){
+        e.preventDefault();
+        if (!validateStep(3)) return;
+        var btn=g('rfqSubmitBtn');
+        if (btn) {
+          btn.disabled=true;
+          btn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Sending…';
+        }
+        var fd=new FormData(this);
+        fd.delete('reference_photos[]');
+        rfqFiles.forEach(function(f){ fd.append('reference_photos[]',f,f.name); });
+        try {
+          var res=await fetch('<?= url('api/rfq/submit') ?>',{method:'POST',body:fd});
+          var data=await res.json();
+          if (data.success) {
+            [1,2,3].forEach(function(i){ var sEl = g('rfqStep'+i); if (sEl) sEl.style.display='none'; });
+            var ftEl = g('rfqFt'); if (ftEl) ftEl.style.display='none';
+            var pwEl = g('rfqProgressWrap'); if (pwEl) pwEl.style.display='none';
+            var mlEl = g('rfqMobileLbl'); if (mlEl) mlEl.style.display='none';
+            var scEl = g('rfqSuccess'); if (scEl) scEl.style.display='block';
+            rfqFiles=[]; this.reset(); var th = g('rfqThumbs'); if (th) th.innerHTML=''; step=1;
+          } else {
+            alert(data.message||'Submission failed. Please try again.');
+            if (btn) {
+              btn.disabled=false;
+              btn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Submit Request';
+            }
+          }
+        } catch(ex){
+          alert('Network error. Please try again.');
+          if (btn) {
+            btn.disabled=false;
+            btn.innerHTML='<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Submit Request';
+          }
+        }
+      });
+    }
+
+    // Clear errors on change
+    document.querySelectorAll('#rfqForm input,#rfqForm select,#rfqForm textarea').forEach(function(el){
+      el.addEventListener('input',function(){ this.classList.remove('rfq-err'); });
+    });
+
+  })();
   </script>
 </body>
 

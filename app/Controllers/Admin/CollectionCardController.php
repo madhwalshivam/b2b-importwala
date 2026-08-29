@@ -149,14 +149,29 @@ class CollectionCardController extends Controller {
             return;
         }
 
-        $cardId    = (int)$id;
-        $card      = $this->cardModel->findById($cardId);
+        // JSON body se data read karo
+        $body = [];
+        $rawInput = file_get_contents('php://input');
+        if (!empty($rawInput)) {
+            $body = json_decode($rawInput, true) ?: [];
+        }
+
+        // CSRF validate karo (header ya body se)
+        $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $body['_csrf_token'] ?? $_POST['_csrf_token'] ?? null;
+        $session = new \App\Core\Session();
+        if (!$session->validateCsrfToken($token)) {
+            $this->json(['success' => false, 'message' => 'CSRF verification failed.'], 403);
+            return;
+        }
+
+        $cardId = (int)$id;
+        $card   = $this->cardModel->findById($cardId);
         if (!$card) {
             $this->json(['success' => false, 'message' => 'Card not found'], 404);
             return;
         }
 
-        $productIds = $this->request->input('product_ids', []);
+        $productIds = $body['product_ids'] ?? $this->request->input('product_ids', []);
         if (!is_array($productIds)) $productIds = [];
 
         $ok = $this->cardModel->saveCardProducts($cardId, $productIds);
@@ -231,17 +246,17 @@ class CollectionCardController extends Controller {
     private function handleImageUpload(string $fileInput, string $urlInput): string {
         $urlVal = trim($this->request->input($urlInput, ''));
 
-        if (!empty($_FILES[$fileInput]['name'])) {
-            $file    = $_FILES[$fileInput];
-            $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-            $dir     = __DIR__ . '/../../../public/uploads/collection_cards/';
+        if (!empty($_FILES[$fileInput]['name']) && $_FILES[$fileInput]['error'] === UPLOAD_ERR_OK) {
+            $file        = $_FILES[$fileInput];
+            $ext         = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
+            $dir         = __DIR__ . '/../../../public/uploads/collection_cards/';
 
             if (!is_dir($dir)) {
                 @mkdir($dir, 0777, true);
             }
 
-            if (in_array($file['type'], $allowed) && $file['size'] <= 5 * 1024 * 1024) {
-                $ext      = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (in_array($ext, $allowedExts) && $file['size'] <= 10 * 1024 * 1024) {
                 $filename = 'cc_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
                 if (move_uploaded_file($file['tmp_name'], $dir . $filename)) {
                     return '/uploads/collection_cards/' . $filename;

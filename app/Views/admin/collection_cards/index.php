@@ -60,7 +60,7 @@
                     <!-- Thumbnail -->
                     <div class="w-16 h-16 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
                         <?php if (!empty($card['image'])): ?>
-                            <img src="<?= htmlspecialchars($card['image']) ?>" alt="" class="w-full h-full object-cover">
+                            <img src="<?= htmlspecialchars(asset($card['image'])) ?>" alt="" class="w-full h-full object-cover">
                         <?php else: ?>
                             <div class="w-full h-full flex items-center justify-center">
                                 <i data-lucide="image" class="w-6 h-6 text-slate-300"></i>
@@ -450,7 +450,10 @@ function openEditModal(card) {
     const preview = document.getElementById('edit_current_image');
     const img     = document.getElementById('edit_image_preview');
     if (card.image) {
-        img.src = card.image;
+        const fullUrl = (card.image.startsWith('http://') || card.image.startsWith('https://') || card.image.startsWith('//'))
+            ? card.image
+            : '<?= url("") ?>/' + card.image.replace(/^\//, '');
+        img.src = fullUrl;
         preview.classList.remove('hidden');
     } else {
         preview.classList.add('hidden');
@@ -624,13 +627,14 @@ function saveProducts() {
     btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Saving...';
     btn.disabled = true;
 
+    const csrfToken = '<?= csrf_token() ?>';
     fetch(`<?= url('admin/collection-cards/update-products') ?>/${currentCardId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            'X-CSRF-TOKEN': csrfToken,
         },
-        body: JSON.stringify({ product_ids: ids, _token: '<?= csrf_token() ?>' }),
+        body: JSON.stringify({ product_ids: ids, _csrf_token: csrfToken }),
     })
     .then(r => r.json())
     .then(data => {
@@ -692,12 +696,8 @@ function showToast(msg, type = 'success') {
     setTimeout(() => div.remove(), 3000);
 }
 
-// ----------- CSRF HELPER -----------
-function csrf_token() {
-    return document.querySelector('input[name="_token"]')?.value || '';
-}
 
-// Close modals on backdrop click
+// ----------- LUCIDE REINIT -----------
 ['addModal', 'editModal', 'productModal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) {
         if (e.target === this) {

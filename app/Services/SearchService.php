@@ -49,13 +49,33 @@ class SearchService extends BaseService
         $params = [];
 
         if (!empty($query)) {
-            $where[] = "(p.`title` LIKE :q OR p.`sku` LIKE :q OR p.`short_description` LIKE :q)";
+            $where[] = "(p.`title` LIKE :q OR p.`name` LIKE :q OR p.`sku` LIKE :q OR p.`description` LIKE :q OR p.`tags` LIKE :q)";
             $params['q'] = '%' . trim($query) . '%';
         }
 
         if (!empty($filters['category_id'])) {
             $where[] = "p.`category_id` = :cat_id";
             $params['cat_id'] = (int)$filters['category_id'];
+        }
+
+        if (!empty($filters['collection_id'])) {
+            $where[] = "p.`id` IN (SELECT `product_id` FROM `collection_card_products` WHERE `collection_card_id` = :collection_id)";
+            $params['collection_id'] = (int)$filters['collection_id'];
+        }
+
+        if (!empty($filters['similar_to'])) {
+            $targetId = (int)$filters['similar_to'];
+            $targetStmt = $db->prepare("SELECT id, title, category_id FROM `products` WHERE id = ?");
+            $targetStmt->execute([$targetId]);
+            $targetProd = $targetStmt->fetch();
+            if ($targetProd) {
+                $where[] = "p.`id` != :target_id";
+                $params['target_id'] = $targetId;
+                if (empty($filters['category_id'])) {
+                    $where[] = "p.`category_id` = :target_cat_id";
+                    $params['target_cat_id'] = (int)$targetProd['category_id'];
+                }
+            }
         }
 
         if (!empty($filters['min_price'])) {
@@ -69,9 +89,10 @@ class SearchService extends BaseService
         }
 
         $sortClause = match ($filters['sort'] ?? 'relevance') {
-            'price_asc' => 'ORDER BY p.`base_price` ASC',
-            'price_desc' => 'ORDER BY p.`base_price` DESC',
+            'price_asc', 'price_low_high' => 'ORDER BY COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) ASC, p.`id` ASC',
+            'price_desc', 'price_high_low' => 'ORDER BY COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) DESC, p.`id` DESC',
             'newest'     => 'ORDER BY p.`id` DESC',
+            'popular'    => 'ORDER BY p.`sales_count` DESC, p.`id` DESC',
             default      => 'ORDER BY p.`sales_count` DESC, p.`id` DESC',
         };
 

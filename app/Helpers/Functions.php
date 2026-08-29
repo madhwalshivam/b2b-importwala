@@ -219,4 +219,57 @@ if (!function_exists('check_api_rate_limit')) {
     }
 }
 
+if (!function_exists('get_product_images')) {
+    function get_product_images(array $product): array {
+        $pid = (int)($product['id'] ?? 0);
+
+        // 1. Check product_images database table for primary cover images
+        if ($pid > 0) {
+            static $imgCache = [];
+            if (!isset($imgCache[$pid])) {
+                try {
+                    $db = \App\Core\Database::getInstance();
+                    $stmt = $db->prepare("SELECT COALESCE(NULLIF(image_url, ''), NULLIF(image_path, '')) as img FROM product_images WHERE product_id = ? ORDER BY is_primary DESC, sort_order ASC, id ASC");
+                    $stmt->execute([$pid]);
+                    $imgs = $stmt->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+                    $imgCache[$pid] = array_values(array_filter($imgs));
+                } catch (\Throwable $e) {
+                    $imgCache[$pid] = [];
+                }
+            }
+            if (!empty($imgCache[$pid])) {
+                return array_values(array_filter(array_map('asset', $imgCache[$pid])));
+            }
+        }
+
+        // 2. Check array images parameter
+        if (!empty($product['images']) && is_array($product['images'])) {
+            $urls = array_map(function($img) {
+                if (is_array($img)) {
+                    $u = $img['image_path'] ?? $img['image_url'] ?? $img['url'] ?? $img['display_url'] ?? '';
+                } else {
+                    $u = (string)$img;
+                }
+                return asset($u);
+            }, $product['images']);
+            $urls = array_values(array_filter($urls));
+            if (!empty($urls)) return $urls;
+        }
+
+        // 3. Check gallery_images JSON field
+        if (!empty($product['gallery_images'])) {
+            $json = is_string($product['gallery_images']) ? json_decode($product['gallery_images'], true) : $product['gallery_images'];
+            if (is_array($json) && !empty($json)) {
+                $urls = array_values(array_filter(array_map('asset', $json)));
+                if (!empty($urls)) return $urls;
+            }
+        }
+
+        // 4. Fallback to main_image column
+        $main = !empty($product['main_image']) ? asset($product['main_image']) : asset('assets/images/placeholder.jpg');
+        return [$main];
+    }
+}
+
+
 

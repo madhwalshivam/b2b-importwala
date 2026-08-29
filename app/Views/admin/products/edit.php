@@ -17,9 +17,38 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <h2 class="text-lg font-semibold text-gray-900 leading-snug">Edit Product:
                     <?= htmlspecialchars($productNameClean) ?>
                 </h2>
-                <p class="text-xs text-gray-500 mt-0.5 font-medium">Unified single-page product manager (all changes
-                    save with one button below)</p>
+                <p class="text-xs text-gray-500 mt-0.5 font-medium">Unified single-page product manager</p>
             </div>
+        </div>
+    </div>
+
+    <!-- INQUIRY REQUESTS TRACKING WIDGET (SPEC 13) -->
+    <?php
+    $inquiryModel = new \App\Models\Inquiry();
+    $inqStats = $inquiryModel->getProductInquiryStats($product['id']);
+    ?>
+    <div class="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-2xl border border-orange-200 shadow-xs flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+            <div class="w-12 h-12 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-sm">
+                📋
+            </div>
+            <div>
+                <h3 class="font-bold text-base text-gray-900">Product Inquiry Requests</h3>
+                <p class="text-xs text-gray-600 font-medium">Dynamic tracking calculated from all B2B customer inquiries containing this product.</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-6 text-right">
+            <div>
+                <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Inquiries</div>
+                <div class="text-2xl font-black text-gray-900"><?= $inqStats['total_inquiries'] ?></div>
+            </div>
+            <div class="border-l border-orange-200 pl-6">
+                <div class="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Total Requested Units</div>
+                <div class="text-2xl font-black text-orange-600"><?= $inqStats['total_requested_units'] ?> Units</div>
+            </div>
+            <a href="<?= url('admin/inquiries?search=' . urlencode($product['sku'])) ?>" class="px-4 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition shadow-xs">
+                View Inquiries &rsaquo;
+            </a>
         </div>
     </div>
 
@@ -521,17 +550,27 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             }
         </script>
 
-        <!-- SECTION 4: BADGES & DESCRIPTION -->
+        <!-- SECTION 4: BADGES & B2B SELLING SETTINGS -->
         <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-5 shadow-xs">
             <div class="flex items-center space-x-2 border-b border-gray-100 pb-3">
-                <i data-lucide="file-text" class="w-4 h-4 text-red-600"></i>
-                <h3 class="font-semibold text-sm text-gray-900">Description &amp; Promotional Badges</h3>
+                <i data-lucide="shield-check" class="w-4 h-4 text-red-600"></i>
+                <h3 class="font-semibold text-sm text-gray-900">Product Selling &amp; B2B Settings</h3>
             </div>
 
             <div class="space-y-4 text-xs">
                 <div>
-                    <label class="block font-semibold text-red-600 uppercase mb-2">Promotional Badges</label>
+                    <label class="block font-semibold text-red-600 uppercase mb-2">Promotional Badges &amp; Status</label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <label
+                            class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
+                            <input type="checkbox" name="is_new" value="1" <?= (!empty($product['is_new']) || !empty($product['is_new_arrival'])) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
+                            <span>New Product [ON/OFF]</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
+                            <input type="checkbox" name="is_free_shipping" value="1" <?= (!isset($product['is_free_shipping']) || !empty($product['is_free_shipping'])) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
+                            <span>Free Delivery [ON/OFF]</span>
+                        </label>
                         <label
                             class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
                             <input type="checkbox" name="is_featured" value="1" <?= !empty($product['is_featured']) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
@@ -539,19 +578,25 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         </label>
                         <label
                             class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
-                            <input type="checkbox" name="is_best_seller" value="1" <?= !empty($product['is_best_seller']) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
-                            <span>Best Seller</span>
-                        </label>
-                        <label
-                            class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
-                            <input type="checkbox" name="is_new_arrival" value="1" <?= !empty($product['is_new_arrival']) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
-                            <span>New Arrival</span>
-                        </label>
-                        <label
-                            class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
                             <input type="checkbox" name="is_flash_sale" value="1" <?= !empty($product['is_flash_sale']) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
                             <span>Flash Sale</span>
                         </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div>
+                        <label class="block font-semibold text-gray-700 uppercase mb-1">Total Sold Count</label>
+                        <input type="number" name="total_sold" min="0" value="<?= (int)($product['total_sold'] ?? $product['sales_count'] ?? 0) ?>" placeholder="e.g. 1250"
+                            class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        <p class="text-[11px] text-gray-500 mt-1">Displayed on frontend as "{Total Sold}+ sold". Admin controlled value.</p>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity (MOQ)</label>
+                        <input type="number" name="moq" min="1" value="<?= (int)($product['moq'] ?? 1) ?>" placeholder="e.g. 50"
+                            class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        <p class="text-[11px] text-gray-500 mt-1">Minimum units customer must order in an inquiry. Default minimum 1.</p>
                     </div>
                 </div>
 

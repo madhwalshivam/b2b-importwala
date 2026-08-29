@@ -7,11 +7,11 @@ class Brand extends Model {
     protected string $table = 'brands';
 
     public function getActiveBrands(): array {
-        return $this->where("(is_active = 1 OR status = 'active')", [], "sort_order ASC, name ASC");
+        return $this->where("status = 'active'", [], "sort_order ASC, name ASC");
     }
 
     public function getFeaturedBrands(): array {
-        return $this->where("(is_active = 1 OR status = 'active') AND is_featured = 1", [], "sort_order ASC, name ASC");
+        return $this->where("status = 'active' AND is_featured = 1", [], "sort_order ASC, name ASC");
     }
 
     public function getAllOrdered(): array {

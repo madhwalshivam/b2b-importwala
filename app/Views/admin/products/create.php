@@ -501,8 +501,20 @@ include __DIR__ . '/../layouts/header.php';
 
             <div class="space-y-4 text-xs">
                 <div>
-                    <label class="block font-semibold text-red-600 uppercase mb-2">Promotional Badges</label>
+                    <label class="block font-semibold text-red-600 uppercase mb-2">Promotional Badges &amp; Status</label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <label
+                            class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
+                            <input type="checkbox" name="is_new" value="1"
+                                class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
+                            <span>New Product [ON/OFF]</span>
+                        </label>
+                        <label
+                            class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
+                            <input type="checkbox" name="is_free_shipping" value="1" checked
+                                class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
+                            <span>Free Delivery [ON/OFF]</span>
+                        </label>
                         <label
                             class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
                             <input type="checkbox" name="is_featured" value="1"
@@ -511,22 +523,26 @@ include __DIR__ . '/../layouts/header.php';
                         </label>
                         <label
                             class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
-                            <input type="checkbox" name="is_best_seller" value="1"
-                                class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
-                            <span>Best Seller</span>
-                        </label>
-                        <label
-                            class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
-                            <input type="checkbox" name="is_new_arrival" value="1"
-                                class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
-                            <span>New Arrival</span>
-                        </label>
-                        <label
-                            class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
                             <input type="checkbox" name="is_flash_sale" value="1"
                                 class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
                             <span>Flash Sale</span>
                         </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div>
+                        <label class="block font-semibold text-gray-700 uppercase mb-1">Total Sold Count</label>
+                        <input type="number" name="total_sold" min="0" value="0" placeholder="e.g. 1250"
+                            class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        <p class="text-[11px] text-gray-500 mt-1">Displayed on frontend as "{Total Sold}+ sold". Admin controlled value.</p>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity (MOQ)</label>
+                        <input type="number" name="moq" min="1" value="1" placeholder="e.g. 50"
+                            class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        <p class="text-[11px] text-gray-500 mt-1">Minimum units customer must order in an inquiry. Default minimum 1.</p>
                     </div>
                 </div>
 

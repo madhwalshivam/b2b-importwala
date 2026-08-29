@@ -45,7 +45,7 @@ class CollectionCard extends Model {
     public function getCardProducts(int $cardId, ?int $limit = null): array {
         $limitClause = ($limit !== null && $limit > 0) ? "LIMIT {$limit}" : "";
         $sql = "
-            SELECT p.id, p.name, p.slug, p.price, p.sale_price, p.main_image, p.sku,
+            SELECT p.*,
                    c.name AS category_name,
                    ccp.display_order
             FROM collection_card_products ccp

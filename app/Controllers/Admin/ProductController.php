@@ -126,9 +126,8 @@ class ProductController extends Controller {
 
         // Handle Main Image
         $mainImage = trim(htmlspecialchars_decode($this->request->input('main_image_url', ''))) ?: '/assets/images/placeholder.jpg';
-        if (!empty($_FILES['main_image']['name']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
-            $r2 = new CloudflareR2();
-            $uploadedUrl = $r2->upload($_FILES['main_image']);
+        if (!empty($_FILES['main_image']['tmp_name']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
+            $uploadedUrl = $this->uploadImageFile($_FILES['main_image'], 'products');
             if (!empty($uploadedUrl)) {
                 $mainImage = $uploadedUrl;
             }
@@ -186,6 +185,9 @@ class ProductController extends Controller {
         $subcategoryId = !empty($_POST['subcategory_id']) ? (int)$_POST['subcategory_id'] : null;
         $basePrice = isset($_POST['base_price']) && $_POST['base_price'] !== '' ? (float)$_POST['base_price'] : $price;
         $moq = isset($_POST['moq']) && (int)$_POST['moq'] > 0 ? (int)$_POST['moq'] : 1;
+        $totalSold = isset($_POST['total_sold']) && (int)$_POST['total_sold'] >= 0 ? (int)$_POST['total_sold'] : 0;
+        $isBestSeller = isset($_POST['is_best_seller']) ? 1 : 0;
+        $isNew = isset($_POST['is_new']) || isset($_POST['is_new_arrival']) ? 1 : 0;
 
         $productId = $this->productModel->insert([
             'name'                 => $name,
@@ -200,6 +202,8 @@ class ProductController extends Controller {
             'sale_price'           => $salePrice,
             'base_price'           => $basePrice,
             'moq'                  => $moq,
+            'total_sold'           => $totalSold,
+            'sales_count'          => $totalSold,
             'tax_percent'          => (float)$this->request->input('tax_percent', 18),
             'stock'                => $stock,
             'main_image'           => $mainImage,
@@ -213,8 +217,10 @@ class ProductController extends Controller {
             'meta_title'           => $name,
             'meta_description'     => $this->request->input('meta_description'),
             'is_featured'          => isset($_POST['is_featured']) ? 1 : 0,
-            'is_best_seller'       => isset($_POST['is_best_seller']) ? 1 : 0,
-            'is_new_arrival'       => isset($_POST['is_new_arrival']) ? 1 : 0,
+            'is_best_seller'       => $isBestSeller,
+            'is_new'               => $isNew,
+            'is_new_arrival'       => $isNew,
+            'is_free_shipping'      => isset($_POST['is_free_shipping']) ? 1 : 0,
             'is_flash_sale'        => isset($_POST['is_flash_sale']) ? 1 : 0,
             'status'               => $this->request->input('status', 'active'),
             // OEM & Warranty fields (shown in Compare page)
@@ -259,9 +265,8 @@ class ProductController extends Controller {
 
         // Multiple Gallery Image Files Uploaded in store()
         if (!empty($_FILES['gallery_images']['name']) && is_array($_FILES['gallery_images']['name'])) {
-            $r2 = new CloudflareR2();
             foreach ($_FILES['gallery_images']['name'] as $idx => $fileName) {
-                if ($_FILES['gallery_images']['error'][$idx] === UPLOAD_ERR_OK) {
+                if (!empty($_FILES['gallery_images']['tmp_name'][$idx]) && $_FILES['gallery_images']['error'][$idx] === UPLOAD_ERR_OK) {
                     $fileArr = [
                         'name' => $_FILES['gallery_images']['name'][$idx],
                         'type' => $_FILES['gallery_images']['type'][$idx],
@@ -269,7 +274,7 @@ class ProductController extends Controller {
                         'error' => $_FILES['gallery_images']['error'][$idx],
                         'size' => $_FILES['gallery_images']['size'][$idx]
                     ];
-                    $uUrl = $r2->upload($fileArr);
+                    $uUrl = $this->uploadImageFile($fileArr, 'products');
                     if (!empty($uUrl)) {
                         $this->imageModel->add($productId, $uUrl);
                     }
@@ -287,6 +292,9 @@ class ProductController extends Controller {
         }
 
         activity_log('Create Product', 'Products', $productId, "Created product: {$name} (SKU: {$sku})");
+
+        // Flush Cache
+        try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
 
         $this->setFlash('success', 'Product created successfully!');
         $this->redirect(url('admin/products/edit/' . $productId));
@@ -430,6 +438,9 @@ class ProductController extends Controller {
         $subcategoryId = !empty($_POST['subcategory_id']) ? (int)$_POST['subcategory_id'] : null;
         $basePrice = isset($_POST['base_price']) && $_POST['base_price'] !== '' ? (float)$_POST['base_price'] : $price;
         $moq = isset($_POST['moq']) && (int)$_POST['moq'] > 0 ? (int)$_POST['moq'] : 1;
+        $totalSold = isset($_POST['total_sold']) && (int)$_POST['total_sold'] >= 0 ? (int)$_POST['total_sold'] : (int)($product['total_sold'] ?? 0);
+        $isBestSeller = isset($_POST['is_best_seller']) ? 1 : 0;
+        $isNew = isset($_POST['is_new']) || isset($_POST['is_new_arrival']) ? 1 : 0;
 
         $data = [
             'name'                 => $name,
@@ -443,6 +454,8 @@ class ProductController extends Controller {
             'sale_price'           => $salePrice,
             'base_price'           => $basePrice,
             'moq'                  => $moq,
+            'total_sold'           => $totalSold,
+            'sales_count'          => $totalSold,
             'tax_percent'          => (float)$this->request->input('tax_percent', 18),
             'stock'                => (int)$this->request->input('stock', 0),
             'video_url'            => $videoUrl,
@@ -454,8 +467,10 @@ class ProductController extends Controller {
             'meta_title'           => $name,
             'meta_description'     => $this->request->input('meta_description'),
             'is_featured'          => isset($_POST['is_featured']) ? 1 : 0,
-            'is_best_seller'       => isset($_POST['is_best_seller']) ? 1 : 0,
-            'is_new_arrival'       => isset($_POST['is_new_arrival']) ? 1 : 0,
+            'is_best_seller'       => $isBestSeller,
+            'is_new'               => $isNew,
+            'is_new_arrival'       => $isNew,
+            'is_free_shipping'      => isset($_POST['is_free_shipping']) ? 1 : 0,
             'is_flash_sale'        => isset($_POST['is_flash_sale']) ? 1 : 0,
             'status'               => $this->request->input('status', 'active'),
             // OEM & Warranty fields (shown in Compare page)
@@ -468,9 +483,8 @@ class ProductController extends Controller {
 
         // Handle Main Image: 1. Uploaded File or 2. Direct Image URL
         $imageUrl = trim($this->request->input('main_image_url', ''));
-        if (!empty($_FILES['main_image']['name']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
-            $r2 = new CloudflareR2();
-            $uploadedUrl = $r2->upload($_FILES['main_image']);
+        if (!empty($_FILES['main_image']['tmp_name']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
+            $uploadedUrl = $this->uploadImageFile($_FILES['main_image'], 'products');
             if (!empty($uploadedUrl)) {
                 $data['main_image'] = $uploadedUrl;
             }
@@ -504,9 +518,8 @@ class ProductController extends Controller {
 
         // 3. Handle Multiple Image Files Uploaded in single form
         if (!empty($_FILES['gallery_images']['name']) && is_array($_FILES['gallery_images']['name'])) {
-            $r2 = new CloudflareR2();
             foreach ($_FILES['gallery_images']['name'] as $idx => $fileName) {
-                if ($_FILES['gallery_images']['error'][$idx] === UPLOAD_ERR_OK) {
+                if (!empty($_FILES['gallery_images']['tmp_name'][$idx]) && $_FILES['gallery_images']['error'][$idx] === UPLOAD_ERR_OK) {
                     $fileArr = [
                         'name' => $_FILES['gallery_images']['name'][$idx],
                         'type' => $_FILES['gallery_images']['type'][$idx],
@@ -514,7 +527,7 @@ class ProductController extends Controller {
                         'error' => $_FILES['gallery_images']['error'][$idx],
                         'size' => $_FILES['gallery_images']['size'][$idx]
                     ];
-                    $uUrl = $r2->upload($fileArr);
+                    $uUrl = $this->uploadImageFile($fileArr, 'products');
                     if (!empty($uUrl)) {
                         $this->imageModel->add($id, $uUrl);
                     }
@@ -531,6 +544,9 @@ class ProductController extends Controller {
 
         activity_log('Update Product', 'Products', $id, "Updated product: {$name}");
 
+        // Flush Cache
+        try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+
         $this->setFlash('success', 'Product saved successfully!');
         $this->redirect(url('admin/products/edit/' . $id));
     }
@@ -544,9 +560,9 @@ class ProductController extends Controller {
         if ($product) {
             $this->productModel->delete($id);
             activity_log('Delete Product', 'Products', $id, "Deleted product ID: {$id}");
-            $this->setFlash('success', 'Product deleted.');
+            try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+            $this->setFlash('success', 'Product deleted successfully.');
         }
-
         $this->redirect(url('admin/products'));
     }
 
@@ -561,15 +577,20 @@ class ProductController extends Controller {
         exit;
     }
 
-    private function uploadImageFile(array $file, string $folder = 'gallery'): ?string {
-        if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) return null;
-        $r2 = new CloudflareR2();
-        $url = $r2->upload($file);
-        if ($url) return $url;
+    private function uploadImageFile(array $file, string $folder = 'products'): ?string {
+        if (empty($file['tmp_name'])) return null;
+        try {
+            if (class_exists('\App\Services\CloudflareR2')) {
+                $r2 = new CloudflareR2();
+                $url = $r2->upload($file);
+                if (!empty($url)) return $url;
+            }
+        } catch (\Throwable $e) {}
+
         // Fallback to local
         $uploadDir = __DIR__ . '/../../../public/uploads/' . $folder . '/';
         if (!is_dir($uploadDir)) @mkdir($uploadDir, 0777, true);
-        $ext  = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION)) ?: 'jpg';
+        $ext  = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION)) ?: 'jpg';
         $name = time() . '_' . uniqid() . '.' . $ext;
         if (@move_uploaded_file($file['tmp_name'], $uploadDir . $name)) {
             return '/uploads/' . $folder . '/' . $name;
@@ -656,5 +677,48 @@ class ProductController extends Controller {
                 $stmt->execute([$productId, $min, $max, $unit]);
             }
         }
+    }
+
+    public function toggleFlag(): void {
+        if (!Auth::hasPermission('products.edit')) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Permission denied']);
+            exit;
+        }
+
+        $id = (int)($this->request->input('id', 0));
+        $field = trim($this->request->input('field', ''));
+
+        if ($id <= 0 || !in_array($field, ['is_best_seller', 'is_new', 'is_new_arrival', 'is_free_shipping', 'status'])) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Invalid arguments']);
+            exit;
+        }
+
+        $product = $this->productModel->find($id);
+        if (!$product) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Product not found']);
+            exit;
+        }
+
+        $newVal = 0;
+        if ($field === 'is_best_seller') {
+            $newVal = !empty($product['is_best_seller']) ? 0 : 1;
+            $this->productModel->update($id, ['is_best_seller' => $newVal]);
+        } elseif ($field === 'is_new' || $field === 'is_new_arrival') {
+            $newVal = (!empty($product['is_new']) || !empty($product['is_new_arrival'])) ? 0 : 1;
+            $this->productModel->update($id, ['is_new' => $newVal, 'is_new_arrival' => $newVal]);
+        } elseif ($field === 'is_free_shipping') {
+            $newVal = !empty($product['is_free_shipping']) ? 0 : 1;
+            $this->productModel->update($id, ['is_free_shipping' => $newVal]);
+        }
+
+        // Immediate Cache Flush
+        try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'id' => $id, 'field' => $field, 'newValue' => $newVal]);
+        exit;
     }
 }

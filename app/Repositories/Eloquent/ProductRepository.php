@@ -64,7 +64,7 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     {
         $cacheKey = "catalog:new_arrivals:limit_{$limit}";
         return CacheManager::getInstance()->remember($cacheKey, 1800, function () use ($limit) {
-            $stmt = $this->getReadDb()->prepare("SELECT * FROM `products` WHERE `status` = 'active' AND `is_new_arrival` = 1 ORDER BY `id` DESC LIMIT {$limit}");
+            $stmt = $this->getReadDb()->prepare("SELECT * FROM `products` WHERE `status` = 'active' AND (`is_new` = 1 OR `is_new_arrival` = 1) ORDER BY `id` DESC LIMIT {$limit}");
             $stmt->execute();
             return $stmt->fetchAll();
         });
@@ -74,7 +74,7 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     {
         $cacheKey = "catalog:bestsellers:limit_{$limit}";
         return CacheManager::getInstance()->remember($cacheKey, 1800, function () use ($limit) {
-            $stmt = $this->getReadDb()->prepare("SELECT * FROM `products` WHERE `status` = 'active' AND `is_best_seller` = 1 ORDER BY `sales_count` DESC LIMIT {$limit}");
+            $stmt = $this->getReadDb()->prepare("SELECT * FROM `products` WHERE `status` = 'active' AND `is_best_seller` = 1 ORDER BY `sales_count` DESC, `id` DESC LIMIT {$limit}");
             $stmt->execute();
             return $stmt->fetchAll();
         });

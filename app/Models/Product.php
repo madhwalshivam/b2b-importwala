@@ -328,35 +328,43 @@ class Product extends Model {
      * Fetch related or frequently bought products for a given product
      */
     public function getRelatedProducts(int $productId, string $type = 'related', int $limit = 20): array {
-        $stmt = $this->db->prepare("
-            SELECT p.*, pr.sort_order, c.name as category_name
-            FROM product_related pr
-            JOIN products p ON pr.related_product_id = p.id
-            LEFT JOIN categories c ON p.category_id = c.id
-            WHERE pr.product_id = ? AND pr.relation_type = ? AND p.status = 'active'
-            ORDER BY pr.sort_order ASC, pr.id ASC
-            LIMIT {$limit}
-        ");
-        $stmt->execute([$productId, $type]);
-        $items = $stmt->fetchAll();
-        foreach ($items as &$item) {
-            $item['main_image'] = asset($item['main_image'] ?? 'assets/images/placeholder.jpg');
+        try {
+            $stmt = $this->db->prepare("
+                SELECT p.*, pr.sort_order, c.name as category_name
+                FROM product_related pr
+                JOIN products p ON pr.related_product_id = p.id
+                LEFT JOIN categories c ON p.category_id = c.id
+                WHERE pr.product_id = ? AND pr.relation_type = ? AND p.status = 'active'
+                ORDER BY pr.sort_order ASC, pr.id ASC
+                LIMIT {$limit}
+            ");
+            $stmt->execute([$productId, $type]);
+            $items = $stmt->fetchAll();
+            foreach ($items as &$item) {
+                $item['main_image'] = asset($item['main_image'] ?? 'assets/images/placeholder.jpg');
+            }
+            return $items;
+        } catch (\Throwable $e) {
+            return [];
         }
-        return $items;
     }
 
     /**
      * Fetch array of related product IDs for editing
      */
     public function getRelatedProductIds(int $productId, string $type = 'related'): array {
-        $stmt = $this->db->prepare("
-            SELECT related_product_id
-            FROM product_related
-            WHERE product_id = ? AND relation_type = ?
-            ORDER BY sort_order ASC
-        ");
-        $stmt->execute([$productId, $type]);
-        return array_column($stmt->fetchAll(), 'related_product_id');
+        try {
+            $stmt = $this->db->prepare("
+                SELECT related_product_id
+                FROM product_related
+                WHERE product_id = ? AND relation_type = ?
+                ORDER BY sort_order ASC
+            ");
+            $stmt->execute([$productId, $type]);
+            return array_column($stmt->fetchAll(), 'related_product_id');
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     /**

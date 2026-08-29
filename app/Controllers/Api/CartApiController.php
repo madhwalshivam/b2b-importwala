@@ -41,10 +41,19 @@ class CartApiController extends BaseController
         $variationId = (int)($input['variation_id'] ?? 0);
         $quantity = (int)($input['quantity'] ?? 1);
 
-        if (!$productId || !$variationId) {
+        if (!$productId) {
             http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid product or variation parameters.']);
+            echo json_encode(['success' => false, 'message' => 'Invalid product parameters.']);
             return;
+        }
+
+        // If variation_id is 0 (Quick Add from card), auto-resolve to primary variation or 0
+        if (!$variationId) {
+            $productRepo = new \App\Repositories\Eloquent\ProductRepository();
+            $product = $productRepo->getProductWithDetails($productId);
+            if (!empty($product['variations'][0]['id'])) {
+                $variationId = (int)$product['variations'][0]['id'];
+            }
         }
 
         try {

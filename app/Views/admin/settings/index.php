@@ -168,6 +168,48 @@ include __DIR__ . '/../layouts/header.php';
                     </div>
                 <?php endforeach; ?>
             </div>
+        <!-- SECTION 5: WhatsApp B2B & Wishlist Settings -->
+        <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+            <div class="border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2.5">
+                    <i data-lucide="message-circle" class="w-5 h-5 text-emerald-600"></i>
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">5. WhatsApp B2B & Wishlist Settings</h3>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Configure business WhatsApp number, max wishlist limits, and customizable enquiry message templates.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1.5">WhatsApp Business Phone Number <span class="text-red-600">*</span></label>
+                    <input type="text" name="whatsapp_business_number"
+                        value="<?= htmlspecialchars($settings['whatsapp_business_number'] ?? '919217714452') ?>" required
+                        placeholder="e.g. 919217714452 (country code + number without spaces or +)"
+                        class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                    <p class="text-[10px] text-slate-400 mt-1">Format: Country code + phone number without + or spaces (e.g., 919217714452).</p>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1.5">Wishlist Maximum Items Limit <span class="text-red-600">*</span></label>
+                    <input type="number" name="wishlist_max_limit" min="1" max="1000"
+                        value="<?= htmlspecialchars($settings['wishlist_max_limit'] ?? '100') ?>" required
+                        class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                    <p class="text-[10px] text-slate-400 mt-1">Maximum products allowed per user/guest wishlist (default: 100).</p>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-semibold text-slate-700 mb-1.5">Single-Product WhatsApp Enquiry Template</label>
+                    <textarea name="whatsapp_single_product_template" rows="4"
+                        class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition"><?= htmlspecialchars($settings['whatsapp_single_product_template'] ?? "Hi, I want to enquire about this product:\n*Product:* {product_name}\n*SKU:* {sku}\n*URL:* {product_url}\n\nPlease share wholesale price & availability details.") ?></textarea>
+                    <p class="text-[10px] text-slate-400 mt-1">Available placeholders: <code class="bg-slate-100 px-1 rounded">{product_name}</code>, <code class="bg-slate-100 px-1 rounded">{product_url}</code>, <code class="bg-slate-100 px-1 rounded">{sku}</code>, <code class="bg-slate-100 px-1 rounded">{price}</code>.</p>
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="block font-semibold text-slate-700 mb-1.5">Wishlist Bulk WhatsApp Enquiry Template</label>
+                    <textarea name="whatsapp_wishlist_template" rows="5"
+                        class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition"><?= htmlspecialchars($settings['whatsapp_wishlist_template'] ?? "Hi, I am interested in wholesale pricing for the following wishlist items:\n\n{product_list}\n\nPlease provide a bulk quotation and delivery timeline.") ?></textarea>
+                    <p class="text-[10px] text-slate-400 mt-1">Available placeholders: <code class="bg-slate-100 px-1 rounded">{product_list}</code> (automatically formatted with product names & links).</p>
+                </div>
+            </div>
         </div>
 
         <!-- Submit Button Row -->

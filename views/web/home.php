@@ -4,10 +4,10 @@ ob_start();
 ?>
 
 <!-- Dynamic Hero Banner Slider Section -->
-<div class="hero-banner-wrapper" style="margin:20px 0 32px 0; border-radius:16px; overflow:hidden; position:relative; background:#FAF4F2;">
+<div class="hero-banner-wrapper" style="margin:0 -24px 32px -24px; width:calc(100% + 48px); border-radius:0; overflow:hidden; position:relative; background:#FAF4F2;">
 
   <?php if (!empty($heroBanners)): ?>
-    <div id="heroBannerSlider" class="hero-slides-container" style="display:flex; transition:transform 0.5s ease-in-out; width:100%;">
+    <div id="heroBannerSlider" class="hero-slides-container" style="display:flex; transition:transform 0.5s ease-in-out; width:100%; height:100%;">
       <?php foreach ($heroBanners as $idx => $banner): ?>
         <?php
           $desktopSrc = \App\Models\Banner::getImageSrc($banner);
@@ -15,19 +15,19 @@ ob_start();
           $mobileSrc  = \App\Models\Banner::getMobileImageSrc($banner) ?: $desktopSrc;
           $linkUrl    = !empty($banner['link_url']) ? (str_starts_with($banner['link_url'], 'http') ? $banner['link_url'] : url(ltrim($banner['link_url'], '/'))) : '#';
         ?>
-        <div class="hero-slide-item" style="min-width:100%; flex-shrink:0; position:relative;">
+        <div class="hero-slide-item" style="min-width:100%; flex-shrink:0; position:relative; height:100%;">
           <?php if ($linkUrl !== '#'): ?>
-            <a href="<?= htmlspecialchars($linkUrl) ?>" style="display:block; width:100%;">
+            <a href="<?= htmlspecialchars($linkUrl) ?>" style="display:block; width:100%; height:100%;">
           <?php endif; ?>
 
-          <picture>
+          <picture style="display:block; width:100%; height:100%;">
             <?php if ($mobileSrc): ?>
               <source media="(max-width: 640px)" srcset="<?= htmlspecialchars($mobileSrc) ?>">
             <?php endif; ?>
             <?php if ($tabletSrc): ?>
               <source media="(max-width: 1024px)" srcset="<?= htmlspecialchars($tabletSrc) ?>">
             <?php endif; ?>
-            <img src="<?= htmlspecialchars($desktopSrc) ?>" alt="<?= htmlspecialchars($banner['title'] ?: 'ImportWala Wholesale Banner') ?>" style="width:100%; height:auto; max-height:480px; display:block; object-fit:cover; border-radius:16px;">
+            <img src="<?= htmlspecialchars($desktopSrc) ?>" alt="<?= htmlspecialchars($banner['title'] ?: 'ImportWala Wholesale Banner') ?>" style="width:100%; height:100%; display:block; object-fit:cover; object-position:center; border-radius:0;">
           </picture>
 
           <?php if (!empty($banner['title']) || !empty($banner['subtitle'])): ?>
@@ -116,7 +116,7 @@ ob_start();
   <?php else: ?>
     <!-- Fallback Standard Banner if no active DB banners exist -->
     <a href="<?= url('catalog') ?>" style="display:block; width:100%;">
-      <img src="<?= asset('images/hero-spooky-banner.png') ?>" alt="ImportWala Wholesale Catalog" style="width:100%; height:auto; display:block; object-fit:cover; border-radius:16px;">
+      <img src="<?= asset('images/hero-spooky-banner.png') ?>" alt="ImportWala Wholesale Catalog" style="width:100%; height:auto; display:block; object-fit:cover; border-radius:0;">
     </a>
   <?php endif; ?>
 
@@ -171,14 +171,16 @@ ob_start();
 
 <!-- Embedded CSS for Featured Categories Section -->
 <style>
-.featured-cats-heading {
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 24px;
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.025em;
-  color: #111827;
-  margin: 0;
+.featured-cats-heading,
+.cc-section-title,
+.section-header-title span {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.015em !important;
+  color: #111827 !important;
+  margin: 0 !important;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -397,6 +399,521 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
+<?php if (!empty($collectionCards)): ?>
+<!-- ============================================================
+     TRENDING COLLECTIONS CARDS SECTION
+     ============================================================ -->
+<div class="collection-cards-section">
+
+  <!-- Section Header -->
+  <div class="cc-header-row">
+    <div>
+      <h2 class="cc-section-title">Trending Collections</h2>
+      <p class="cc-section-sub">Curated wholesale product collections · Updated daily</p>
+    </div>
+    <div class="cc-nav-arrows">
+      <button type="button" onclick="scrollCollections(-1)" class="cc-arrow-btn" aria-label="Scroll Left">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <button type="button" onclick="scrollCollections(1)" class="cc-arrow-btn" aria-label="Scroll Right">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scrollable Cards Track -->
+  <div class="cc-track-wrapper">
+    <div class="cc-track" id="ccTrack">
+      <?php foreach ($collectionCards as $card):
+        $products = $card['products'] ?? [];
+        $productCount = count($products);
+        // Take first 4 products for the collage
+        $collageProducts = array_slice($products, 0, 4);
+        $rawLink = trim($card['link_url'] ?? '');
+        if (empty($rawLink) || $rawLink === '/catalog' || $rawLink === 'catalog') {
+            $cardLink = url('catalog?collection_id=' . $card['id']);
+        } elseif (str_starts_with($rawLink, 'http://') || str_starts_with($rawLink, 'https://')) {
+            $cardLink = $rawLink;
+        } else {
+            $cardLink = url(ltrim($rawLink, '/'));
+        }
+      ?>
+      <a href="<?= htmlspecialchars($cardLink) ?>" class="cc-card" title="<?= htmlspecialchars($card['title']) ?>">
+
+        <!-- Badge -->
+        <?php if (!empty($card['badge_text'])): ?>
+          <div class="cc-badge"><?= htmlspecialchars($card['badge_text']) ?></div>
+        <?php endif; ?>
+
+        <!-- Product Image Collage -->
+        <div class="cc-collage">
+          <?php if (!empty($card['image'])): ?>
+            <!-- Single cover image if set -->
+            <div class="cc-collage-full">
+              <img src="<?= htmlspecialchars(asset($card['image'])) ?>" alt="<?= htmlspecialchars($card['title']) ?>" loading="lazy" onerror="this.style.opacity='0'">
+            </div>
+          <?php elseif (count($collageProducts) >= 4): ?>
+            <!-- 2x2 product collage -->
+            <div class="cc-collage-grid">
+              <?php foreach ($collageProducts as $cp): ?>
+                <div class="cc-collage-cell">
+                  <img src="<?= htmlspecialchars(asset($cp['main_image'] ?? 'assets/images/placeholder.jpg')) ?>"
+                       alt="<?= htmlspecialchars($cp['name']) ?>" loading="lazy"
+                       onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'">
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php elseif (count($collageProducts) >= 2): ?>
+            <!-- 2 products side by side -->
+            <div class="cc-collage-duo">
+              <?php foreach (array_slice($collageProducts, 0, 2) as $cp): ?>
+                <div class="cc-collage-cell">
+                  <img src="<?= htmlspecialchars(asset($cp['main_image'] ?? 'assets/images/placeholder.jpg')) ?>"
+                       alt="<?= htmlspecialchars($cp['name']) ?>" loading="lazy">
+                </div>
+              <?php endforeach; ?>
+            </div>
+          <?php elseif (!empty($collageProducts)): ?>
+            <!-- Single product image -->
+            <div class="cc-collage-full">
+              <img src="<?= htmlspecialchars(asset($collageProducts[0]['main_image'] ?? 'assets/images/placeholder.jpg')) ?>"
+                   alt="<?= htmlspecialchars($collageProducts[0]['name']) ?>" loading="lazy">
+            </div>
+          <?php else: ?>
+            <!-- Placeholder -->
+            <div class="cc-collage-full cc-placeholder">
+              <svg fill="none" stroke="#d1d5db" viewBox="0 0 24 24" width="48" height="48">
+                <rect x="3" y="3" width="18" height="18" rx="3" fill="#f3f4f6"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM21 15l-5-5L5 21"/>
+              </svg>
+            </div>
+          <?php endif; ?>
+        </div>
+
+        <!-- Card Info -->
+        <div class="cc-info">
+          <?php if (!empty($card['subtitle'])): ?>
+            <p class="cc-subtitle"><?= htmlspecialchars($card['subtitle']) ?></p>
+          <?php endif; ?>
+          <h3 class="cc-title"><?= htmlspecialchars($card['title']) ?></h3>
+          <?php if ($productCount > 0): ?>
+            <span class="cc-count"><?= $productCount ?> products</span>
+          <?php endif; ?>
+        </div>
+
+        <!-- Hover Overlay Arrow -->
+        <div class="cc-hover-arrow">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+          </svg>
+        </div>
+      </a>
+      <?php endforeach; ?>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     THE IMPORTWALE EXPERIENCE BANNER (User Provided Luxury Feature Section)
+     ============================================================ -->
+<div class="importwale-experience-banner" style="background: linear-gradient(135deg, #f05a29 0%, #e04b1c 100%); border-radius: 0; padding: 46px 28px; margin: 36px -24px 48px -24px; width: calc(100% + 48px); color: #ffffff; text-align: center; box-shadow: 0 8px 30px rgba(240, 90, 41, 0.25);">
+  
+  <!-- Main Inter Heading (Reduced Size 24px) -->
+  <h2 style="font-family: 'Inter', system-ui, -apple-system, sans-serif !important; font-size: 24px; font-weight: 800; color: #ffffff; margin: 0 0 28px 0; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased;">
+    The ImportWale Experience
+  </h2>
+
+  <!-- 5 Feature Points Grid -->
+  <div class="exp-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; align-items: start; max-width: 1200px; margin: 0 auto 36px auto;">
+    
+    <!-- Point 1: B2B Pricing -->
+    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="1" x2="12" y2="23"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      </div>
+      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
+        B2B Pricing
+      </h4>
+      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
+        Competitive pricing for business &amp; bulk requirements.
+      </p>
+    </div>
+
+    <!-- Point 2: Bulk Orders Welcome -->
+    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+      </div>
+      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
+        Bulk Orders Welcome
+      </h4>
+      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
+        Flexible quantities for wholesale and business requirements.
+      </p>
+    </div>
+
+    <!-- Point 3: Quality Products -->
+    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <path d="m9 12 2 2 4-4"></path>
+        </svg>
+      </div>
+      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
+        Quality Products
+      </h4>
+      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
+        Reliable products built for regular business requirements.
+      </p>
+    </div>
+
+    <!-- Point 4: Easy Inquiry -->
+    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="22" y1="2" x2="11" y2="13"></line>
+          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+        </svg>
+      </div>
+      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
+        Easy Inquiry
+      </h4>
+      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
+        Send your requirement directly and our team will get back to you.
+      </p>
+    </div>
+
+    <!-- Point 5: Business Support -->
+    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
+      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
+        Business Support
+      </h4>
+      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
+        Dedicated support for product, quantity and bulk requirements.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Join Now Button -->
+  <div>
+    <a href="<?= url('catalog') ?>" class="exp-join-btn" style="display: inline-block; padding: 11px 36px; background: #ffffff; border-radius: 8px; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #f05a29; text-decoration: none; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
+      Join Now
+    </a>
+  </div>
+
+</div>
+
+<!-- Media query styling for ImportWale Experience Section -->
+<style>
+.exp-join-btn:hover {
+  background: #FAF4F2 !important;
+  color: #d8481b !important;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1024px) {
+  .exp-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 24px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .importwale-experience-banner {
+    margin-left: -16px !important;
+    margin-right: -16px !important;
+    width: calc(100% + 32px) !important;
+    padding: 36px 18px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .exp-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px 16px !important;
+  }
+}
+</style>
+
+<!-- Collection Cards CSS -->
+<style>
+.collection-cards-section {
+  margin: 0 0 48px 0;
+}
+
+.cc-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+}
+
+.cc-section-title {
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 2px 0;
+  letter-spacing: -0.025em;
+}
+
+.cc-section-sub {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 400;
+}
+
+.cc-nav-arrows {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.cc-arrow-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid #e5e7eb;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.cc-arrow-btn:hover {
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(17,24,39,0.15);
+}
+
+.cc-track-wrapper {
+  overflow: hidden;
+  position: relative;
+}
+
+.cc-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+}
+
+.cc-track::-webkit-scrollbar { display: none; }
+
+.cc-card {
+  flex-shrink: 0;
+  width: 220px;
+  background: #f9fafb;
+  border: 1.5px solid #f0f0f0;
+  border-radius: 20px;
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.25s ease;
+  cursor: pointer;
+  scroll-snap-align: start;
+}
+
+.cc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+  border-color: #e5e7eb;
+  background: #ffffff;
+}
+
+.cc-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  background: #f05a29;
+  color: #ffffff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-family: system-ui, sans-serif;
+  box-shadow: 0 2px 6px rgba(240,90,41,0.35);
+}
+
+/* Collage Area */
+.cc-collage {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  position: relative;
+  background: #f0f1f3;
+}
+
+.cc-collage-full {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cc-collage-full img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.cc-card:hover .cc-collage-full img {
+  transform: scale(1.04);
+}
+
+.cc-collage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+  gap: 2px;
+}
+
+.cc-collage-duo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  height: 100%;
+  gap: 2px;
+}
+
+.cc-collage-cell {
+  overflow: hidden;
+  background: #e5e7eb;
+}
+
+.cc-collage-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.cc-card:hover .cc-collage-cell img {
+  transform: scale(1.05);
+}
+
+.cc-placeholder {
+  background: #f3f4f6;
+}
+
+/* Info */
+.cc-info {
+  padding: 14px 16px 16px;
+  flex: 1;
+}
+
+.cc-subtitle {
+  font-size: 10px;
+  color: #f05a29;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0 0 4px 0;
+  font-family: system-ui, sans-serif;
+}
+
+.cc-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.cc-count {
+  font-size: 11px;
+  color: #9ca3af;
+  font-weight: 500;
+  background: #f3f4f6;
+  padding: 2px 8px;
+  border-radius: 99px;
+  display: inline-block;
+}
+
+/* Hover arrow */
+.cc-hover-arrow {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  background: #111827;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.22s ease;
+}
+
+.cc-card:hover .cc-hover-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 640px) {
+  .cc-card { width: 180px; }
+  .cc-collage { height: 150px; }
+  .cc-section-title { font-size: 20px; }
+  .cc-nav-arrows { display: none; }
+}
+</style>
+
+<script>
+(function() {
+  let ccScrollStep = 0;
+  function getTrack() { return document.getElementById('ccTrack'); }
+
+  window.scrollCollections = function(dir) {
+    const track = getTrack();
+    if (!track) return;
+    const cardWidth = track.querySelector('.cc-card')?.offsetWidth || 236;
+    track.scrollBy({ left: dir * (cardWidth + 16) * 2, behavior: 'smooth' });
+  };
+})();
+</script>
+
+</div><!-- /collection-cards-section -->
+<?php endif; // collectionCards ?>
+
 <!-- Featured Products Section -->
 <div class="section-header-title">
   <span>Featured Wholesale Products</span>
@@ -406,28 +923,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="product-grid">
   <?php if (!empty($featuredProducts)): ?>
     <?php foreach ($featuredProducts as $product): ?>
-      <div class="product-card">
-        <div class="product-card-image-wrapper">
-          <img src="<?= htmlspecialchars($product['main_image']) ?>" alt="<?= htmlspecialchars($product['title']) ?>" class="product-card-img" loading="lazy">
-          <span class="product-badge-moq">MOQ: <?= $product['moq'] ?> pcs</span>
-          <?php if (!empty($product['is_best_seller'])): ?>
-            <span class="product-badge-shipping">BEST SELLER</span>
-          <?php endif; ?>
-        </div>
-        <div class="product-card-body">
-          <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>">
-            <h3 class="product-title"><?= htmlspecialchars($product['title']) ?></h3>
-          </a>
-          <div class="product-price-row">
-            <span class="product-unit-price">$<?= number_format($product['base_price'], 2) ?></span>
-            <span class="product-moq-label">/ piece</span>
-          </div>
-          <div class="product-tiered-summary">
-            Tier Discounts Available
-          </div>
-          <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>" class="btn-add-cart-card" style="text-align:center; display:block;">View Wholesale Tiers</a>
-        </div>
-      </div>
+      <?php require __DIR__ . '/partials/product_card.php'; ?>
     <?php endforeach; ?>
   <?php endif; ?>
 </div>
@@ -441,22 +937,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <div class="product-grid">
   <?php if (!empty($bestSellers)): ?>
     <?php foreach ($bestSellers as $product): ?>
-      <div class="product-card">
-        <div class="product-card-image-wrapper">
-          <img src="<?= htmlspecialchars($product['main_image']) ?>" alt="<?= htmlspecialchars($product['title']) ?>" class="product-card-img" loading="lazy">
-          <span class="product-badge-moq">MOQ: <?= $product['moq'] ?> pcs</span>
-        </div>
-        <div class="product-card-body">
-          <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>">
-            <h3 class="product-title"><?= htmlspecialchars($product['title']) ?></h3>
-          </a>
-          <div class="product-price-row">
-            <span class="product-unit-price">$<?= number_format($product['base_price'], 2) ?></span>
-            <span class="product-moq-label">/ piece</span>
-          </div>
-          <a href="<?= url('product/' . htmlspecialchars($product['slug'])) ?>" class="btn-add-cart-card" style="text-align:center; display:block;">View Wholesale Tiers</a>
-        </div>
-      </div>
+      <?php require __DIR__ . '/partials/product_card.php'; ?>
     <?php endforeach; ?>
   <?php endif; ?>
 </div>

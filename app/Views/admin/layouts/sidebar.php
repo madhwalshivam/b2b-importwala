@@ -78,6 +78,13 @@ $isActive = function(string $path) use ($currentUri): bool {
                     <span class="truncate">Home Sec.</span>
                 </a>
 
+                <a href="<?= url('admin/collection-cards') ?>"
+                    class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/collection-cards') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
+                    title="Product Collection Cards">
+                    <i data-lucide="layout-grid" class="w-4 h-4 shrink-0"></i>
+                    <span class="truncate">Collections</span>
+                </a>
+
                 <a href="<?= url('admin/videos') ?>"
                     class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/videos') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
                     title="Homepage Videos">
@@ -107,6 +114,27 @@ $isActive = function(string $path) use ($currentUri): bool {
         <div>
             <div class="px-1 mb-1.5 text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Catalog & Sales</div>
             <div class="grid grid-cols-2 gap-2">
+                <a href="<?= url('admin/inquiries') ?>"
+                    class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/inquiries') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-orange-400 border-slate-700/60' ?>"
+                    title="B2B Customer Inquiries">
+                    <i data-lucide="clipboard-list" class="w-4 h-4 shrink-0 text-orange-400"></i>
+                    <span class="truncate">Inquiries</span>
+                </a>
+
+                <a href="<?= url('admin/rfq') ?>"
+                    class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/rfq') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-orange-400 border-slate-700/60' ?>"
+                    title="RFQ Requests">
+                    <i data-lucide="file-search" class="w-4 h-4 shrink-0 text-orange-400"></i>
+                    <span class="truncate">RFQ</span>
+                    <?php
+                      try {
+                        $rfqBadge = (new \App\Models\RfqRequest())->getNewCount();
+                        if ($rfqBadge > 0):
+                    ?>
+                    <span class="ml-auto flex-shrink-0 bg-[#f05a29] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none"><?= $rfqBadge ?></span>
+                    <?php endif; } catch (\Throwable $e) {} ?>
+                </a>
+
                 <a href="<?= url('admin/coupons') ?>"
                     class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/coupons') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
                     title="Discount Coupons">

@@ -90,19 +90,19 @@ ob_start();
       let html = '';
       cart.items.forEach(item => {
         html += `
-          <div style="display:flex; gap:16px; padding:16px 0; border-bottom:1px solid #f3f4f6; align-items:center;">
-            <img src="${item.main_image}" style="width:70px; height:70px; object-fit:cover; border-radius:6px; border:1px solid #e5e7eb;">
+          <div style="display:flex; gap:16px; padding:18px 0; border-bottom:1px solid #f1f5f9; align-items:center;">
+            <img src="${item.main_image}" style="width:74px; height:74px; object-fit:cover; border-radius:12px; border:1px solid #e2e8f0; background:#f8fafc;">
             <div style="flex:1;">
-              <h4 style="font-size:14px; font-weight:700; color:#111827; margin-bottom:4px;">${item.product_title}</h4>
-              <div style="font-size:12px; color:#6b7280;">Color/Style: ${item.color_name || 'Standard'} | SKU: ${item.sku}</div>
-              <div style="font-size:13px; font-weight:700; color:#f05a29; margin-top:4px;">$${item.unit_price.toFixed(2)} / pc</div>
+              <h4 style="font-family:'Inter', system-ui, sans-serif; font-size:14px; font-weight:700; color:#0f172a; margin:0 0 4px 0;">${item.product_title}</h4>
+              <div style="font-size:12px; color:#64748b;">Color/Style: <strong style="color:#334155;">${item.color_name || 'Standard'}</strong> | SKU: <span style="font-family:monospace;">${item.sku}</span></div>
+              <div style="font-size:14px; font-weight:800; color:#f05a29; margin-top:4px;">$${item.unit_price.toFixed(2)} <span style="font-size:11px; color:#64748b; font-weight:500;">/ piece</span></div>
             </div>
-            <div style="display:flex; align-items:center; border:1px solid #d1d5db; border-radius:4px; overflow:hidden;">
-              <button onclick="updateQty(${item.product_id}, ${item.variation_id}, ${item.quantity - 1})" style="width:30px; height:32px; border:none; background:#f3f4f6; cursor:pointer;">-</button>
-              <span style="padding:0 12px; font-size:13px; font-weight:700;">${item.quantity}</span>
-              <button onclick="updateQty(${item.product_id}, ${item.variation_id}, ${item.quantity + 1})" style="width:30px; height:32px; border:none; background:#f3f4f6; cursor:pointer;">+</button>
+            <div style="display:flex; align-items:center; border:1.5px solid #e2e8f0; border-radius:10px; overflow:hidden; background:#f8fafc;">
+              <button onclick="updateQty(${item.product_id}, ${item.variation_id}, ${item.quantity - 1})" style="width:32px; height:36px; border:none; background:transparent; cursor:pointer; font-weight:700; color:#0f172a;">-</button>
+              <span style="padding:0 12px; font-size:13px; font-weight:700; color:#0f172a;">${item.quantity}</span>
+              <button onclick="updateQty(${item.product_id}, ${item.variation_id}, ${item.quantity + 1})" style="width:32px; height:36px; border:none; background:transparent; cursor:pointer; font-weight:700; color:#0f172a;">+</button>
             </div>
-            <div style="font-size:15px; font-weight:800; color:#111827; min-width:80px; text-align:right;">
+            <div style="font-family:'Inter', system-ui, sans-serif; font-size:16px; font-weight:800; color:#0f172a; min-width:90px; text-align:right;">
               $${item.line_total.toFixed(2)}
             </div>
           </div>

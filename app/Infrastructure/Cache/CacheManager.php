@@ -149,10 +149,12 @@ class CacheManager implements CacheInterface
                 $this->redisClient->flushDB();
             } catch (\Throwable $e) {}
         }
-        $files = glob($this->cacheStoragePath . '/*.cache');
+        $files = glob($this->cacheStoragePath . '/*');
         if ($files) {
             foreach ($files as $f) {
-                @unlink($f);
+                if (is_file($f)) {
+                    @unlink($f);
+                }
             }
         }
         return true;
