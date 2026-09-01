@@ -64,6 +64,8 @@
                         :class="openSection === 'pol' ? 'rotate-180' : ''"></i>
                 </button>
                 <div x-show="openSection === 'pol'" x-collapse class="px-4 pb-4 space-y-2.5">
+                    <a href="<?= url('support') ?>"
+                        class="block text-gray-600 hover:text-red-600 font-medium">Help Center &amp; FAQs</a>
                     <a href="<?= url('shipping-policy') ?>"
                         class="block text-gray-600 hover:text-red-600 font-medium">Shipping &amp; Delivery Policy</a>
                     <a href="<?= url('refund-policy') ?>"
@@ -220,6 +222,7 @@
                     Policies &amp; Legal
                 </h4>
                 <ul class="space-y-2.5 text-xs text-gray-600 font-medium">
+                    <li><a href="<?= url('support') ?>" class="hover:text-red-600 transition">Help Center &amp; FAQs</a></li>
                     <li><a href="<?= url('shipping-policy') ?>" class="hover:text-red-600 transition">Shipping &amp;
                             Delivery Policy</a></li>
                     <li><a href="<?= url('refund-policy') ?>" class="hover:text-red-600 transition">Returns &amp;

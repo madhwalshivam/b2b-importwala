@@ -129,7 +129,7 @@ class HomepageSectionsController extends Controller {
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN brands b ON p.brand_id = b.id
-                WHERE p.status = 'active'";
+                WHERE 1=1";
                 
         if (!empty($q)) {
             $sql .= " AND (p.name LIKE ? OR p.sku LIKE ? OR c.name LIKE ? OR b.name LIKE ?)";
@@ -137,25 +137,29 @@ class HomepageSectionsController extends Controller {
             $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
         }
         
-        $sql .= " GROUP BY p.id ORDER BY p.name ASC LIMIT 30";
+        $sql .= " ORDER BY p.name ASC LIMIT 30";
         
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
-        $resultData = $stmt->fetchAll();
+        $resultData = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
         $this->response->json([
             'success' => true,
             'items'   => array_map(function($p) {
+                $priceVal = (($p['sale_price'] ?? 0) > 0) ? $p['sale_price'] : ($p['price'] ?? 0);
+                $formattedPrice = function_exists('format_price') ? \format_price($priceVal) : '₹' . number_format((float)$priceVal, 2);
+                $imgPath = $p['main_image'] ?? 'assets/images/placeholder.jpg';
+                $imgUrl = function_exists('asset') ? \asset($imgPath) : $imgPath;
                 return [
                     'id'         => (int)$p['id'],
-                    'name'       => $p['name'],
+                    'name'       => htmlspecialchars_decode($p['name'] ?? ''),
                     'slug'       => $p['slug'] ?? '',
-                    'sku'        => $p['sku'],
-                    'price'      => format_price($p['sale_price'] ?: $p['price']),
-                    'main_image' => asset($p['main_image']),
-                    'stock'      => (int)$p['stock']
+                    'sku'        => $p['sku'] ?? '',
+                    'price'      => $formattedPrice,
+                    'main_image' => $imgUrl,
+                    'stock'      => (int)($p['stock'] ?? 0)
                 ];
-            }, $resultData)
+            }, $resultData ?: [])
         ]);
     }
 

@@ -22,16 +22,23 @@ class Request {
 
     public function getBody(): array {
         $data = [];
+        $sanitize = function($val) {
+            if (function_exists('sanitize_input')) {
+                return \sanitize_input($val);
+            }
+            return is_string($val) ? htmlspecialchars(trim($val), ENT_QUOTES, 'UTF-8') : $val;
+        };
+
         if ($this->getMethod() === 'GET') {
             foreach ($_GET as $key => $value) {
                 if ($key !== 'url') {
-                    $data[$key] = is_array($value) ? array_map('sanitize_input', $value) : sanitize_input($value);
+                    $data[$key] = is_array($value) ? array_map($sanitize, $value) : $sanitize($value);
                 }
             }
         }
         if ($this->getMethod() === 'POST') {
             foreach ($_POST as $key => $value) {
-                $data[$key] = is_array($value) ? array_map('sanitize_input', $value) : sanitize_input($value);
+                $data[$key] = is_array($value) ? array_map($sanitize, $value) : $sanitize($value);
             }
         }
         return $data;

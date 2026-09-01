@@ -338,6 +338,12 @@ class ProductController extends Controller {
         $subcatModel = new \App\Models\Subcategory();
         $subcategories = !empty($product['category_id']) ? $subcatModel->getByCategoryId((int)$product['category_id']) : [];
 
+        $variantModel = new \App\Models\ProductVariant();
+        $variants = $variantModel->getByProduct($id, false);
+
+        $specModel = new \App\Models\ProductSpecification();
+        $specifications = $specModel->getByProduct($id);
+
         return $this->render('admin/products/edit', [
             'product'             => $product,
             'categories'          => $categoryModel->all('name ASC'),
@@ -349,7 +355,9 @@ class ProductController extends Controller {
             'selectedCategoryIds' => $selectedCategoryIds,
             'selectedBrandIds'    => $selectedBrandIds,
             'galleryImages'       => $galleryImages,
-            'frequentlyBought'    => $frequentlyBought
+            'frequentlyBought'    => $frequentlyBought,
+            'variants'            => $variants,
+            'specifications'      => $specifications
         ]);
     }
 
@@ -660,22 +668,34 @@ class ProductController extends Controller {
     }
 
     /**
-     * Save wholesale tiered volume prices for product
+     * Save wholesale tiered volume prices for product or variant
      */
-    protected function saveTieredPrices(int $productId, array $minQtys, array $maxQtys, array $unitPrices): void {
+    protected function saveTieredPrices(int $productId, array $minQtys, array $maxQtys, array $unitPrices, ?int $variantId = null): void {
         $db = \App\Core\Database::getInstance();
-        $db->prepare("DELETE FROM tiered_prices WHERE product_id = ?")->execute([$productId]);
+        if ($variantId !== null) {
+            $db->prepare("DELETE FROM tiered_prices WHERE product_id = ? AND variant_id = ?")->execute([$productId, $variantId]);
+        } else {
+            $db->prepare("DELETE FROM tiered_prices WHERE product_id = ? AND variant_id IS NULL")->execute([$productId]);
+        }
         
         if (empty($minQtys)) return;
 
-        $stmt = $db->prepare("INSERT INTO tiered_prices (product_id, min_qty, max_qty, unit_price) VALUES (?, ?, ?, ?)");
+        $tiersToSave = [];
         foreach ($minQtys as $idx => $minQty) {
             $min = (int)$minQty;
-            $max = isset($maxQtys[$idx]) && $maxQtys[$idx] !== '' ? (int)$maxQtys[$idx] : null;
+            $max = isset($maxQtys[$idx]) && $maxQtys[$idx] !== '' && $maxQtys[$idx] !== null ? (int)$maxQtys[$idx] : null;
             $unit = (float)($unitPrices[$idx] ?? 0);
             if ($min > 0 && $unit > 0) {
-                $stmt->execute([$productId, $min, $max, $unit]);
+                $tiersToSave[] = ['min' => $min, 'max' => $max, 'unit' => $unit];
             }
+        }
+
+        // Sort by min_qty ASC
+        usort($tiersToSave, fn($a, $b) => $a['min'] <=> $b['min']);
+
+        $stmt = $db->prepare("INSERT INTO tiered_prices (product_id, variant_id, min_qty, max_qty, unit_price) VALUES (?, ?, ?, ?, ?)");
+        foreach ($tiersToSave as $t) {
+            $stmt->execute([$productId, $variantId, $t['min'], $t['max'], $t['unit']]);
         }
     }
 
@@ -719,6 +739,141 @@ class ProductController extends Controller {
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'id' => $id, 'field' => $field, 'newValue' => $newVal]);
+        exit;
+    }
+
+    /**
+     * AJAX Save / Create Variant
+     */
+    public function saveVariant(int $id): void {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $variantModel = new \App\Models\ProductVariant();
+        $variantId = (int)$this->request->input('variant_id', 0);
+        $data = [
+            'product_id'      => $id,
+            'variant_code'    => trim($this->request->input('variant_code', '')),
+            'image_url'       => trim($this->request->input('image_url', '')),
+            'attribute_label' => trim($this->request->input('attribute_label', 'Variant')),
+            'attribute_value' => trim($this->request->input('attribute_value', '')),
+            'weight'          => trim($this->request->input('weight', '')),
+            'dimensions'      => trim($this->request->input('dimensions', '')),
+            'stock_quantity'  => (int)$this->request->input('stock_quantity', 0),
+            'wholesale_price' => (float)$this->request->input('wholesale_price', 0),
+            'one_piece_price' => (float)$this->request->input('one_piece_price', 0),
+            'sort_order'      => (int)$this->request->input('sort_order', 0),
+            'is_active'       => (int)$this->request->input('is_active', 1)
+        ];
+
+        if (empty($data['attribute_value'])) {
+            echo json_encode(['success' => false, 'message' => 'Attribute value is required']);
+            exit;
+        }
+
+        try {
+            if ($variantId > 0) {
+                $variantModel->updateVariant($variantId, $data);
+                echo json_encode(['success' => true, 'message' => 'Variant updated successfully']);
+            } else {
+                $newId = $variantModel->createVariant($data);
+                echo json_encode(['success' => true, 'message' => 'Variant created successfully', 'variant_id' => $newId]);
+            }
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    /**
+     * AJAX Delete Variant
+     */
+    public function deleteVariant(int $variantId): void {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $variantModel = new \App\Models\ProductVariant();
+        $variantModel->deleteVariant($variantId);
+        echo json_encode(['success' => true, 'message' => 'Variant deleted successfully']);
+        exit;
+    }
+
+    /**
+     * AJAX Save Specifications List
+     */
+    public function saveSpecs(int $id): void {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $specsRaw = $this->request->input('specs', []);
+        if (is_string($specsRaw)) {
+            $specsRaw = json_decode($specsRaw, true) ?: [];
+        }
+
+        $specModel = new \App\Models\ProductSpecification();
+        $specModel->saveSpecifications($id, $specsRaw);
+
+        echo json_encode(['success' => true, 'message' => 'Specifications saved successfully']);
+        exit;
+    }
+
+    /**
+     * AJAX Product Search API for Admin Selectors
+     */
+    public function searchApi(): void {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $q = trim($this->request->input('q', ''));
+        $db = \App\Core\Database::getInstance();
+
+        $sql = "SELECT p.id, p.name, p.slug, p.sku, p.price, p.sale_price, p.main_image, p.stock
+                FROM products p
+                LEFT JOIN categories c ON p.category_id = c.id
+                LEFT JOIN brands b ON p.brand_id = b.id
+                WHERE 1=1";
+        $params = [];
+
+        if (!empty($q)) {
+            $sql .= " AND (p.name LIKE ? OR p.sku LIKE ? OR c.name LIKE ? OR b.name LIKE ?)";
+            $like = '%' . $q . '%';
+            $params = [$like, $like, $like, $like];
+        }
+
+        $sql .= " ORDER BY p.name ASC LIMIT 30";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $products = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        $items = array_map(function($p) {
+            $priceVal = (($p['sale_price'] ?? 0) > 0) ? $p['sale_price'] : ($p['price'] ?? 0);
+            $formattedPrice = function_exists('format_price') ? \format_price($priceVal) : '₹' . number_format((float)$priceVal, 2);
+            $imgPath = $p['main_image'] ?? 'assets/images/placeholder.jpg';
+            $imgUrl = function_exists('asset') ? \asset($imgPath) : $imgPath;
+            return [
+                'id'         => (int)$p['id'],
+                'name'       => htmlspecialchars_decode($p['name'] ?? ''),
+                'slug'       => $p['slug'] ?? '',
+                'sku'        => $p['sku'] ?? '',
+                'price'      => $formattedPrice,
+                'main_image' => $imgUrl,
+                'stock'      => (int)($p['stock'] ?? 0)
+            ];
+        }, $products);
+
+        echo json_encode(['success' => true, 'items' => $items]);
         exit;
     }
 }

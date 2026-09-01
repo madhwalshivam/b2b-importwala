@@ -6,13 +6,89 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="<?= csrf_token() ?>">
   <title><?= htmlspecialchars($title ?? 'ImportWale | World-Scale B2B Wholesale Platform') ?></title>
+
+  <!-- Tailwind CSS CDN (required for all utility classes across the site) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#f05a29',
+            'primary-dark': '#d8481b',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        }
+      },
+      corePlugins: {
+        preflight: false, /* Don't override existing everful-theme.css base styles */
+      }
+    }
+  </script>
+
+  <!-- Site Stylesheets -->
   <link rel="stylesheet" href="<?= asset('css/everful-theme.css') ?>?v=<?= time() ?>">
   <link rel="stylesheet" href="<?= asset('css/product-card-unified.css') ?>?v=<?= time() ?>">
+  <link rel="stylesheet" href="<?= asset('css/theme.css') ?>?v=<?= time() ?>">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       GLOBAL BRAND ORANGE SCROLLBAR
+       ============================================================ */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: #CBD5E1 transparent;
+    }
+
+    /* ============================================================
+       GLOBAL SVG / ICON SAFETY RESET
+       Prevents inline SVGs from expanding to full container width
+       when no explicit Tailwind w-* / h-* class is present.
+       ============================================================ */
+    svg:not([width]):not([height]):not(.no-size-reset) {
+      width: 1em;
+      height: 1em;
+    }
+
+    /* Product detail layout helpers */
+    .font-sans { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* Custom scrollbar for variant list */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Prose styles for product description */
+    .prose { color: #374151; line-height: 1.7; }
+    .prose p { margin-bottom: 0.75rem; }
+    .prose ul, .prose ol { padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    .prose li { margin-bottom: 0.25rem; }
+    .prose strong { font-weight: 700; }
+    .prose h2, .prose h3, .prose h4 { font-weight: 700; margin: 1rem 0 0.5rem; }
+  </style>
 </head>
 
 <?php
@@ -212,14 +288,20 @@ $initialWishlistCount = (int)$wStmt->fetchColumn();
               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </a>
-        <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist" style="position:relative;">
+        <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
           <div class="cart-pill-count" id="headerWishlistCount" style="background:#f05a29; display:<?= $initialWishlistCount > 0 ? 'flex' : 'none' ?>;"><?= $initialWishlistCount ?></div>
         </a>
-        <a href="<?= url('inquiry') ?>" class="header-icon-item" title="My Inquiry" style="position:relative;">
+        <button type="button" onclick="openCartDrawer()" class="header-icon-item cursor-pointer" title="Cart" style="background:transparent; border:none; outline:none;">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+          </svg>
+          <div class="cart-pill-count" id="headerCartCount" style="background:#f05a29; display:none;">0</div>
+        </button>
+        <a href="<?= url('inquiry') ?>" class="header-icon-item" title="My Inquiry">
           <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -229,32 +311,58 @@ $initialWishlistCount = (int)$wStmt->fetchColumn();
       </div>
     </div>
 
-    <!-- Category Sub-Nav Bar -->
+    <!-- Category Sub-Nav Bar (Fully Database Driven) -->
+    <?php
+    $navModel = new \App\Models\NavLink();
+    $dynamicNavTree = $navModel->getTree(true); // Fetch active links (is_active = 1) ordered by sort_order ASC
+    $currentUri = trim($_SERVER['REQUEST_URI'] ?? '', '/');
+    ?>
     <nav class="nav-categories-bar">
       <div class="nav-categories-inner">
-        <a href="<?= url('') ?>" class="nav-category-link active">Home</a>
-        <a href="<?= url('catalog') ?>" class="nav-category-link">
-          Categories
-          <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
-            style="margin-left:3px; display:inline-block; vertical-align:middle;">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </a>
-        <a href="<?= url('catalog?sort=newest') ?>" class="nav-category-link">New Arrivals</a>
-        <a href="<?= url('catalog?sort=popular') ?>" class="nav-category-link">Best Sellers</a>
-        <a href="<?= url('catalog?free_shipping=1') ?>" class="nav-category-link">Free Air Shipping</a>
-        <a href="<?= url('catalog?price_drops=1') ?>" class="nav-category-link">Price Drops</a>
-        <a href="<?= url('catalog?q=halloween') ?>" class="nav-category-link">Halloween</a>
-        <a href="<?= url('blog') ?>" class="nav-category-link">Blog</a>
-        <a href="<?= url('support') ?>" class="nav-category-link">
-          Support
-          <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
-            style="margin-left:3px; display:inline-block; vertical-align:middle;">
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </a>
+        <?php foreach ($dynamicNavTree as $navItem): ?>
+          <?php
+          $cleanPath = ltrim($navItem['url'], '/');
+          $targetUrl = url($cleanPath);
+          $hasChildren = !empty($navItem['children']) || $navItem['type'] === 'dropdown';
+          $targetAttr = !empty($navItem['open_in_new_tab']) ? 'target="_blank" rel="noopener"' : '';
+          
+          // Determine active tab class
+          $isActiveClass = '';
+          if (($navItem['url'] === '/' || $navItem['url'] === '') && ($currentUri === '' || str_contains($currentUri, 'importwala/index.php'))) {
+              $isActiveClass = 'active';
+          } elseif (!empty($cleanPath) && str_contains($currentUri, $cleanPath)) {
+              $isActiveClass = 'active';
+          }
+          ?>
+
+          <div class="nav-item-dropdown-wrapper <?= $hasChildren ? 'has-dropdown' : '' ?>">
+            <a href="<?= $targetUrl ?>" class="nav-category-link <?= $isActiveClass ?>" <?= $targetAttr ?>>
+              <?= htmlspecialchars($navItem['label']) ?>
+              <?php if ($hasChildren): ?>
+                <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  style="margin-left:3px; display:inline-block; vertical-align:middle;">
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              <?php endif; ?>
+            </a>
+
+            <?php if (!empty($navItem['children'])): ?>
+              <div class="nav-sub-dropdown-menu">
+                <?php foreach ($navItem['children'] as $childItem): ?>
+                  <?php
+                  $childCleanPath = ltrim($childItem['url'], '/');
+                  $childUrl = url($childCleanPath);
+                  $childTargetAttr = !empty($childItem['open_in_new_tab']) ? 'target="_blank" rel="noopener"' : '';
+                  ?>
+                  <a href="<?= $childUrl ?>" class="nav-sub-dropdown-item" <?= $childTargetAttr ?>>
+                    <?= htmlspecialchars($childItem['label']) ?>
+                  </a>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
       </div>
     </nav>
   </header>
@@ -292,27 +400,37 @@ $initialWishlistCount = (int)$wStmt->fetchColumn();
     <div class="footer-inner">
       <div class="footer-col">
         <h4>ImportWale Wholesale</h4>
-        <p style="font-size:13px; color:#9ca3af; margin-bottom:12px;">World-Scale B2B Wholesale Platform connecting
-          international buyers directly with global manufacturers.</p>
-        <p style="font-size:13px; color:#9ca3af;">Email: support@importwale.com</p>
+        <p style="font-size:13px; color:#9ca3af; margin-bottom:10px;">World-Scale B2B Wholesale Platform connecting international buyers directly with global manufacturers.</p>
+        <p style="font-size:13px; color:#9ca3af; margin-bottom:4px;">✉ Email: <a href="mailto:support@importwale.com" style="color:#f05a29; text-decoration:none;">support@importwale.com</a></p>
+        <p style="font-size:13px; color:#9ca3af;">📞 Phone/WhatsApp: <a href="https://wa.me/919217714452" style="color:#10b981; text-decoration:none;">+91 92177 14452</a></p>
       </div>
       <div class="footer-col">
-        <h4>Customer Care</h4>
+        <h4>Support & Help</h4>
+        <ul>
+          <li><a href="<?= url('support') ?>">Help Center & FAQs</a></li>
+          <li><a href="<?= url('contact-us') ?>">Contact Support</a></li>
+          <li><a href="<?= url('shipping-policy') ?>">Shipping & Air Freight Policy</a></li>
+          <li><a href="<?= url('refund-policy') ?>">Refund & Replacement Policy</a></li>
+          <li><a href="<?= url('cancellation-policy') ?>">Order Cancellation Policy</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company & Legal</h4>
         <ul>
           <li><a href="<?= url('') ?>">Home</a></li>
-          <li><a href="<?= url('catalog') ?>">All Products</a></li>
-          <li><a href="<?= url('cart') ?>">Shopping Cart</a></li>
-          <li><a href="#">Shipping Information</a></li>
-          <li><a href="#">Wholesale Verification</a></li>
+          <li><a href="<?= url('catalog') ?>">All Wholesale Products</a></li>
+          <li><a href="<?= url('about-us') ?>">About ImportWale</a></li>
+          <li><a href="<?= url('terms-and-conditions') ?>">Terms & Conditions</a></li>
+          <li><a href="<?= url('privacy-policy') ?>">Privacy Policy</a></li>
         </ul>
       </div>
       <div class="footer-col">
         <h4>Top Categories</h4>
         <ul>
-          <li><a href="<?= url('catalog?category_id=1') ?>">Jewelry & Accessories</a></li>
-          <li><a href="<?= url('catalog?category_id=2') ?>">Hats & Headwear</a></li>
-          <li><a href="<?= url('catalog?category_id=3') ?>">Stationery & Office</a></li>
-          <li><a href="<?= url('catalog?category_id=4') ?>">Socks & Apparel</a></li>
+          <li><a href="<?= url('catalog?category=jewelry') ?>">Jewelry & Accessories</a></li>
+          <li><a href="<?= url('catalog?category=hats') ?>">Hats & Headwear</a></li>
+          <li><a href="<?= url('catalog?category=stationery') ?>">Stationery & Office</a></li>
+          <li><a href="<?= url('catalog?category=socks') ?>">Socks & Apparel</a></li>
         </ul>
       </div>
     </div>
@@ -1519,6 +1637,179 @@ $initialWishlistCount = (int)$wStmt->fetchColumn();
     });
 
   })();
+  </script>
+
+  <!-- Slide-Over Mini Cart Drawer -->
+  <div id="cartDrawerBackdrop" onclick="closeCartDrawer()" class="fixed inset-0 bg-black/60 z-[999990] hidden transition-opacity duration-300 backdrop-blur-xs"></div>
+  <div id="cartDrawer" class="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white z-[999999] shadow-2xl transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col font-sans">
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+          <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#f05a29]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+              <h3 class="font-bold text-sm text-gray-900">Your Shopping Cart (<span id="drawerCountText">0</span>)</h3>
+          </div>
+          <button onclick="closeCartDrawer()" class="p-1 text-gray-400 hover:text-gray-700 text-lg cursor-pointer border-0 bg-transparent">✕</button>
+      </div>
+
+      <div id="drawerItemsWrap" class="flex-1 overflow-y-auto p-4 space-y-3">
+          <!-- Rendered dynamically -->
+      </div>
+
+      <div class="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
+          <div class="flex justify-between items-baseline text-xs">
+              <span class="text-gray-600 font-semibold">Subtotal:</span>
+              <span class="text-base font-bold text-[#f05a29]" id="drawerSubtotalText">₹0.00</span>
+          </div>
+          <p class="text-[10px] text-gray-400">Taxes &amp; shipping calculated at checkout</p>
+
+          <div class="grid grid-cols-2 gap-2">
+              <a href="<?= url('cart') ?>" class="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold text-xs rounded-xl text-center transition">View Cart</a>
+              <a href="<?= url('checkout') ?>" class="py-2.5 px-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-bold text-xs rounded-xl text-center transition shadow-xs">Checkout &rarr;</a>
+          </div>
+
+          <!-- Request Bulk Quote / RFQ Button in Side Cart -->
+          <button type="button" onclick="openRfqModal()" class="w-full py-2.5 px-3 bg-[#0F172A] hover:bg-black text-white font-bold text-xs rounded-xl text-center transition flex items-center justify-center gap-2 cursor-pointer border-0 shadow-xs">
+              <svg class="w-4 h-4 text-[#f05a29]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span>Request Bulk Quote / Send Inquiry</span>
+          </button>
+      </div>
+  </div>
+
+  <!-- Toast Notification Popup -->
+  <div id="cartToast" class="fixed bottom-6 right-6 z-[999999] hidden items-center gap-3 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-semibold border border-gray-700 transition transform duration-300">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span id="cartToastText">Item added to cart</span>
+  </div>
+
+  <script>
+      async function quickAddToCartCard(productId, moq, btn) {
+          const payload = new URLSearchParams();
+          payload.append('product_id', productId);
+          payload.append('quantity', moq || 1);
+          payload.append('pricing_mode', 'wholesale');
+
+          try {
+              const res = await fetch('<?= url('cart/add') ?>', { method: 'POST', body: payload });
+              const data = await res.json();
+              if (data.success) {
+                  if (typeof updateHeaderCartBadge === 'function') {
+                      updateHeaderCartBadge(data.cart_count);
+                  }
+                  if (typeof renderCartDrawerUI === 'function') {
+                      renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
+                  }
+                  if (typeof showCartToast === 'function') {
+                      showCartToast('Item added to cart');
+                  }
+              }
+          } catch(e){}
+      }
+      async function fetchCartData() {
+          try {
+              const res = await fetch('<?= url('cart/data') ?>');
+              const data = await res.json();
+              if (data.success) {
+                  updateHeaderCartBadge(data.count);
+                  renderCartDrawerUI(data.items, data.subtotal, data.count);
+                  if (typeof updateOrderSummarySidebar === 'function') {
+                      updateOrderSummarySidebar(data.count, data.subtotal);
+                  }
+                  if (typeof syncExistingCartToSteppers === 'function') {
+                      syncExistingCartToSteppers(data.items);
+                  }
+              }
+          } catch(e){}
+      }
+
+      function updateHeaderCartBadge(count) {
+          const badge = document.getElementById('headerCartCount');
+          if (badge) {
+              if (count > 0) {
+                  badge.textContent = count;
+                  badge.style.display = 'flex';
+              } else {
+                  badge.style.display = 'none';
+              }
+          }
+      }
+
+      function renderCartDrawerUI(items, subtotal, count) {
+          const countEl = document.getElementById('drawerCountText');
+          if (countEl) countEl.textContent = count || 0;
+
+          const subEl = document.getElementById('drawerSubtotalText');
+          if (subEl) subEl.textContent = '₹' + (subtotal || '0.00');
+
+          const wrap = document.getElementById('drawerItemsWrap');
+          if (!wrap) return;
+
+          if (!items || items.length === 0) {
+              wrap.innerHTML = `
+                  <div class="text-center py-12 text-gray-400 space-y-2">
+                      <svg class="w-12 h-12 mx-auto text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/></svg>
+                      <div class="text-xs font-semibold">Your cart is empty</div>
+                  </div>
+              `;
+              return;
+          }
+
+          let html = '';
+          items.forEach(item => {
+              html += `
+                  <div class="flex items-center gap-3 p-2.5 bg-white border border-gray-200 rounded-xl">
+                      <img src="${item.image}" class="w-12 h-12 object-cover rounded-lg border border-gray-100 shrink-0">
+                      <div class="flex-1 min-w-0">
+                          <div class="font-bold text-xs text-gray-900 truncate">${item.name}</div>
+                          <div class="text-[10px] text-gray-500">${item.variant_title ? item.variant_title + ' &bull; ' : ''} Qty: ${item.quantity}</div>
+                          <div class="text-xs font-bold text-[#f05a29]">₹${parseFloat(item.item_total).toFixed(2)}</div>
+                      </div>
+                      <button onclick="removeDrawerCartItem(${item.id})" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer border-0 bg-transparent" title="Remove item">
+                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                          </svg>
+                      </button>
+                  </div>
+              `;
+          });
+          wrap.innerHTML = html;
+      }
+
+      function openCartDrawer() {
+          fetchCartData();
+          document.getElementById('cartDrawerBackdrop').classList.remove('hidden');
+          document.getElementById('cartDrawer').classList.remove('translate-x-full');
+      }
+
+      function closeCartDrawer() {
+          document.getElementById('cartDrawerBackdrop').classList.add('hidden');
+          document.getElementById('cartDrawer').classList.add('translate-x-full');
+      }
+
+      function showCartToast(msg) {
+          const toast = document.getElementById('cartToast');
+          const txt = document.getElementById('cartToastText');
+          if (toast && txt) {
+              txt.textContent = msg;
+              toast.classList.remove('hidden');
+              toast.classList.add('flex');
+              setTimeout(() => {
+                  toast.classList.add('hidden');
+                  toast.classList.remove('flex');
+              }, 3500);
+          }
+      }
+
+      async function removeDrawerCartItem(itemId) {
+          const payload = new URLSearchParams();
+          payload.append('cart_item_id', itemId);
+          const res = await fetch('<?= url('cart/remove') ?>', { method: 'POST', body: payload });
+          const data = await res.json();
+          if (data.success) {
+              updateHeaderCartBadge(data.cart_count);
+              renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
+          }
+      }
+
+      document.addEventListener('DOMContentLoaded', fetchCartData);
   </script>
 </body>
 

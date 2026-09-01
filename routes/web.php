@@ -46,26 +46,21 @@ $router->get('/logout', 'AuthController@customerLogout');
 $router->get('/account', 'AuthController@account');
 
 // Wishlist Routes (AJAX & Page View)
-$router->get('/wishlist', 'WishlistController@index');
-$router->post('/wishlist/toggle', 'WishlistController@toggle', [CsrfMiddleware::class]);
-
-// Compare Routes (AJAX & Page View)
-$router->get('/compare', 'CompareController@index');
-$router->post('/compare/toggle', 'CompareController@toggle', [CsrfMiddleware::class]);
-$router->get('/compare/clear', 'CompareController@clear');
-$router->post('/compare/clear', 'CompareController@clear');
+$router->get('/wishlist', 'Web\WishlistController@index');
+$router->post('/wishlist/toggle', 'Web\WishlistController@toggle');
+$router->get('/wishlist/status', 'Web\WishlistController@status');
 
 // Cart & Checkout Actions
-$router->post('/cart/add', 'CartController@add', [CsrfMiddleware::class]);
-$router->post('/cart/update', 'CartController@update', [CsrfMiddleware::class]);
-$router->post('/cart/remove', 'CartController@remove', [CsrfMiddleware::class]);
-$router->get('/cart/data', 'CartController@getCartData');
-$router->post('/cart/apply-coupon', 'CartController@applyCoupon', [CsrfMiddleware::class]);
+$router->get('/cart', 'Web\CartController@index');
+$router->get('/cart/data', 'Web\CartController@data');
+$router->post('/cart/add', 'Web\CartController@add');
+$router->post('/cart/update', 'Web\CartController@update');
+$router->post('/cart/remove', 'Web\CartController@remove');
 
-$router->get('/checkout', 'CheckoutController@index');
-$router->post('/checkout/process', 'CheckoutController@processCheckout', [CsrfMiddleware::class]);
-$router->post('/checkout/address/save', 'CheckoutController@saveAddressAjax', [CsrfMiddleware::class]);
-$router->get('/order-success/{orderNumber}', 'CheckoutController@success');
+$router->get('/checkout', 'Web\CheckoutController@index');
+$router->post('/checkout/create-order', 'Web\CheckoutController@createOrder');
+$router->post('/checkout/razorpay-verify', 'Web\CheckoutController@verifyRazorpay');
+$router->get('/checkout/success/{id}', 'Web\CheckoutController@success');
 
 // Cart Coupon Actions
 $router->post('/cart/apply-coupon', 'CartController@applyCoupon', [CsrfMiddleware::class]);
@@ -75,15 +70,21 @@ $router->post('/cart/remove-coupon', 'CartController@removeCoupon', [CsrfMiddlew
 $router->get('/blog', 'BlogFrontendController@index');
 $router->get('/blog/{slug}', 'BlogFrontendController@show');
 
-// CMS Pages
-$router->get('/page/{slug}', 'PageController@show');
+// Support & CMS Pages (Web Storefront)
+$router->get('/support', 'Web\SupportController@index');
+$router->get('/help-center', 'Web\SupportController@index');
+$router->get('/faqs', 'Web\SupportController@index');
+$router->get('/contact-us', 'Web\SupportController@contact');
+$router->get('/contact-support', 'Web\SupportController@contact');
+$router->post('/api/support/contact', 'Web\SupportController@submitContact');
+
+$router->get('/shipping-policy', 'Web\SupportController@shipping');
+$router->get('/refund-policy', 'Web\SupportController@refund');
+$router->get('/cancellation-policy', 'Web\SupportController@cancellation');
+$router->get('/terms-and-conditions', 'Web\SupportController@terms');
+$router->get('/privacy-policy', 'Web\SupportController@privacy');
 $router->get('/about-us', fn() => (new App\Controllers\PageController())->show('about-us'));
-$router->get('/contact-us', fn() => (new App\Controllers\PageController())->show('contact-us'));
-$router->get('/privacy-policy', fn() => (new App\Controllers\PageController())->show('privacy-policy'));
-$router->get('/terms-and-conditions', fn() => (new App\Controllers\PageController())->show('terms-and-conditions'));
-$router->get('/refund-policy', fn() => (new App\Controllers\PageController())->show('refund-policy'));
-$router->get('/shipping-policy', fn() => (new App\Controllers\PageController())->show('shipping-policy'));
-$router->get('/cancellation-policy', fn() => (new App\Controllers\PageController())->show('cancellation-policy'));
+$router->get('/page/{slug}', 'PageController@show');
 $router->post('/wholesale/inquire', 'WholesaleController@submit');
 
 // RFQ (Request For Quote) Public Submission
@@ -154,6 +155,17 @@ $router->post('/admin/product-compatibility/update/{id}', 'Admin\ProductCompatib
 // Announcement Bar Manager
 $router->get('/admin/announcement', 'Admin\AnnouncementController@index', [AdminMiddleware::class]);
 $router->post('/admin/announcement/update', 'Admin\AnnouncementController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+
+// Navigation Links Manager (Manage Top Navigation)
+$router->get('/admin/navigation', 'Admin\NavigationController@index', [AdminMiddleware::class]);
+$router->post('/admin/navigation/store', 'Admin\NavigationController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/navigation/update/{id}', 'Admin\NavigationController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/navigation/delete/{id}', 'Admin\NavigationController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/navigation/delete/{id}', 'Admin\NavigationController@delete', [AdminMiddleware::class]);
+$router->post('/admin/navigation/toggle-status/{id}', 'Admin\NavigationController@toggleStatus', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/navigation/toggle-status/{id}', 'Admin\NavigationController@toggleStatus', [AdminMiddleware::class]);
+$router->get('/admin/navigation/move/{id}/{direction}', 'Admin\NavigationController@move', [AdminMiddleware::class]);
+$router->post('/admin/navigation/reorder', 'Admin\NavigationController@reorder', [AdminMiddleware::class, CsrfMiddleware::class]);
 
 // Hero Banner Manager
 $router->get('/admin/banners', 'Admin\BannerController@index', [AdminMiddleware::class]);
@@ -246,6 +258,12 @@ $router->post('/admin/products/gallery-delete/{id}', 'Admin\ProductController@ga
 $router->post('/admin/products/gallery-set-primary/{id}', 'Admin\ProductController@gallerySetPrimary', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/gallery-reorder/{id}', 'Admin\ProductController@galleryReorder', [AdminMiddleware::class, CsrfMiddleware::class]);
 
+// Product Variants, Specs & Search AJAX Endpoints
+$router->get('/admin/products/search-api', 'Admin\ProductController@searchApi', [AdminMiddleware::class]);
+$router->post('/admin/products/{id}/variants/save', 'Admin\ProductController@saveVariant', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/variants/delete/{variantId}', 'Admin\ProductController@deleteVariant', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/{id}/specs/save', 'Admin\ProductController@saveSpecs', [AdminMiddleware::class, CsrfMiddleware::class]);
+
 
 
 // Brands Management
@@ -279,9 +297,9 @@ $router->post('/admin/subcategories/delete/{id}', 'Admin\SubcategoryController@d
 
 
 // Orders Management
-$router->get('/admin/orders', 'Admin\OrderController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
-$router->get('/admin/orders/{id}', 'Admin\OrderController@show', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
-$router->post('/admin/orders/update-status/{id}', 'Admin\OrderController@updateStatus', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('orders.edit'))->execute()]);
+$router->get('/admin/orders', 'Admin\OrderController@index', [AdminMiddleware::class]);
+$router->get('/admin/orders/view/{id}', 'Admin\OrderController@view', [AdminMiddleware::class]);
+$router->post('/admin/orders/update-status', 'Admin\OrderController@updateStatus', [AdminMiddleware::class]);
 $router->get('/admin/orders/invoice/{id}', 'Admin\OrderController@invoice', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
 
 // Sales & Tax Reports

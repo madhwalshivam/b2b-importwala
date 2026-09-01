@@ -201,7 +201,7 @@ class CollectionCardController extends Controller {
                    c.name AS category_name
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.id
-            WHERE p.status = 'active'
+            WHERE 1=1
         ";
         $params = [];
 

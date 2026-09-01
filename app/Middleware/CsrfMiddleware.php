@@ -9,7 +9,7 @@ class CsrfMiddleware {
     public function execute(): void {
         $request = new Request();
         if ($request->getMethod() === 'POST') {
-            $token = $_POST['_csrf_token'] ?? $_POST['_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
+            $token = $_POST['_csrf_token'] ?? $_POST['_token'] ?? $_POST['csrf_token'] ?? $_REQUEST['_csrf_token'] ?? $_REQUEST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? null;
             $session = new Session();
             if (!$session->validateCsrfToken($token)) {
                 if ($request->isAjax()) {

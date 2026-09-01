@@ -9,7 +9,6 @@ curl_setopt($ch1, CURLOPT_POST, true);
 curl_setopt($ch1, CURLOPT_POSTFIELDS, ['photo' => $cfile1]);
 curl_setopt($ch1, CURLOPT_RETURNTRANSFER, true);
 $res1 = curl_exec($ch1);
-curl_close($ch1);
 
 echo "=== WATCH UPLOAD API RESPONSE ===\n";
 $data1 = json_decode($res1, true);
@@ -27,7 +26,6 @@ curl_setopt($ch2, CURLOPT_POST, true);
 curl_setopt($ch2, CURLOPT_POSTFIELDS, ['photo' => $cfile2]);
 curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
 $res2 = curl_exec($ch2);
-curl_close($ch2);
 
 echo "\n=== SUNGLASSES UPLOAD API RESPONSE ===\n";
 $data2 = json_decode($res2, true);

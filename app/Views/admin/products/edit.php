@@ -609,109 +609,44 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         </div>
 
         <!-- SECTION 5: FREQUENTLY BOUGHT TOGETHER BUNDLE ITEMS -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-6 shadow-xs"
-            x-data="adminRelatedProductsComponent(<?= (int) $product['id'] ?>, <?= htmlspecialchars(json_encode(array_map(fn($p) => ['id' => (int) $p['id'], 'name' => $p['name'], 'slug' => $p['slug'] ?? '', 'sku' => $p['sku'], 'price' => format_price($p['sale_price'] ?: $p['price']), 'main_image' => asset($p['main_image'])], $frequentlyBought ?? [])), ENT_QUOTES, 'UTF-8') ?>)">
-
+        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-6 shadow-xs">
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="layers" class="w-4 h-4 text-red-600"></i>
                     <h3 class="font-semibold text-sm text-gray-900">Frequently Bought Together Bundle Items</h3>
                 </div>
-                <span class="text-[11px] text-gray-400 font-medium">Max 5 bundle items • Bidirectionally
-                    Synchronized</span>
+                <span class="text-[11px] text-gray-400 font-medium">Max 5 bundle items • Bidirectionally Synchronized</span>
             </div>
 
-            <!-- Hidden Fields for Form Submission -->
-            <input type="hidden" name="frequently_bought" :value="frequentlyBoughtItems.map(i => i.id).join(',')">
+            <!-- Hidden Field for Form Submission -->
+            <input type="hidden" id="frequently_bought_input" name="frequently_bought" value="">
 
             <!-- 1. FREQUENTLY BOUGHT TOGETHER BUNDLE SELECTOR -->
             <div class="space-y-3 pt-2">
                 <label class="block text-xs font-semibold text-gray-800 uppercase tracking-wider">
-                    Search Products (<span x-text="frequentlyBoughtItems.length"></span>/5)
+                    Search Products (<span id="bundleCountBadge">0</span>/5)
                 </label>
 
                 <!-- Search Input with Dropdown -->
-                <div class="relative" @click.away="searchResultsBought = []; isSearching = false;">
+                <div class="relative z-30" id="bundleSearchWrapper">
                     <div class="relative">
                         <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-gray-400"></i>
-                        <input type="text" x-model="searchQueryBought" @focus="searchProducts()"
-                            @input.debounce.300ms="searchProducts()" @keydown.enter.prevent=""
+                        <input type="text" id="bundleSearchInput"
+                            oninput="doBundleSearch(this.value)"
+                            onfocus="doBundleSearch(this.value)"
+                            onkeyup="doBundleSearch(this.value)"
                             placeholder="Search bundle items by name, SKU, category, or brand..."
                             class="w-full h-10 pl-10 pr-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
-
-                        <!-- Loading Indicator -->
-                        <div x-show="isSearching" class="absolute right-3 top-3">
-                            <i data-lucide="loader-2" class="w-4 h-4 text-gray-400 animate-spin"></i>
-                        </div>
                     </div>
 
-                    <!-- Dropdown Results -->
-                    <div x-show="searchResultsBought.length > 0 || (searchQueryBought.trim() !== '' && !isSearching && searchResultsBought.length === 0)"
-                        class="absolute z-30 top-11 left-0 right-0 bg-white border border-gray-900 rounded-xl shadow-xl max-h-60 overflow-y-auto divide-y divide-gray-100 text-xs">
-
-                        <!-- Empty State -->
-                        <div x-show="searchQueryBought.trim() !== '' && !isSearching && searchResultsBought.length === 0"
-                            class="p-4 text-center text-gray-500 italic">
-                            No products found matching your search.
-                        </div>
-
-                        <!-- Results List -->
-                        <template x-for="p in searchResultsBought" :key="p.id">
-                            <div class="p-2.5 flex items-center justify-between hover:bg-gray-50 transition cursor-pointer"
-                                @click="addBoughtProduct(p)">
-                                <div class="flex items-center space-x-3">
-                                    <img :src="p.main_image"
-                                        @error="$el.src='<?= asset('assets/images/mudsor-logo.png') ?>'"
-                                        class="w-8 h-8 rounded-lg object-contain bg-gray-50 border border-gray-900 p-0.5">
-                                    <div>
-                                        <p class="font-semibold text-gray-900 leading-tight" x-text="p.name"></p>
-                                        <p class="text-[10px] text-gray-400 font-mono"
-                                            x-text="'SKU: ' + (p.sku || 'N/A') + ' • ' + p.price"></p>
-                                    </div>
-                                </div>
-                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-gray-900 text-white">+
-                                    Add</span>
-                            </div>
-                        </template>
+                    <!-- Dropdown Results Container -->
+                    <div id="bundleSearchResults"
+                        class="hidden absolute z-50 top-11 left-0 right-0 bg-white border border-gray-900 rounded-xl shadow-2xl max-h-72 overflow-y-auto divide-y divide-gray-100 text-xs">
                     </div>
                 </div>
 
-                <!-- Selected List (Sortable via JS logic or just listed if sorting is native in backend) -->
-                <div
-                    class="min-h-[60px] bg-gray-50 p-3 rounded-xl border border-dashed border-gray-300 flex flex-col gap-2">
-                    <template x-if="frequentlyBoughtItems.length === 0">
-                        <p class="text-xs text-gray-400 italic py-1 px-2 text-center w-full">No bundle items selected.
-                            Add products that customers frequently purchase together with this item.</p>
-                    </template>
-
-                    <template x-for="(p, idx) in frequentlyBoughtItems" :key="p.id">
-                        <div
-                            class="bg-white border border-gray-900 rounded-xl p-3 flex items-center justify-between shadow-2xs hover:border-gray-400 transition text-xs select-none group">
-                            <div class="flex items-center space-x-3">
-                                <div class="cursor-move text-gray-300 group-hover:text-gray-500 transition px-1">
-                                    <i data-lucide="grip-vertical" class="w-4 h-4"></i>
-                                </div>
-                                <img :src="p.main_image"
-                                    @error="$el.src='<?= asset('assets/images/mudsor-logo.png') ?>'"
-                                    class="w-10 h-10 rounded-lg object-contain bg-gray-50 border border-gray-100 p-1">
-                                <div>
-                                    <p class="font-semibold text-gray-900 truncate" x-text="p.name"></p>
-                                    <p class="text-[10px] text-gray-500 font-mono" x-text="p.price"></p>
-                                </div>
-                            </div>
-                            <div class="flex items-center space-x-2 border-l border-gray-100 pl-3">
-                                <a :href="'<?= url('product/') ?>' + (p.slug || p.id)" target="_blank"
-                                    title="View Product Page"
-                                    class="w-8 h-8 rounded-lg hover:bg-blue-50 text-gray-400 hover:text-blue-600 transition flex items-center justify-center">
-                                    <i data-lucide="external-link" class="w-4 h-4"></i>
-                                </a>
-                                <button type="button" @click="removeBoughtProduct(p.id)" title="Remove Item"
-                                    class="w-8 h-8 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition flex items-center justify-center">
-                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </template>
+                <!-- Selected List Container -->
+                <div id="bundleSelectedContainer" class="min-h-[60px] bg-gray-50 p-3 rounded-xl border border-dashed border-gray-300 flex flex-col gap-2">
                 </div>
             </div>
         </div>
@@ -730,50 +665,148 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 <script>
     const PRODUCT_ID = <?= (int) $product['id'] ?>;
     const CSRF_TOKEN = '<?= csrf_token() ?>';
-    const BASE_URL = '<?= url('') ?>';
+    const BASE_URL   = '<?= url('') ?>';
 
-    function adminRelatedProductsComponent(currentProductId, initialBought) {
-        return {
-            productId: currentProductId,
-            frequentlyBoughtItems: initialBought || [],
-            searchQueryBought: '',
-            searchResultsBought: [],
-            isSearching: false,
-            async searchProducts() {
-                if (!this.searchQueryBought.trim()) {
-                    this.searchResultsBought = [];
+    let selectedBundleItems = <?= json_encode(array_map(fn($p) => [
+        'id' => (int) $p['id'],
+        'name' => htmlspecialchars_decode($p['name'] ?? ''),
+        'sku' => $p['sku'] ?? '',
+        'price' => format_price(($p['sale_price'] ?? 0) > 0 ? $p['sale_price'] : ($p['price'] ?? 0)),
+        'main_image' => asset($p['main_image'] ?? 'assets/images/placeholder.jpg')
+    ], $frequentlyBought ?? []), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
+
+    let bundleSearchTimeout = null;
+    let searchMap = {};
+
+    function renderSelectedBundleItems() {
+        const container   = document.getElementById('bundleSelectedContainer');
+        const hiddenInput = document.getElementById('frequently_bought_input');
+        const countBadge  = document.getElementById('bundleCountBadge');
+
+        if (hiddenInput) hiddenInput.value = selectedBundleItems.map(i => i.id).join(',');
+        if (countBadge)  countBadge.textContent = selectedBundleItems.length;
+
+        if (!container) return;
+
+        if (selectedBundleItems.length === 0) {
+            container.innerHTML = `<p class="text-xs text-gray-400 italic py-1 px-2 text-center w-full">No bundle items selected. Add products that customers frequently purchase together with this item.</p>`;
+            return;
+        }
+
+        container.innerHTML = selectedBundleItems.map(p => `
+            <div class="bg-white border border-gray-900 rounded-xl p-3 flex items-center justify-between shadow-2xs hover:border-gray-400 transition text-xs select-none group">
+                <div class="flex items-center space-x-3">
+                    <div class="cursor-move text-gray-300 group-hover:text-gray-500 transition px-1">
+                        <i data-lucide="grip-vertical" class="w-4 h-4"></i>
+                    </div>
+                    <img src="${p.main_image}" onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'" class="w-10 h-10 rounded-lg object-contain bg-gray-50 border border-gray-100 p-1">
+                    <div>
+                        <p class="font-semibold text-gray-900 truncate">${p.name}</p>
+                        <p class="text-[10px] text-gray-500 font-mono">${p.price}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 border-l border-gray-100 pl-3">
+                    <button type="button" onclick="removeBundleItem(${p.id})" title="Remove Item"
+                        class="w-8 h-8 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition flex items-center justify-center border-0 cursor-pointer">
+                        <i data-lucide="trash-2" class="w-4 h-4 text-red-500"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function removeBundleItem(id) {
+        selectedBundleItems = selectedBundleItems.filter(i => i.id !== id);
+        renderSelectedBundleItems();
+    }
+
+    function addBundleItemById(id) {
+        const item = searchMap[id];
+        if (!item) return;
+        if (selectedBundleItems.length >= 5) {
+            alert('Maximum 5 bundle items allowed.');
+            return;
+        }
+        if (!selectedBundleItems.some(i => i.id === item.id)) {
+            selectedBundleItems.push(item);
+            renderSelectedBundleItems();
+        }
+        const drop = document.getElementById('bundleSearchResults');
+        if (drop) drop.classList.add('hidden');
+        const input = document.getElementById('bundleSearchInput');
+        if (input) input.value = '';
+    }
+
+    function doBundleSearch(val) {
+        const drop = document.getElementById('bundleSearchResults');
+        if (!drop) return;
+
+        const q = (val || '').trim();
+        drop.innerHTML = '<div class="p-3 text-center text-gray-400 font-medium animate-pulse">Searching products...</div>';
+        drop.classList.remove('hidden');
+
+        clearTimeout(bundleSearchTimeout);
+        bundleSearchTimeout = setTimeout(async () => {
+            try {
+                const res = await fetch(`<?= url('admin/products/search-api') ?>?q=${encodeURIComponent(q)}`, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                
+                if (!res.ok) {
+                    drop.innerHTML = `<div class="p-3 text-center text-red-500 italic">Server error (${res.status}). Please refresh page.</div>`;
                     return;
                 }
 
-                this.isSearching = true;
+                const data = await res.json();
 
-                try {
-                    const res = await fetch(`<?= url('admin/homepage-sections/search-products') ?>?q=${encodeURIComponent(this.searchQueryBought)}`);
-                    const data = await res.json();
-                    if (data.success && data.items) {
-                        // Filter out the current product AND products already added to the bundle (No duplicate results)
-                        this.searchResultsBought = data.items.filter(i => {
-                            return i.id !== this.productId && !this.frequentlyBoughtItems.some(b => b.id === i.id);
-                        });
+                if (data.success && data.items && data.items.length > 0) {
+                    const filtered = data.items.filter(i => !selectedBundleItems.some(b => b.id === i.id));
+                    if (filtered.length > 0) {
+                        searchMap = {};
+                        drop.innerHTML = filtered.map(p => {
+                            searchMap[p.id] = p;
+                            const safeName = (p.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const safeSku  = (p.sku || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            return `
+                                <div class="p-3 flex items-center justify-between hover:bg-red-50/50 transition cursor-pointer"
+                                    onclick="addBundleItemById(${p.id})">
+                                    <div class="flex items-center space-x-3 min-w-0">
+                                        <img src="${p.main_image}" onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'" class="w-9 h-9 rounded-lg object-contain bg-gray-50 border border-gray-200 p-0.5 shrink-0">
+                                        <div class="min-w-0">
+                                            <p class="font-semibold text-gray-900 leading-tight truncate">${safeName}</p>
+                                            <p class="text-[11px] text-gray-500 font-mono mt-0.5">SKU: ${safeSku} • <span class="text-red-600 font-bold">${p.price}</span></p>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-gray-900 hover:bg-red-600 text-white transition shrink-0 ml-2">+ Add</span>
+                                </div>
+                            `;
+                        }).join('');
+                        drop.classList.remove('hidden');
+                        return;
                     }
-                } catch (err) {
-                    console.error('Search error:', err);
-                } finally {
-                    this.isSearching = false;
                 }
-            },
-            addBoughtProduct(p) {
-                if (!this.frequentlyBoughtItems.some(i => i.id === p.id) && this.frequentlyBoughtItems.length < 5) {
-                    this.frequentlyBoughtItems.push(p);
-                }
-                this.searchResultsBought = [];
-                this.searchQueryBought = '';
-            },
-            removeBoughtProduct(id) {
-                this.frequentlyBoughtItems = this.frequentlyBoughtItems.filter(i => i.id !== id);
+                drop.innerHTML = `<div class="p-4 text-center text-gray-500 italic">No matching products found.</div>`;
+                drop.classList.remove('hidden');
+            } catch(e) {
+                console.error('Search error:', e);
+                drop.innerHTML = `<div class="p-3 text-center text-red-500 italic">Search error: ${e.message}</div>`;
             }
-        };
+        }, 120);
     }
+
+    document.addEventListener('click', function(e) {
+        const wrap = document.getElementById('bundleSearchWrapper');
+        const drop = document.getElementById('bundleSearchResults');
+        if (wrap && drop && !wrap.contains(e.target)) {
+            drop.classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderSelectedBundleItems();
+    });
 
     function apiPost(url, body) {
         const fd = new FormData();
@@ -797,7 +830,365 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 if (data.success) {
                     if (itemCard) itemCard.remove();
                     showToast('Product image removed successfully!');
-                } else {
+                }
+            }
+        });
+    }
+</script>
+
+    <!-- ========================================================================= -->
+    <!-- PRODUCT VARIANTS MANAGER (DUAL PRICING: WHOLESALE & ONE-PIECE) -->
+    <!-- ========================================================================= -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div>
+                <div class="flex items-center space-x-2">
+                    <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase bg-orange-50 text-[#f05a29] rounded-md border border-orange-200">
+                        Multi-Variant System
+                    </span>
+                    <span class="text-xs font-bold text-slate-400">•</span>
+                    <span class="text-xs font-semibold text-slate-500"><?= count($variants ?? []) ?> Variants Configured</span>
+                </div>
+                <h3 class="text-base font-bold text-slate-900 mt-1">Product Variants &amp; Dual Pricing</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Manage variant attributes, stock, and explicit Wholesale &amp; One-Piece prices per variant.</p>
+            </div>
+            <button type="button" onclick="openVariantModal()"
+                class="px-4 py-2 bg-[#f05a29] hover:bg-[#d8481b] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Variant
+            </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-gray-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        <th class="py-3 px-4">Code</th>
+                        <th class="py-3 px-4">Attribute &amp; Value</th>
+                        <th class="py-3 px-4 text-center">Stock</th>
+                        <th class="py-3 px-4 text-right">Wholesale Price (₹)</th>
+                        <th class="py-3 px-4 text-right">One-Piece Price (₹)</th>
+                        <th class="py-3 px-4 text-center">Status</th>
+                        <th class="py-3 px-4 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 text-slate-700">
+                    <?php if (empty($variants)): ?>
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-slate-400">
+                                No variants configured yet. Click "Add Variant" above to add color/size/style variations.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($variants as $v): ?>
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="py-3 px-4 font-mono font-bold text-slate-900"><?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?></td>
+                                <td class="py-3 px-4">
+                                    <div class="font-bold text-slate-900"><?= htmlspecialchars($v['attribute_value']) ?></div>
+                                    <div class="text-[10px] text-slate-400"><?= htmlspecialchars($v['attribute_label']) ?> <?= !empty($v['weight']) ? '&bull; ' . htmlspecialchars($v['weight']) : '' ?></div>
+                                </td>
+                                <td class="py-3 px-4 text-center font-bold text-slate-900"><?= $v['stock_quantity'] ?></td>
+                                <td class="py-3 px-4 text-right font-bold text-slate-900">₹<?= number_format($v['wholesale_price'], 2) ?></td>
+                                <td class="py-3 px-4 text-right font-bold text-emerald-600">₹<?= number_format($v['one_piece_price'], 2) ?></td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full border <?= $v['is_active'] ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">
+                                        <?= $v['is_active'] ? 'Active' : 'Disabled' ?>
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                                    <button type="button" onclick='editVariant(<?= json_encode($v, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
+                                        class="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition border border-blue-200 cursor-pointer" title="Edit Variant">
+                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button type="button" onclick="deleteVariant(<?= $v['id'] ?>)"
+                                        class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer" title="Delete Variant">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- DYNAMIC SPECIFICATIONS MANAGER -->
+    <!-- ========================================================================= -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Product Technical Specifications</h3>
+                <p class="text-xs text-slate-500 mt-0.5">Dynamic key-value specifications displayed on the storefront product detail page.</p>
+            </div>
+            <button type="button" onclick="addSpecRow()"
+                class="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4"></i> Add Spec Row
+            </button>
+        </div>
+
+        <form id="specsForm" onsubmit="saveSpecifications(event)" class="space-y-4">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-gray-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <th class="py-2.5 px-4 w-1/3">Specification Key</th>
+                            <th class="py-2.5 px-4">Specification Value</th>
+                            <th class="py-2.5 px-4 text-right w-16">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="specsTableBody" class="divide-y divide-gray-100">
+                        <?php if (empty($specifications)): ?>
+                            <tr>
+                                <td colspan="3" class="py-6 text-center text-slate-400" id="noSpecsMsg">
+                                    No specifications added yet. Click "Add Spec Row" above to add technical parameters.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($specifications as $s): ?>
+                                <tr>
+                                    <td class="py-2 px-3">
+                                        <input type="text" name="spec_key[]" value="<?= htmlspecialchars($s['spec_key']) ?>" placeholder="e.g. Material" required
+                                            class="w-full h-9 px-3 bg-slate-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#f05a29]">
+                                    </td>
+                                    <td class="py-2 px-3">
+                                        <input type="text" name="spec_value[]" value="<?= htmlspecialchars($s['spec_value']) ?>" placeholder="e.g. Stainless Steel 316L" required
+                                            class="w-full h-9 px-3 bg-slate-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#f05a29]">
+                                    </td>
+                                    <td class="py-2 px-3 text-right">
+                                        <button type="button" onclick="this.closest('tr').remove()" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="save" class="w-4 h-4"></i> Save All Specifications
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<!-- VARIANT MODAL -->
+<div id="variantModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+            <h3 class="text-sm font-bold text-slate-900" id="variantModalTitle">Add Product Variant</h3>
+            <button onclick="closeVariantModal()" class="text-slate-400 hover:text-slate-700 transition">✕</button>
+        </div>
+
+        <form id="variantForm" onsubmit="submitVariantForm(event)" class="p-6 space-y-4 text-xs">
+            <input type="hidden" id="v_variant_id" value="0">
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Attribute Label <span class="text-rose-500">*</span></label>
+                    <input type="text" id="v_attribute_label" required placeholder="e.g. Color, Size, Style" value="Color / Style"
+                        class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Attribute Value <span class="text-rose-500">*</span></label>
+                    <input type="text" id="v_attribute_value" required placeholder="e.g. Onyx Black, XL"
+                        class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Variant SKU / Code</label>
+                    <input type="text" id="v_variant_code" placeholder="e.g. VAR-001"
+                        class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold font-mono">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Stock Quantity</label>
+                    <input type="number" id="v_stock_quantity" min="0" value="50"
+                        class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-bold text-slate-900 mb-1">Wholesale Price (₹) <span class="text-rose-500">*</span></label>
+                    <input type="number" step="0.01" id="v_wholesale_price" required placeholder="0.00"
+                        class="w-full h-9 px-3 bg-orange-50 border border-orange-200 rounded-lg text-xs font-bold text-[#f05a29]">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-900 mb-1">One-Piece Price (₹) <span class="text-rose-500">*</span></label>
+                    <input type="number" step="0.01" id="v_one_piece_price" required placeholder="0.00"
+                        class="w-full h-9 px-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Weight (Optional)</label>
+                    <input type="text" id="v_weight" placeholder="e.g. 0.85 kg"
+                        class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Dimensions (Optional)</label>
+                    <input type="text" id="v_dimensions" placeholder="e.g. 15x8x4 cm"
+                        class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Variant Image URL (Optional)</label>
+                <input type="text" id="v_image_url" placeholder="e.g. uploads/products/variant1.jpg"
+                    class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono">
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="v_is_active" checked class="w-4 h-4 text-[#f05a29] rounded border-slate-300">
+                <label for="v_is_active" class="font-semibold text-slate-700">Is Active (Visible on storefront)</label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
+                <button type="button" onclick="closeVariantModal()" class="px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-[#f05a29] text-white font-bold rounded-xl shadow-xs">Save Variant</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openVariantModal() {
+        document.getElementById('variantModalTitle').innerText = 'Add Product Variant';
+        document.getElementById('v_variant_id').value = 0;
+        document.getElementById('v_attribute_label').value = 'Color / Style';
+        document.getElementById('v_attribute_value').value = '';
+        document.getElementById('v_variant_code').value = '';
+        document.getElementById('v_stock_quantity').value = 50;
+        document.getElementById('v_wholesale_price').value = '<?= $product['price'] ?>';
+        document.getElementById('v_one_piece_price').value = '<?= $product['sale_price'] ?: $product['price'] ?>';
+        document.getElementById('v_weight').value = '';
+        document.getElementById('v_dimensions').value = '';
+        document.getElementById('v_image_url').value = '';
+        document.getElementById('v_is_active').checked = true;
+        document.getElementById('variantModal').classList.remove('hidden');
+    }
+
+    function editVariant(v) {
+        document.getElementById('variantModalTitle').innerText = 'Edit Product Variant';
+        document.getElementById('v_variant_id').value = v.id;
+        document.getElementById('v_attribute_label').value = v.attribute_label || 'Variant';
+        document.getElementById('v_attribute_value').value = v.attribute_value || '';
+        document.getElementById('v_variant_code').value = v.variant_code || '';
+        document.getElementById('v_stock_quantity').value = v.stock_quantity || 0;
+        document.getElementById('v_wholesale_price').value = v.wholesale_price || 0;
+        document.getElementById('v_one_piece_price').value = v.one_piece_price || 0;
+        document.getElementById('v_weight').value = v.weight || '';
+        document.getElementById('v_dimensions').value = v.dimensions || '';
+        document.getElementById('v_image_url').value = v.image_url || '';
+        document.getElementById('v_is_active').checked = parseInt(v.is_active) === 1;
+        document.getElementById('variantModal').classList.remove('hidden');
+    }
+
+    function closeVariantModal() {
+        document.getElementById('variantModal').classList.add('hidden');
+    }
+
+    async function submitVariantForm(e) {
+        e.preventDefault();
+        const payload = new URLSearchParams();
+        payload.append('_csrf_token', '<?= csrf_token() ?>');
+        payload.append('variant_id', document.getElementById('v_variant_id').value);
+        payload.append('attribute_label', document.getElementById('v_attribute_label').value);
+        payload.append('attribute_value', document.getElementById('v_attribute_value').value);
+        payload.append('variant_code', document.getElementById('v_variant_code').value);
+        payload.append('stock_quantity', document.getElementById('v_stock_quantity').value);
+        payload.append('wholesale_price', document.getElementById('v_wholesale_price').value);
+        payload.append('one_piece_price', document.getElementById('v_one_piece_price').value);
+        payload.append('weight', document.getElementById('v_weight').value);
+        payload.append('dimensions', document.getElementById('v_dimensions').value);
+        payload.append('image_url', document.getElementById('v_image_url').value);
+        payload.append('is_active', document.getElementById('v_is_active').checked ? 1 : 0);
+
+        const res = await fetch('<?= url('admin/products/' . $product['id'] . '/variants/save') ?>', {
+            method: 'POST',
+            body: payload
+        });
+        const d = await res.json();
+        if (d.success) {
+            location.reload();
+        } else {
+            alert(d.message || 'Error saving variant');
+        }
+    }
+
+    async function deleteVariant(vid) {
+        if (!confirm('Are you sure you want to delete this variant?')) return;
+        const payload = new URLSearchParams();
+        payload.append('_csrf_token', '<?= csrf_token() ?>');
+        const res = await fetch('<?= url('admin/products/variants/delete/') ?>' + vid, {
+            method: 'POST',
+            body: payload
+        });
+        const d = await res.json();
+        if (d.success) {
+            location.reload();
+        } else {
+            alert(d.message || 'Error deleting variant');
+        }
+    }
+
+    function addSpecRow() {
+        const tbody = document.getElementById('specsTableBody');
+        const noMsg = document.getElementById('noSpecsMsg');
+        if (noMsg) noMsg.closest('tr').remove();
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="py-2 px-3">
+                <input type="text" name="spec_key[]" placeholder="e.g. Material" required
+                    class="w-full h-9 px-3 bg-slate-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#f05a29]">
+            </td>
+            <td class="py-2 px-3">
+                <input type="text" name="spec_value[]" placeholder="e.g. Stainless Steel 316L" required
+                    class="w-full h-9 px-3 bg-slate-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#f05a29]">
+            </td>
+            <td class="py-2 px-3 text-right">
+                <button type="button" onclick="this.closest('tr').remove()" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        if (window.lucide) lucide.createIcons();
+    }
+
+    async function saveSpecifications(e) {
+        e.preventDefault();
+        const keys = document.querySelectorAll('input[name="spec_key[]"]');
+        const vals = document.querySelectorAll('input[name="spec_value[]"]');
+        const specs = [];
+        keys.forEach((k, idx) => {
+            if (k.value.trim() && vals[idx] && vals[idx].value.trim()) {
+                specs.push({ key: k.value.trim(), value: vals[idx].value.trim() });
+            }
+        });
+
+        const payload = new URLSearchParams();
+        payload.append('_csrf_token', '<?= csrf_token() ?>');
+        payload.append('specs', JSON.stringify(specs));
+
+        const res = await fetch('<?= url('admin/products/' . $product['id'] . '/specs/save') ?>', {
+            method: 'POST',
+            body: payload
+        });
+        const d = await res.json();
+        if (d.success) {
+            alert('Specifications saved successfully');
+            location.reload();
+        } else {
+            alert(d.message || 'Error saving specifications');
+        }
+    }
+
     function loadSubcategories(categoryId) {
         const select = document.getElementById('subCategorySelect');
         if (!select) return;

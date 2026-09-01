@@ -1,254 +1,1320 @@
 <?php
-$title = htmlspecialchars($product['name'] ?? $product['title'] ?? 'Product Detail') . " | ImportWala Wholesale";
+// ============================================================
+// PRODUCT DETAIL PAGE — Importerr.com Exact Replica UI
+// ============================================================
+$title = htmlspecialchars($product['name'] ?? 'Product') . ' | ImportWale Wholesale';
+$productName = htmlspecialchars($product['name'] ?? 'Wholesale Product');
+$sku = htmlspecialchars($product['sku'] ?? 'N/A');
+$canonicalUrl = url('product/' . ($product['slug'] ?? $product['id']));
+$moq = (int) ($product['moq'] ?? 1);
+$descHtml = !empty($product['description']) ? htmlspecialchars_decode($product['description']) : '';
 
-$pImages        = get_product_images($product);
-$totalImages    = count($pImages);
-$mainImage      = $pImages[0] ?? asset('assets/images/placeholder.jpg');
-$productName    = htmlspecialchars($product['name'] ?? $product['title'] ?? 'Wholesale Product');
-$sku            = htmlspecialchars($product['sku'] ?? 'N/A');
-$basePrice      = (float)($product['price'] ?? $product['base_price'] ?? 0);
-$salePrice      = !empty($product['sale_price']) ? (float)$product['sale_price'] : null;
-$effectivePrice = $salePrice ?: $basePrice;
-$moq            = (int)($product['moq'] ?? 1);
-$stock          = (int)($product['stock'] ?? 100);
+// Gallery
+$gallery = !empty($galleryImages) ? $galleryImages : [asset('assets/images/placeholder.jpg')];
+$mainImage = $gallery[0];
+$totalImgs = count($gallery);
 
-$discountPct    = ($salePrice && $basePrice > $salePrice) 
-    ? round((($basePrice - $salePrice) / $basePrice) * 100) 
-    : 0;
+// Initial Prices from variants
+$wholesaleStartPrice = (float) ($minWholesalePrice ?? $product['price'] ?? 0);
+$onePieceStartPrice = (float) ($minOnePiecePrice ?? $product['sale_price'] ?? $wholesaleStartPrice);
 
-$displayThumbs  = array_slice($pImages, 0, 4);
-$hasMoreOverlay = ($totalImages > 4);
-$remainingCount = $totalImages - 3;
+// Delivery window: +7 to +10 days from current date
+$delivStart = (new DateTime())->modify('+7 days')->format('d M Y');
+$delivEnd = (new DateTime())->modify('+10 days')->format('d M Y');
 
-// WhatsApp Business Enquiry Configuration
-$settingModel = new \App\Models\Setting();
-$whatsappNumber = preg_replace('/[^0-9]/', '', $settingModel->get('whatsapp_business_number') ?? '919217714452');
-$singleTemplate = $settingModel->get('whatsapp_single_product_template') ?? "Hi, I want to enquire about this product:\n*Product:* {product_name}\n*SKU:* {sku}\n*URL:* {product_url}\n\nPlease share wholesale price & availability details.";
-$productCanonicalUrl = url('product/' . ($product['slug'] ?? $product['id']));
+// WhatsApp
+$waNumber = preg_replace('/[^0-9]/', '', $whatsappNumber ?? '919217714452');
 
-$msg = str_replace(
-    ['{product_name}', '{product_url}', '{sku}', '{price}'],
-    [$productName, $productCanonicalUrl, $sku, '$' . number_format($effectivePrice, 2)],
-    $singleTemplate
-);
+// Specifications strictly from admin panel DB
+$specs = $specifications ?? [];
 
-$singleProductWhatsappUrl = 'https://wa.me/' . $whatsappNumber . '?text=' . rawurlencode($msg);
+// Related
+$related = $relatedProducts ?? [];
+$prodTiers = $productTiers ?? [];
+$varTiersMap = $variantTiersMap ?? [];
+
+$variantsList = $variants ?? [];
+if (empty($variantsList)) {
+    $variantsList = [
+        [
+            'id' => null,
+            'variant_code' => $product['sku'] ?? '',
+            'attribute_label' => 'Edition',
+            'attribute_value' => 'Standard Model (' . ($product['name'] ?? 'Main Item') . ')',
+            'stock_quantity' => (int) ($product['stock_quantity'] ?? 100),
+            'wholesale_price' => (float) ($product['wholesale_price'] ?: $product['price']),
+            'one_piece_price' => (float) ($product['one_piece_price'] ?: $product['price']),
+            'image_url' => $product['main_image'],
+            'weight' => $product['weight'] ?? '',
+            'dimensions' => $product['dimensions'] ?? '',
+        ]
+    ];
+}
+$variants = $variantsList;
+$varCount = count($variants);
+
+$variantsJsonData = array_map(function ($v) use ($mainImage, $prodTiers, $varTiersMap) {
+    $vId = (int) $v['id'];
+    $vTiers = !empty($varTiersMap[$vId]) ? $varTiersMap[$vId] : $prodTiers;
+    return [
+        'id' => $vId,
+        'code' => $v['variant_code'] ?? '',
+        'label' => $v['attribute_label'] ?? 'Color',
+        'value' => $v['attribute_value'] ?? '',
+        'stock' => (int) $v['stock_quantity'],
+        'wholesale_price' => (float) $v['wholesale_price'],
+        'one_piece_price' => (float) $v['one_piece_price'],
+        'image' => !empty($v['image_url']) ? asset($v['image_url']) : $mainImage,
+        'weight' => $v['weight'] ?? '',
+        'dimensions' => $v['dimensions'] ?? '',
+        'is_active' => (int) ($v['is_active'] ?? 1),
+        'tiers' => $vTiers
+    ];
+}, $variants ?? []);
 
 ob_start();
 ?>
 
-<!-- Breadcrumbs -->
-<div style="margin: 12px 0 20px 0; font-size: 13px; color: #64748b;">
-  <a href="<?= url('') ?>" style="color: #64748b; text-decoration: none;">Home</a> &nbsp;/&nbsp;
-  <a href="<?= url('catalog') ?>" style="color: #64748b; text-decoration: none;">Catalog</a> &nbsp;/&nbsp;
-  <?php if (!empty($product['category_name'])): ?>
-    <a href="<?= url('catalog?category_id=' . ($product['category_id'] ?? '')) ?>" style="color: #64748b; text-decoration: none;"><?= htmlspecialchars($product['category_name']) ?></a> &nbsp;/&nbsp;
-  <?php endif; ?>
-  <span style="color: #0f172a; font-weight: 600;"><?= $productName ?></span>
-</div>
+<!-- ============================================================ -->
+<!-- MAIN PRODUCT LAYOUT -->
+<!-- ============================================================ -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16 font-sans text-gray-900">
+    <div class="flex flex-col lg:flex-row gap-6 items-start">
 
-<!-- Main Detail Card -->
-<div style="display:grid; grid-template-columns: 460px 1fr; gap:40px; background:#fff; border:1px solid #f1f5f9; border-radius:24px; padding:32px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.04);">
+        <!-- ======================================================= -->
+        <!-- LEFT — IMAGE GALLERY (Sticky on Scroll) -->
+        <!-- ======================================================= -->
+        <div class="w-full lg:w-[420px] xl:w-[450px] shrink-0 lg:sticky lg:top-24 self-start">
+            <!-- Main Image Card -->
+            <div class="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xs group/mainimg"
+                style="aspect-ratio:1/1;">
+                <img id="mainProductImage" src="<?= htmlspecialchars($mainImage) ?>" alt="<?= $productName ?>"
+                    class="w-full h-full object-cover transition duration-300 cursor-zoom-in"
+                    onclick="openLightbox(this.src)">
 
-  <!-- Left: Product Media Gallery -->
-  <div>
-    <!-- Main Big Image -->
-    <div style="width:100%; aspect-ratio:1/1; background:#f8fafc; border-radius:18px; overflow:hidden; border:1px solid #e2e8f0; position:relative; cursor:pointer;"
-         onclick="openGlobalGalleryModal(<?= htmlspecialchars(json_encode($pImages, JSON_HEX_QUOT | JSON_HEX_TAG)) ?>, 0, '<?= $productName ?>')">
-      <img src="<?= htmlspecialchars($mainImage) ?>" alt="<?= $productName ?>" style="width:100%; height:100%; object-fit:cover; transition: transform 0.3s ease;" id="mainDetailImg" onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>';">
-      
-      <!-- Top Badges -->
-      <div style="position:absolute; top:14px; left:14px; display:flex; gap:8px; z-index:2;">
-        <span class="pcard-badge-moq">MOQ: <?= $moq ?> PCS</span>
-        <?php if ($discountPct > 0): ?>
-          <span class="pcard-badge-tag tag-sale">-<?= $discountPct ?>% OFF</span>
-        <?php endif; ?>
-      </div>
-    </div>
+                <!-- Floating Wishlist Heart Button Overlaid on Main Image (No Border) -->
+                <button type="button" id="floatingWishlistBtn" onclick="toggleDetailWishlist()"
+                    class="absolute top-3 right-3 z-20 w-9 h-9 rounded-full bg-white/90 backdrop-blur-xs shadow-md flex items-center justify-center transition duration-200 hover:scale-110 hover:bg-white cursor-pointer border-0 outline-none"
+                    title="Save to Wishlist">
+                    <svg id="floatingWishlistIcon" class="w-4.5 h-4.5 text-gray-400 transition" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                </button>
 
-    <!-- Gallery Thumbnails Bar -->
-    <?php if ($totalImages > 1): ?>
-      <div style="display:flex; gap:10px; margin-top:14px; overflow-x:auto;">
-        <?php foreach ($displayThumbs as $idx => $tUrl): 
-          $isOverlay = ($hasMoreOverlay && $idx === 3);
-        ?>
-          <?php if ($isOverlay): ?>
-            <button type="button" 
-                    onclick="openGlobalGalleryModal(<?= htmlspecialchars(json_encode($pImages, JSON_HEX_QUOT | JSON_HEX_TAG)) ?>, 3, '<?= $productName ?>')"
-                    style="width:80px; height:80px; border-radius:12px; border:2px solid #e2e8f0; overflow:hidden; position:relative; cursor:pointer; padding:0; flex-shrink:0; background:#0f172a;">
-              <img src="<?= htmlspecialchars($tUrl) ?>" alt="" style="width:100%; height:100%; object-fit:cover; opacity:0.5;">
-              <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:800; font-family:system-ui, sans-serif;">+<?= $remainingCount ?></span>
-            </button>
-          <?php else: ?>
-            <button type="button" 
-                    onclick="document.getElementById('mainDetailImg').src = '<?= htmlspecialchars($tUrl) ?>'"
-                    style="width:80px; height:80px; border-radius:12px; border:2px solid #e2e8f0; overflow:hidden; cursor:pointer; padding:0; flex-shrink:0; background:#f8fafc; transition:all 0.2s ease;">
-              <img src="<?= htmlspecialchars($tUrl) ?>" alt="Thumb" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>';">
-            </button>
-          <?php endif; ?>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
-  </div>
+                <?php if ($totalImgs > 1): ?>
+                    <!-- Left Slide Arrow -->
+                    <button onclick="prevImage()" type="button" aria-label="Previous Image"
+                        class="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-800 hover:text-[#f05a29] shadow-md flex items-center justify-center border-0 focus:outline-none transition-all cursor-pointer z-10 opacity-90 hover:opacity-100 hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
 
-  <!-- Right: Product Information & Wholesale Pricing -->
-  <div>
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-      <span style="color:#64748b; font-size:12px; font-weight:600; font-family:monospace;">SKU: <?= $sku ?></span>
-      <?php if ($stock > 0): ?>
-        <span style="background:#ecfdf5; color:#059669; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">IN STOCK (<?= $stock ?> pcs)</span>
-      <?php else: ?>
-        <span style="background:#fef2f2; color:#dc2626; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px;">OUT OF STOCK</span>
-      <?php endif; ?>
-    </div>
-
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
-      <?php if (!empty($product['is_new']) || !empty($product['is_new_arrival'])): ?>
-        <span style="background: #f05a29; color: #ffffff; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; text-transform: uppercase;">NEW</span>
-      <?php endif; ?>
-      <span style="color: #64748b; font-size: 12px; font-weight: 600;">Minimum Order Quantity: <?= $moq ?> Units</span>
-      <?php 
-        $tSold = (int)($product['total_sold'] ?? $product['sales_count'] ?? 0);
-        if ($tSold > 0): 
-      ?>
-        <span style="color: #059669; font-size: 12px; font-weight: 700;">&bull; <?= number_format($tSold) ?>+ Sold</span>
-      <?php endif; ?>
-    </div>
-
-    <h1 style="font-family:'Inter', system-ui, sans-serif; font-size:26px; font-weight:800; color:#0f172a; margin:0 0 16px 0; line-height:1.35;"><?= $productName ?></h1>
-
-    <!-- Price Header -->
-    <div style="display:flex; align-items:baseline; gap:12px; margin-bottom:20px; padding-bottom:18px; border-bottom:1px solid #f1f5f9;">
-      <span style="font-size:36px; font-weight:900; color:#f05a29; font-family:'Inter', system-ui, sans-serif;">$<?= number_format($effectivePrice, 2) ?></span>
-      <?php if ($salePrice && $basePrice > $salePrice): ?>
-        <span style="font-size:16px; color:#94a3b8; text-decoration:line-through; font-weight:500;">$<?= number_format($basePrice, 2) ?></span>
-      <?php endif; ?>
-      <span style="font-size:14px; color:#64748b; font-weight:500;">/ piece (Base Wholesale Price)</span>
-    </div>
-
-    <!-- Tiered Pricing Volume Discount Cards -->
-    <?php if (!empty($product['tiered_prices'])): ?>
-      <div style="margin-bottom:24px; background:#fff7ed; border:1px solid #ffedd5; border-radius:16px; padding:16px;">
-        <h4 style="font-size:13px; font-weight:800; color:#c2410c; margin:0 0 12px 0; letter-spacing:0.04em; text-transform:uppercase;">⚡ WHOLESALE VOLUME DISCOUNTS</h4>
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap:10px;">
-          <?php foreach ($product['tiered_prices'] as $tier): ?>
-            <div style="background:#ffffff; border:1px solid #fed7aa; border-radius:10px; padding:10px; text-align:center;">
-              <div style="font-size:11px; color:#64748b; font-weight:600;">
-                <?= $tier['min_qty'] ?><?= $tier['max_qty'] ? (' - ' . $tier['max_qty']) : '+' ?> pcs
-              </div>
-              <div style="font-size:16px; font-weight:800; color:#f05a29; margin-top:3px;">
-                $<?= number_format($tier['unit_price'], 2) ?>
-              </div>
+                    <!-- Right Slide Arrow -->
+                    <button onclick="nextImage()" type="button" aria-label="Next Image"
+                        class="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-800 hover:text-[#f05a29] shadow-md flex items-center justify-center border-0 focus:outline-none transition-all cursor-pointer z-10 opacity-90 hover:opacity-100 hover:scale-105">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                <?php endif; ?>
             </div>
-          <?php endforeach; ?>
+
+            <!-- Thumbnail Strip with Borderless Scroll Buttons -->
+            <?php if ($totalImgs > 1): ?>
+                <style>
+                    #thumbStrip::-webkit-scrollbar {
+                        display: none !important;
+                    }
+                </style>
+                <div class="relative flex items-center mt-3">
+                    <button onclick="scrollThumbs('left')" type="button" aria-label="Scroll Left"
+                        class="shrink-0 w-7 h-7 rounded-full bg-white text-gray-700 hover:text-[#f05a29] shadow-xs flex items-center justify-center border-0 focus:outline-none transition cursor-pointer mr-1 z-10">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                        </svg>
+                    </button>
+
+                    <div class="flex gap-2.5 overflow-x-auto py-1 scroll-smooth flex-1 [scrollbar-width:none] [-ms-overflow-style:none]"
+                        id="thumbStrip">
+                        <?php foreach ($gallery as $idx => $imgUrl): ?>
+                            <button onclick="switchImage(<?= $idx ?>, '<?= htmlspecialchars($imgUrl) ?>')"
+                                class="thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all focus:outline-none cursor-pointer <?= $idx === 0 ? 'border-2 border-[#f05a29]' : 'border-2 border-gray-200 hover:border-gray-400' ?>"
+                                data-idx="<?= $idx ?>">
+                                <img src="<?= htmlspecialchars($imgUrl) ?>" alt="Thumb <?= $idx + 1 ?>"
+                                    class="w-full h-full object-cover" loading="lazy">
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <button onclick="scrollThumbs('right')" type="button" aria-label="Scroll Right"
+                        class="shrink-0 w-7 h-7 rounded-full bg-white text-gray-700 hover:text-[#f05a29] shadow-xs flex items-center justify-center border-0 focus:outline-none transition cursor-pointer ml-1 z-10">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                </div>
+            <?php endif; ?>
         </div>
-      </div>
-    <?php endif; ?>
 
-    <!-- Variations Selector -->
-    <?php if (!empty($product['variations'])): ?>
-      <div style="margin-bottom:24px;">
-        <label style="font-size:13px; font-weight:700; color:#0f172a; display:block; margin-bottom:10px;">Select Color / Variation:</label>
-        <div style="display:flex; flex-wrap:wrap; gap:10px;" id="variationContainer">
-          <?php foreach ($product['variations'] as $index => $var): ?>
-            <button type="button" class="variation-btn <?= $index === 0 ? 'selected' : '' ?>" data-id="<?= $var['id'] ?>" style="padding:10px 16px; border:1.5px solid <?= $index === 0 ? '#f05a29' : '#e2e8f0' ?>; background:<?= $index === 0 ? '#fff7ed' : '#fff' ?>; color:<?= $index === 0 ? '#f05a29' : '#334155' ?>; font-weight:700; border-radius:10px; cursor:pointer; font-size:13px; transition:all 0.2s ease;">
-              <?= htmlspecialchars($var['color_name'] ?? ('Style #' . $var['id'])) ?>
-            </button>
-          <?php endforeach; ?>
-        </div>
-      </div>
-    <?php endif; ?>
+        <!-- ======================================================= -->
+        <!-- CENTER — PRODUCT DETAILS & PRICING -->
+        <!-- ======================================================= -->
+        <div class="flex-1 min-w-0 space-y-5">
 
-    <!-- Quantity, Cart & WhatsApp Enquiry -->
-    <div style="display:flex; flex-direction:column; gap:12px; margin-top:24px;">
-      <div style="display:flex; align-items:center; gap:16px;">
-        <div style="display:flex; align-items:center; border:1.5px solid #e2e8f0; border-radius:12px; overflow:hidden; background:#f8fafc;">
-          <button type="button" onclick="adjustQty(-1)" style="width:44px; height:48px; border:none; background:transparent; font-size:18px; font-weight:700; cursor:pointer; color:#0f172a;">-</button>
-          <input type="number" id="qtyInput" value="<?= $moq ?>" min="<?= $moq ?>" style="width:64px; height:48px; border:none; text-align:center; font-size:16px; font-weight:700; outline:none; background:transparent;">
-          <button type="button" onclick="adjustQty(1)" style="width:44px; height:48px; border:none; background:transparent; font-size:18px; font-weight:700; cursor:pointer; color:#0f172a;">+</button>
-        </div>
+            <!-- Product Title Card Container -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs space-y-4">
+                <h1 class="text-lg sm:text-xl font-bold text-gray-900 leading-snug tracking-tight">
+                    <?= $productName ?>
+                </h1>
 
-        <button type="button" onclick="addToInquiry()" class="pcard-btn-action" style="flex:1; height:48px; display:flex; align-items:center; justify-content:center; font-size:14px;">
-          Add to Inquiry List
-        </button>
-      </div>
+                <div class="flex items-center gap-2 text-xs text-gray-500">
+                    <span id="activeStockBadge" class="font-semibold text-emerald-600">In Stock</span>
+                </div>
 
-      <!-- Per-Product WhatsApp Enquiry Button -->
-      <a href="<?= htmlspecialchars($singleProductWhatsappUrl) ?>" target="_blank" rel="noopener noreferrer"
-         style="display:flex; align-items:center; justify-content:center; gap:10px; height:48px; background:#25D366; color:#ffffff; font-weight:700; font-size:14px; border-radius:12px; text-decoration:none; box-shadow: 0 4px 14px rgba(37,211,102,0.25); transition:transform 0.2s ease;">
-        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-        Enquire on WhatsApp
-      </a>
-    </div>
+                <!-- Pricing Box inside Title Card -->
+                <div class="bg-[#F8FAFC] border border-gray-100 rounded-xl p-3.5 space-y-3">
+                    <!-- One-Piece / Wholesale Toggle -->
+                    <div class="bg-gray-200/70 rounded-full p-1 max-w-[300px] flex items-center justify-between">
+                        <button id="btnOnePiece" onclick="setPricingMode('onepiece')" type="button"
+                            class="flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600">
+                            One-Piece
+                        </button>
 
-    <!-- Alert / Status -->
-    <div id="addToCartMsg" style="margin-top:14px; font-size:13px; font-weight:600;"></div>
+                        <div onclick="togglePricingMode()"
+                            class="w-8 h-4 bg-[#f05a29] rounded-full flex items-center px-0.5 cursor-pointer shrink-0 mx-1">
+                            <div id="toggleSwitchDot"
+                                class="w-3 h-3 bg-white rounded-full transition-transform duration-200 translate-x-4">
+                            </div>
+                        </div>
 
-  </div>
+                        <button id="btnWholesale" onclick="setPricingMode('wholesale')" type="button"
+                            class="flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-black text-white">
+                            Wholesale
+                        </button>
+                    </div>
 
+                    <!-- Single Price Display (One-Piece Mode) -->
+                    <div id="singlePriceRow" class="pt-0.5 hidden">
+                        <div
+                            class="text-xl sm:text-2xl font-bold text-[#f05a29] flex items-baseline gap-0.5 whitespace-nowrap">
+                            <span>₹</span><span id="priceDisplay"><?= number_format($onePieceStartPrice, 2) ?></span>
+                            <span class="text-xs text-gray-500 font-normal ml-1">/ piece</span>
+                        </div>
+                    </div>
+
+                    <!-- Tiered Volume Pricing Cards (Wholesale Mode) -->
+                    <div id="wholesaleTierContainer" class="pt-0.5 space-y-2">
+                        <div id="tierCardsRow"
+                            class="flex items-center gap-2.5 overflow-x-auto pb-1 scroll-smooth [scrollbar-width:none]">
+                            <?php
+                            $initialTiers = !empty($variantsJsonData[0]['tiers']) ? $variantsJsonData[0]['tiers'] : ($productTiers ?? []);
+                            if (empty($initialTiers)) {
+                                $initialTiers = [['min_qty' => 1, 'max_qty' => null, 'unit_price' => $wholesaleStartPrice]];
+                            }
+                            ?>
+                            <?php foreach ($initialTiers as $tIdx => $t): ?>
+                                <?php
+                                $tMin = (int) $t['min_qty'];
+                                $tMax = !empty($t['max_qty']) ? (int) $t['max_qty'] : null;
+                                $tPrice = (float) $t['unit_price'];
+                                $rangeLabel = $tMax ? "{$tMin}-{$tMax} piece" : "≥ {$tMin} piece";
+                                ?>
+                                <div class="tier-card p-2.5 rounded-xl border transition-all text-center min-w-[105px] shrink-0 <?= $tIdx === 0 ? 'border-[#f05a29] bg-orange-50/40 shadow-2xs' : 'border-gray-200 bg-white hover:border-gray-300' ?>"
+                                    data-tier-idx="<?= $tIdx ?>">
+                                    <div
+                                        class="text-sm sm:text-base font-bold <?= $tIdx === 0 ? 'text-[#f05a29]' : 'text-gray-900' ?>">
+                                        ₹<?= number_format($tPrice, 0) ?> <span
+                                            class="text-[10px] font-normal text-gray-500">/ piece</span>
+                                    </div>
+                                    <div
+                                        class="text-[11px] <?= $tIdx === 0 ? 'text-gray-800 font-bold' : 'text-gray-500 font-medium' ?> mt-0.5">
+                                        <?= $rangeLabel ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div
+                            class="text-[11px] text-gray-500 bg-amber-50/80 border border-amber-200/80 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                            <span>This is the <strong class="text-gray-800">Product price</strong> only. Procurement,
+                                taxes, duties & are charged separately.</span>
+                        </div>
+                    </div>
+
+                    <!-- Estimated Delivery Card -->
+                    <div
+                        class="bg-white border border-gray-200/80 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-gray-700">
+                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                        </svg>
+                        <span>Get it between <strong class="font-semibold text-emerald-700"><?= $delivStart ?> -
+                                <?= $delivEnd ?></strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Need Help? Strip with SVG WhatsApp Icon -->
+            <div class="bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center justify-between">
+                <div>
+                    <div class="text-xs font-bold text-gray-900">Need Help?</div>
+                    <div class="text-[11px] text-gray-400">Mon to Sat (9:30AM to 6:00PM)</div>
+                </div>
+                <a id="helpWhatsappBtn"
+                    href="https://wa.me/<?= $waNumber ?>?text=<?= urlencode('Hi, I need help with: ' . $productName) ?>"
+                    target="_blank"
+                    class="flex items-center gap-1.5 px-3.5 py-1.5 border border-emerald-500 text-emerald-600 hover:bg-emerald-50 text-xs font-semibold rounded-full transition">
+                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                        <path
+                            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                    </svg>
+                    Chat Now
+                </a>
+            </div>
+
+            <!-- Custom Scrollbar Style for Variants List -->
+            <style>
+                #variantsList::-webkit-scrollbar {
+                    width: 4px;
+                }
+
+                #variantsList::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+
+                #variantsList::-webkit-scrollbar-thumb {
+                    background: #CBD5E1;
+                    border-radius: 4px;
+                }
+
+                #variantsList::-webkit-scrollbar-thumb:hover {
+                    background: #94A3B8;
+                }
+            </style>
+
+            <!-- Variant List (Expandable Color/Size Container - Max Height 3 Rows Scrollable) -->
+            <?php if (!empty($variants)): ?>
+                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
+                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                        <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                            <?= htmlspecialchars($variants[0]['attribute_label'] ?? 'Color') ?>
+                        </h3>
+                    </div>
+
+                    <!-- Scrollable Container: Capped to 3 rows max-height (~235px), slide/scroll for 4+ variants -->
+                    <div class="divide-y divide-gray-100 max-h-[235px] overflow-y-auto scroll-smooth" id="variantsList">
+                        <?php foreach ($variants as $vi => $v):
+                            $vWholesale = (float) $v['wholesale_price'];
+                            $vOnePiece = (float) $v['one_piece_price'];
+                            $vStock = (int) $v['stock_quantity'];
+                            $vName = htmlspecialchars($v['attribute_value'] ?? 'Variant ' . ($vi + 1));
+                            $vCode = htmlspecialchars($v['variant_code'] ?? '');
+                            $vDim = htmlspecialchars($v['dimensions'] ?? '');
+                            $vImg = !empty($v['image_url']) ? asset($v['image_url']) : $mainImage;
+                            $vWeight = htmlspecialchars($v['weight'] ?? '');
+                            ?>
+                            <div class="variant-row flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/80 transition border-b border-gray-100 last:border-0 <?= $vi === 0 ? 'bg-orange-50/40 border-l-4 border-l-[#f05a29]' : '' ?>"
+                                data-variant-idx="<?= $vi ?>" data-wholesale="<?= $vWholesale ?>"
+                                data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
+                                data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)">
+
+                                <div
+                                    class="w-12 h-12 rounded-lg border border-gray-200 overflow-hidden shrink-0 bg-white shadow-2xs">
+                                    <img src="<?= htmlspecialchars($vImg) ?>" alt="<?= $vName ?>"
+                                        class="w-full h-full object-cover">
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-gray-900 truncate"><?= $vName ?></span>
+                                    </div>
+                                    <div class="text-[11px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-1">
+                                        <?php if ($vWeight): ?><span>Wt: <?= $vWeight ?></span> &bull; <?php endif; ?>
+                                        <?php if ($vDim): ?><span>Fit: <?= $vDim ?></span> &bull; <?php endif; ?>
+                                        <?php if ($vStock > 0): ?>
+                                            <span class="text-emerald-600 font-semibold">In stock</span>
+                                        <?php else: ?>
+                                            <span class="text-red-500 font-semibold">Out of stock</span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <!-- Stepper & Price Section -->
+                                <div class="flex items-center gap-2.5 shrink-0">
+                                    <!-- Quantity Stepper (- 0 +) -->
+                                    <div class="flex items-center border border-gray-200 rounded-lg bg-gray-50 overflow-hidden text-xs font-semibold select-none"
+                                        onclick="event.stopPropagation()">
+                                        <button type="button" onclick="updateVariantQty(<?= $vi ?>, -1)"
+                                            class="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition cursor-pointer border-0 bg-transparent">-</button>
+                                        <span id="vQtyVal_<?= $vi ?>" class="w-5 text-center text-gray-800 text-[11px]">0</span>
+                                        <button type="button" onclick="updateVariantQty(<?= $vi ?>, 1)"
+                                            class="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition cursor-pointer border-0 bg-transparent">+</button>
+                                    </div>
+
+                                    <div class="text-right">
+                                        <div class="text-xs font-bold text-[#f05a29] variant-price-display"
+                                            data-wholesale="<?= number_format($vWholesale, 2) ?>"
+                                            data-onepiece="<?= number_format($vOnePiece, 2) ?>">
+                                            ₹<?= number_format($vWholesale, 2) ?>
+                                        </div>
+                                        <div class="text-[10px] text-gray-400">/piece</div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+            <!-- ====================================================== -->
+            <!-- ONLINE ORDER ACTION BOX -->
+            <!-- ====================================================== -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <!-- Quantity Input Stepper -->
+                    <div
+                        class="flex items-center justify-between border border-gray-300 rounded-xl bg-gray-50 h-11 px-2 select-none shrink-0">
+                        <button type="button" onclick="changeDetailQty(-1)"
+                            class="w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 rounded-lg transition font-bold text-sm cursor-pointer border-0 bg-transparent">-</button>
+                        <input type="number" id="detailQtyInput" value="1" min="1" onchange="onDetailQtyInputChange()"
+                            class="w-12 text-center text-gray-900 font-bold text-xs bg-transparent border-0 focus:outline-none">
+                        <button type="button" onclick="changeDetailQty(1)"
+                            class="w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 rounded-lg transition font-bold text-sm cursor-pointer border-0 bg-transparent">+</button>
+                    </div>
+
+                    <!-- Add to Cart Button -->
+                    <button type="button" onclick="addToCartFromDetail()"
+                        class="flex-1 h-11 bg-[#f05a29] hover:bg-[#d94e20] text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center justify-center gap-2 cursor-pointer border-0">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                        <span>Add to Cart</span>
+                    </button>
+
+                    <!-- Buy Now Button -->
+                    <button type="button" onclick="buyNowFromDetail()"
+                        class="px-5 h-11 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer border-0">
+                        Buy Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navy Blue RFQ Banner -->
+            <div class="bg-[#0F172A] rounded-2xl p-4 text-white flex items-center justify-between gap-4 shadow-xs">
+                <div>
+                    <div class="text-xs font-bold text-white">Need a Better Price?</div>
+                    <div class="text-[11px] text-gray-300 mt-0.5">Share your required quantity &amp; target price for a
+                        tailored quote.</div>
+                </div>
+                <button onclick="openRfqWithProducts()"
+                    class="shrink-0 px-5 py-2.5 bg-[#f05a29] hover:bg-[#d94818] text-white text-xs font-semibold rounded-full border-0 focus:outline-none transition cursor-pointer">
+                    Request for Quote
+                </button>
+            </div>
+
+            <!-- ====================================================== -->
+            <!-- PRODUCT SPECIFICATIONS (IMPORTERR EXACT REPLICA UI) -->
+            <!-- ====================================================== -->
+            <?php if (!empty($specs)): ?>
+                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
+                    <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                        <h2 class="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider">Product
+                            Specifications</h2>
+                    </div>
+
+                    <div class="divide-y divide-gray-100 text-xs">
+                        <?php foreach ($specs as $si => $s): ?>
+                            <div
+                                class="spec-row flex items-center justify-between px-5 py-3 transition <?php echo ($si >= 5) ? 'hidden spec-row-extra' : ''; ?> <?php echo ($si % 2 === 1) ? 'bg-gray-50/40' : 'bg-white'; ?>">
+                                <div class="w-1/2 sm:w-5/12 text-gray-600 font-medium pr-4 truncate">
+                                    <?= htmlspecialchars($s['spec_key'] ?? '') ?>
+                                </div>
+                                <div
+                                    class="w-1/2 sm:w-7/12 text-gray-900 font-semibold text-right sm:text-left leading-relaxed">
+                                    <?= htmlspecialchars($s['spec_value'] ?? '') ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+
+                    <?php if (count($specs) > 5): ?>
+                        <div
+                            class="py-5 px-4 text-center bg-gray-50/40 border-t border-gray-100 flex items-center justify-center">
+                            <button type="button" id="toggleSpecsBtn" onclick="toggleAllSpecs()"
+                                style="display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 22px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #374151; cursor: pointer; outline: none; transition: all 0.15s ease-in-out; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);"
+                                class="hover:bg-gray-50 hover:border-gray-400 shrink-0">
+                                <span id="specsBtnText">Show all specifications</span>
+                                <svg id="specsChevron"
+                                    class="w-3.5 h-3.5 transition-transform duration-200 text-gray-500 shrink-0 ml-2"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- ====================================================== -->
+            <!-- PRODUCT DESCRIPTION -->
+            <!-- ====================================================== -->
+            <?php if ($descHtml): ?>
+                <?php
+                $formattedDesc = $descHtml;
+                // If not raw HTML (no tags like <p>, <div>, <ul>), auto-format text & bullets
+                if (!preg_match('/<[a-z][\s\S]*>/i', $descHtml)) {
+                    $lines = array_filter(explode("\n", str_replace("\r", "", $descHtml)));
+                    $blocks = [];
+                    $bulletItems = [];
+
+                    foreach ($lines as $line) {
+                        $trimmed = trim($line);
+                        if (empty($trimmed))
+                            continue;
+
+                        if (str_starts_with($trimmed, '•') || str_starts_with($trimmed, '-') || str_starts_with($trimmed, '*')) {
+                            $bulletItems[] = trim(ltrim($trimmed, '•-* '));
+                        } else {
+                            if (!empty($bulletItems)) {
+                                $blocks[] = ['type' => 'bullets', 'items' => $bulletItems];
+                                $bulletItems = [];
+                            }
+                            $blocks[] = ['type' => 'text', 'content' => $trimmed];
+                        }
+                    }
+                    if (!empty($bulletItems)) {
+                        $blocks[] = ['type' => 'bullets', 'items' => $bulletItems];
+                    }
+
+                    ob_start();
+                    ?>
+                    <div class="space-y-4">
+                        <?php foreach ($blocks as $block): ?>
+                            <?php if ($block['type'] === 'text'): ?>
+                                <p class="text-xs sm:text-sm text-gray-700 leading-relaxed font-sans">
+                                    <?= nl2br(htmlspecialchars($block['content'])) ?>
+                                </p>
+                            <?php elseif ($block['type'] === 'bullets'): ?>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-3">
+                                    <?php foreach ($block['items'] as $item): ?>
+                                        <?php
+                                        $parts = explode(':', $item, 2);
+                                        $bTitle = count($parts) > 1 ? trim($parts[0]) : '';
+                                        $bBody = count($parts) > 1 ? trim($parts[1]) : $item;
+                                        ?>
+                                        <div class="p-3 bg-gray-50/80 rounded-xl border border-gray-200/80 flex items-start gap-2.5">
+                                            <div
+                                                class="w-5 h-5 rounded-full bg-orange-100 text-[#f05a29] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                                                ✓</div>
+                                            <div class="text-xs text-gray-700 leading-snug">
+                                                <?php if ($bTitle): ?>
+                                                    <strong
+                                                        class="text-gray-900 font-bold block mb-0.5"><?= htmlspecialchars($bTitle) ?></strong>
+                                                <?php endif; ?>
+                                                <span><?= htmlspecialchars($bBody) ?></span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php
+                    $formattedDesc = ob_get_clean();
+                }
+                ?>
+                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
+                    <div class="px-5 py-4 bg-gray-50/50 flex items-center justify-between cursor-pointer select-none"
+                        onclick="toggleProductDesc()">
+                        <h2
+                            class="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                            <svg class="w-4 h-4 text-[#f05a29] shrink-0" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                            </svg>
+                            <span>Product Description</span>
+                        </h2>
+                        <button type="button"
+                            style="display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 16px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #374151; cursor: pointer; outline: none; transition: all 0.15s ease-in-out; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);"
+                            class="hover:bg-gray-50 hover:border-gray-400 shrink-0">
+                            <span id="descHeaderBtnText">Show description</span>
+                            <svg id="descChevron"
+                                class="w-3.5 h-3.5 transition-transform duration-200 text-gray-500 shrink-0 ml-1.5"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                    </div>
+                    <!-- Content hidden / closed by default -->
+                    <div id="productDescContent"
+                        class="hidden p-5 sm:p-6 text-xs sm:text-sm text-gray-700 leading-relaxed font-sans prose prose-sm max-w-none border-t border-gray-100">
+                        <?= $formattedDesc ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+        </div><!-- end center column -->
+
+        <!-- ======================================================= -->
+        <!-- RIGHT — ORDER SUMMARY & PROTECTION SIDEBAR (Sticky) -->
+        <!-- ======================================================= -->
+        <div class="w-full lg:w-[280px] xl:w-[300px] shrink-0 space-y-4 lg:sticky lg:top-24 self-start">
+
+            <!-- Importerr Order Summary Card -->
+            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                    <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Order Summary</h3>
+                    <div class="flex items-center gap-1.5">
+                        <span
+                            class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded uppercase">WHOLESALE</span>
+                        <span
+                            class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded uppercase">MOQ
+                            1</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <div class="flex items-center justify-between text-gray-600">
+                        <span>Quantity</span>
+                        <span class="font-bold text-gray-900" id="summaryQtyText">0 units</span>
+                    </div>
+                    <div class="flex items-center justify-between text-gray-600">
+                        <span>Gross Total Amount</span>
+                        <span class="font-bold text-[#f05a29] text-sm" id="summaryTotalText">₹0.00</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="buyNowFromDetail()"
+                    class="w-full py-3 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer border-0">
+                    Buy Now
+                </button>
+            </div>
+
+            <!-- Importerr Order Protection Card -->
+            <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
+                <div class="px-4 py-3 bg-[#0F172A] text-white flex items-center gap-2">
+                    <svg class="w-4 h-4 text-[#f05a29] shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                    </svg>
+                    <span class="text-xs font-bold tracking-wide">ImportWale <span
+                            class="font-normal text-gray-300 text-[10px] uppercase">order protection</span></span>
+                </div>
+
+                <div class="p-4 space-y-3 text-xs">
+                    <!-- Secure Payments (Importerr Replica) -->
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                            stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                        </svg>
+                        <div>
+                            <div class="font-bold text-gray-900 flex items-center gap-1 flex-wrap">
+                                <span>Secure payments*</span>
+                            </div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Every payment you make on ImportWale is secured
+                                with strict SSL encryption.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100"></div>
+
+                    <!-- Delivery -->
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-[#f05a29] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                            stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                        </svg>
+                        <div>
+                            <div class="font-bold text-gray-900">Delivery arranged by ImportWale*</div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Expect your order to be delivered before
+                                scheduled dates.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100"></div>
+
+                    <!-- Easy Return -->
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                            stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                        </svg>
+                        <div>
+                            <div class="font-bold text-gray-900">Easy Return*</div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Make free local returns for defects on
+                                qualifying request.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100"></div>
+
+                    <!-- Money-back -->
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                            stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
+                        </svg>
+                        <div>
+                            <div class="font-bold text-gray-900">Full Money-back protection*</div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Claim a refund if your order doesn't ship or is
+                                missing.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl p-2.5 text-[10px] text-gray-400 leading-relaxed">
+                        Only orders placed and paid through <strong>ImportWale</strong> can enjoy free protection by
+                        <strong>Trade Assurance.</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- end right sidebar -->
+
+    </div><!-- end 3-column flex -->
+</div><!-- end main container -->
+
+<!-- ============================================================ -->
+<!-- LIGHTBOX MODAL -->
+<!-- ============================================================ -->
+<div id="lightboxModal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4"
+    onclick="closeLightbox()">
+    <button onclick="closeLightbox()"
+        class="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xl transition z-10">✕</button>
+    <img id="lightboxImg" src="" alt="" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+        onclick="event.stopPropagation()">
 </div>
 
-<!-- Product Specifications & Description Tabs -->
-<?php if (!empty($product['description'])): ?>
-<div style="background:#fff; border:1px solid #f1f5f9; border-radius:24px; padding:32px; margin-top:28px;">
-  <h3 style="font-size:18px; font-weight:800; color:#0f172a; margin-bottom:16px;">Product Description & Details</h3>
-  <div style="font-size:14px; color:#475569; line-height:1.7;">
-    <?= nl2br(htmlspecialchars($product['description'])) ?>
-  </div>
-</div>
-<?php endif; ?>
-
+<!-- ============================================================ -->
+<!-- JAVASCRIPT -->
+<!-- ============================================================ -->
 <script>
-  let selectedVariationId = <?= !empty($product['variations']) ? $product['variations'][0]['id'] : 0 ?>;
-  const moq = <?= $moq ?>;
+    const WHATSAPP_NUMBER = '<?= $waNumber ?>';
+    const PRODUCT_NAME = '<?= addslashes($productName) ?>';
+    const PRODUCT_URL = '<?= $canonicalUrl ?>';
+    const WS_START = <?= $wholesaleStartPrice ?>;
+    const OP_START = <?= $onePieceStartPrice ?>;
 
-  document.querySelectorAll('.variation-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.variation-btn').forEach(b => {
-        b.style.borderColor = '#e2e8f0';
-        b.style.background = '#fff';
-        b.style.color = '#334155';
-      });
-      this.style.borderColor = '#f05a29';
-      this.style.background = '#fff7ed';
-      this.style.color = '#f05a29';
-      selectedVariationId = this.getAttribute('data-id');
-    });
-  });
+    let currentMode = 'wholesale';
+    let selectedVariantEl = null;
 
-  function adjustQty(delta) {
-    const input = document.getElementById('qtyInput');
-    let val = parseInt(input.value) || moq;
-    val += delta;
-    if (val < moq) val = moq;
-    input.value = val;
-  }
+    function setPricingMode(mode) {
+        currentMode = mode;
+        const btnOP = document.getElementById('btnOnePiece');
+        const btnWS = document.getElementById('btnWholesale');
+        const switchDot = document.getElementById('toggleSwitchDot');
+        const singlePriceRow = document.getElementById('singlePriceRow');
+        const wholesaleTierContainer = document.getElementById('wholesaleTierContainer');
+        const priceEl = document.getElementById('priceDisplay');
 
-  async function addToInquiry() {
-    const qty = parseInt(document.getElementById('qtyInput').value) || moq;
-    const msgDiv = document.getElementById('addToCartMsg');
-    msgDiv.innerHTML = '<span style="color:#64748b;">Adding to inquiry list...</span>';
+        if (mode === 'wholesale') {
+            if (btnWS) btnWS.className = 'flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-black text-white';
+            if (btnOP) btnOP.className = 'flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600';
+            if (switchDot) switchDot.className = 'w-3 h-3 bg-white rounded-full transition-transform duration-200 translate-x-4';
 
-    try {
-      const res = await fetch('<?= url('api/inquiry/add') ?>', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: <?= $product['id'] ?>, variation_id: selectedVariationId, quantity: qty })
-      });
-      const data = await res.json();
-      if (data.success) {
-        msgDiv.innerHTML = '<span style="color:#10b981;">✓ Added to Inquiry List! <a href="<?= url("inquiry") ?>" style="color:#f05a29; font-weight:700; text-decoration:underline;">View My Inquiry &rsaquo;</a></span>';
-        if (typeof updateHeaderInquiryCount === 'function') updateHeaderInquiryCount();
-      } else {
-        msgDiv.innerHTML = `<span style="color:#ef4444;">${data.message || 'Could not add to inquiry.'}</span>`;
-      }
-    } catch(e) {
-      msgDiv.innerHTML = '<span style="color:#ef4444;">Server error. Please try again.</span>';
+            if (singlePriceRow) singlePriceRow.classList.add('hidden');
+            if (wholesaleTierContainer) wholesaleTierContainer.classList.remove('hidden');
+        } else {
+            if (btnOP) btnOP.className = 'flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-black text-white';
+            if (btnWS) btnWS.className = 'flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600';
+            if (switchDot) switchDot.className = 'w-3 h-3 bg-white rounded-full transition-transform duration-200 translate-x-0';
+
+            if (singlePriceRow) singlePriceRow.classList.remove('hidden');
+            if (wholesaleTierContainer) wholesaleTierContainer.classList.add('hidden');
+
+            let p = OP_START;
+            if (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST[selectedVariantIndex]) {
+                p = VARIANTS_LIST[selectedVariantIndex].one_piece_price || OP_START;
+            } else if (selectedVariantEl) {
+                p = parseFloat(selectedVariantEl.dataset.onepiece) || OP_START;
+            }
+            if (priceEl) priceEl.textContent = formatNum(p);
+        }
+
+        document.querySelectorAll('.variant-price-display').forEach(el => {
+            const ws = parseFloat(el.dataset.wholesale) || 0;
+            const op = parseFloat(el.dataset.onepiece) || 0;
+            el.textContent = '₹' + formatNum(mode === 'wholesale' ? ws : op);
+        });
     }
-  }
+
+    function renderVariantTiers(tiers) {
+        const row = document.getElementById('tierCardsRow');
+        if (!row) return;
+
+        if (!tiers || tiers.length === 0) {
+            const p = (VARIANTS_LIST && VARIANTS_LIST[selectedVariantIndex]) ? VARIANTS_LIST[selectedVariantIndex].wholesale_price : WS_START;
+            tiers = [{ min_qty: 1, max_qty: null, unit_price: p }];
+        }
+
+        let html = '';
+        tiers.forEach((t, i) => {
+            const min = parseInt(t.min_qty);
+            const max = t.max_qty ? parseInt(t.max_qty) : null;
+            const price = parseFloat(t.unit_price);
+            const label = max ? `${min}-${max} piece` : `≥ ${min} piece`;
+            const isActive = (i === 0);
+
+            html += `
+                <div class="tier-card p-2.5 rounded-xl border transition-all text-center min-w-[105px] shrink-0 ${isActive ? 'border-[#f05a29] bg-orange-50/40 shadow-2xs' : 'border-gray-200 bg-white hover:border-gray-300'}" data-tier-idx="${i}">
+                    <div class="text-sm sm:text-base font-bold ${isActive ? 'text-[#f05a29]' : 'text-gray-900'}">
+                        ₹${formatNumNoDec(price)} <span class="text-[10px] font-normal text-gray-500">/ piece</span>
+                    </div>
+                    <div class="text-[11px] ${isActive ? 'text-gray-800 font-bold' : 'text-gray-500 font-medium'} mt-0.5">${label}</div>
+                </div>
+            `;
+        });
+
+        row.innerHTML = html;
+    }
+
+    function formatNumNoDec(n) {
+        return parseFloat(n).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+    }
+
+    function togglePricingMode() {
+        setPricingMode(currentMode === 'wholesale' ? 'onepiece' : 'wholesale');
+    }
+
+    function formatNum(n) {
+        return parseFloat(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    // (Removed unused duplicate updateVariantQty)
+
+    function toggleAllSpecs() {
+        const extras = document.querySelectorAll('.spec-row-extra');
+        const txtEl = document.getElementById('specsBtnText');
+        const chevron = document.getElementById('specsChevron');
+        if (!extras || extras.length === 0) return;
+
+        const isCollapsed = extras[0].classList.contains('hidden');
+        extras.forEach(el => el.classList.toggle('hidden'));
+
+        if (isCollapsed) {
+            if (txtEl) txtEl.textContent = 'Show less specifications';
+            if (chevron) chevron.classList.add('rotate-180');
+        } else {
+            if (txtEl) txtEl.textContent = 'Show all specifications';
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+    }
+
+    function toggleProductDesc() {
+        const content = document.getElementById('productDescContent');
+        const txtEl = document.getElementById('descHeaderBtnText');
+        const chevron = document.getElementById('descChevron');
+        if (!content) return;
+
+        const isHidden = content.classList.contains('hidden');
+        content.classList.toggle('hidden');
+
+        if (isHidden) {
+            if (txtEl) txtEl.textContent = 'Hide description';
+            if (chevron) chevron.classList.add('rotate-180');
+        } else {
+            if (txtEl) txtEl.textContent = 'Show description';
+            if (chevron) chevron.classList.remove('rotate-180');
+        }
+    }
+
+    function selectVariant(el) {
+        document.querySelectorAll('.variant-row').forEach(r => {
+            r.classList.remove('bg-orange-50/40', 'border-l-3', 'border-l-[#f05a29]');
+        });
+        el.classList.add('bg-orange-50/40', 'border-l-3', 'border-l-[#f05a29]');
+        selectedVariantEl = el;
+
+        const vImg = el.dataset.img;
+        if (vImg) {
+            const mainImg = document.getElementById('mainProductImage');
+            if (mainImg) mainImg.src = vImg;
+        }
+
+        // Dynamically update single price display when variant selected
+        const vWholesale = parseFloat(el.dataset.wholesale) || 0;
+        const vOnePiece = parseFloat(el.dataset.onepiece) || 0;
+        const targetPrice = (currentMode === 'wholesale') ? (vWholesale || WS_START) : (vOnePiece || OP_START);
+        const priceEl = document.getElementById('priceDisplay');
+        if (priceEl && targetPrice > 0) priceEl.textContent = formatNum(targetPrice);
+    }
+
+    const GALLERY_IMAGES = <?= json_encode(array_values($gallery)) ?>;
+    let currentImgIdx = 0;
+
+    function switchImage(idx, src) {
+        currentImgIdx = idx;
+        const mainImg = document.getElementById('mainProductImage');
+        if (mainImg) mainImg.src = src;
+        document.querySelectorAll('.thumb-btn').forEach(btn => {
+            const isActive = parseInt(btn.dataset.idx) === idx;
+            btn.className = `thumb-btn shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all border-0 focus:outline-none cursor-pointer ${isActive ? 'border-2 border-[#f05a29]' : 'border-2 border-gray-200 hover:border-gray-400'}`;
+        });
+        const activeThumb = document.querySelector(`.thumb-btn[data-idx="${idx}"]`);
+        if (activeThumb) {
+            activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+    }
+
+    function nextImage() {
+        if (!GALLERY_IMAGES || GALLERY_IMAGES.length <= 1) return;
+        currentImgIdx = (currentImgIdx + 1) % GALLERY_IMAGES.length;
+        switchImage(currentImgIdx, GALLERY_IMAGES[currentImgIdx]);
+    }
+
+    function prevImage() {
+        if (!GALLERY_IMAGES || GALLERY_IMAGES.length <= 1) return;
+        currentImgIdx = (currentImgIdx - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length;
+        switchImage(currentImgIdx, GALLERY_IMAGES[currentImgIdx]);
+    }
+
+    function scrollThumbs(dir) {
+        const strip = document.getElementById('thumbStrip');
+        if (strip) {
+            strip.scrollBy({ left: dir === 'left' ? -140 : 140, behavior: 'smooth' });
+        }
+    }
+
+    function openLightbox(src) {
+        const modal = document.getElementById('lightboxModal');
+        const img = document.getElementById('lightboxImg');
+        img.src = src;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeLightbox() {
+        const modal = document.getElementById('lightboxModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function openRfqWithProducts() {
+        if (typeof openRfqModal === 'function') {
+            openRfqModal();
+        } else {
+            window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hi, I want a quote for: ' + PRODUCT_NAME)}`, '_blank');
+        }
+    }
+
+    const VARIANTS_LIST = <?= json_encode($variantsJsonData) ?>;
+    let selectedVariantIndex = 0;
+
+    function selectAmazonVariant(idx) {
+        if (!VARIANTS_LIST || !VARIANTS_LIST[idx]) return;
+        selectedVariantIndex = idx;
+        const v = VARIANTS_LIST[idx];
+
+        // 1. Update Swatch Styles
+        document.querySelectorAll('.amazon-swatch-btn').forEach((btn, i) => {
+            const isOos = VARIANTS_LIST[i].stock <= 0;
+            if (i === idx) {
+                btn.className = `amazon-swatch-btn relative flex items-center gap-2 px-2.5 py-1.5 rounded-xl border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100 shadow-2xs transition-all cursor-pointer focus:outline-none select-none ${isOos ? 'opacity-50 grayscale bg-gray-50' : ''}`;
+            } else {
+                btn.className = `amazon-swatch-btn relative flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-gray-200 hover:border-gray-400 bg-white transition-all cursor-pointer focus:outline-none select-none ${isOos ? 'opacity-50 grayscale bg-gray-50' : ''}`;
+            }
+        });
+
+        // 2. Update Header Titles & Badges
+        const titleEl = document.getElementById('selectedVariantTitle');
+        if (titleEl) titleEl.textContent = v.value;
+
+        const codeBadge = document.getElementById('selectedVariantCodeBadge');
+        if (codeBadge) codeBadge.textContent = v.code || '';
+
+        // 3. Update Stock Status
+        const stockBadge = document.getElementById('variantStockStatusText');
+        const mainStockBadge = document.getElementById('activeStockBadge');
+        if (v.stock > 0) {
+            if (stockBadge) {
+                stockBadge.textContent = 'In stock';
+                stockBadge.className = 'text-[11px] font-semibold text-emerald-600';
+            }
+            if (mainStockBadge) {
+                mainStockBadge.textContent = 'In Stock';
+                mainStockBadge.className = 'font-semibold text-emerald-600';
+            }
+        } else {
+            if (stockBadge) {
+                stockBadge.textContent = 'Out of Stock';
+                stockBadge.className = 'text-[11px] font-semibold text-red-500';
+            }
+            if (mainStockBadge) {
+                mainStockBadge.textContent = 'Out of Stock';
+                mainStockBadge.className = 'font-semibold text-red-500';
+            }
+        }
+
+        // 4. Update Main Product Image
+        if (v.image) {
+            const mainImg = document.getElementById('mainProductImage');
+            if (mainImg) mainImg.src = v.image;
+        }
+
+        // 5. Update Tier Pricing Cards for selected variant
+        if (v && v.tiers) {
+            renderVariantTiers(v.tiers);
+        }
+
+        // 5. Dynamic Price Update for current active mode
+        const targetPrice = (currentMode === 'wholesale') ? (v.wholesale_price || WS_START) : (v.one_piece_price || OP_START);
+        const priceEl = document.getElementById('priceDisplay');
+        if (priceEl && targetPrice > 0) priceEl.textContent = formatNum(targetPrice);
+
+        // 6. Update URL query string without page reload
+        if (v.code) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('variant', v.code);
+            window.history.replaceState(null, '', url.toString());
+        }
+
+        // 7. Sync Bottom Accordion if present
+        const bottomRow = document.querySelector(`.variant-row[data-variant-idx="${idx}"]`);
+        if (bottomRow) {
+            document.querySelectorAll('.variant-row').forEach(r => {
+                r.classList.remove('bg-orange-50/40', 'border-l-4', 'border-l-[#f05a29]');
+            });
+            bottomRow.classList.add('bg-orange-50/40', 'border-l-4', 'border-l-[#f05a29]');
+        }
+    }
+
+    function toggleVariantRow(el) {
+        const idx = parseInt(el.dataset.variantIdx);
+        if (!isNaN(idx)) selectAmazonVariant(idx);
+
+        const item = el.closest('.variant-item');
+        if (!item) return;
+        const drawer = item.querySelector('.variant-drawer');
+        const chevron = item.querySelector('.variant-chevron');
+
+        document.querySelectorAll('.variant-drawer').forEach(d => {
+            if (d !== drawer) d.classList.add('hidden');
+        });
+        document.querySelectorAll('.variant-chevron').forEach(c => {
+            if (c !== chevron) c.classList.remove('rotate-180');
+        });
+
+        if (drawer) {
+            drawer.classList.toggle('hidden');
+            if (chevron) chevron.classList.toggle('rotate-180');
+        }
+    }
+
+    function openVariantModalDetails(name, wholesale, onepiece, stock, img) {
+        document.getElementById('vModalTitle').textContent = name;
+        document.getElementById('vModalImg').src = img;
+        document.getElementById('vModalStock').textContent = parseInt(stock) > 0 ? 'In stock' : 'Out of stock';
+        document.getElementById('vModalWholesale').textContent = `₹${formatNum(parseFloat(wholesale))}`;
+        document.getElementById('vModalOnePiece').textContent = `₹${formatNum(parseFloat(onepiece))}`;
+        const waText = encodeURIComponent(`Hi, I am interested in variant: ${name} of product: ${PRODUCT_NAME}`);
+        document.getElementById('vModalWaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waText}`;
+        const modal = document.getElementById('variantQuickViewModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeVariantQuickView() {
+        const modal = document.getElementById('variantQuickViewModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        setPricingMode('wholesale');
+
+        // Check URL query param for deep-linked variant ?variant=...
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlVariantCode = urlParams.get('variant');
+
+        if (urlVariantCode && VARIANTS_LIST && VARIANTS_LIST.length > 0) {
+            const foundIdx = VARIANTS_LIST.findIndex(v => v.code.toLowerCase() === urlVariantCode.toLowerCase());
+            if (foundIdx !== -1) {
+                selectAmazonVariant(foundIdx);
+                return;
+            }
+        }
+
+        // Default: select first available in-stock variant on load
+        if (VARIANTS_LIST && VARIANTS_LIST.length > 0) {
+            const firstInStock = VARIANTS_LIST.findIndex(v => v.stock > 0);
+            selectAmazonVariant(firstInStock !== -1 ? firstInStock : 0);
+        }
+
+        checkDetailWishlistStatus();
+    });
+
+    // ========================================================
+    // CART & WISHLIST DETAIL FUNCTIONS
+    // ========================================================
+    let cartSyncDebounceTimers = {};
+
+    function updateVariantQty(vi, delta) {
+        selectAmazonVariant(vi);
+        const span = document.getElementById('vQtyVal_' + vi);
+        if (!span) return;
+        let val = parseInt(span.textContent) || 0;
+        val = Math.max(0, val + delta);
+        span.textContent = val;
+
+        const mainInp = document.getElementById('detailQtyInput');
+        if (mainInp) {
+            mainInp.value = Math.max(1, val);
+        }
+
+        // Auto Sync with Cart via AJAX in background on stepper click!
+        if (cartSyncDebounceTimers[vi]) clearTimeout(cartSyncDebounceTimers[vi]);
+        cartSyncDebounceTimers[vi] = setTimeout(() => {
+            syncVariantToCart(vi, val);
+        }, 300);
+    }
+
+    async function syncVariantToCart(vi, qty) {
+        if (!VARIANTS_LIST || !VARIANTS_LIST[vi]) return;
+        const v = VARIANTS_LIST[vi];
+        const payload = new URLSearchParams();
+        payload.append('product_id', <?= (int) $product['id'] ?>);
+        if (v.id) payload.append('variant_id', v.id);
+        payload.append('quantity', qty);
+        payload.append('set_exact_qty', '1');
+        payload.append('pricing_mode', currentMode);
+
+        try {
+            const res = await fetch('<?= url('cart/add') ?>', { method: 'POST', body: payload });
+            const data = await res.json();
+            if (data.success) {
+                if (typeof updateHeaderCartBadge === 'function') {
+                    updateHeaderCartBadge(data.cart_count);
+                }
+                updateOrderSummarySidebar(data.cart_count, data.subtotal);
+                if (typeof renderCartDrawerUI === 'function') {
+                    renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
+                }
+                if (qty > 0 && typeof showCartToast === 'function') {
+                    showCartToast('Item added to cart!');
+                }
+            }
+        } catch (e) { }
+    }
+
+    function syncExistingCartToSteppers(items) {
+        if (!VARIANTS_LIST || !items) return;
+        const currentProductId = <?= (int) $product['id'] ?>;
+        items.forEach(item => {
+            if (parseInt(item.product_id) === currentProductId) {
+                const vi = VARIANTS_LIST.findIndex(v => parseInt(v.id) === parseInt(item.variant_id));
+                if (vi !== -1) {
+                    const span = document.getElementById('vQtyVal_' + vi);
+                    if (span) span.textContent = item.quantity;
+                }
+            }
+        });
+    }
+
+    function updateOrderSummarySidebar(count, subtotalStr) {
+        const qtyEl = document.getElementById('summaryQtyText');
+        const totalEl = document.getElementById('summaryTotalText');
+        if (qtyEl) qtyEl.textContent = (count || 0) + ' units';
+        if (totalEl) totalEl.textContent = '₹' + (subtotalStr || '0.00');
+    }
+
+    function changeDetailQty(delta) {
+        const inp = document.getElementById('detailQtyInput');
+        if (!inp) return;
+        let val = parseInt(inp.value) || 1;
+        val = Math.max(1, val + delta);
+        inp.value = val;
+    }
+
+    function onDetailQtyInputChange() {
+        const inp = document.getElementById('detailQtyInput');
+        if (!inp) return;
+        let val = parseInt(inp.value) || 1;
+        if (val < 1) val = 1;
+        inp.value = val;
+    }
+
+    async function addToCartFromDetail() {
+        const qtyInp = document.getElementById('detailQtyInput');
+        let qty = parseInt(qtyInp ? qtyInp.value : 1) || 1;
+
+        let selectedVariantId = null;
+        if (selectedVariantIndex !== null && VARIANTS_LIST && VARIANTS_LIST[selectedVariantIndex]) {
+            selectedVariantId = VARIANTS_LIST[selectedVariantIndex].id;
+            const vSpan = document.getElementById('vQtyVal_' + selectedVariantIndex);
+            if (vSpan) {
+                const vQty = parseInt(vSpan.textContent) || 0;
+                if (vQty > 0) qty = vQty;
+            }
+        }
+
+        const payload = new URLSearchParams();
+        payload.append('product_id', <?= (int) $product['id'] ?>);
+        if (selectedVariantId) payload.append('variant_id', selectedVariantId);
+        payload.append('quantity', qty);
+        payload.append('pricing_mode', currentMode);
+
+        try {
+            const res = await fetch('<?= url('cart/add') ?>', { method: 'POST', body: payload });
+            const data = await res.json();
+            if (data.success) {
+                if (typeof showCartToast === 'function') {
+                    showCartToast('Item added to cart!');
+                } else {
+                    alert('Added to cart!');
+                }
+                if (typeof updateHeaderCartBadge === 'function') {
+                    updateHeaderCartBadge(data.cart_count);
+                }
+                if (typeof renderCartDrawerUI === 'function') {
+                    renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
+                }
+            } else {
+                alert(data.message || 'Could not add to cart');
+            }
+        } catch (e) {
+            alert('Error adding to cart');
+        }
+    }
+
+    async function buyNowFromDetail() {
+        await addToCartFromDetail();
+        window.location.href = '<?= url('checkout') ?>';
+    }
+
+    async function checkDetailWishlistStatus() {
+        try {
+            const res = await fetch('<?= url('wishlist/status?product_id=' . $product['id']) ?>');
+            const data = await res.json();
+            if (data.success && data.saved) {
+                setDetailWishlistActive(true);
+            }
+            if (data.count !== undefined && document.getElementById('headerWishlistCount')) {
+                const wBadge = document.getElementById('headerWishlistCount');
+                if (data.count > 0) {
+                    wBadge.textContent = data.count;
+                    wBadge.style.display = 'flex';
+                } else {
+                    wBadge.style.display = 'none';
+                }
+            }
+        } catch (e) { }
+    }
+
+    async function toggleDetailWishlist() {
+        const payload = new URLSearchParams();
+        payload.append('product_id', <?= (int) $product['id'] ?>);
+        try {
+            const res = await fetch('<?= url('wishlist/toggle') ?>', { method: 'POST', body: payload });
+            const data = await res.json();
+            if (data.success) {
+                setDetailWishlistActive(data.saved);
+                if (data.count !== undefined && document.getElementById('headerWishlistCount')) {
+                    const wBadge = document.getElementById('headerWishlistCount');
+                    if (data.count > 0) {
+                        wBadge.textContent = data.count;
+                        wBadge.style.display = 'flex';
+                    } else {
+                        wBadge.style.display = 'none';
+                    }
+                }
+                if (typeof showCartToast === 'function') {
+                    showCartToast(data.message);
+                }
+            }
+        } catch (e) { }
+    }
+
+    function setDetailWishlistActive(saved) {
+        const icon = document.getElementById('detailWishlistIcon');
+        const floatIcon = document.getElementById('floatingWishlistIcon');
+        const txt = document.getElementById('detailWishlistText');
+        const btn = document.getElementById('detailWishlistBtn');
+        const floatBtn = document.getElementById('floatingWishlistBtn');
+
+        if (saved) {
+            if (icon) {
+                icon.setAttribute('fill', '#ef4444');
+                icon.classList.remove('text-gray-400');
+                icon.classList.add('text-red-500');
+            }
+            if (floatIcon) {
+                floatIcon.setAttribute('fill', '#ef4444');
+                floatIcon.classList.remove('text-gray-400');
+                floatIcon.classList.add('text-red-500');
+            }
+            if (txt) txt.textContent = 'Saved in Wishlist';
+            if (btn) btn.classList.add('border-red-200', 'bg-rose-50/50');
+            if (floatBtn) floatBtn.classList.add('border-red-200');
+        } else {
+            if (icon) {
+                icon.setAttribute('fill', 'none');
+                icon.classList.remove('text-red-500');
+                icon.classList.add('text-gray-400');
+            }
+            if (floatIcon) {
+                floatIcon.setAttribute('fill', 'none');
+                floatIcon.classList.remove('text-red-500');
+                floatIcon.classList.add('text-gray-400');
+            }
+            if (txt) txt.textContent = 'Save to Wishlist';
+            if (btn) btn.classList.remove('border-red-200', 'bg-rose-50/50');
+            if (floatBtn) floatBtn.classList.remove('border-red-200');
+        }
+    }
 </script>
+
+<!-- VARIANT QUICK VIEW MODAL -->
+<div id="variantQuickViewModal"
+    class="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-xs items-center justify-center p-4 hidden">
+    <div
+        class="bg-white border border-gray-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in">
+        <button type="button" onclick="closeVariantQuickView()"
+            class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm border-0 cursor-pointer">
+            ✕
+        </button>
+        <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
+            <div class="w-16 h-16 rounded-xl border border-gray-200 overflow-hidden shrink-0 bg-white">
+                <img id="vModalImg" src="" class="w-full h-full object-cover">
+            </div>
+            <div>
+                <h4 id="vModalTitle" class="text-base font-bold text-gray-900"></h4>
+                <div id="vModalStock" class="text-xs text-emerald-600 font-semibold mt-0.5"></div>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/80">
+                <div class="text-[10px] text-gray-400 font-semibold uppercase">Wholesale Price</div>
+                <div id="vModalWholesale" class="text-base font-bold text-[#f05a29]"></div>
+            </div>
+            <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/80">
+                <div class="text-[10px] text-gray-400 font-semibold uppercase">One-Piece Price</div>
+                <div id="vModalOnePiece" class="text-base font-bold text-emerald-600"></div>
+            </div>
+        </div>
+        <div class="pt-2 flex items-center gap-2">
+            <a id="vModalWaBtn" href="#" target="_blank"
+                class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-full text-center flex items-center justify-center gap-1.5 transition border-0">
+                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                    <path
+                        d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+                </svg>
+                Inquire for this Variant
+            </a>
+        </div>
+    </div>
+</div>
 
 <?php
 $content = ob_get_clean();
-require __DIR__ . '/layout.php';
-
+include __DIR__ . '/layout.php';
+?>

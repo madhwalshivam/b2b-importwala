@@ -12,8 +12,8 @@ include __DIR__ . '/../layouts/header.php';
                 class="inline-block px-3 py-1 bg-red-600 text-white font-semibold text-[10px] uppercase rounded tracking-wider mb-2">
                 Mudsor Executive CMS
             </span>
-            <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-slate-100">Welcome back,
-                <?= htmlspecialchars($user['name'] ?? 'Admin') ?>!
+            <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-slate-100">Welcome back, Admin
+                
             </h2>
             <p class="text-xs text-gray-500 dark:text-slate-400 mt-1 font-medium">Here is your live real-time e-commerce
                 revenue, inventory,

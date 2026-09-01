@@ -1,165 +1,209 @@
 <?php
+$title = 'Orders Management | ImportWale Admin';
 include __DIR__ . '/../layouts/header.php';
 ?>
 
-<div class="space-y-6 font-sans">
+<main class="p-6 max-w-7xl mx-auto space-y-6">
 
-    <!-- Top Header -->
-    <div
-        class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+    <!-- Header & Filter Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
         <div>
-            <div class="flex items-center space-x-2">
-                <span
-                    class="px-2.5 py-1 text-[11px] font-semibold uppercase bg-red-50 text-red-600 rounded-lg tracking-wider border border-red-100">
-                    Fulfillment Center
-                </span>
-                <span class="text-slate-400 text-xs">•</span>
-                <span class="text-xs text-slate-500 font-medium">Customer Orders</span>
-            </div>
-            <h1 class="text-2xl font-semibold text-slate-900 mt-1 tracking-tight">Customer Orders Management</h1>
-            <p class="text-xs text-slate-500 mt-0.5 font-medium max-w-2xl">
-                Track, process, and fulfill incoming customer orders, manage shipping status, and print tax invoices.
-            </p>
+            <h1 class="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+                <i data-lucide="shopping-bag" class="w-6 h-6 text-[#f05a29]"></i>
+                <span>Direct Online Orders</span>
+            </h1>
+            <p class="text-xs text-gray-500 mt-1">Manage Razorpay paid and online checkout orders</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="<?= url('admin/orders') ?>" class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= empty($currentStatus) ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">All</a>
+            <a href="<?= url('admin/orders?status=confirmed') ?>" class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'confirmed' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Confirmed</a>
+            <a href="<?= url('admin/orders?status=shipped') ?>" class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'shipped' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Shipped</a>
+            <a href="<?= url('admin/orders?status=delivered') ?>" class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'delivered' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Delivered</a>
         </div>
     </div>
 
-    <!-- Search & Filter Bar -->
-    <form action="<?= url('admin/orders') ?>" method="GET"
-        class="bg-white p-4 rounded-2xl border border-gray-900 flex flex-wrap items-center gap-4 text-xs shadow-xs">
-        <div class="relative flex-1 min-w-[240px]">
-            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
-            <input type="text" name="search" value="<?= htmlspecialchars($search ?? '') ?>"
-                placeholder="Search Order # or Customer Phone..."
-                class="w-full h-11 pl-10 pr-4 bg-gray-50 border border-gray-900 rounded-xl focus:outline-none focus:border-red-600 focus:bg-white font-semibold text-gray-900 text-xs transition">
-        </div>
-
-        <div class="w-full sm:w-auto">
-            <select name="status" onchange="this.form.submit()"
-                class="w-full sm:w-auto h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600 text-xs cursor-pointer">
-                <option value="">All Order Statuses</option>
-                <option value="pending" <?= ($status ?? '') === 'pending' ? 'selected' : '' ?>>Pending</option>
-                <option value="confirmed" <?= ($status ?? '') === 'confirmed' ? 'selected' : '' ?>>Confirmed</option>
-                <option value="packed" <?= ($status ?? '') === 'packed' ? 'selected' : '' ?>>Packed</option>
-                <option value="shipped" <?= ($status ?? '') === 'shipped' ? 'selected' : '' ?>>Shipped</option>
-                <option value="delivered" <?= ($status ?? '') === 'delivered' ? 'selected' : '' ?>>Delivered</option>
-                <option value="cancelled" <?= ($status ?? '') === 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
-            </select>
-        </div>
-
-        <button type="submit"
-            class="h-11 px-6 bg-gray-900 hover:bg-black text-white font-semibold text-xs rounded-xl transition shadow-xs flex items-center space-x-1.5 cursor-pointer">
-            <i data-lucide="filter" class="w-3.5 h-3.5"></i>
-            <span>Filter Orders</span>
-        </button>
-    </form>
-
-    <!-- Orders Table -->
-    <div class="bg-white rounded-2xl border border-gray-900 overflow-hidden shadow-xs">
+    <!-- Orders Table Card -->
+    <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
         <div class="overflow-x-auto">
-            <table class="w-full text-xs text-left border-collapse min-w-[900px]">
+            <table class="w-full text-xs text-left border-collapse">
                 <thead>
-                    <tr
-                        class="bg-gray-50/80 dark:bg-gray-900 border-b border-gray-900 dark:border-gray-700 text-gray-500 dark:text-gray-300 font-semibold uppercase tracking-wider text-[11px]">
-                        <th class="p-4 pl-6">Order #</th>
-                        <th class="p-4">Customer Name</th>
-                        <th class="p-4">Phone</th>
-                        <th class="p-4">Total Amount</th>
-                        <th class="p-4">Payment</th>
-                        <th class="p-4">Shipping Status</th>
-                        <th class="p-4">Order Date</th>
-                        <th class="p-4 pr-6 text-right">Actions</th>
+                    <tr class="bg-gray-50/80 text-gray-700 font-bold uppercase tracking-wider text-[11px] border-b border-gray-200">
+                        <th class="py-3.5 px-4">Order #</th>
+                        <th class="py-3.5 px-4">Customer Details</th>
+                        <th class="py-3.5 px-4">Total Amount</th>
+                        <th class="py-3.5 px-4">Payment Status</th>
+                        <th class="py-3.5 px-4">Order Status</th>
+                        <th class="py-3.5 px-4">Date</th>
+                        <th class="py-3.5 px-4 text-right">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
-                    <?php if (empty($orders)): ?>
-                        <tr>
-                            <td colspan="8" class="p-8 text-center text-gray-400 font-medium">
-                                <div class="flex flex-col items-center justify-center space-y-2">
-                                    <i data-lucide="inbox" class="w-8 h-8 text-gray-300"></i>
-                                    <span>No orders found matching your filter criteria.</span>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($orders as $ord): ?>
-                            <tr class="hover:bg-gray-50/60 transition-colors">
-                                <td class="p-4 pl-6 font-mono font-semibold text-gray-900">
-                                    <a href="<?= url('admin/orders/' . $ord['id']) ?>" class="hover:text-red-600 transition">
-                                        <?= htmlspecialchars($ord['order_number']) ?>
-                                    </a>
+                <tbody class="divide-y divide-gray-100 text-gray-800 font-medium">
+                    <?php if (!empty($orders)): ?>
+                        <?php foreach ($orders as $o): ?>
+                            <tr class="hover:bg-gray-50/60 transition">
+                                <td class="py-3.5 px-4 font-bold text-gray-900">
+                                    <?= htmlspecialchars($o['order_number']) ?>
+                                    <?php if (!empty($o['razorpay_payment_id'])): ?>
+                                        <div class="text-[10px] text-gray-400 font-mono mt-0.5"><?= htmlspecialchars($o['razorpay_payment_id']) ?></div>
+                                    <?php endif; ?>
                                 </td>
-                                <td class="p-4 font-semibold text-gray-900">
-                                    <?= htmlspecialchars($ord['customer_name']) ?>
+                                <td class="py-3.5 px-4">
+                                    <div class="font-semibold text-gray-900"><?= htmlspecialchars($o['customer_name']) ?></div>
+                                    <div class="text-[11px] text-gray-500"><?= htmlspecialchars($o['customer_phone']) ?></div>
                                 </td>
-                                <td class="p-4 text-gray-600 font-mono">
-                                    <?= htmlspecialchars($ord['customer_phone']) ?>
+                                <td class="py-3.5 px-4 font-bold text-[#f05a29] text-sm">
+                                    ₹<?= number_format((float)$o['total_amount'], 2) ?>
                                 </td>
-                                <td class="p-4 font-semibold text-gray-900">
-                                    <?= format_price($ord['total_amount']) ?>
+                                <td class="py-3.5 px-4">
+                                    <?php if ($o['payment_status'] === 'paid'): ?>
+                                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold text-[10px] uppercase">Paid</span>
+                                    <?php else: ?>
+                                        <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-bold text-[10px] uppercase"><?= htmlspecialchars($o['payment_status']) ?></span>
+                                    <?php endif; ?>
                                 </td>
-                                <td class="p-4 font-medium">
-                                    <?php 
-                                    $paySt = strtolower($ord['payment_status'] ?? 'pending'); 
-                                    $payBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-800';
-                                    if ($paySt === 'paid') {
-                                        $payBadgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800';
-                                    } elseif ($paySt === 'failed') {
-                                        $payBadgeClass = 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800';
-                                    }
-                                    ?>
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] uppercase font-bold border tracking-wider <?= $payBadgeClass ?>">
-                                        <?= htmlspecialchars($ord['payment_status'] ?? 'pending') ?>
-                                    </span>
+                                <td class="py-3.5 px-4">
+                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full font-bold text-[10px] uppercase"><?= htmlspecialchars($o['order_status']) ?></span>
                                 </td>
-                                <td class="p-4">
-                                    <?php
-                                    $shipSt = strtolower($ord['shipping_status'] ?? 'not_shipped');
-                                    $shipClass = 'bg-gray-100 text-gray-800 border-gray-900 dark:bg-red-950/60 dark:text-red-200 dark:border-red-900/60';
-                                    if ($shipSt === 'delivered') {
-                                        $shipClass = 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-800';
-                                    } elseif ($shipSt === 'shipped') {
-                                        $shipClass = 'bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-950/80 dark:text-indigo-300 dark:border-indigo-800';
-                                    } elseif ($shipSt === 'processing') {
-                                        $shipClass = 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-800';
-                                    } elseif ($shipSt === 'cancelled') {
-                                        $shipClass = 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-800';
-                                    }
-                                    ?>
-                                    <span class="inline-flex items-center px-2.5 py-1 text-[10px] font-bold rounded-lg border uppercase tracking-wider w-max <?= $shipClass ?>">
-                                        <?= htmlspecialchars(str_replace('_', ' ', $shipSt)) ?>
-                                    </span>
+                                <td class="py-3.5 px-4 text-gray-500 text-[11px]">
+                                    <?= date('d M Y, h:i A', strtotime($o['created_at'])) ?>
                                 </td>
-                                <td class="p-4 text-gray-500 font-medium">
-                                    <?= date('d M Y, h:i A', strtotime($ord['created_at'])) ?>
-                                </td>
-                                <td class="p-4 pr-6 text-right whitespace-nowrap">
-                                    <div class="inline-flex items-center justify-end space-x-2">
-                                        <a href="<?= url('admin/orders/' . $ord['id']) ?>"
-                                            class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold text-xs transition shadow-2xs">
-                                            <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                                            <span>Manage</span>
-                                        </a>
-                                        <a href="<?= url('admin/orders/invoice/' . $ord['id']) ?>" target="_blank"
-                                            class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-900 text-gray-800 hover:text-white border border-gray-900 hover:border-gray-900 rounded-xl font-semibold text-xs transition shadow-2xs">
-                                            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
-                                            <span>Invoice</span>
-                                        </a>
-                                    </div>
+                                <td class="py-3.5 px-4 text-right space-x-1">
+                                    <button type="button" onclick="viewOrderDetails(<?= (int)$o['id'] ?>)" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition inline-flex items-center gap-1 cursor-pointer">
+                                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                                        <span>View</span>
+                                    </button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="py-8 text-center text-gray-400 font-medium">No direct online orders found.</td>
+                        </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
+    </div>
+</main>
 
-        <div class="p-4 border-t border-gray-100">
-            <?= $paginator->render() ?>
+<!-- Order Details Modal -->
+<div id="orderDetailsModal" class="fixed inset-0 bg-black/60 z-[100] hidden items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative">
+        <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-lg">✕</button>
+        <h2 class="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+            <i data-lucide="package" class="w-5 h-5 text-[#f05a29]"></i>
+            <span>Order Details #<span id="modalOrderNum"></span></span>
+        </h2>
+
+        <div class="grid grid-cols-2 gap-4 text-xs bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <div>
+                <strong class="text-gray-900 block font-bold mb-1">Customer Info:</strong>
+                <div id="modalCustomer"></div>
+            </div>
+            <div>
+                <strong class="text-gray-900 block font-bold mb-1">Shipping Address:</strong>
+                <div id="modalAddress"></div>
+            </div>
+        </div>
+
+        <div>
+            <strong class="text-xs text-gray-900 block font-bold mb-2">Ordered Items:</strong>
+            <div id="modalItems" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+        </div>
+
+        <div class="flex items-center justify-between border-t border-gray-100 pt-3 text-xs">
+            <div>
+                <label class="block text-gray-600 font-semibold mb-1">Update Order Status:</label>
+                <select id="modalStatusSelect" class="h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+            <button type="button" onclick="saveOrderStatus()" class="px-5 h-9 bg-[#f05a29] hover:bg-[#d94e20] text-white font-bold rounded-lg shadow-xs transition">Save Status</button>
         </div>
     </div>
-
 </div>
 
-<?php
-include __DIR__ . '/../layouts/footer.php';
-?>
+<script>
+    let activeModalOrderId = null;
+
+    async function viewOrderDetails(orderId) {
+        activeModalOrderId = orderId;
+        const res = await fetch('<?= url('admin/orders/view/') ?>' + orderId);
+        const data = await res.json();
+        if (!data.success) {
+            alert('Error loading order');
+            return;
+        }
+
+        const o = data.order;
+        document.getElementById('modalOrderNum').textContent = o.order_number;
+        document.getElementById('modalCustomer').innerHTML = `
+            <div>${o.customer_name}</div>
+            <div>Phone: ${o.customer_phone}</div>
+            <div>Email: ${o.customer_email || 'N/A'}</div>
+        `;
+        let addrStr = o.shipping_address;
+        try {
+            const parsed = JSON.parse(o.shipping_address);
+            if (parsed && typeof parsed === 'object') {
+                addrStr = `${parsed.address || ''}, ${parsed.city || ''}, ${parsed.state || ''} - ${parsed.pincode || ''}`;
+            }
+        } catch(e){}
+
+        document.getElementById('modalAddress').innerHTML = `
+            <div>${addrStr}</div>
+        `;
+
+        let itemsHtml = '';
+        data.items.forEach(item => {
+            itemsHtml += `
+                <div class="flex items-center justify-between p-2.5 bg-white border border-gray-200 rounded-lg">
+                    <div>
+                        <div class="font-bold text-gray-900">${item.product_name}</div>
+                        <div class="text-[10px] text-gray-400">SKU: ${item.sku} &bull; Qty: ${item.quantity}</div>
+                    </div>
+                    <div class="font-bold text-gray-900">₹${parseFloat(item.total_amount).toFixed(2)}</div>
+                </div>
+            `;
+        });
+        document.getElementById('modalItems').innerHTML = itemsHtml;
+        document.getElementById('modalStatusSelect').value = o.order_status;
+
+        const modal = document.getElementById('orderDetailsModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeOrderModal() {
+        document.getElementById('orderDetailsModal').classList.add('hidden');
+        document.getElementById('orderDetailsModal').classList.remove('flex');
+    }
+
+    async function saveOrderStatus() {
+        if (!activeModalOrderId) return;
+        const status = document.getElementById('modalStatusSelect').value;
+        const payload = new URLSearchParams();
+        payload.append('order_id', activeModalOrderId);
+        payload.append('order_status', status);
+        payload.append('payment_status', status === 'delivered' ? 'paid' : 'paid');
+
+        const res = await fetch('<?= url('admin/orders/update-status') ?>', {
+            method: 'POST',
+            body: payload
+        });
+        const d = await res.json();
+        if (d.success) {
+            alert('Order status updated');
+            location.reload();
+        } else {
+            alert(d.message || 'Error updating status');
+        }
+    }
+</script>
+
+<?php include __DIR__ . '/../layouts/footer.php'; ?>

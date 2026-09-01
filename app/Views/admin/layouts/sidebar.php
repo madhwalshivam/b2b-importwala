@@ -50,6 +50,13 @@ $isActive = function(string $path) use ($currentUri): bool {
         <div>
             <div class="px-1 mb-1.5 text-[10px] font-semibold uppercase text-slate-400 tracking-wider">Content</div>
             <div class="grid grid-cols-2 gap-2">
+                <a href="<?= url('admin/navigation') ?>"
+                    class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/navigation') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-orange-400 border-slate-700/60' ?>"
+                    title="Top Navigation Menu Manager">
+                    <i data-lucide="compass" class="w-4 h-4 shrink-0 text-orange-400"></i>
+                    <span class="truncate">Navigation</span>
+                </a>
+
                 <a href="<?= url('admin/announcement') ?>"
                     class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/announcement') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
                     title="Announcement Bar">

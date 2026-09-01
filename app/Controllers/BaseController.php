@@ -17,6 +17,10 @@ abstract class BaseController
     {
         extract($data);
         $file = __DIR__ . '/../../views/' . str_replace('.', '/', $viewPath) . '.php';
+        if (!file_exists($file)) {
+            $file = __DIR__ . '/../Views/' . str_replace('.', '/', $viewPath) . '.php';
+        }
+
         if (file_exists($file)) {
             require $file;
         } else {
