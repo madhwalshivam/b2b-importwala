@@ -58,15 +58,10 @@ class CartService extends BaseService
             }
         }
 
-        $moq = (int)($product['moq'] ?? 1);
         $itemKey = "{$productId}_{$variationId}";
 
         $existingQty = isset($cart['items'][$itemKey]) ? (int)$cart['items'][$itemKey]['quantity'] : 0;
-        $newQty = $existingQty + $quantity;
-
-        if ($newQty < $moq) {
-            $newQty = $moq;
-        }
+        $newQty = max(1, $existingQty + $quantity);
 
         $cart['items'][$itemKey] = [
             'product_id' => $productId,
@@ -93,13 +88,8 @@ class CartService extends BaseService
         if ($quantity <= 0) {
             unset($cart['items'][$itemKey]);
         } else {
-            $product = $this->productRepo->getProductWithDetails($productId);
-            $moq = (int)($product['moq'] ?? 1);
-            if ($quantity < $moq) {
-                $quantity = $moq;
-            }
             if (isset($cart['items'][$itemKey])) {
-                $cart['items'][$itemKey]['quantity'] = $quantity;
+                $cart['items'][$itemKey]['quantity'] = max(1, $quantity);
             }
         }
 

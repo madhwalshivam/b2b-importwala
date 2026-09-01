@@ -1143,7 +1143,11 @@ ob_start();
         inp.value = val;
     }
 
+    let detailAddToCartInFlight = false;
     async function addToCartFromDetail() {
+        if (detailAddToCartInFlight) return;
+        detailAddToCartInFlight = true;
+
         const qtyInp = document.getElementById('detailQtyInput');
         let qty = parseInt(qtyInp ? qtyInp.value : 1) || 1;
 
@@ -1161,6 +1165,7 @@ ob_start();
         payload.append('product_id', <?= (int) $product['id'] ?>);
         if (selectedVariantId) payload.append('variant_id', selectedVariantId);
         payload.append('quantity', qty);
+        payload.append('set_exact_qty', '1');
         payload.append('pricing_mode', currentMode);
 
         try {
@@ -1183,6 +1188,8 @@ ob_start();
             }
         } catch (e) {
             alert('Error adding to cart');
+        } finally {
+            detailAddToCartInFlight = false;
         }
     }
 

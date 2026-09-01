@@ -715,31 +715,39 @@ $initialWishlistCount = (int)$wStmt->fetchColumn();
 
     window.quickAddToCart = async function(productId, moq, btn) {
       if (!productId) return;
-      const originalHtml = btn.innerHTML;
-      btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="10"/></svg>';
+      if (btn && btn.dataset.submitting === 'true') return;
+      if (btn) btn.dataset.submitting = 'true';
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) btn.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="10"/></svg>';
       try {
         const res = await fetch('<?= url("api/cart/add") ?>', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ product_id: productId, quantity: moq || 1 })
+          body: JSON.stringify({ product_id: productId, quantity: 1 })
         });
         const data = await res.json();
         if (data.success) {
-          btn.style.background = '#10b981';
-          btn.style.color = '#ffffff';
-          btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+          if (btn) {
+            btn.style.background = '#10b981';
+            btn.style.color = '#ffffff';
+            btn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>';
+          }
           if (typeof updateHeaderCartCount === 'function') updateHeaderCartCount();
           setTimeout(() => {
-            btn.style.background = '';
-            btn.style.color = '';
-            btn.innerHTML = originalHtml;
+            if (btn) {
+              btn.style.background = '';
+              btn.style.color = '';
+              btn.innerHTML = originalHtml;
+            }
           }, 1500);
         } else {
           alert(data.message || 'Could not add product to cart.');
-          btn.innerHTML = originalHtml;
+          if (btn) btn.innerHTML = originalHtml;
         }
       } catch(e) {
-        btn.innerHTML = originalHtml;
+        if (btn) btn.innerHTML = originalHtml;
+      } finally {
+        if (btn) btn.dataset.submitting = 'false';
       }
     };
 
@@ -1681,10 +1689,15 @@ $initialWishlistCount = (int)$wStmt->fetchColumn();
   </div>
 
   <script>
+      let quickAddCardInFlight = {};
       async function quickAddToCartCard(productId, moq, btn) {
+          if (!productId) return;
+          if (quickAddCardInFlight[productId]) return;
+          quickAddCardInFlight[productId] = true;
+
           const payload = new URLSearchParams();
           payload.append('product_id', productId);
-          payload.append('quantity', moq || 1);
+          payload.append('quantity', 1);
           payload.append('pricing_mode', 'wholesale');
 
           try {
@@ -1701,7 +1714,9 @@ $initialWishlistCount = (int)$wStmt->fetchColumn();
                       showCartToast('Item added to cart');
                   }
               }
-          } catch(e){}
+          } catch(e){} finally {
+              quickAddCardInFlight[productId] = false;
+          }
       }
       async function fetchCartData() {
           try {
