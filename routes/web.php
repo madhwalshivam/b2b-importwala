@@ -284,6 +284,13 @@ $router->post('/admin/products/{id}/specs/save', 'Admin\ProductController@saveSp
 
 
 
+// Bulk Product Import Routes
+$router->get('/admin/products/import/template', 'Admin\BulkProductImportController@downloadTemplate', [AdminMiddleware::class]);
+$router->post('/admin/products/import/parse', 'Admin\BulkProductImportController@parse', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/import/commit', 'Admin\BulkProductImportController@commit', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/products/import/errors-csv', 'Admin\BulkProductImportController@errorsCsv', [AdminMiddleware::class]);
+
+
 // Brands Management
 $router->get('/admin/brands', 'Admin\BrandController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('brands.view'))->execute()]);
 $router->post('/admin/brands/store', 'Admin\BrandController@store', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('brands.add'))->execute()]);

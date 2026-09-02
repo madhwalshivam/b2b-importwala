@@ -4,7 +4,7 @@ include __DIR__ . '/../layouts/header.php';
 
 <div class="max-w-5xl mx-auto space-y-6 font-sans pb-12">
     <!-- Header Bar -->
-    <div class="flex items-center justify-between bg-white p-6 rounded-2xl border border-gray-900 shadow-xs">
+    <div class="flex items-center justify-between bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div class="flex items-center space-x-3">
             <a href="<?= url('admin/products') ?>"
                 class="w-10 h-10 bg-gray-100 text-gray-700 hover:bg-gray-900 hover:text-white rounded-xl transition flex items-center justify-center shrink-0"
@@ -23,7 +23,7 @@ include __DIR__ . '/../layouts/header.php';
         <?= csrf_field() ?>
 
         <!-- SECTION 1: BASIC INFORMATION -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-5 shadow-xs">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 space-y-5 shadow-xs">
             <div class="flex items-center space-x-2 border-b border-gray-100 pb-3">
                 <i data-lucide="package" class="w-4 h-4 text-red-600"></i>
                 <h3 class="font-semibold text-sm text-gray-900">Basic Information &amp; Pricing</h3>
@@ -34,19 +34,19 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Product Name *</label>
                     <input type="text" name="name" required
                         placeholder="e.g. Mudsor Heavy-Duty Portable Fast Charger Dock"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl focus:outline-none focus:border-red-600 font-semibold text-gray-900">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl focus:outline-none focus:border-red-600 font-semibold text-gray-900">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">SKU Number *</label>
                     <input type="text" name="sku" required placeholder="MUD-CHG-001"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl uppercase font-mono font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl uppercase font-mono font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Primary Category *</label>
                     <select id="mainCategorySelect" name="category_id" required onchange="loadSubcategories(this.value)"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
                         <option value="">-- Select Primary Category --</option>
                         <?php foreach ($categories as $cat): ?>
                             <option value="<?= $cat['id'] ?>"><?= htmlspecialchars(htmlspecialchars_decode($cat['name'])) ?>
@@ -58,7 +58,7 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Sub-category</label>
                     <select id="subCategorySelect" name="subcategory_id"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
                         <option value="">-- Select Sub-category (Optional) --</option>
                     </select>
                 </div>
@@ -66,7 +66,7 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Primary Scooter Brand</label>
                     <select name="brand_id"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
                         <option value="">-- Select Primary Brand --</option>
                         <?php foreach ($brands as $b): ?>
                             <option value="<?= $b['id'] ?>"><?= htmlspecialchars(htmlspecialchars_decode($b['name'])) ?>
@@ -79,26 +79,26 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Retail Single-Piece Price (₹)
                         *</label>
                     <input type="number" step="0.01" name="price" required placeholder="999"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Retail Discounted Sale Price
                         (₹)</label>
                     <input type="number" step="0.01" name="sale_price" placeholder="449"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Inventory Stock Units *</label>
                     <input type="number" name="stock" required value="100" min="0"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Status</label>
                     <select name="status"
-                        class="w-full h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-3 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                     </select>
@@ -107,13 +107,13 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">HSN Code</label>
                     <input type="text" name="hsn_code" value="8714.99.90" placeholder="e.g. 8714.99.90"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-mono font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-mono font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">GST Rate (%) *</label>
                     <select name="tax_percent" required
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
                         <option value="0">0% (Exempt / Nil Rated)</option>
                         <option value="5">5% GST</option>
                         <option value="12">12% GST</option>
@@ -128,7 +128,7 @@ include __DIR__ . '/../layouts/header.php';
         </div>
 
         <!-- SECTION 1B: B2B WHOLESALE PRICING & TIER DISCOUNTS -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-5 shadow-xs">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 space-y-5 shadow-xs">
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="tag" class="w-4 h-4 text-[#f05a29]"></i>
@@ -145,14 +145,14 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Wholesale Base Price (₹) *</label>
                     <input type="number" step="0.01" name="base_price" placeholder="e.g. 350.00"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity (MOQ)
                         *</label>
                     <input type="number" name="moq" value="1" min="1"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
             </div>
 
@@ -197,7 +197,7 @@ include __DIR__ . '/../layouts/header.php';
         </div>
 
         <!-- SECTION 1B: WARRANTY & OEM COMPARISON DATA -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-5 shadow-xs">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 space-y-5 shadow-xs">
             <div class="flex items-center space-x-2 border-b border-gray-100 pb-3">
                 <i data-lucide="git-compare" class="w-4 h-4 text-red-600"></i>
                 <h3 class="font-semibold text-sm text-gray-900">Warranty &amp; OEM Comparison Data</h3>
@@ -212,7 +212,7 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Mudsor Warranty (Months)</label>
                     <input type="number" name="warranty_months" id="create_warranty_months" value="12" min="0" max="120"
                         placeholder="e.g. 12"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                     <p class="text-[10px] text-gray-500 mt-1">Mudsor product ki warranty (months mein)</p>
                 </div>
 
@@ -223,7 +223,7 @@ include __DIR__ . '/../layouts/header.php';
                     </label>
                     <input type="number" step="0.01" name="oem_price" id="create_oem_price" value=""
                         placeholder="Auto-estimated if blank"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                     <p class="text-[10px] text-gray-500 mt-1">Blank raho to auto-estimate (price × 1.4x) hoga</p>
                 </div>
 
@@ -232,7 +232,7 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-gray-700 uppercase mb-1">OEM Warranty (Months)</label>
                     <input type="number" name="oem_warranty_months" id="create_oem_warranty" value="6" min="0" max="60"
                         placeholder="e.g. 6"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                     <p class="text-[10px] text-gray-500 mt-1">Vehicle brand ki warranty (usually 3–12 months)</p>
                 </div>
 
@@ -241,7 +241,7 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-gray-700 uppercase mb-1">OEM Material</label>
                     <input type="text" name="oem_material" value="Standard Steel / Plastic"
                         placeholder="e.g. Standard Steel / Plastic"
-                        class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                 </div>
 
                 <!-- Live Preview -->
@@ -300,7 +300,7 @@ include __DIR__ . '/../layouts/header.php';
         </script>
 
         <!-- SECTION 2: CATEGORIES & BRANDS -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-5 shadow-xs">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 space-y-5 shadow-xs">
             <div class="flex items-center space-x-2 border-b border-gray-100 pb-3">
                 <i data-lucide="tag" class="w-4 h-4 text-red-600"></i>
                 <h3 class="font-semibold text-sm text-gray-900">Categories &amp; Compatibility Mapping</h3>
@@ -308,7 +308,7 @@ include __DIR__ . '/../layouts/header.php';
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                 <!-- MULTIPLE CATEGORIES -->
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-900 space-y-3">
+                <div class="bg-gray-50 p-4 rounded-xl border border-slate-200 space-y-3">
                     <div class="flex items-center justify-between">
                         <label class="font-semibold text-gray-900 text-xs uppercase tracking-wider">Product
                             Categories</label>
@@ -316,7 +316,7 @@ include __DIR__ . '/../layouts/header.php';
                             class="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded font-semibold">MULTI-SELECT</span>
                     </div>
                     <div
-                        class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-white rounded-lg border border-gray-900">
+                        class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
                         <?php foreach ($categories as $cat): ?>
                             <label
                                 class="flex items-center space-x-2 p-1.5 hover:bg-gray-50 rounded cursor-pointer font-semibold text-gray-800">
@@ -329,7 +329,7 @@ include __DIR__ . '/../layouts/header.php';
                 </div>
 
                 <!-- MULTIPLE BRANDS -->
-                <div class="bg-gray-50 p-4 rounded-xl border border-gray-900 space-y-3">
+                <div class="bg-gray-50 p-4 rounded-xl border border-slate-200 space-y-3">
                     <div class="flex items-center justify-between">
                         <label class="font-semibold text-gray-900 text-xs uppercase tracking-wider">Scooter
                             Brands</label>
@@ -337,7 +337,7 @@ include __DIR__ . '/../layouts/header.php';
                             class="text-[10px] bg-gray-900 text-white px-2 py-0.5 rounded font-semibold">MULTI-SELECT</span>
                     </div>
                     <div
-                        class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-white rounded-lg border border-gray-900">
+                        class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
                         <?php foreach ($brands as $b): ?>
                             <label
                                 class="flex items-center space-x-2 p-1.5 hover:bg-gray-50 rounded cursor-pointer font-semibold text-gray-800">
@@ -352,7 +352,7 @@ include __DIR__ . '/../layouts/header.php';
         </div>
 
         <!-- SECTION 3: MAIN PRODUCT IMAGE -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-4 shadow-xs" x-data="{ imgMode: 'url' }">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 shadow-xs" x-data="{ imgMode: 'url' }">
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="image" class="w-4 h-4 text-red-600"></i>
@@ -370,19 +370,19 @@ include __DIR__ . '/../layouts/header.php';
 
             <div x-show="imgMode === 'url'" class="space-y-1">
                 <input type="url" name="main_image_url" placeholder="https://example.com/image.jpg"
-                    class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-red-600">
+                    class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-red-600">
                 <p class="text-[11px] text-gray-500">Direct image URL (JPEG, PNG, WEBP)</p>
             </div>
 
             <div x-show="imgMode === 'upload'" class="space-y-1" x-cloak>
                 <input type="file" name="main_image" accept="image/*"
-                    class="w-full p-2 bg-gray-50 border border-gray-900 rounded-xl text-xs">
+                    class="w-full p-2 bg-gray-50 border border-slate-200 rounded-xl text-xs">
                 <p class="text-[11px] text-gray-500">Upload main product image file (Max 5MB)</p>
             </div>
         </div>
 
         <!-- SECTION 4: PRODUCT GALLERY IMAGES -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-4 shadow-xs">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 shadow-xs">
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="images" class="w-4 h-4 text-red-600"></i>
@@ -394,20 +394,20 @@ include __DIR__ . '/../layouts/header.php';
                 <div class="space-y-1">
                     <label class="block font-semibold text-gray-700">Upload Multiple Image Files:</label>
                     <input type="file" name="gallery_images[]" accept="image/*" multiple
-                        class="w-full p-2.5 bg-gray-50 border border-gray-900 rounded-xl text-xs">
+                        class="w-full p-2.5 bg-gray-50 border border-slate-200 rounded-xl text-xs">
                     <p class="text-[11px] text-gray-500">Select multiple product photos from your computer.</p>
                 </div>
                 <div class="space-y-1">
                     <label class="block font-semibold text-gray-700">Or Paste Image URLs (one per line):</label>
                     <textarea name="gallery_urls" rows="2"
                         placeholder="https://example.com/photo1.jpg&#10;https://example.com/photo2.jpg"
-                        class="w-full p-2.5 bg-gray-50 border border-gray-900 rounded-xl text-xs font-mono focus:outline-none focus:border-red-600"></textarea>
+                        class="w-full p-2.5 bg-gray-50 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:border-red-600"></textarea>
                     <p class="text-[11px] text-gray-500">Enter direct image URLs.</p>
                 </div>
             </div>
 
             <!-- SECTION: PRODUCT DEMO VIDEO & COVER THUMBNAIL -->
-            <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-4 shadow-xs"
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 space-y-4 shadow-xs"
                 x-data="{ videoSource: 'url' }">
                 <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                     <div class="flex items-center space-x-2">
@@ -434,7 +434,7 @@ include __DIR__ . '/../layouts/header.php';
                             <label class="block font-semibold text-gray-700 uppercase">Video URL Link</label>
                             <input type="url" name="video_url"
                                 placeholder="https://www.youtube.com/watch?v=... or MP4 URL"
-                                class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-red-600">
+                                class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-red-600">
                             <p class="text-[11px] text-gray-500">YouTube, Instagram, Facebook, or MP4 link</p>
                         </div>
 
@@ -443,7 +443,7 @@ include __DIR__ . '/../layouts/header.php';
                                 .webm)</label>
                             <input type="file" name="video_file" accept="video/mp4,video/webm"
                                 onchange="extractFrameThumbnail(this, 'create')"
-                                class="w-full p-2 bg-gray-50 border border-gray-900 rounded-xl text-xs">
+                                class="w-full p-2 bg-gray-50 border border-slate-200 rounded-xl text-xs">
                             <p class="text-[11px] text-gray-500">Auto-extracts frame at 1-sec mark for poster thumbnail
                                 if no custom cover photo is uploaded.</p>
                         </div>
@@ -454,7 +454,7 @@ include __DIR__ . '/../layouts/header.php';
                         <label class="block font-semibold text-gray-700 uppercase">Cover Photo / Video Poster (Manual
                             Override)</label>
                         <input type="file" name="video_thumbnail" accept="image/*"
-                            class="w-full p-2 bg-gray-50 border border-gray-900 rounded-xl text-xs">
+                            class="w-full p-2 bg-gray-50 border border-slate-200 rounded-xl text-xs">
                         <p class="text-[11px] text-gray-500">Optional custom cover image. Overrides auto-generated video
                             frame thumbnail.</p>
 
@@ -518,7 +518,7 @@ include __DIR__ . '/../layouts/header.php';
             </script>
 
             <!-- SECTION 5: PROMOTIONAL BADGES & DESCRIPTION -->
-            <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-5 shadow-xs">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 space-y-5 shadow-xs">
                 <div class="flex items-center space-x-2 border-b border-gray-100 pb-3">
                     <i data-lucide="file-text" class="w-4 h-4 text-red-600"></i>
                     <h3 class="font-semibold text-sm text-gray-900">Description &amp; Badges</h3>
@@ -530,25 +530,25 @@ include __DIR__ . '/../layouts/header.php';
                             Status</label>
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <label
-                                class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
+                                class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-semibold hover:border-red-600 transition">
                                 <input type="checkbox" name="is_new" value="1"
                                     class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
                                 <span>New Product [ON/OFF]</span>
                             </label>
                             <label
-                                class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
+                                class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-semibold hover:border-red-600 transition">
                                 <input type="checkbox" name="is_free_shipping" value="1" checked
                                     class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
                                 <span>Free Delivery [ON/OFF]</span>
                             </label>
                             <label
-                                class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
+                                class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-semibold hover:border-red-600 transition">
                                 <input type="checkbox" name="is_featured" value="1"
                                     class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
                                 <span>Featured Deal</span>
                             </label>
                             <label
-                                class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
+                                class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-semibold hover:border-red-600 transition">
                                 <input type="checkbox" name="is_flash_sale" value="1"
                                     class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
                                 <span>Flash Sale</span>
@@ -560,7 +560,7 @@ include __DIR__ . '/../layouts/header.php';
                         <div>
                             <label class="block font-semibold text-gray-700 uppercase mb-1">Total Sold Count</label>
                             <input type="number" name="total_sold" min="0" value="0" placeholder="e.g. 1250"
-                                class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                                class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                             <p class="text-[11px] text-gray-500 mt-1">Displayed on frontend as "{Total Sold}+ sold".
                                 Admin controlled value.</p>
                         </div>
@@ -569,7 +569,7 @@ include __DIR__ . '/../layouts/header.php';
                             <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity
                                 (MOQ)</label>
                             <input type="number" name="moq" min="1" value="1" placeholder="e.g. 50"
-                                class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                                class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                             <p class="text-[11px] text-gray-500 mt-1">Minimum units customer must order in an inquiry.
                                 Default minimum 1.</p>
                         </div>
@@ -579,7 +579,7 @@ include __DIR__ . '/../layouts/header.php';
                         <label class="block font-semibold text-gray-700 uppercase mb-1">Product Description</label>
                         <textarea name="description" rows="5"
                             placeholder="Detailed product specifications, compatibility guidance, and features..."
-                            class="w-full p-4 bg-gray-50 border border-gray-900 rounded-xl focus:outline-none focus:border-red-600 text-xs font-medium text-gray-900"></textarea>
+                            class="w-full p-4 bg-gray-50 border border-slate-200 rounded-xl focus:outline-none focus:border-red-600 text-xs font-medium text-gray-900"></textarea>
                     </div>
                 </div>
             </div>

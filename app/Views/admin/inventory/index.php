@@ -35,12 +35,12 @@ include __DIR__ . '/../layouts/header.php';
 
     <!-- Inventory Form -->
     <form action="<?= url('admin/inventory/update') ?>" method="POST"
-        class="bg-white rounded-[10px] border border-gray-900 overflow-hidden space-y-4">
+        class="bg-white rounded-2xl border border-slate-200 overflow-hidden space-y-4 shadow-xs">
         <?= csrf_field() ?>
 
         <table class="w-full text-xs text-left border-collapse">
             <thead>
-                <tr class="bg-gray-50 border-b border-gray-900 text-gray-500 font-semibold uppercase tracking-wider">
+                <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
                     <th class="p-4">Product Name</th>
                     <th class="p-4">SKU</th>
                     <th class="p-4">Low Stock Threshold</th>
@@ -54,19 +54,19 @@ include __DIR__ . '/../layouts/header.php';
                         ? (str_starts_with($p['main_image'], 'http') ? $p['main_image'] : url(ltrim($p['main_image'], '/')))
                         : url('assets/images/placeholder.jpg');
                     ?>
-                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
-                        <td class="p-4 font-semibold text-gray-900 flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-2xs">
+                    <tr class="border-b border-slate-100 hover:bg-slate-50/70 transition">
+                        <td class="p-4 font-medium text-slate-900 flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shrink-0 flex items-center justify-center p-1 shadow-2xs">
                                 <img src="<?= $imgSrc ?>" alt="" class="w-full h-full object-contain rounded-lg"
                                     onerror="this.onerror=null; this.src='<?= url('assets/images/placeholder.jpg') ?>'">
                             </div>
-                            <span><?= htmlspecialchars($p['name']) ?></span>
+                            <span class="font-semibold text-slate-800"><?= htmlspecialchars($p['name']) ?></span>
                         </td>
-                        <td class="p-4 font-mono text-gray-600"><?= htmlspecialchars($p['sku']) ?></td>
-                        <td class="p-4 font-semibold text-gray-500"><?= $p['low_stock_threshold'] ?> units</td>
+                        <td class="p-4 font-mono font-medium text-slate-600"><?= htmlspecialchars($p['sku']) ?></td>
+                        <td class="p-4 font-medium text-slate-500"><?= $p['low_stock_threshold'] ?> units</td>
                         <td class="p-4">
                             <input type="number" name="stock[<?= $p['id'] ?>]" value="<?= $p['stock'] ?>" min="0"
-                                class="w-24 h-10 px-3 bg-gray-50 border border-gray-900 rounded-[10px] font-semibold text-xs focus:outline-none focus:border-gray-900">
+                                class="w-24 h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs text-slate-900 focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
                         </td>
                     </tr>
                 <?php endforeach; ?>

@@ -1,6 +1,12 @@
 {
     "require": {
         "phpmailer/phpmailer": "^7.1",
-        "razorpay/razorpay": "^2.9"
+        "razorpay/razorpay": "^2.9",
+        "phpoffice/phpspreadsheet": "^3.0"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.12"
+        }
     }
 }

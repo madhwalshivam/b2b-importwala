@@ -15,18 +15,23 @@ class AnalyticsController extends Controller {
         $db = Database::getInstance();
 
         // 1. Live Users Online (active in last 5 minutes)
-        $liveStmt = $db->query("SELECT COUNT(*) FROM live_sessions WHERE last_active >= NOW() - INTERVAL 5 MINUTE");
-        $liveOnlineCount = (int)$liveStmt->fetchColumn();
+        try {
+            $liveStmt = $db->query("SELECT COUNT(*) FROM live_sessions WHERE last_active >= NOW() - INTERVAL 5 MINUTE");
+            $liveOnlineCount = (int)($liveStmt ? $liveStmt->fetchColumn() : 0);
 
-        $liveUsersListStmt = $db->query("
-            SELECT ls.*, u.name as user_name, u.email as user_email
-            FROM live_sessions ls
-            LEFT JOIN users u ON ls.user_id = u.id
-            WHERE ls.last_active >= NOW() - INTERVAL 5 MINUTE
-            ORDER BY ls.last_active DESC
-            LIMIT 15
-        ");
-        $liveUsersList = $liveUsersListStmt->fetchAll();
+            $liveUsersListStmt = $db->query("
+                SELECT ls.*, u.name as user_name, u.email as user_email
+                FROM live_sessions ls
+                LEFT JOIN users u ON ls.user_id = u.id
+                WHERE ls.last_active >= NOW() - INTERVAL 5 MINUTE
+                ORDER BY ls.last_active DESC
+                LIMIT 15
+            ");
+            $liveUsersList = $liveUsersListStmt ? $liveUsersListStmt->fetchAll() : [];
+        } catch (\Throwable $e) {
+            $liveOnlineCount = 0;
+            $liveUsersList = [];
+        }
 
         // 2. Date Range Filter for Orders & Revenue
         $preset = $this->request->input('range', 'this_month');
@@ -61,75 +66,108 @@ class AnalyticsController extends Controller {
         $whereSql = implode(' AND ', $whereConds);
 
         // Total orders & total revenue
-        $metricsStmt = $db->prepare("SELECT COUNT(*) as total_orders, COALESCE(SUM(total_amount), 0) as total_revenue FROM orders WHERE {$whereSql}");
-        $metricsStmt->execute($params);
-        $metrics = $metricsStmt->fetch();
+        try {
+            $metricsStmt = $db->prepare("SELECT COUNT(*) as total_orders, COALESCE(SUM(total_amount), 0) as total_revenue FROM orders WHERE {$whereSql}");
+            $metricsStmt->execute($params);
+            $metrics = $metricsStmt->fetch() ?: ['total_orders' => 0, 'total_revenue' => 0];
+        } catch (\Throwable $e) {
+            $metrics = ['total_orders' => 0, 'total_revenue' => 0];
+        }
 
         // Orders over time for Chart.js
-        $chartStmt = $db->prepare("
-            SELECT DATE(created_at) as order_date, COUNT(*) as count, COALESCE(SUM(total_amount), 0) as revenue
-            FROM orders
-            WHERE {$whereSql}
-            GROUP BY DATE(created_at)
-            ORDER BY order_date ASC
-            LIMIT 30
-        ");
-        $chartStmt->execute($params);
-        $chartData = $chartStmt->fetchAll();
+        try {
+            $chartStmt = $db->prepare("
+                SELECT DATE(created_at) as order_date, COUNT(*) as count, COALESCE(SUM(total_amount), 0) as revenue
+                FROM orders
+                WHERE {$whereSql}
+                GROUP BY DATE(created_at)
+                ORDER BY order_date ASC
+                LIMIT 30
+            ");
+            $chartStmt->execute($params);
+            $chartData = $chartStmt->fetchAll() ?: [];
+        } catch (\Throwable $e) {
+            $chartData = [];
+        }
 
         // 3. Per-user purchase history table
         $userSearch = trim($this->request->input('user_search', ''));
         $userWhere = "1=1";
         $userParams = [];
         if (!empty($userSearch)) {
-            $userWhere = "(u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)";
+            $userWhere = "(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, '')) LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)";
             $userParams = ["%{$userSearch}%", "%{$userSearch}%", "%{$userSearch}%"];
         }
 
-        $purchasesStmt = $db->prepare("
-            SELECT u.id, u.name, u.email, u.phone, COUNT(o.id) as order_count, COALESCE(SUM(o.total_amount), 0) as total_spent, MAX(o.created_at) as last_order_date
-            FROM users u
-            LEFT JOIN orders o ON o.customer_email = u.email OR o.customer_phone = u.phone
-            WHERE {$userWhere}
-            GROUP BY u.id, u.name, u.email, u.phone
-            ORDER BY total_spent DESC
-            LIMIT 25
-        ");
-        $purchasesStmt->execute($userParams);
-        $userPurchases = $purchasesStmt->fetchAll();
+        try {
+            $purchasesStmt = $db->prepare("
+                SELECT 
+                    u.id, 
+                    TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as name, 
+                    u.email, 
+                    u.phone, 
+                    COUNT(o.id) as order_count, 
+                    COALESCE(SUM(o.total_amount), 0) as total_spent, 
+                    MAX(o.created_at) as last_order_date
+                FROM users u
+                LEFT JOIN orders o ON o.customer_email = u.email OR o.customer_phone = u.phone
+                WHERE {$userWhere}
+                GROUP BY u.id, u.first_name, u.last_name, u.email, u.phone
+                ORDER BY total_spent DESC
+                LIMIT 25
+            ");
+            $purchasesStmt->execute($userParams);
+            $userPurchases = $purchasesStmt->fetchAll() ?: [];
+        } catch (\Throwable $e) {
+            $userPurchases = [];
+        }
 
         // 4. Cart Abandonment Tracking
-        // Show sessions/users who added items to cart in last 48 hours but have no order created after cart update
-        $abandonedStmt = $db->query("
-            SELECT ci.*, p.name as product_name, p.price, p.main_image, u.name as user_name, u.email as user_email, u.phone as user_phone
-            FROM cart_items ci
-            JOIN products p ON ci.product_id = p.id
-            LEFT JOIN users u ON ci.user_id = u.id
-            ORDER BY ci.updated_at DESC
-            LIMIT 20
-        ");
-        $abandonedCarts = $abandonedStmt->fetchAll();
+        try {
+            $abandonedStmt = $db->query("
+                SELECT ci.*, p.name as product_name, p.price, p.main_image, 
+                       TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as user_name, 
+                       u.email as user_email, u.phone as user_phone
+                FROM cart_items ci
+                JOIN products p ON ci.product_id = p.id
+                LEFT JOIN users u ON ci.user_id = u.id
+                ORDER BY ci.updated_at DESC
+                LIMIT 20
+            ");
+            $abandonedCarts = $abandonedStmt ? $abandonedStmt->fetchAll() : [];
+        } catch (\Throwable $e) {
+            $abandonedCarts = [];
+        }
 
         // 5. Wishlist Activity Report
-        $wishlistTrendsStmt = $db->query("
-            SELECT p.id, p.name, p.main_image, p.price, COUNT(w.id) as wishlist_count
-            FROM wishlist w
-            JOIN products p ON w.product_id = p.id
-            GROUP BY p.id, p.name, p.main_image, p.price
-            ORDER BY wishlist_count DESC
-            LIMIT 10
-        ");
-        $wishlistTrends = $wishlistTrendsStmt->fetchAll();
+        try {
+            $wishlistTrendsStmt = $db->query("
+                SELECT p.id, p.name, p.main_image, p.price, COUNT(w.id) as wishlist_count
+                FROM wishlist w
+                JOIN products p ON w.product_id = p.id
+                GROUP BY p.id, p.name, p.main_image, p.price
+                ORDER BY wishlist_count DESC
+                LIMIT 10
+            ");
+            $wishlistTrends = $wishlistTrendsStmt ? $wishlistTrendsStmt->fetchAll() : [];
+        } catch (\Throwable $e) {
+            $wishlistTrends = [];
+        }
 
-        $userWishlistsStmt = $db->query("
-            SELECT u.name as user_name, u.email as user_email, u.phone as user_phone, p.name as product_name, w.created_at
-            FROM wishlist w
-            JOIN users u ON w.user_id = u.id
-            JOIN products p ON w.product_id = p.id
-            ORDER BY w.created_at DESC
-            LIMIT 15
-        ");
-        $userWishlists = $userWishlistsStmt->fetchAll();
+        try {
+            $userWishlistsStmt = $db->query("
+                SELECT TRIM(CONCAT(COALESCE(u.first_name, ''), ' ', COALESCE(u.last_name, ''))) as user_name, 
+                       u.email as user_email, u.phone as user_phone, p.name as product_name, w.created_at
+                FROM wishlist w
+                JOIN users u ON w.user_id = u.id
+                JOIN products p ON w.product_id = p.id
+                ORDER BY w.created_at DESC
+                LIMIT 15
+            ");
+            $userWishlists = $userWishlistsStmt ? $userWishlistsStmt->fetchAll() : [];
+        } catch (\Throwable $e) {
+            $userWishlists = [];
+        }
 
         return $this->render('admin/analytics', [
             'liveOnlineCount' => $liveOnlineCount,

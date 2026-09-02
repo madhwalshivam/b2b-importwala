@@ -50,7 +50,7 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1.5">Owner Name</label>
                     <input type="text" name="owner_name"
-                        value="<?= htmlspecialchars($settings['owner_name'] ?? 'Jass Rughwani') ?>"
+                        value="<?= htmlspecialchars($settings['owner_name'] ?? 'Sunny') ?>"
                         class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-red-600 focus:bg-white transition">
                 </div>
 

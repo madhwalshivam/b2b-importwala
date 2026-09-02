@@ -87,7 +87,7 @@ $countryVal = htmlspecialchars($savedAddress['country'] ?? 'India');
                     x-show="editingAddress || <?= empty($savedAddress) ? 'true' : 'false' ?>">
                     <div class="sm:col-span-2">
                         <label class="block font-semibold text-gray-700 mb-1">Full Name *</label>
-                        <input type="text" name="name" required placeholder="e.g. Jass Rughwani" value="<?= $nameVal ?>"
+                        <input type="text" name="name" required placeholder="e.g. Sunny" value="<?= $nameVal ?>"
                             class="w-full h-12 px-4 bg-gray-50 border border-gray-900 rounded-[10px] focus:outline-none focus:border-gray-900 font-medium">
                     </div>
 

@@ -28,6 +28,11 @@ abstract class BaseController
         }
     }
 
+    protected function render(string $viewPath, array $data = []): void
+    {
+        $this->renderView($viewPath, $data);
+    }
+
     protected function jsonResponse(array $data, int $statusCode = 200): void
     {
         header('Content-Type: application/json');

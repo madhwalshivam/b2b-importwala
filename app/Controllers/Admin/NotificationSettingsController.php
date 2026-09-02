@@ -19,9 +19,13 @@ class NotificationSettingsController extends Controller {
         $phoneId = NotificationService::getSetting('whatsapp_phone_number_id', '');
 
         // Fetch recent notification logs
-        $db = Database::getInstance();
-        $logsStmt = $db->query("SELECT * FROM notification_log ORDER BY id DESC LIMIT 20");
-        $logs = $logsStmt->fetchAll();
+        try {
+            $db = Database::getInstance();
+            $logsStmt = $db->query("SELECT * FROM notification_log ORDER BY id DESC LIMIT 20");
+            $logs = $logsStmt ? $logsStmt->fetchAll() : [];
+        } catch (\Throwable $e) {
+            $logs = [];
+        }
 
         return $this->render('admin/notification_settings', [
             'notification_email' => $email,

@@ -10,7 +10,7 @@ return [
     'company' => [
         'name' => 'Mudsor',
         'legal_name' => 'Rughwani Enterprises',
-        'owner' => 'Jass Rughwani',
+        'owner' => 'Sunny',
         'phone' => '9217714452',
         'email' => 'mudsorinfo@gmail.com',
         'gstin' => '07FLOPR6641L1Z8',

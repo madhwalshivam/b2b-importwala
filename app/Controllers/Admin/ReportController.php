@@ -175,11 +175,12 @@ class ReportController extends Controller {
         $sql = "
             SELECT 
                 o.*, 
-                GROUP_CONCAT(DISTINCT COALESCE(NULLIF(oi.hsn_code, ''), '8714.99.90') SEPARATOR ', ') AS hsn_codes,
+                GROUP_CONCAT(DISTINCT COALESCE(NULLIF(oi.hsn_code, ''), NULLIF(p.hsn_code, ''), '8714.99.90') SEPARATOR ', ') AS hsn_codes,
                 GROUP_CONCAT(DISTINCT CONCAT(ROUND(COALESCE(oi.tax_percent, 18)), '%') SEPARATOR ', ') AS gst_rates,
                 SUM(COALESCE(oi.tax_amount, 0)) AS items_tax_sum
             FROM orders o
             LEFT JOIN order_items oi ON o.id = oi.order_id
+            LEFT JOIN products p ON oi.product_id = p.id
             WHERE o.created_at >= ? AND o.created_at <= ?
             GROUP BY o.id
             ORDER BY o.created_at DESC, o.id DESC
