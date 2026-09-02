@@ -81,11 +81,13 @@
             background-color: rgba(240, 90, 41, 0.20) !important;
         }
 
-        .bg-red-500, .bg-red-600 {
+        .bg-red-500,
+        .bg-red-600 {
             background-color: #f05a29 !important;
         }
 
-        .bg-red-700, .bg-red-800 {
+        .bg-red-700,
+        .bg-red-800 {
             background-color: #d8481b !important;
         }
 
@@ -101,7 +103,8 @@
             color: rgba(240, 90, 41, 0.8) !important;
         }
 
-        .text-red-500, .text-red-600 {
+        .text-red-500,
+        .text-red-600 {
             color: #f05a29 !important;
         }
 
@@ -117,7 +120,8 @@
             color: #d8481b !important;
         }
 
-        .border-red-500, .border-red-600 {
+        .border-red-500,
+        .border-red-600 {
             border-color: #f05a29 !important;
         }
 
@@ -133,15 +137,18 @@
             border-color: #f05a29 !important;
         }
 
-        .focus\:ring-red-500:focus, .focus\:ring-red-600:focus {
+        .focus\:ring-red-500:focus,
+        .focus\:ring-red-600:focus {
             --tw-ring-color: #f05a29 !important;
         }
 
-        .fill-red-500, .fill-red-600 {
+        .fill-red-500,
+        .fill-red-600 {
             fill: #f05a29 !important;
         }
 
-        .text-amber-400, .text-amber-500 {
+        .text-amber-400,
+        .text-amber-500 {
             color: #f05a29 !important;
         }
 
@@ -149,15 +156,18 @@
             fill: #f05a29 !important;
         }
 
-        .bg-purple-600, .bg-indigo-600 {
+        .bg-purple-600,
+        .bg-indigo-600 {
             background-color: #f05a29 !important;
         }
 
-        .hover\:bg-purple-700:hover, .hover\:bg-indigo-700:hover {
+        .hover\:bg-purple-700:hover,
+        .hover\:bg-indigo-700:hover {
             background-color: #d8481b !important;
         }
 
-        .text-purple-600, .text-indigo-600 {
+        .text-purple-600,
+        .text-indigo-600 {
             color: #f05a29 !important;
         }
     </style>
@@ -214,9 +224,9 @@
         <!-- Fixed Top Header with Theme Switcher -->
         <header
             class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-xs shrink-0 sticky top-0 z-30">
-            <h1 class="text-base font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <h1 class="text-base font-semibold text-gray-900 tracking-tight flex items-center gap-2">
                 <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#f05a29]"></span>
-               Wholesale Admin Panel
+                Wholesale Admin Panel
             </h1>
 
             <div class="flex items-center space-x-3">
@@ -242,46 +252,44 @@
         <!-- Scrollable Main Content Container -->
         <main class="flex-1 p-6 overflow-y-auto" style="background-color: var(--color-bg-soft);">
             <?php if ($flash = (new App\Core\Session())->getFlash('success')): ?>
-                <div x-data="{ show: true }" 
-                     x-show="show" 
-                     x-init="setTimeout(() => show = false, 1000)"
-                     x-transition:enter="transition ease-out duration-200 transform"
-                     x-transition:enter-start="opacity-0 -translate-y-2"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-in duration-300 transform"
-                     x-transition:leave-start="opacity-100 translate-y-0"
-                     x-transition:leave-end="opacity-0 -translate-y-2"
-                     class="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs p-3.5 px-4 rounded-xl font-semibold mb-6 flex items-center justify-between shadow-xs transition-all">
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 1000)"
+                    x-transition:enter="transition ease-out duration-200 transform"
+                    x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-300 transform"
+                    x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
+                    class="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs p-3.5 px-4 rounded-xl font-semibold mb-6 flex items-center justify-between shadow-xs transition-all">
                     <div class="flex items-center space-x-2.5">
-                        <div class="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <div
+                            class="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                             <i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>
                         </div>
                         <span class="leading-snug"><?= htmlspecialchars($flash) ?></span>
                     </div>
-                    <button type="button" @click="show = false" class="text-emerald-500 hover:text-emerald-800 dark:hover:text-emerald-200 p-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-lg transition focus:outline-none shrink-0" title="Close Notification">
+                    <button type="button" @click="show = false"
+                        class="text-emerald-500 hover:text-emerald-800 dark:hover:text-emerald-200 p-1.5 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 rounded-lg transition focus:outline-none shrink-0"
+                        title="Close Notification">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
             <?php endif; ?>
 
             <?php if ($flash = (new App\Core\Session())->getFlash('error')): ?>
-                <div x-data="{ show: true }" 
-                     x-show="show" 
-                     x-init="setTimeout(() => show = false, 2500)"
-                     x-transition:enter="transition ease-out duration-200 transform"
-                     x-transition:enter-start="opacity-0 -translate-y-2"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-in duration-300 transform"
-                     x-transition:leave-start="opacity-100 translate-y-0"
-                     x-transition:leave-end="opacity-0 -translate-y-2"
-                     class="bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs p-3.5 px-4 rounded-xl font-semibold mb-6 flex items-center justify-between shadow-xs transition-all">
+                <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 2500)"
+                    x-transition:enter="transition ease-out duration-200 transform"
+                    x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:leave="transition ease-in duration-300 transform"
+                    x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2"
+                    class="bg-rose-50 dark:bg-rose-950/50 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300 text-xs p-3.5 px-4 rounded-xl font-semibold mb-6 flex items-center justify-between shadow-xs transition-all">
                     <div class="flex items-center space-x-2.5">
-                        <div class="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+                        <div
+                            class="w-6 h-6 rounded-full bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
                             <i data-lucide="alert-circle" class="w-3.5 h-3.5 stroke-[2.5]"></i>
                         </div>
                         <span class="leading-snug"><?= htmlspecialchars($flash) ?></span>
                     </div>
-                    <button type="button" @click="show = false" class="text-rose-500 hover:text-rose-800 dark:hover:text-rose-200 p-1.5 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-lg transition focus:outline-none shrink-0" title="Close Notification">
+                    <button type="button" @click="show = false"
+                        class="text-rose-500 hover:text-rose-800 dark:hover:text-rose-200 p-1.5 hover:bg-rose-100 dark:hover:bg-rose-900/50 rounded-lg transition focus:outline-none shrink-0"
+                        title="Close Notification">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>

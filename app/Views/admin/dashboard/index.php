@@ -13,7 +13,7 @@ include __DIR__ . '/../layouts/header.php';
                 Mudsor Executive CMS
             </span>
             <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-slate-100">Welcome back, Admin
-                
+
             </h2>
             <p class="text-xs text-gray-500 dark:text-slate-400 mt-1 font-medium">Here is your live real-time e-commerce
                 revenue, inventory,
@@ -246,7 +246,7 @@ include __DIR__ . '/../layouts/header.php';
                                     }
                                     ?>
                                     <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase border <?= $dashPayClass ?>">
+                                        class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-semibold uppercase border <?= $dashPayClass ?>">
                                         <?= htmlspecialchars($ord['payment_status'] ?? 'pending') ?>
                                     </span>
                                 </td>
@@ -261,7 +261,7 @@ include __DIR__ . '/../layouts/header.php';
                                     }
                                     ?>
                                     <span
-                                        class="px-2.5 py-1 text-[10px] font-bold rounded-lg uppercase border <?= $dashOrdClass ?>">
+                                        class="px-2.5 py-1 text-[10px] font-semibold rounded-lg uppercase border <?= $dashOrdClass ?>">
                                         <?= htmlspecialchars($ord['order_status']) ?>
                                     </span>
                                 </td>

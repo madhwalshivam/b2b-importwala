@@ -81,12 +81,13 @@ include __DIR__ . '/../layouts/header.php';
                                     <div class="flex items-center space-x-3">
                                         <!-- Clean initials avatar circle -->
                                         <div
-                                            class="w-9 h-9 rounded-xl bg-slate-900 text-white font-bold text-xs flex items-center justify-center shrink-0 border border-slate-800 shadow-xs">
+                                            class="w-9 h-9 rounded-xl bg-slate-900 text-white font-semibold text-xs flex items-center justify-center shrink-0 border border-slate-800 shadow-xs">
                                             <?= $initials ?>
                                         </div>
                                         <div>
                                             <h4 class="font-semibold text-gray-900 text-xs">
-                                                <?= htmlspecialchars($emp['name']) ?></h4>
+                                                <?= htmlspecialchars($emp['name']) ?>
+                                            </h4>
                                             <span class="text-[10px] text-gray-500 font-mono">Phone:
                                                 <?= htmlspecialchars($emp['phone'] ?: 'N/A') ?></span>
                                         </div>

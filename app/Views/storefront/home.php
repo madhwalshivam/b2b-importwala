@@ -12,50 +12,57 @@ include __DIR__ . '/layouts/header.php';
         <div class="hidden lg:flex flex-col w-[250px] xl:w-[270px] shrink-0 justify-between gap-2">
             <a href="<?= url('category/crash-guards') ?>"
                 class="robu-hero-card-1 flex-1 px-3.5 py-2.5 rounded-xl transition-all duration-300 flex items-center justify-between group shadow-2xs hover:shadow-md cursor-pointer">
-                <span class="robu-hero-card-span font-bold text-xs xl:text-sm leading-tight pr-2">
+                <span class="robu-hero-card-span font-semibold text-xs xl:text-sm leading-tight pr-2">
                     Heavy-Duty<br>Crash Guards
                 </span>
-                <div class="robu-hero-card-img-box w-11 h-11 xl:w-12 xl:h-12 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
-                    <img src="<?= asset('assets/images/crash_guard_icon.png') ?>" alt="Crash Guards" class="w-full h-full object-contain rounded">
+                <div
+                    class="robu-hero-card-img-box w-11 h-11 xl:w-12 xl:h-12 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
+                    <img src="<?= asset('assets/images/crash_guard_icon.png') ?>" alt="Crash Guards"
+                        class="w-full h-full object-contain rounded">
                 </div>
             </a>
 
             <a href="<?= url('category/body-covers') ?>"
                 class="robu-hero-card-2 flex-1 px-3.5 py-2.5 rounded-xl transition-all duration-300 flex items-center justify-between group shadow-2xs hover:shadow-md cursor-pointer">
-                <span class="robu-hero-card-span font-bold text-xs xl:text-sm leading-tight pr-2">
+                <span class="robu-hero-card-span font-semibold text-xs xl:text-sm leading-tight pr-2">
                     All-Weather<br>Body Covers
                 </span>
-                <div class="robu-hero-card-img-box w-11 h-11 xl:w-12 xl:h-12 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
-                    <img src="<?= asset('assets/images/body_cover_icon.png') ?>" alt="Body Covers" class="w-full h-full object-contain rounded">
+                <div
+                    class="robu-hero-card-img-box w-11 h-11 xl:w-12 xl:h-12 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
+                    <img src="<?= asset('assets/images/body_cover_icon.png') ?>" alt="Body Covers"
+                        class="w-full h-full object-contain rounded">
                 </div>
             </a>
 
             <a href="<?= url('category/mobile-holders') ?>"
                 class="robu-hero-card-3 flex-1 px-3.5 py-2.5 rounded-xl transition-all duration-300 flex items-center justify-between group shadow-2xs hover:shadow-md cursor-pointer">
-                <span class="robu-hero-card-span font-bold text-xs xl:text-sm leading-tight pr-2">
+                <span class="robu-hero-card-span font-semibold text-xs xl:text-sm leading-tight pr-2">
                     Waterproof<br>Mobile Holders
                 </span>
-                <div class="robu-hero-card-img-box w-11 h-11 xl:w-12 xl:h-12 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
-                    <img src="<?= asset('assets/images/mobile_holder_icon.png') ?>" alt="Mobile Holders" class="w-full h-full object-contain rounded">
+                <div
+                    class="robu-hero-card-img-box w-11 h-11 xl:w-12 xl:h-12 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
+                    <img src="<?= asset('assets/images/mobile_holder_icon.png') ?>" alt="Mobile Holders"
+                        class="w-full h-full object-contain rounded">
                 </div>
             </a>
 
             <a href="<?= url('category/seat-covers') ?>"
                 class="robu-hero-card-4 flex-1 px-3.5 py-2.5 rounded-xl transition-all duration-300 flex items-center justify-between group shadow-2xs hover:shadow-md cursor-pointer">
-                <span class="robu-hero-card-span font-bold text-xs xl:text-sm leading-tight pr-2">
+                <span class="robu-hero-card-span font-semibold text-xs xl:text-sm leading-tight pr-2">
                     Breathable<br>Seat Covers
                 </span>
-                <div class="robu-hero-card-img-box w-11 h-11 xl:w-12 xl:h-12 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
-                    <img src="<?= asset('assets/images/seat_cover_icon.png') ?>" alt="Seat Covers" class="w-full h-full object-contain rounded">
+                <div
+                    class="robu-hero-card-img-box w-11 h-11 xl:w-12 xl:h-12 rounded-lg p-1 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform duration-300">
+                    <img src="<?= asset('assets/images/seat_cover_icon.png') ?>" alt="Seat Covers"
+                        class="w-full h-full object-contain rounded">
                 </div>
             </a>
         </div>
 
         <!-- Hero Banner Slider Container -->
         <div class="flex-1 w-full min-w-0 overflow-hidden relative md:rounded-2xl md:border md:border-gray-900 md:shadow-sm bg-white mobile-hero-container"
-            style="max-width:100%; display:block;" x-data="heroBannerSlider()" x-init="init()"
-            @mouseenter="stopTimer()" @mouseleave="startTimer()"
-            @touchstart="handleTouchStart($event)" @touchend="handleTouchEnd($event)">
+            style="max-width:100%; display:block;" x-data="heroBannerSlider()" x-init="init()" @mouseenter="stopTimer()"
+            @mouseleave="startTimer()" @touchstart="handleTouchStart($event)" @touchend="handleTouchEnd($event)">
 
             <?php if (!empty($heroBanners)): ?>
 
@@ -269,12 +276,12 @@ include __DIR__ . '/layouts/header.php';
                                             class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                                             onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
                                         <div
-                                            class="hidden w-full h-full bg-slate-900 flex items-center justify-center text-white/40 font-bold text-xl uppercase">
+                                            class="hidden w-full h-full bg-slate-900 flex items-center justify-center text-white/40 font-semibold text-xl uppercase">
                                             <?= htmlspecialchars(substr($cat['name'], 0, 2)) ?>
                                         </div>
                                     <?php else: ?>
                                         <div
-                                            class="w-full h-full bg-slate-900 flex items-center justify-center text-white/40 font-bold text-xl uppercase">
+                                            class="w-full h-full bg-slate-900 flex items-center justify-center text-white/40 font-semibold text-xl uppercase">
                                             <?= htmlspecialchars(substr($cat['name'], 0, 2)) ?>
                                         </div>
                                     <?php endif; ?>
@@ -332,7 +339,8 @@ include __DIR__ . '/layouts/header.php';
                     <div class="swiper-wrapper">
                         <?php foreach ($bestSellers as $prod): ?>
                             <div class="swiper-slide h-auto">
-                                <div class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
+                                <div
+                                    class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
 
                                     <?php $isWished = in_array((int) $prod['id'], $wishlistProductIds ?? []); ?>
                                     <button type="button" onclick="toggleWishlist(<?= $prod['id'] ?>, this)"
@@ -376,7 +384,7 @@ include __DIR__ . '/layouts/header.php';
                                         <div class="pt-2 border-t border-red-100/70 space-y-2">
                                             <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
                                                 <span
-                                                    class="text-xs sm:text-sm font-bold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
+                                                    class="text-xs sm:text-sm font-semibold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
                                                 <?php if ($prod['sale_price']): ?>
                                                     <span
                                                         class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>
@@ -515,7 +523,8 @@ include __DIR__ . '/layouts/header.php';
                             <div class="swiper-wrapper">
                                 <?php foreach ($featuredProducts as $prod): ?>
                                     <div class="swiper-slide h-auto">
-                                        <div class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
+                                        <div
+                                            class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
 
                                             <?php $isWished = in_array((int) $prod['id'], $wishlistProductIds ?? []); ?>
                                             <button type="button" onclick="toggleWishlist(<?= $prod['id'] ?>, this)"
@@ -560,7 +569,7 @@ include __DIR__ . '/layouts/header.php';
                                                 <div class="pt-2 border-t border-red-100/70 space-y-2">
                                                     <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
                                                         <span
-                                                            class="text-xs sm:text-sm font-bold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
+                                                            class="text-xs sm:text-sm font-semibold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
                                                         <?php if ($prod['sale_price']): ?>
                                                             <span
                                                                 class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>
@@ -652,19 +661,21 @@ include __DIR__ . '/layouts/header.php';
                                         <!-- Video Thumbnail Box -->
                                         <div class="relative aspect-video rounded-xl overflow-hidden bg-black border border-gray-200 dark:border-slate-800 cursor-pointer group/thumb"
                                             onclick="playHomeVideo('<?= htmlspecialchars($embedUrl) ?>', '<?= htmlspecialchars(addslashes($v['title'])) ?>', '<?= $platform ?>')">
-                                            
+
                                             <?php if (!empty($v['thumbnail'])): ?>
                                                 <img src="<?= asset($v['thumbnail']) ?>" alt="<?= htmlspecialchars($v['title']) ?>"
                                                     class="w-full h-full object-cover group-hover/thumb:scale-105 transition duration-300"
                                                     loading="lazy">
                                             <?php else: ?>
-                                                <div class="w-full h-full bg-slate-900 flex items-center justify-center text-slate-500">
+                                                <div
+                                                    class="w-full h-full bg-slate-900 flex items-center justify-center text-slate-500">
                                                     <i data-lucide="video" class="w-10 h-10"></i>
                                                 </div>
                                             <?php endif; ?>
 
                                             <!-- Platform Tag Badge -->
-                                            <span class="absolute top-2 left-2 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow-sm text-white bg-black/75">
+                                            <span
+                                                class="absolute top-2 left-2 text-[9px] font-extrabold uppercase px-2 py-0.5 rounded shadow-sm text-white bg-black/75">
                                                 <?= htmlspecialchars(strtoupper($platform)) ?>
                                             </span>
 
@@ -735,7 +746,8 @@ include __DIR__ . '/layouts/header.php';
                     <div class="swiper-wrapper">
                         <?php foreach ($newArrivals as $prod): ?>
                             <div class="swiper-slide h-auto">
-                                <div class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
+                                <div
+                                    class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
 
                                     <?php $isWished = in_array((int) $prod['id'], $wishlistProductIds ?? []); ?>
                                     <button type="button" onclick="toggleWishlist(<?= $prod['id'] ?>, this)"
@@ -779,7 +791,7 @@ include __DIR__ . '/layouts/header.php';
                                         <div class="pt-2 border-t border-red-100/70 space-y-2">
                                             <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
                                                 <span
-                                                    class="text-xs sm:text-sm font-bold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
+                                                    class="text-xs sm:text-sm font-semibold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
                                                 <?php if ($prod['sale_price']): ?>
                                                     <span
                                                         class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>
@@ -848,8 +860,10 @@ include __DIR__ . '/layouts/header.php';
                             <span class="text-2xl font-semibold text-gray-900 dark:text-white tracking-tight">Reviews</span>
                         </div>
                         <div>
-                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white leading-snug">Trusted by Riders</h3>
-                            <p class="text-[13px] text-gray-500 dark:text-slate-300 mt-2 font-medium leading-relaxed">Discover why riders trust
+                            <h3 class="text-xl font-semibold text-gray-900 dark:text-white leading-snug">Trusted by Riders
+                            </h3>
+                            <p class="text-[13px] text-gray-500 dark:text-slate-300 mt-2 font-medium leading-relaxed">
+                                Discover why riders trust
                                 us for premium electric scooter accessories, modifications, and performance upgrades.</p>
                         </div>
                     </div>
@@ -884,10 +898,13 @@ include __DIR__ . '/layouts/header.php';
                                                             </div>
                                                         <?php endif; ?>
                                                         <div>
-                                                            <h4 class="text-[15px] font-semibold text-gray-900 dark:text-white leading-tight">
-                                                                <?= htmlspecialchars($r['customer_name']) ?></h4>
+                                                            <h4
+                                                                class="text-[15px] font-semibold text-gray-900 dark:text-white leading-tight">
+                                                                <?= htmlspecialchars($r['customer_name']) ?>
+                                                            </h4>
                                                             <div class="flex items-center mt-1 space-x-2">
-                                                                <p class="text-[11px] text-gray-400 dark:text-slate-400 font-medium">
+                                                                <p
+                                                                    class="text-[11px] text-gray-400 dark:text-slate-400 font-medium">
                                                                     <?= htmlspecialchars($r['review_date'] ?: date('Y-m-d')) ?>
                                                                 </p>
 
@@ -909,7 +926,8 @@ include __DIR__ . '/layouts/header.php';
                                                 </div>
 
                                                 <!-- Text -->
-                                                <p class="text-[14px] text-gray-700 dark:text-slate-100 font-medium leading-relaxed italic">
+                                                <p
+                                                    class="text-[14px] text-gray-700 dark:text-slate-100 font-medium leading-relaxed italic">
                                                     "<?= htmlspecialchars($r['review_text']) ?>"
                                                 </p>
                                             </div>
@@ -1080,11 +1098,13 @@ include __DIR__ . '/layouts/header.php';
 
 <!-- LATEST BLOG ARTICLES & GUIDES SECTION -->
 <?php if (!empty($latestArticles)): ?>
-    <section class="py-12 md:py-16 bg-gradient-to-b from-gray-50/50 to-white dark:from-slate-900 dark:to-slate-900 border-t border-gray-100 dark:border-slate-800 font-sans reveal-on-scroll">
+    <section
+        class="py-12 md:py-16 bg-gradient-to-b from-gray-50/50 to-white dark:from-slate-900 dark:to-slate-900 border-t border-gray-100 dark:border-slate-800 font-sans reveal-on-scroll">
         <div class="container mx-auto px-4 space-y-8">
 
             <!-- Section Header -->
-            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-100 dark:border-slate-800 pb-4">
+            <div
+                class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-100 dark:border-slate-800 pb-4">
                 <div class="flex items-center gap-3">
                     <div class="w-1.5 h-8 rounded-full shrink-0" style="background-color: var(--color-primary);"></div>
                     <div>
@@ -1094,7 +1114,9 @@ include __DIR__ . '/layouts/header.php';
                                 Blog</span>
                             <span class="text-xs text-gray-400 font-normal">• EV Maintenance & Guides</span>
                         </div>
-                        <h2 class="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mt-1">Latest
+                        <h2
+                            class="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mt-1">
+                            Latest
                             EV Articles & Guides</h2>
                     </div>
                 </div>

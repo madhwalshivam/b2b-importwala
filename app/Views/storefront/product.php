@@ -283,7 +283,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
             </div>
 
             <!-- RIGHT: SUMMARY -->
-            <?php $stockQty = (int)($product['stock'] ?? 0); ?>
+            <?php $stockQty = (int) ($product['stock'] ?? 0); ?>
             <div class="lg:col-span-6 flex flex-col gap-3">
 
                 <!-- 1. PRODUCT TITLE -->
@@ -296,11 +296,15 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                     <!-- Price left block -->
                     <div class="flex flex-col gap-0.5">
                         <div class="flex items-baseline gap-2 flex-wrap">
-                            <span class="text-2xl font-semibold text-gray-900 tracking-tight"><?= format_price($effectivePrice) ?></span>
+                            <span
+                                class="text-2xl font-semibold text-gray-900 tracking-tight"><?= format_price($effectivePrice) ?></span>
                             <?php if ($hasDiscount): ?>
-                                <span class="text-sm text-gray-400 line-through font-light"><?= format_price($regularPrice) ?></span>
+                                <span
+                                    class="text-sm text-gray-400 line-through font-light"><?= format_price($regularPrice) ?></span>
                                 <?php if ($discountPct > 0): ?>
-                                    <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100"><?= $discountPct ?>% OFF</span>
+                                    <span
+                                        class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100"><?= $discountPct ?>%
+                                        OFF</span>
                                 <?php endif; ?>
                             <?php endif; ?>
                         </div>
@@ -311,13 +315,22 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                     <button type="button"
                         @click="document.getElementById('reviews-accordion')?.scrollIntoView({behavior:'smooth'})"
                         class="shrink-0 inline-flex items-center gap-1 bg-gray-50 border border-gray-200 rounded-xl px-2.5 py-1.5 hover:border-gray-300 transition cursor-pointer">
-                        <?php $ratingAvg = (float)($product['rating_avg'] ?? 0); ?>
+                        <?php $ratingAvg = (float) ($product['rating_avg'] ?? 0); ?>
                         <?php if ($ratingAvg > 0): ?>
                             <span class="text-xs font-semibold text-gray-800"><?= number_format($ratingAvg, 1) ?></span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-400 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                            <span class="text-[10px] text-gray-400 font-normal">(<?= (int)$product['review_count'] ?>)</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"
+                                viewBox="0 0 24 24">
+                                <path
+                                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
+                            <span
+                                class="text-[10px] text-gray-400 font-normal">(<?= (int) $product['review_count'] ?>)</span>
                         <?php else: ?>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-300 fill-gray-300" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-300 fill-gray-300"
+                                viewBox="0 0 24 24">
+                                <path
+                                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            </svg>
                             <span class="text-[10px] text-gray-400 font-normal">No reviews</span>
                         <?php endif; ?>
                     </button>
@@ -326,12 +339,18 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                 <!-- 3. STOCK STATUS -->
                 <?php if ($stockQty > 0 && $stockQty <= 20): ?>
                     <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 3h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                        <span
+                            class="inline-flex items-center gap-1.5 text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 9v3m0 3h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                            </svg>
                             Only <?= $stockQty ?> left!
                         </span>
                         <div class="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div class="h-full rounded-full bg-amber-400" style="width:<?= min(100, ($stockQty / 20) * 100) ?>%"></div>
+                            <div class="h-full rounded-full bg-amber-400"
+                                style="width:<?= min(100, ($stockQty / 20) * 100) ?>%"></div>
                         </div>
                     </div>
                 <?php elseif ($stockQty > 20): ?>
@@ -348,20 +367,40 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
 
                 <!-- 4. TRUST BADGES (all screens) -->
                 <div class="grid grid-cols-4 gap-2 py-2 border-t border-b border-gray-100">
-                    <div class="flex flex-col items-center gap-1 text-center py-2 px-1 rounded-xl bg-gray-50 border border-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    <div
+                        class="flex flex-col items-center gap-1 text-center py-2 px-1 rounded-xl bg-gray-50 border border-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
                         <span class="text-[10px] font-normal text-gray-400 leading-tight">All India<br>Delivery</span>
                     </div>
-                    <div class="flex flex-col items-center gap-1 text-center py-2 px-1 rounded-xl bg-gray-50 border border-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <div
+                        class="flex flex-col items-center gap-1 text-center py-2 px-1 rounded-xl bg-gray-50 border border-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
                         <span class="text-[10px] font-normal text-gray-400 leading-tight">Easy<br>Returns</span>
                     </div>
-                    <div class="flex flex-col items-center gap-1 text-center py-2 px-1 rounded-xl bg-gray-50 border border-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <div
+                        class="flex flex-col items-center gap-1 text-center py-2 px-1 rounded-xl bg-gray-50 border border-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
                         <span class="text-[10px] font-normal text-gray-400 leading-tight">COD<br>Available</span>
                     </div>
-                    <div class="flex flex-col items-center gap-1 text-center py-2 px-1 rounded-xl bg-gray-50 border border-gray-100">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    <div
+                        class="flex flex-col items-center gap-1 text-center py-2 px-1 rounded-xl bg-gray-50 border border-gray-100">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-400" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
                         <span class="text-[10px] font-normal text-gray-400 leading-tight">Secure<br>Payment</span>
                     </div>
                 </div>
@@ -378,7 +417,8 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                             ?>
                             <a href="<?= url('product/' . $fbSlug) ?>" target="_self"
                                 class="group/card bg-white rounded-2xl border border-gray-200 hover:border-gray-300 p-2.5 text-center transition shadow-2xs hover:shadow-md flex flex-col items-center w-28 sm:w-32 shrink-0 cursor-pointer relative snap-start">
-                                <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl p-1 overflow-hidden flex items-center justify-center border border-gray-100 group-hover/card:scale-105 transition duration-200">
+                                <div
+                                    class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl p-1 overflow-hidden flex items-center justify-center border border-gray-100 group-hover/card:scale-105 transition duration-200">
                                     <img src="<?= $fbImg ?>"
                                         onerror="this.onerror=null;this.src='<?= asset('assets/images/mudsor-logo.png') ?>';"
                                         alt="<?= htmlspecialchars($fb['name']) ?>" class="w-full h-full object-contain">
@@ -387,7 +427,8 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                     title="<?= htmlspecialchars($fb['name']) ?>">
                                     <?= htmlspecialchars($fb['name']) ?>
                                 </p>
-                                <span class="text-[11px] font-semibold text-gray-800 block mt-0.5"><?= format_price($fbPrice) ?></span>
+                                <span
+                                    class="text-[11px] font-semibold text-gray-800 block mt-0.5"><?= format_price($fbPrice) ?></span>
                             </a>
                         <?php endforeach; ?>
                     </div>
@@ -395,8 +436,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
 
                 <!-- 6. DESKTOP ONLY: Add to Cart Button -->
                 <div class="hidden lg:flex items-center gap-3 pt-1">
-                    <button type="button" x-show="cartQty <= 0" @click="addToCart()"
-                        :disabled="loading || stock <= 0"
+                    <button type="button" x-show="cartQty <= 0" @click="addToCart()" :disabled="loading || stock <= 0"
                         class="h-12 px-8 bg-red-600 hover:bg-red-700 text-white font-medium text-sm rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center space-x-2 disabled:bg-gray-400 cursor-pointer tracking-wider uppercase min-w-[220px]">
                         <i data-lucide="shopping-bag" class="w-4 h-4 text-white"></i>
                         <span x-text="loading ? 'Adding...' : (stock > 0 ? 'Add to cart' : 'Out of stock')"></span>
@@ -456,7 +496,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                 <?php foreach ($keyFeatures as $kf): ?>
                                     <div class="flex items-start space-x-3 bg-gray-50 p-3 rounded-xl border border-gray-200">
                                         <div
-                                            class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-xs mt-0.5">
+                                            class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-semibold text-xs mt-0.5">
                                             ✓
                                         </div>
                                         <span class="text-gray-700 font-normal leading-snug"><?= htmlspecialchars($kf) ?></span>
@@ -555,7 +595,8 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                 <span>Customer Reviews &amp; Ratings</span>
                             </h3>
                             <p class="text-xs text-gray-500 mt-1">Verified buyer reviews &amp; ratings for
-                                <?= htmlspecialchars($productNameClean) ?></p>
+                                <?= htmlspecialchars($productNameClean) ?>
+                            </p>
                         </div>
 
                         <button type="button" @click="showReviewForm = !showReviewForm"
@@ -572,7 +613,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                         <div
                             class="flex flex-col items-center justify-center text-center p-4 bg-white rounded-xl border border-gray-200">
                             <span
-                                class="text-3xl font-bold text-gray-800"><?= number_format((float) ($product['rating_avg'] ?? 4.8), 1) ?></span>
+                                class="text-3xl font-semibold text-gray-800"><?= number_format((float) ($product['rating_avg'] ?? 4.8), 1) ?></span>
                             <div class="my-1.5">
                                 <?= render_star_rating($product['rating_avg'] ?? 4.8, 'w-4 h-4') ?>
                             </div>
@@ -611,7 +652,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                     <!-- Review Submission Form -->
                     <div x-show="showReviewForm" x-transition
                         class="bg-red-50/40 p-5 rounded-2xl border border-red-200 space-y-4">
-                        <h4 class="font-bold text-gray-900 text-xs flex items-center space-x-2">
+                        <h4 class="font-semibold text-gray-900 text-xs flex items-center space-x-2">
                             <i data-lucide="pen-tool" class="w-4 h-4 text-red-600"></i>
                             <span>Write Your Product Review</span>
                         </h4>
@@ -670,12 +711,13 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center space-x-2">
                                             <div
-                                                class="w-8 h-8 rounded-full bg-red-100 text-red-700 font-bold text-xs flex items-center justify-center">
+                                                class="w-8 h-8 rounded-full bg-red-100 text-red-700 font-semibold text-xs flex items-center justify-center">
                                                 <?= strtoupper(substr($rev['customer_name'] ?? 'U', 0, 1)) ?>
                                             </div>
                                             <div>
-                                                <h5 class="text-xs font-bold text-gray-900">
-                                                    <?= htmlspecialchars($rev['customer_name']) ?></h5>
+                                                <h5 class="text-xs font-semibold text-gray-900">
+                                                    <?= htmlspecialchars($rev['customer_name']) ?>
+                                                </h5>
                                                 <span
                                                     class="text-[10px] text-gray-400"><?= date('d M Y', strtotime($rev['created_at'])) ?></span>
                                             </div>
@@ -686,7 +728,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                     </div>
 
                                     <?php if (!empty($rev['title'])): ?>
-                                        <h6 class="text-xs font-bold text-gray-900"><?= htmlspecialchars($rev['title']) ?></h6>
+                                        <h6 class="text-xs font-semibold text-gray-900"><?= htmlspecialchars($rev['title']) ?></h6>
                                     <?php endif; ?>
 
                                     <p class="text-xs text-gray-700 leading-relaxed"><?= htmlspecialchars($rev['comment']) ?>
@@ -784,7 +826,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                 <div class="pt-2 border-t border-red-100/70 space-y-2">
                                     <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
                                         <span
-                                            class="text-xs sm:text-sm font-bold text-gray-900 leading-none"><?= format_price($rpPrice) ?></span>
+                                            class="text-xs sm:text-sm font-semibold text-gray-900 leading-none"><?= format_price($rpPrice) ?></span>
                                         <?php if ($hasRpDiscount): ?>
                                             <span
                                                 class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($rpOrigPrice) ?></span>

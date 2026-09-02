@@ -86,7 +86,7 @@ $isBlog = str_contains($currentUri, 'blog');
 
     <!-- Central Theme Design Tokens & Fonts (load first for CSS vars) -->
     <link rel="stylesheet" href="<?= asset('css/theme.css') ?>?v=<?= time() ?>">
-    
+
     <style id="mudsor-scroll-reveal-styles">
         .reveal-on-scroll {
             opacity: 0 !important;
@@ -94,10 +94,12 @@ $isBlog = str_contains($currentUri, 'blog');
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
             will-change: opacity, transform;
         }
+
         .reveal-on-scroll.is-revealed {
             opacity: 1 !important;
             transform: translateY(0) !important;
         }
+
         @media (prefers-reduced-motion: reduce) {
             .reveal-on-scroll {
                 opacity: 1 !important;
@@ -1029,7 +1031,7 @@ $isBlog = str_contains($currentUri, 'blog');
         <!-- 3. Desktop Sticky Header Container (Contains Search Row + Nav Links Row Together) -->
         <header id="desktop-sticky-header"
             class="bg-white border-b border-gray-900 relative z-30 transition-all duration-200">
-            
+
             <!-- Top Search & Logo Row -->
             <div class="py-1.5 md:py-2 px-3 md:px-4 border-b border-gray-100/70 transition-all duration-200">
                 <div class="container mx-auto flex items-center justify-between gap-3 sm:gap-6">
@@ -1178,32 +1180,31 @@ $isBlog = str_contains($currentUri, 'blog');
                             class="md:hidden w-10 h-10 flex items-center justify-center hover:text-theme-primary transition p-1 cursor-pointer focus:outline-none"
                             title="Wholesale & Bulk Inquiry">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                <path
+                                    d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                             </svg>
                         </button>
 
                         <!-- Account Icon (Desktop Only: Amazon-Style Hover Popover) -->
                         <?php if (!empty($_SESSION['user_id'])): ?>
                             <div class="hidden md:flex relative items-center justify-center"
-                                x-data="{ open: false, timeout: null }"
-                                @mouseenter="clearTimeout(timeout); open = true"
+                                x-data="{ open: false, timeout: null }" @mouseenter="clearTimeout(timeout); open = true"
                                 @mouseleave="timeout = setTimeout(() => { open = false }, 250)">
-                                <a href="<?= url('account') ?>"
-                                    @click="open = !open"
+                                <a href="<?= url('account') ?>" @click="open = !open"
                                     class="flex flex-col items-center justify-center hover:text-theme-primary transition focus:outline-none p-1 group cursor-pointer"
                                     title="My Account">
                                     <div class="relative">
-                                        <i data-lucide="user-check" class="w-5 h-5 text-theme-primary group-hover:scale-110 transition-transform"></i>
+                                        <i data-lucide="user-check"
+                                            class="w-5 h-5 text-theme-primary group-hover:scale-110 transition-transform"></i>
                                     </div>
-                                    <span class="text-[11px] font-semibold truncate max-w-[75px] mt-0.5 text-gray-800 group-hover:text-theme-primary transition-colors">
+                                    <span
+                                        class="text-[11px] font-semibold truncate max-w-[75px] mt-0.5 text-gray-800 group-hover:text-theme-primary transition-colors">
                                         <?= htmlspecialchars($_SESSION['user_name'] ?? 'Account') ?>
                                     </span>
                                 </a>
 
                                 <!-- Amazon-Style Flyout Popover Menu -->
-                                <div x-show="open"
-                                    x-cloak
-                                    @click.away="open = false"
+                                <div x-show="open" x-cloak @click.away="open = false"
                                     x-transition:enter="transition ease-out duration-200"
                                     x-transition:enter-start="opacity-0 translate-y-2 scale-95"
                                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
@@ -1211,18 +1212,22 @@ $isBlog = str_contains($currentUri, 'blog');
                                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                                     x-transition:leave-end="opacity-0 translate-y-2 scale-95"
                                     class="absolute right-0 top-full mt-2 w-64 sm:w-72 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2.5 z-[100] text-xs font-medium">
-                                    
+
                                     <!-- Pointer Caret Arrow (Top Right) -->
-                                    <div class="absolute -top-1.5 right-4 w-3.5 h-3.5 bg-white border-t border-l border-gray-100 rotate-45 rounded-tl-xs z-10"></div>
+                                    <div
+                                        class="absolute -top-1.5 right-4 w-3.5 h-3.5 bg-white border-t border-l border-gray-100 rotate-45 rounded-tl-xs z-10">
+                                    </div>
 
                                     <!-- Profile Info Banner (Amazon Header Style) -->
-                                    <div class="p-3 bg-gradient-to-r from-red-50/80 via-white to-gray-50 rounded-xl border border-red-100/60 mb-2 relative overflow-hidden">
+                                    <div
+                                        class="p-3 bg-gradient-to-r from-red-50/80 via-white to-gray-50 rounded-xl border border-red-100/60 mb-2 relative overflow-hidden">
                                         <div class="flex items-center space-x-3">
-                                            <div class="w-9 h-9 rounded-full bg-theme-primary text-white font-extrabold text-sm flex items-center justify-center shadow-xs shrink-0">
+                                            <div
+                                                class="w-9 h-9 rounded-full bg-theme-primary text-white font-extrabold text-sm flex items-center justify-center shadow-xs shrink-0">
                                                 <?= strtoupper(substr($_SESSION['user_name'] ?? 'U', 0, 1)) ?>
                                             </div>
                                             <div class="min-w-0 flex-1">
-                                                <p class="text-xs font-bold text-gray-900 truncate">
+                                                <p class="text-xs font-semibold text-gray-900 truncate">
                                                     Hello, <?= htmlspecialchars($_SESSION['user_name'] ?? 'User') ?>
                                                 </p>
                                                 <p class="text-[10px] text-gray-500 truncate">
@@ -1234,11 +1239,14 @@ $isBlog = str_contains($currentUri, 'blog');
 
                                     <!-- Menu Items -->
                                     <div class="space-y-1">
-                                        <div class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">Your Account</div>
-                                        
+                                        <div
+                                            class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                                            Your Account</div>
+
                                         <a href="<?= url('account') ?>"
                                             class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:text-theme-primary hover:bg-red-50/60 rounded-xl transition-all duration-150 group">
-                                            <div class="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100/70 text-gray-500 group-hover:text-theme-primary flex items-center justify-center transition-colors shrink-0">
+                                            <div
+                                                class="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100/70 text-gray-500 group-hover:text-theme-primary flex items-center justify-center transition-colors shrink-0">
                                                 <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
                                             </div>
                                             <span class="font-semibold text-xs">My Account Dashboard</span>
@@ -1246,7 +1254,8 @@ $isBlog = str_contains($currentUri, 'blog');
 
                                         <a href="<?= url('account') ?>"
                                             class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:text-theme-primary hover:bg-red-50/60 rounded-xl transition-all duration-150 group">
-                                            <div class="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100/70 text-gray-500 group-hover:text-theme-primary flex items-center justify-center transition-colors shrink-0">
+                                            <div
+                                                class="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100/70 text-gray-500 group-hover:text-theme-primary flex items-center justify-center transition-colors shrink-0">
                                                 <i data-lucide="package" class="w-4 h-4"></i>
                                             </div>
                                             <span class="font-semibold text-xs">My Orders & Invoices</span>
@@ -1254,7 +1263,8 @@ $isBlog = str_contains($currentUri, 'blog');
 
                                         <a href="<?= url('wishlist') ?>"
                                             class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:text-theme-primary hover:bg-red-50/60 rounded-xl transition-all duration-150 group">
-                                            <div class="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100/70 text-gray-500 group-hover:text-theme-primary flex items-center justify-center transition-colors shrink-0">
+                                            <div
+                                                class="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100/70 text-gray-500 group-hover:text-theme-primary flex items-center justify-center transition-colors shrink-0">
                                                 <i data-lucide="heart" class="w-4 h-4"></i>
                                             </div>
                                             <span class="font-semibold text-xs">Saved Wishlist</span>
@@ -1262,7 +1272,8 @@ $isBlog = str_contains($currentUri, 'blog');
 
                                         <a href="<?= url('compare') ?>"
                                             class="flex items-center space-x-3 px-3 py-2 text-gray-700 hover:text-theme-primary hover:bg-red-50/60 rounded-xl transition-all duration-150 group">
-                                            <div class="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100/70 text-gray-500 group-hover:text-theme-primary flex items-center justify-center transition-colors shrink-0">
+                                            <div
+                                                class="w-7 h-7 rounded-lg bg-gray-100 group-hover:bg-red-100/70 text-gray-500 group-hover:text-theme-primary flex items-center justify-center transition-colors shrink-0">
                                                 <i data-lucide="git-compare" class="w-4 h-4"></i>
                                             </div>
                                             <span class="font-semibold text-xs">Compare Products</span>
@@ -1272,8 +1283,9 @@ $isBlog = str_contains($currentUri, 'blog');
                                     <!-- Divider & Logout Button -->
                                     <div class="border-t border-gray-100 mt-2 pt-1.5">
                                         <a href="<?= url('logout') ?>"
-                                            class="flex items-center space-x-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-150 group font-bold">
-                                            <div class="w-7 h-7 rounded-lg bg-red-50 group-hover:bg-red-100 text-red-600 flex items-center justify-center transition-colors shrink-0">
+                                            class="flex items-center space-x-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-150 group font-semibold">
+                                            <div
+                                                class="w-7 h-7 rounded-lg bg-red-50 group-hover:bg-red-100 text-red-600 flex items-center justify-center transition-colors shrink-0">
                                                 <i data-lucide="log-out" class="w-4 h-4"></i>
                                             </div>
                                             <span class="text-xs">Sign Out / Logout</span>
@@ -1282,7 +1294,8 @@ $isBlog = str_contains($currentUri, 'blog');
                                 </div>
                             </div>
                         <?php else: ?>
-                            <a href="<?= url('login') ?>" class="hidden md:flex flex-col items-center justify-center hover:text-theme-primary transition p-1"
+                            <a href="<?= url('login') ?>"
+                                class="hidden md:flex flex-col items-center justify-center hover:text-theme-primary transition p-1"
                                 title="Login or Sign Up">
                                 <i data-lucide="user" class="w-5 h-5 mb-0.5"></i>
                                 <span class="text-[11px]">Account</span>
@@ -1379,7 +1392,8 @@ $isBlog = str_contains($currentUri, 'blog');
                                 </div>
                             </template>
 
-                            <template x-if="!searchLoading && searchQuery.trim().length > 0 && searchResults.length === 0">
+                            <template
+                                x-if="!searchLoading && searchQuery.trim().length > 0 && searchResults.length === 0">
                                 <div class="py-4 text-center">
                                     <p class="text-[10px] font-semibold text-gray-600">No products found</p>
                                 </div>
@@ -1458,7 +1472,8 @@ $isBlog = str_contains($currentUri, 'blog');
                                 </div>
 
                                 <div class="pt-3 border-t border-gray-100 flex justify-between items-center text-xs">
-                                    <span class="text-gray-400 text-[11px] font-medium">Scroll to explore all categories</span>
+                                    <span class="text-gray-400 text-[11px] font-medium">Scroll to explore all
+                                        categories</span>
                                     <a href="<?= url('categories') ?>"
                                         class="font-semibold text-red-600 hover:underline flex items-center space-x-1">
                                         <span>View All Categories Page →</span>
@@ -1482,10 +1497,12 @@ $isBlog = str_contains($currentUri, 'blog');
                                 class="py-2 font-semibold transition <?= $isBlog ? 'border-b-2 border-theme-primary text-theme-primary' : 'text-gray-700 hover:text-theme-primary' ?>">Blog</a>
 
                             <a href="<?= url('about-us') ?>"
-                                class="py-2 font-semibold transition <?= $isAbout ? 'border-b-2 border-theme-primary text-theme-primary font-semibold' : 'text-gray-700 hover:text-theme-primary' ?>">About Mudsor</a>
+                                class="py-2 font-semibold transition <?= $isAbout ? 'border-b-2 border-theme-primary text-theme-primary font-semibold' : 'text-gray-700 hover:text-theme-primary' ?>">About
+                                Mudsor</a>
 
                             <a href="<?= url('contact-us') ?>"
-                                class="py-2 font-semibold transition <?= $isContact ? 'border-b-2 border-theme-primary text-theme-primary font-semibold' : 'text-gray-700 hover:text-theme-primary' ?>">Contact Us</a>
+                                class="py-2 font-semibold transition <?= $isContact ? 'border-b-2 border-theme-primary text-theme-primary font-semibold' : 'text-gray-700 hover:text-theme-primary' ?>">Contact
+                                Us</a>
                         </div>
                     </div>
 

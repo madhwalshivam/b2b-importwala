@@ -1,42 +1,71 @@
 <?php
-$title = $pageTitle ?? "Privacy Policy | ImportWale Wholesale";
+$title = "Privacy Policy | ImportWale Wholesale";
+
+$pageTitle = "Privacy Policy";
+$badgeText = "Data Privacy";
+$badgeIcon = "shield";
+$lastUpdated = "January 15, 2026";
+$currentSlug = "privacy-policy";
+$showBusinessAddress = true;
+
+$sections = [
+    [
+        'id' => 'introduction',
+        'number' => '01',
+        'title' => 'Introduction',
+        'content' => 'Importwale operates www.importwale.com as a business-to-business platform for artificial jewellery. This Privacy Policy explains how we collect, use, store and protect information provided by users of our website and services.'
+    ],
+    [
+        'id' => 'information-we-collect',
+        'number' => '02',
+        'title' => 'Information We Collect',
+        'content' => [
+            'We may collect information such as your name, business name, mobile number, email address, business or delivery address, account details, enquiry details, order information, transaction status and communications with us.',
+            'We may also collect limited technical information such as IP address, browser type, device information and website usage data for security, functionality and performance purposes.'
+        ]
+    ],
+    [
+        'id' => 'how-we-use-information',
+        'number' => '03',
+        'title' => 'How We Use Information',
+        'content' => '<ul>
+          <li>To respond to enquiries and provide our services.</li>
+          <li>To create and manage business accounts and relationships.</li>
+          <li>To process quotations, orders, payments, delivery and customer support.</li>
+          <li>To improve website functionality and service quality.</li>
+          <li>To prevent fraud, misuse and unauthorised activity.</li>
+          <li>To comply with applicable legal, accounting, tax and regulatory requirements.</li>
+        </ul>'
+    ],
+    [
+        'id' => 'sharing-of-information',
+        'number' => '04',
+        'title' => 'Sharing of Information',
+        'content' => 'We may share information with trusted service providers where necessary for payment processing, logistics, website operations, technology services, professional advice or legal compliance. We do not sell personal information merely for third-party advertising purposes.'
+    ],
+    [
+        'id' => 'data-security-and-retention',
+        'number' => '05',
+        'title' => 'Data Security and Retention',
+        'content' => 'We use reasonable administrative, technical and organisational measures to protect information. Information is retained only for as long as reasonably necessary for legitimate business, legal, accounting, security or dispute-resolution purposes.'
+    ],
+    [
+        'id' => 'your-requests',
+        'number' => '06',
+        'title' => 'Your Requests',
+        'content' => 'You may contact us using the official contact details available on www.importwale.com to request correction or updating of information. Certain information may need to be retained where required for legal, accounting, fraud-prevention or transaction-related purposes.'
+    ],
+    [
+        'id' => 'changes-to-this-policy',
+        'number' => '07',
+        'title' => 'Changes to This Policy',
+        'content' => 'We may update this Privacy Policy from time to time. The version published on www.importwale.com will be the current applicable version.'
+    ]
+];
+
 ob_start();
-?>
-
-<div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px 32px; margin-bottom: 32px;">
-  <span style="background: #ecfdf5; color: #047857; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 12px;">
-    Data Security & Privacy
-  </span>
-  <h1 style="font-size: 28px; font-weight: 800; color: #111827; margin-bottom: 10px;">Privacy Policy</h1>
-  <p style="font-size: 14px; color: #6b7280; margin: 0;">How ImportWale collects, protects, and handles business buyer data.</p>
-</div>
-
-<div style="display: flex; flex-direction: column; gap: 24px; max-width: 960px; margin-bottom: 50px;">
-
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">1. Information Collection & Usage</h3>
-    <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
-      We collect business contact information, GST numbers, shipping addresses, and transaction histories exclusively for fulfilling wholesale orders, customs documentation, and customer support.
-    </p>
-  </div>
-
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">2. Payment & Data Security</h3>
-    <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
-      All financial transactions are processed over 256-bit SSL encrypted connections using certified payment gateways (Razorpay, Bank Wire transfer). ImportWale never stores full credit card numbers or banking credentials on public servers.
-    </p>
-  </div>
-
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">3. Non-Disclosure Commitment</h3>
-    <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
-      We strictly respect trade secrecy and private labeling specifications. Buyer list data, custom RFQ designs, and sourcing volumes are never shared with unauthorized third parties.
-    </p>
-  </div>
-
-</div>
-
-<?php
+require __DIR__ . '/partials/policy_template.php';
 $content = ob_get_clean();
+
 require __DIR__ . '/layout.php';
 ?>

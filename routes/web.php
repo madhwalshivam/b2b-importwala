@@ -11,6 +11,7 @@ use App\Middleware\CsrfMiddleware;
 // ----------------------------------------------------
 $router->get('/', 'Web\HomeController@index');
 $router->get('/catalog', 'Web\CatalogController@index');
+$router->get('/product/{slug}/{variant}', 'Web\ProductDetailController@show');
 $router->get('/product/{slug}', 'Web\ProductDetailController@show');
 $router->get('/cart', 'Web\CartViewController@index');
 
@@ -70,6 +71,9 @@ $router->post('/cart/remove-coupon', 'CartController@removeCoupon', [CsrfMiddlew
 $router->get('/blog', 'BlogFrontendController@index');
 $router->get('/blog/{slug}', 'BlogFrontendController@show');
 
+// Dedicated Reviews Page
+$router->get('/reviews', 'Web\ReviewsController@index');
+
 // Support & CMS Pages (Web Storefront)
 $router->get('/support', 'Web\SupportController@index');
 $router->get('/help-center', 'Web\SupportController@index');
@@ -83,12 +87,15 @@ $router->get('/refund-policy', 'Web\SupportController@refund');
 $router->get('/cancellation-policy', 'Web\SupportController@cancellation');
 $router->get('/terms-and-conditions', 'Web\SupportController@terms');
 $router->get('/privacy-policy', 'Web\SupportController@privacy');
+$router->get('/payment-policy', 'Web\SupportController@payment');
 $router->get('/about-us', fn() => (new App\Controllers\PageController())->show('about-us'));
 $router->get('/page/{slug}', 'PageController@show');
 $router->post('/wholesale/inquire', 'WholesaleController@submit');
 
-// RFQ (Request For Quote) Public Submission
+// RFQ (Request For Quote) Public Submission & Product Fetch APIs
 $router->post('/api/rfq/submit', 'Api\RfqApiController@submit');
+$router->get('/api/rfq/product-details', 'Api\RfqApiController@getProductDetails');
+$router->get('/api/rfq/search-products', 'Api\RfqApiController@searchProducts');
 
 // Visual Search & Image Similarity API
 $router->get('/api/visual-search', 'Api\VisualSearchController@search');
@@ -231,6 +238,17 @@ $router->get('/admin/google-reviews', 'Admin\GoogleReviewController@index', [Adm
 $router->post('/admin/google-reviews/store', 'Admin\GoogleReviewController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/google-reviews/update/{id}', 'Admin\GoogleReviewController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->get('/admin/google-reviews/delete/{id}', 'Admin\GoogleReviewController@delete', [AdminMiddleware::class]);
+
+// Customer Testimonials & Reviews Manager (Everful Style)
+$router->get('/admin/testimonials', 'Admin\TestimonialController@index', [AdminMiddleware::class]);
+$router->post('/admin/testimonials/store', 'Admin\TestimonialController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/testimonials/update/{id}', 'Admin\TestimonialController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/testimonials/delete/{id}', 'Admin\TestimonialController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/testimonials/delete/{id}', 'Admin\TestimonialController@delete', [AdminMiddleware::class]);
+$router->post('/admin/testimonials/toggle-status/{id}', 'Admin\TestimonialController@toggleStatus', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/testimonials/toggle-status/{id}', 'Admin\TestimonialController@toggleStatus', [AdminMiddleware::class]);
+$router->post('/admin/testimonials/toggle-featured/{id}', 'Admin\TestimonialController@toggleFeatured', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/testimonials/toggle-featured/{id}', 'Admin\TestimonialController@toggleFeatured', [AdminMiddleware::class]);
 
 // Discount Coupons & Offers Manager
 $router->get('/admin/coupons', 'Admin\CouponController@index', [AdminMiddleware::class]);

@@ -194,6 +194,13 @@ class CartController extends BaseController
         $userId    = $this->getUserId();
         $sessionId = $this->getSessionId();
 
+        $item = null;
+        if ($cartItemId) {
+            $stmt = $db->prepare("SELECT * FROM cart_items WHERE id = ?");
+            $stmt->execute([$cartItemId]);
+            $item = $stmt->fetch(\PDO::FETCH_ASSOC);
+        }
+
         $delStmt = $db->prepare("DELETE FROM cart_items WHERE id = ?");
         $delStmt->execute([$cartItemId]);
 
@@ -201,11 +208,15 @@ class CartController extends BaseController
         $cartInfo = $this->getCartSummary($userId, $sessionId);
 
         echo json_encode([
-            'success'    => true,
-            'message'    => 'Item removed from cart',
-            'cart_count' => $cartInfo['total_count'],
-            'subtotal'   => number_format($cartInfo['subtotal'], 2),
-            'items'      => $cartInfo['items']
+            'success'      => true,
+            'message'      => 'Item removed from cart',
+            'product_id'   => $item ? (int)$item['product_id'] : 0,
+            'variant_id'   => ($item && !empty($item['variant_id'])) ? (int)$item['variant_id'] : null,
+            'pricing_mode' => $item['pricing_mode'] ?? 'wholesale',
+            'cart_qty'     => 0,
+            'cart_count'   => $cartInfo['total_count'],
+            'subtotal'     => number_format($cartInfo['subtotal'], 2),
+            'items'        => $cartInfo['items']
         ]);
     }
 

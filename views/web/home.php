@@ -4,7 +4,7 @@ ob_start();
 ?>
 
 <!-- Dynamic Hero Banner Slider Section -->
-<div class="hero-banner-wrapper" style="margin:0 -24px 32px -24px; width:calc(100% + 48px); border-radius:0; overflow:hidden; position:relative; background:#FAF4F2;">
+<div class="hero-banner-wrapper" style="margin:0 -24px 20px -24px; width:calc(100% + 48px); border-radius:0; overflow:hidden; position:relative; background:#FAF4F2;">
 
   <?php if (!empty($heroBanners)): ?>
     <div id="heroBannerSlider" class="hero-slides-container" style="display:flex; transition:transform 0.5s ease-in-out; width:100%; height:100%;">
@@ -124,148 +124,333 @@ ob_start();
 
 <!-- Featured Categories Section (EverfulWholesale UI Architecture) -->
 <?php if (!empty($featuredCategories)): ?>
-<div class="featured-categories-section" style="margin-bottom: 40px;">
+<div class="featured-categories-section">
   
-  <!-- Section Title & Arrows Row -->
-  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
-    <h2 class="featured-cats-heading">
-      Featured categories
-    </h2>
+  <!-- Section Title & Navigation Arrows Row -->
+  <div class="feat-cats-header">
+    <div>
+      <h2 class="featured-cats-heading">Featured Categories</h2>
+      <p class="featured-cats-subtext">Curated wholesale product categories &bull; Direct factory pricing</p>
+    </div>
+    <!-- Card Swipe Navigation Arrows -->
+    <div class="feat-cards-nav">
+      <button type="button" class="card-scroll-btn scroll-left" onclick="scrollFeatCards(-1)" aria-label="Previous Categories" title="Scroll Left">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <button type="button" class="card-scroll-btn scroll-right" onclick="scrollFeatCards(1)" aria-label="Next Categories" title="Scroll Right">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+      </button>
+    </div>
   </div>
 
   <!-- Horizontal Scrollable Pill Tabs Row -->
-  <div class="feat-tabs-wrapper" style="position:relative; display:flex; align-items:center; margin-bottom:24px;">
+  <div class="feat-tabs-wrapper">
     
     <!-- Left Scroll Button -->
-    <button type="button" class="tab-scroll-btn scroll-left" onclick="scrollFeatTabs(-240)" aria-label="Scroll Left" style="display:flex; width:32px; height:32px; border-radius:50%; background:#ffffff; border:1px solid #e5e7eb; cursor:pointer; align-items:center; justify-content:center; margin-right:8px; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.1); opacity:0.4; transition:all 0.2s ease;">
-      <svg style="width:16px; height:16px; color:#374151;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+    <button type="button" class="tab-scroll-btn scroll-left" onclick="scrollFeatTabs(-280)" aria-label="Scroll Left">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
     </button>
 
     <!-- Pill Tabs Container -->
-    <div id="featTabsContainer" style="display:flex; gap:10px; overflow-x:auto; scroll-behavior:smooth; scrollbar-width:none; padding:4px 0; -webkit-overflow-scrolling:touch; width:100%;">
+    <div id="featTabsContainer" class="feat-tabs-container">
       <?php foreach ($featuredCategories as $index => $cat): ?>
         <button type="button" 
                 class="feat-tab-btn <?= $index === 0 ? 'active' : '' ?>" 
                 data-cat-id="<?= $cat['id'] ?>"
                 data-cat-name="<?= htmlspecialchars($cat['name']) ?>"
                 data-cat-slug="<?= htmlspecialchars($cat['slug']) ?>"
-                onclick="switchFeatCategoryTab(this)"
-                style="padding:10px 22px; border-radius:9999px; font-size:14px; font-weight:500; font-family:system-ui, sans-serif; cursor:pointer; border:none; white-space:nowrap; transition:all 0.2s ease; <?= $index === 0 ? 'background:#111827; color:#ffffff; font-weight:600;' : 'background:#f3f4f6; color:#374151;' ?>">
+                onclick="switchFeatCategoryTab(this)">
           <?= htmlspecialchars($cat['name']) ?>
         </button>
       <?php endforeach; ?>
     </div>
 
     <!-- Right Scroll Button -->
-    <button type="button" class="tab-scroll-btn scroll-right" onclick="scrollFeatTabs(240)" aria-label="Scroll Right" style="display:flex; width:32px; height:32px; border-radius:50%; background:#ffffff; border:1px solid #e5e7eb; cursor:pointer; align-items:center; justify-content:center; margin-left:8px; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.1); transition:all 0.2s ease;">
-      <svg style="width:16px; height:16px; color:#374151;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+    <button type="button" class="tab-scroll-btn scroll-right" onclick="scrollFeatTabs(280)" aria-label="Scroll Right">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
     </button>
   </div>
 
-  <!-- Subcategories Grid (4 Cols Desktop / 3 Cols Laptop / 2 Cols Tablet / 1 Mobile) -->
-  <div id="featSubcategoriesGrid" class="feat-subcat-grid" style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; transition:opacity 0.2s ease;">
-    <!-- Grid Content Populated dynamically by JS on Load & Tab Switch -->
+  <!-- Subcategories Single-Row Carousel Container (4 Cards View) -->
+  <div id="featSubcategoriesGrid" class="feat-subcat-grid">
+    <!-- Grid Content Populated dynamically by JS -->
   </div>
 
 </div>
 
-<!-- Embedded CSS for Featured Categories Section -->
+<!-- Embedded CSS for Redesigned Featured Categories Section -->
 <style>
-.featured-cats-heading,
-.cc-section-title,
-.section-header-title span {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-  font-size: 22px !important;
-  font-weight: 700 !important;
-  line-height: 1.25 !important;
-  letter-spacing: -0.015em !important;
-  color: #111827 !important;
-  margin: 0 !important;
-  -webkit-font-smoothing: antialiased;
+.featured-categories-section {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  padding: 24px 20px;
+  margin-bottom: 24px;
+  box-shadow: none !important;
 }
 
-#featTabsContainer::-webkit-scrollbar {
+.feat-cats-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.featured-cats-heading {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.01em !important;
+  color: #0F172A !important;
+  margin: 0 !important;
+}
+
+.featured-cats-subtext {
+  font-size: 13px !important;
+  color: #64748B !important;
+  margin: 4px 0 0 0 !important;
+  font-weight: 400 !important;
+}
+
+.feat-cards-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-scroll-btn {
+  display: flex;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: none !important;
+  transition: all 0.2s ease;
+  color: #334155;
+}
+
+.card-scroll-btn:hover {
+  background: #f05a29;
+  border-color: #f05a29;
+  color: #FFFFFF;
+}
+
+/* Scrollable Pill Tabs Wrapper & Circular Buttons */
+.feat-tabs-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.tab-scroll-btn {
+  display: flex;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: none !important;
+  transition: all 0.2s ease;
+  color: #334155;
+  z-index: 2;
+}
+
+.tab-scroll-btn.scroll-left { margin-right: 8px; }
+.tab-scroll-btn.scroll-right { margin-left: 8px; }
+
+.tab-scroll-btn:hover {
+  background: #f05a29;
+  border-color: #f05a29;
+  color: #FFFFFF;
+}
+
+.feat-tabs-container {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+.feat-tabs-container::-webkit-scrollbar {
   display: none;
 }
 
-.feat-tab-btn:hover:not(.active) {
-  background: #e5e7eb !important;
-  color: #111827 !important;
+.feat-tab-btn {
+  padding: 8px 20px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #475569;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  box-shadow: none !important;
 }
 
-.feat-subcat-card {
+.feat-tab-btn:hover:not(.active) {
+  background: #F1F5F9;
+  color: #0F172A;
+  border-color: #CBD5E1;
+}
+
+.feat-tab-btn.active {
+  background: #f05a29 !important;
+  color: #FFFFFF !important;
+  border-color: #f05a29 !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+/* Subcategories Container: Single Row Horizontal Carousel showing 4 Cards at a time */
+.feat-subcat-grid {
   display: flex;
-  align-items: center;
-  padding: 16px 20px;
-  background: #f4f5f7;
-  border-radius: 16px;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0;
+  transition: opacity 0.25s ease;
+}
+
+.feat-subcat-grid::-webkit-scrollbar {
+  display: none;
+}
+
+/* Amazon-Style Category Card (Desktop Default: 5 Cards visible per row) */
+.feat-subcat-card {
+  flex: 0 0 calc((100% - 64px) / 5);
+  min-width: calc((100% - 64px) / 5);
+  display: flex;
+  flex-direction: column;
+  background: #FFFFFF;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  padding: 12px;
   text-decoration: none;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  min-height: 104px;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  box-shadow: none !important;
+  box-sizing: border-box;
 }
 
 .feat-subcat-card:hover {
+  border-color: #f05a29;
   transform: translateY(-2px);
-  background: #ebeef2;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
+/* Amazon Inner Image Frame */
 .feat-subcat-img-box {
-  width: 76px;
-  height: 76px;
-  border-radius: 14px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  background: #F8FAFC;
   overflow: hidden;
-  background: #e5e7eb;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
-  flex-shrink: 0;
+  margin-bottom: 10px;
+  padding: 5px;
+  box-sizing: border-box;
+  border: 1px solid #F1F5F9;
 }
 
 .feat-subcat-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 14px;
+  border-radius: 6px;
+  transition: transform 0.3s ease;
+}
+
+.feat-subcat-card:hover .feat-subcat-img {
+  transform: scale(1.04);
+}
+
+/* Amazon-Style Card Info */
+.feat-subcat-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
 }
 
 .feat-subcat-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111827;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0F172A;
   line-height: 1.35;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Inter', system-ui, sans-serif;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-@media (max-width: 1200px) {
-  .feat-subcat-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+.feat-subcat-link {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #f05a29;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.feat-subcat-card:hover .feat-subcat-link {
+  text-decoration: underline;
+}
+
+/* Responsive Cards per Row Breakpoints */
+@media (max-width: 1280px) {
+  /* Laptop screens: 4 Cards per row */
+  .feat-subcat-card {
+    flex: 0 0 calc((100% - 48px) / 4);
+    min-width: calc((100% - 48px) / 4);
+    padding: 12px;
   }
 }
 
-@media (max-width: 768px) {
-  .feat-subcat-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
+@media (max-width: 1024px) {
+  /* Tablet screens: 3 Cards per row */
+  .feat-subcat-card {
+    flex: 0 0 calc((100% - 32px) / 3);
+    min-width: calc((100% - 32px) / 3);
+    padding: 11px;
   }
 }
 
-@media (max-width: 480px) {
-  .feat-subcat-grid {
-    grid-template-columns: repeat(1, 1fr) !important;
-    gap: 12px !important;
+@media (max-width: 640px) {
+  /* Mobile screens: 2 Cards per row */
+  .featured-categories-section {
+    padding: 20px 14px;
+    border-radius: 16px;
   }
   .feat-subcat-card {
-    padding: 14px 16px;
-  }
-  .feat-subcat-img-box {
-    width: 64px;
-    height: 64px;
-    margin-right: 12px;
+    flex: 0 0 calc((100% - 12px) / 2);
+    min-width: calc((100% - 12px) / 2);
+    padding: 10px;
   }
   .feat-subcat-title {
-    font-size: 14px;
+    font-size: 12px;
+  }
+  .feat-subcat-link {
+    font-size: 11px;
   }
 }
 </style>
@@ -292,9 +477,9 @@ function renderSubcategoriesForCategory(catId) {
   setTimeout(() => {
     let html = '';
 
-    const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='4' fill='%23f3f4f6'/><path d='M8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3z'/><path d='M21 15l-5-5L5 21'/></svg>";
+    const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='4' fill='%23f1f5f9'/><path d='M8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3z'/><path d='M21 15l-5-5L5 21'/></svg>";
 
-    // Card #1: View All [Category Name] (Uploaded Main Category Image from Admin Panel)
+    // Card #1: View All [Category Name] (Amazon Style)
     const viewAllUrl = '<?= url("catalog") ?>?q=' + encodeURIComponent(category.name.toLowerCase());
     const catRawImg = category.main_category_image || category.image || (category.subcategories && category.subcategories.length > 0 ? category.subcategories[0].image : null);
     const catImgUrl = catRawImg ? getFullAssetUrl(catRawImg) : fallbackSvg;
@@ -304,7 +489,10 @@ function renderSubcategoriesForCategory(catId) {
         <div class="feat-subcat-img-box">
           <img src="${catImgUrl}" alt="View All ${escapeHtml(category.name)}" class="feat-subcat-img" loading="lazy" onerror="this.onerror=null; this.src='${fallbackSvg}';">
         </div>
-        <h3 class="feat-subcat-title">View All ${escapeHtml(category.name)}</h3>
+        <div class="feat-subcat-info">
+          <h3 class="feat-subcat-title">View All ${escapeHtml(category.name)}</h3>
+          <span class="feat-subcat-link">Explore all items &rsaquo;</span>
+        </div>
       </a>
     `;
 
@@ -318,7 +506,10 @@ function renderSubcategoriesForCategory(catId) {
             <div class="feat-subcat-img-box">
               <img src="${imgUrl}" alt="${escapeHtml(sub.name)}" class="feat-subcat-img" loading="lazy" onerror="this.onerror=null; this.src='${fallbackSvg}';">
             </div>
-            <h3 class="feat-subcat-title">${escapeHtml(sub.name)}</h3>
+            <div class="feat-subcat-info">
+              <h3 class="feat-subcat-title">${escapeHtml(sub.name)}</h3>
+              <span class="feat-subcat-link">Shop now &rsaquo;</span>
+            </div>
           </a>
         `;
       });
@@ -326,22 +517,24 @@ function renderSubcategoriesForCategory(catId) {
 
     grid.innerHTML = html;
     grid.style.opacity = '1';
+    grid.scrollLeft = 0;
   }, 120);
+}
+
+function scrollFeatCards(direction) {
+  const container = document.getElementById('featSubcategoriesGrid');
+  if (!container) return;
+  const amount = container.clientWidth * 0.75 * direction;
+  container.scrollBy({ left: amount, behavior: 'smooth' });
 }
 
 function switchFeatCategoryTab(btn) {
   const allBtns = document.querySelectorAll('.feat-tab-btn');
   allBtns.forEach(b => {
     b.classList.remove('active');
-    b.style.background = '#f3f4f6';
-    b.style.color = '#374151';
-    b.style.fontWeight = '500';
   });
 
   btn.classList.add('active');
-  btn.style.background = '#111827';
-  btn.style.color = '#ffffff';
-  btn.style.fontWeight = '600';
 
   if (btn.scrollIntoView) {
     btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -514,137 +707,232 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 <!-- ============================================================
-     THE IMPORTWALE EXPERIENCE BANNER (User Provided Luxury Feature Section)
+     THE IMPORTWALE EXPERIENCE BANNER (Premium Feature Section)
      ============================================================ -->
-<div class="importwale-experience-banner" style="background: linear-gradient(135deg, #f05a29 0%, #e04b1c 100%); border-radius: 0; padding: 46px 28px; margin: 36px -24px 48px -24px; width: calc(100% + 48px); color: #ffffff; text-align: center; box-shadow: 0 8px 30px rgba(240, 90, 41, 0.25);">
-  
-  <!-- Main Inter Heading (Reduced Size 24px) -->
-  <h2 style="font-family: 'Inter', system-ui, -apple-system, sans-serif !important; font-size: 24px; font-weight: 800; color: #ffffff; margin: 0 0 28px 0; letter-spacing: -0.01em; -webkit-font-smoothing: antialiased;">
-    The ImportWale Experience
-  </h2>
+<div class="exp-section-wrapper" style="margin: 24px 0; position: relative;">
 
-  <!-- 5 Feature Points Grid -->
-  <div class="exp-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; align-items: start; max-width: 1200px; margin: 0 auto 36px auto;">
+  <div class="importwale-experience-banner" style="position: relative; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 24px; padding: 32px 24px; text-align: center;">
     
-    <!-- Point 1: B2B Pricing -->
-    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="1" x2="12" y2="23"></line>
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-        </svg>
+    <!-- Main Container -->
+    <div style="position: relative; z-index: 2; max-width: 1240px; margin: 0 auto;">
+      
+      <!-- Subtitle Badge & Main Heading -->
+      <div style="margin-bottom: 32px;">
+        <span class="exp-badge" style="display: inline-block; font-family: 'Inter', system-ui, sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #f05a29; background: #FFF5F2; padding: 6px 18px; border-radius: 99px; border: 1px solid #FDE8E0; margin-bottom: 12px;">
+          Why Choose Us
+        </span>
+        <h2 style="font-family: 'Inter', system-ui, -apple-system, sans-serif !important; font-size: 26px; font-weight: 600; color: #0F172A; margin: 0; letter-spacing: -0.01em; line-height: 1.25;">
+          The ImportWale Experience
+        </h2>
       </div>
-      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
-        B2B Pricing
-      </h4>
-      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
-        Competitive pricing for business &amp; bulk requirements.
-      </p>
-    </div>
 
-    <!-- Point 2: Bulk Orders Welcome -->
-    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-          <line x1="12" y1="22.08" x2="12" y2="12"></line>
-        </svg>
+      <!-- 5 Feature Points Cards Grid -->
+      <div class="exp-grid">
+        
+        <!-- Card 1: B2B Pricing -->
+        <div class="exp-card">
+          <div class="exp-icon-wrap">
+            <div class="exp-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f05a29" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </div>
+          </div>
+          <h4 class="exp-card-title">B2B Pricing</h4>
+          <p class="exp-card-desc">Competitive pricing tailored for business &amp; bulk requirements.</p>
+        </div>
+
+        <!-- Card 2: Bulk Orders Welcome -->
+        <div class="exp-card">
+          <div class="exp-icon-wrap">
+            <div class="exp-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f05a29" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+            </div>
+          </div>
+          <h4 class="exp-card-title">Bulk Orders Welcome</h4>
+          <p class="exp-card-desc">Flexible order quantities for wholesale and growing businesses.</p>
+        </div>
+
+        <!-- Card 3: Quality Products -->
+        <div class="exp-card">
+          <div class="exp-icon-wrap">
+            <div class="exp-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f05a29" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="m9 12 2 2 4-4"></path>
+              </svg>
+            </div>
+          </div>
+          <h4 class="exp-card-title">Quality Products</h4>
+          <p class="exp-card-desc">Reliable, quality-verified products built for high commercial standards.</p>
+        </div>
+
+        <!-- Card 4: Easy Inquiry -->
+        <div class="exp-card">
+          <div class="exp-icon-wrap">
+            <div class="exp-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f05a29" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </div>
+          </div>
+          <h4 class="exp-card-title">Easy Inquiry</h4>
+          <p class="exp-card-desc">Directly submit requirements and get quick response from our team.</p>
+        </div>
+
+        <!-- Card 5: Business Support -->
+        <div class="exp-card">
+          <div class="exp-icon-wrap">
+            <div class="exp-icon-circle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f05a29" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </div>
+          </div>
+          <h4 class="exp-card-title">Business Support</h4>
+          <p class="exp-card-desc">Dedicated account assistance for product sourcing &amp; bulk support.</p>
+        </div>
+
       </div>
-      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
-        Bulk Orders Welcome
-      </h4>
-      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
-        Flexible quantities for wholesale and business requirements.
-      </p>
-    </div>
 
-    <!-- Point 3: Quality Products -->
-    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          <path d="m9 12 2 2 4-4"></path>
-        </svg>
+      <!-- Action-Oriented CTA Button -->
+      <div style="margin-top: 32px;">
+        <a href="<?= url('catalog') ?>" class="exp-join-btn">
+          <span>Explore Catalog</span>
+          <svg class="exp-btn-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
       </div>
-      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
-        Quality Products
-      </h4>
-      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
-        Reliable products built for regular business requirements.
-      </p>
+
     </div>
-
-    <!-- Point 4: Easy Inquiry -->
-    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13"></line>
-          <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-        </svg>
-      </div>
-      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
-        Easy Inquiry
-      </h4>
-      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
-        Send your requirement directly and our team will get back to you.
-      </p>
-    </div>
-
-    <!-- Point 5: Business Support -->
-    <div class="exp-item" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-      <div class="exp-icon-circle" style="width: 56px; height: 56px; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.85); display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </div>
-      <h4 style="font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; line-height: 1.25;">
-        Business Support
-      </h4>
-      <p style="font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 400; color: rgba(255, 255, 255, 0.82); margin: 0; line-height: 1.35;">
-        Dedicated support for product, quantity and bulk requirements.
-      </p>
-    </div>
-
-  </div>
-
-  <!-- Join Now Button -->
-  <div>
-    <a href="<?= url('catalog') ?>" class="exp-join-btn" style="display: inline-block; padding: 11px 36px; background: #ffffff; border-radius: 8px; font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 700; color: #f05a29; text-decoration: none; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
-      Join Now
-    </a>
   </div>
 
 </div>
 
-<!-- Media query styling for ImportWale Experience Section -->
+<!-- Styling for ImportWale Experience Section -->
 <style>
+.exp-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 18px;
+  align-items: stretch;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.exp-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: #ffffff !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 16px !important;
+  padding: 26px 18px 22px 18px !important;
+  box-shadow: none !important; /* SHADOW REMOVED AS REQUESTED */
+  transition: all 0.22s ease !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.exp-card:hover {
+  background: #ffffff !important;
+  border-color: #CBD5E1 !important;
+  transform: translateY(-3px) !important;
+  box-shadow: none !important;
+}
+
+.exp-icon-wrap {
+  position: relative;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exp-icon-circle {
+  width: 54px !important;
+  height: 54px !important;
+  border-radius: 50% !important;
+  background: #FFF5F2 !important;
+  border: 1px solid #FDE8E0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative;
+  z-index: 1;
+  box-shadow: none !important;
+  transition: all 0.22s ease !important;
+}
+
+.exp-card:hover .exp-icon-circle {
+  transform: scale(1.06) !important;
+  background: #f05a29 !important;
+  border-color: #f05a29 !important;
+}
+
+.exp-card:hover .exp-icon-circle svg {
+  stroke: #ffffff !important;
+}
+
+.exp-card-title {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #0F172A !important;
+  margin: 0 0 6px 0 !important;
+  line-height: 1.3 !important;
+}
+
+.exp-card-desc {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-size: 12.5px !important;
+  color: #64748B !important;
+  margin: 0 !important;
+  line-height: 1.5 !important;
+}
+
+.exp-join-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 28px !important;
+  background: #f05a29 !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  border-radius: 99px !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important; /* NO SHADOW */
+  transition: all 0.22s ease !important;
+}
+
 .exp-join-btn:hover {
-  background: #FAF4F2 !important;
-  color: #d8481b !important;
-  transform: translateY(-1px);
+  background: #d8481b !important;
+  transform: translateY(-2px) !important;
 }
 
 @media (max-width: 1024px) {
   .exp-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 24px !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .importwale-experience-banner {
-    margin-left: -16px !important;
-    margin-right: -16px !important;
-    width: calc(100% + 32px) !important;
-    padding: 36px 18px !important;
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 640px) {
   .exp-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 20px 16px !important;
+    grid-template-columns: 1fr;
+  }
+  .exp-card {
+    padding: 20px;
   }
 }
 </style>
@@ -652,7 +940,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Collection Cards CSS -->
 <style>
 .collection-cards-section {
-  margin: 0 0 48px 0;
+  margin: 0 0 24px 0;
 }
 
 .cc-header-row {
@@ -664,12 +952,12 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .cc-section-title {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 24px;
-  font-weight: 700;
-  color: #111827;
-  margin: 0 0 2px 0;
-  letter-spacing: -0.025em;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 22px !important;
+  font-weight: 500 !important;
+  color: #111827 !important;
+  margin: 0 0 2px 0 !important;
+  letter-spacing: -0.01em !important;
 }
 
 .cc-section-sub {
@@ -744,8 +1032,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .cc-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 32px rgba(0,0,0,0.1);
-  border-color: #e5e7eb;
+  box-shadow: none !important;
+  border-color: #cbd5e1;
   background: #ffffff;
 }
 
@@ -849,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .cc-title {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 600 !important;
   color: #111827;
   margin: 0 0 6px 0;
   line-height: 1.3;
@@ -934,13 +1222,16 @@ document.addEventListener('DOMContentLoaded', function() {
   <a href="<?= url('catalog?sort=popular') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
 </div>
 
-<div class="product-grid">
+<div class="product-grid" style="margin-bottom: 24px;">
   <?php if (!empty($bestSellers)): ?>
     <?php foreach ($bestSellers as $product): ?>
       <?php require __DIR__ . '/partials/product_card.php'; ?>
     <?php endforeach; ?>
   <?php endif; ?>
 </div>
+
+<!-- Customer Reviews / Testimonials Section (Everful Style) -->
+<?php require __DIR__ . '/partials/testimonials_section.php'; ?>
 
 <?php
 $content = ob_get_clean();

@@ -108,11 +108,18 @@ $isActive = function(string $path) use ($currentUri): bool {
                     </a>
                 <?php endif; ?>
 
+                <a href="<?= url('admin/testimonials') ?>"
+                    class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/testimonials') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-emerald-400 border-slate-700/60' ?>"
+                    title="Customer Reviews & Testimonials">
+                    <i data-lucide="message-square-quote" class="w-4 h-4 shrink-0 text-emerald-400"></i>
+                    <span class="truncate">Testimonials</span>
+                </a>
+
                 <a href="<?= url('admin/google-reviews') ?>"
                     class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/google-reviews') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
                     title="Google Reviews">
                     <i data-lucide="star" class="w-4 h-4 shrink-0"></i>
-                    <span class="truncate">Reviews</span>
+                    <span class="truncate">G. Reviews</span>
                 </a>
             </div>
         </div>

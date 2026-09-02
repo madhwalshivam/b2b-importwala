@@ -213,4 +213,139 @@ class RfqApiController extends BaseController
             }
         }
     }
+
+    /**
+     * GET /api/rfq/product-details?product_id=X or ?slug=Y
+     * Returns full product details + active variants for RFQ modal populating.
+     */
+    public function getProductDetails(): void
+    {
+        $productId = isset($_GET['product_id']) ? (int)$_GET['product_id'] : 0;
+        $slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
+
+        $db = \App\Core\Database::getInstance();
+        $product = null;
+
+        if ($productId > 0) {
+            $stmt = $db->prepare("SELECT * FROM products WHERE id = ? AND status = 'active' LIMIT 1");
+            $stmt->execute([$productId]);
+            $product = $stmt->fetch(\PDO::FETCH_ASSOC);
+        } elseif (!empty($slug)) {
+            $stmt = $db->prepare("SELECT * FROM products WHERE slug = ? AND status = 'active' LIMIT 1");
+            $stmt->execute([$slug]);
+            $product = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$product && is_numeric($slug)) {
+                $stmt = $db->prepare("SELECT * FROM products WHERE id = ? AND status = 'active' LIMIT 1");
+                $stmt->execute([(int)$slug]);
+                $product = $stmt->fetch(\PDO::FETCH_ASSOC);
+            }
+        }
+
+        if (!$product) {
+            $this->jsonResponse(['success' => false, 'message' => 'Product not found.'], 404);
+            return;
+        }
+
+        $pId = (int)$product['id'];
+
+        // Fetch active variants
+        $variantModel = new \App\Models\ProductVariant();
+        $rawVariants = $variantModel->getByProduct($pId, true);
+
+        // Fetch gallery images
+        $imageModel = new \App\Models\ProductImage();
+        $dbImages = $imageModel->getByProduct($pId);
+
+        $mainImg = !empty($product['main_image']) ? asset($product['main_image']) : asset('assets/images/placeholder.jpg');
+        $gallery = [$mainImg];
+
+        foreach ($dbImages as $img) {
+            $u = asset($img['image_url'] ?: $img['image_path']);
+            if ($u && !in_array($u, $gallery, true)) {
+                $gallery[] = $u;
+            }
+        }
+
+        if (empty($rawVariants)) {
+            $rawVariants = [
+                [
+                    'id'              => null,
+                    'variant_code'    => $product['sku'] ?? '',
+                    'attribute_label' => 'Edition',
+                    'attribute_value' => 'Standard (' . ($product['name'] ?? 'Main Item') . ')',
+                    'stock_quantity'  => (int)($product['stock_quantity'] ?? 100),
+                    'wholesale_price' => (float)($product['wholesale_price'] ?: $product['price']),
+                    'one_piece_price' => (float)($product['one_piece_price'] ?: $product['price']),
+                    'image_url'       => $product['main_image'],
+                ]
+            ];
+        }
+
+        $variantsFormatted = array_map(function ($v) use ($mainImg) {
+            return [
+                'id'              => (int)($v['id'] ?? 0),
+                'code'            => $v['variant_code'] ?? '',
+                'label'           => $v['attribute_label'] ?? 'Color',
+                'value'           => $v['attribute_value'] ?? '',
+                'stock'           => (int)($v['stock_quantity'] ?? 0),
+                'wholesale_price' => (float)($v['wholesale_price'] ?? 0),
+                'one_piece_price' => (float)($v['one_piece_price'] ?? 0),
+                'image'           => !empty($v['image_url']) ? asset($v['image_url']) : $mainImg,
+            ];
+        }, $rawVariants);
+
+        $baseUrl = url('product/' . ($product['slug'] ?? $product['id']));
+
+        $this->jsonResponse([
+            'success' => true,
+            'product' => [
+                'id'         => $pId,
+                'name'       => $product['name'],
+                'sku'        => $product['sku'] ?? 'N/A',
+                'moq'        => (int)($product['moq'] ?? 1),
+                'url'        => $baseUrl,
+                'main_image' => $mainImg,
+                'gallery'    => $gallery,
+                'variants'   => $variantsFormatted
+            ]
+        ]);
+    }
+
+    /**
+     * GET /api/rfq/search-products?q=query
+     * Returns matching active products for Change Product search dropdown.
+     */
+    public function searchProducts(): void
+    {
+        $q = trim($_GET['q'] ?? '');
+        if (strlen($q) < 1) {
+            $this->jsonResponse(['success' => true, 'items' => []]);
+            return;
+        }
+
+        $db = \App\Core\Database::getInstance();
+        $stmt = $db->prepare(
+            "SELECT id, name, sku, slug, main_image, price, sale_price, moq
+             FROM products
+             WHERE status = 'active' AND (name LIKE :q OR sku LIKE :q)
+             ORDER BY id DESC LIMIT 10"
+        );
+        $stmt->execute(['q' => '%' . $q . '%']);
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        $items = array_map(function ($p) {
+            return [
+                'id'         => (int)$p['id'],
+                'name'       => $p['name'],
+                'sku'        => $p['sku'] ?? '',
+                'slug'       => $p['slug'],
+                'main_image' => !empty($p['main_image']) ? asset($p['main_image']) : asset('assets/images/placeholder.jpg'),
+                'price'      => (float)($p['price'] ?? 0),
+                'sale_price' => (float)($p['sale_price'] ?? 0),
+                'moq'        => (int)($p['moq'] ?? 1)
+            ];
+        }, $rows);
+
+        $this->jsonResponse(['success' => true, 'items' => $items]);
+    }
 }

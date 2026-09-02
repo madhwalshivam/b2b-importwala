@@ -76,19 +76,23 @@ include __DIR__ . '/layouts/header.php';
                                 </div>
                                 <div class="flex-1 min-w-0 pr-1">
                                     <div class="flex items-start justify-between gap-2">
-                                        <h4 class="font-semibold text-gray-900 text-xs line-clamp-2 hover:text-red-600 transition">
-                                            <a href="<?= url('product/' . ($item['slug'] ?? $item['id'])) ?>"><?= htmlspecialchars($item['name']) ?></a>
+                                        <h4
+                                            class="font-semibold text-gray-900 text-xs line-clamp-2 hover:text-red-600 transition">
+                                            <a
+                                                href="<?= url('product/' . ($item['slug'] ?? $item['id'])) ?>"><?= htmlspecialchars($item['name']) ?></a>
                                         </h4>
                                         <form action="<?= url('cart/remove') ?>" method="POST" class="shrink-0">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="product_id" value="<?= $item['id'] ?>">
-                                            <button type="submit" class="text-gray-400 hover:text-red-600 p-1 transition" title="Remove product">
+                                            <button type="submit" class="text-gray-400 hover:text-red-600 p-1 transition"
+                                                title="Remove product">
                                                 <i data-lucide="trash-2" class="w-4 h-4"></i>
                                             </button>
                                         </form>
                                     </div>
                                     <?php if (!empty($cart['coupon_code']) && !empty($cart['applicable_product_ids']) && in_array($item['id'], $cart['applicable_product_ids'])): ?>
-                                        <span class="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded inline-flex items-center space-x-1 mt-1">
+                                        <span
+                                            class="text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded inline-flex items-center space-x-1 mt-1">
                                             <i data-lucide="tag" class="w-3 h-3 text-green-600"></i>
                                             <span>Discount Applied</span>
                                         </span>
@@ -100,12 +104,21 @@ include __DIR__ . '/layouts/header.php';
                                 <form action="<?= url('cart/update') ?>" method="POST" class="inline-block">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="product_id" value="<?= $item['id'] ?>">
-                                    <div class="inline-flex items-center border border-gray-900 rounded-xl bg-gray-50 p-1 space-x-1 shadow-xs">
-                                        <button type="button" onclick="const i = this.form.querySelector('input[name=\'quantity\']'); i.value = Math.max(0, parseInt(i.value) - 1); this.form.submit();" class="w-7 h-7 rounded-lg bg-white border border-gray-900 text-gray-700 font-semibold hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition focus:outline-none shadow-2xs" title="Decrease quantity">
+                                    <div
+                                        class="inline-flex items-center border border-gray-900 rounded-xl bg-gray-50 p-1 space-x-1 shadow-xs">
+                                        <button type="button"
+                                            onclick="const i = this.form.querySelector('input[name=\'quantity\']'); i.value = Math.max(0, parseInt(i.value) - 1); this.form.submit();"
+                                            class="w-7 h-7 rounded-lg bg-white border border-gray-900 text-gray-700 font-semibold hover:bg-red-50 hover:text-red-600 flex items-center justify-center transition focus:outline-none shadow-2xs"
+                                            title="Decrease quantity">
                                             <i data-lucide="minus" class="w-3.5 h-3.5"></i>
                                         </button>
-                                        <input type="number" name="quantity" value="<?= $item['quantity'] ?>" min="0" onchange="this.form.submit()" class="w-9 h-7 text-center bg-transparent font-bold text-xs text-gray-900 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
-                                        <button type="button" onclick="const i = this.form.querySelector('input[name=\'quantity\']'); i.value = parseInt(i.value) + 1; this.form.submit();" class="w-7 h-7 rounded-lg bg-white border border-gray-900 text-gray-700 font-semibold hover:bg-green-50 hover:text-green-600 flex items-center justify-center transition focus:outline-none shadow-2xs" title="Increase quantity">
+                                        <input type="number" name="quantity" value="<?= $item['quantity'] ?>" min="0"
+                                            onchange="this.form.submit()"
+                                            class="w-9 h-7 text-center bg-transparent font-semibold text-xs text-gray-900 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                        <button type="button"
+                                            onclick="const i = this.form.querySelector('input[name=\'quantity\']'); i.value = parseInt(i.value) + 1; this.form.submit();"
+                                            class="w-7 h-7 rounded-lg bg-white border border-gray-900 text-gray-700 font-semibold hover:bg-green-50 hover:text-green-600 flex items-center justify-center transition focus:outline-none shadow-2xs"
+                                            title="Increase quantity">
                                             <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                                         </button>
                                     </div>
@@ -113,7 +126,8 @@ include __DIR__ . '/layouts/header.php';
 
                                 <div class="text-right">
                                     <span class="text-[10px] text-gray-400 block font-medium">Subtotal</span>
-                                    <span class="font-bold text-red-600 text-sm"><?= format_price($item['price'] * $item['quantity']) ?></span>
+                                    <span
+                                        class="font-semibold text-red-600 text-sm"><?= format_price($item['price'] * $item['quantity']) ?></span>
                                 </div>
                             </div>
                         </div>

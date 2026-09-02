@@ -65,14 +65,15 @@ include __DIR__ . '/../layouts/header.php';
                             <td class="p-4 pl-6">
                                 <div class="flex items-center space-x-3">
                                     <div
-                                        class="w-8 h-8 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center shrink-0 font-bold">
+                                        class="w-8 h-8 rounded-xl bg-red-50 text-red-600 border border-red-100 flex items-center justify-center shrink-0 font-semibold">
                                         <i data-lucide="shield" class="w-4 h-4"></i>
                                     </div>
                                     <div>
                                         <h4 class="font-semibold text-gray-900 text-xs"><?= htmlspecialchars($r['name']) ?>
                                         </h4>
                                         <p class="text-[10px] text-gray-500">
-                                            <?= htmlspecialchars($r['description'] ?: 'Custom staff access profile') ?></p>
+                                            <?= htmlspecialchars($r['description'] ?: 'Custom staff access profile') ?>
+                                        </p>
                                     </div>
                                 </div>
                             </td>
@@ -150,7 +151,7 @@ include __DIR__ . '/../layouts/header.php';
                         <?php foreach ($groupedPermissions as $module => $perms): ?>
                             <div class="bg-white p-3 rounded-xl border border-gray-900">
                                 <span
-                                    class="font-bold text-red-600 uppercase text-[11px] block mb-2 tracking-wider"><?= uppercase_words($module) ?>
+                                    class="font-semibold text-red-600 uppercase text-[11px] block mb-2 tracking-wider"><?= uppercase_words($module) ?>
                                     MODULE</span>
                                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     <?php foreach ($perms as $p): ?>
@@ -217,7 +218,7 @@ include __DIR__ . '/../layouts/header.php';
                         <?php foreach ($groupedPermissions as $module => $perms): ?>
                             <div class="bg-white p-3 rounded-xl border border-gray-900">
                                 <span
-                                    class="font-bold text-red-600 uppercase text-[11px] block mb-2 tracking-wider"><?= uppercase_words($module) ?>
+                                    class="font-semibold text-red-600 uppercase text-[11px] block mb-2 tracking-wider"><?= uppercase_words($module) ?>
                                     MODULE</span>
                                 <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     <?php foreach ($perms as $p): ?>

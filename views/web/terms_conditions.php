@@ -1,42 +1,67 @@
 <?php
-$title = $pageTitle ?? "Terms & Conditions | ImportWale Wholesale";
+$title = "Terms and Conditions | ImportWale Wholesale";
+
+$pageTitle = "Terms and Conditions";
+$badgeText = "Official Terms";
+$badgeIcon = "doc";
+$lastUpdated = "January 15, 2026";
+$currentSlug = "terms-and-conditions";
+$showBusinessAddress = true;
+
+$sections = [
+    [
+        'id' => 'acceptance-of-terms',
+        'number' => '01',
+        'title' => 'Acceptance of Terms',
+        'content' => 'By accessing or using www.importwale.com, you agree to these Terms and Conditions and any other policies referenced on the website.'
+    ],
+    [
+        'id' => 'b2b-platform',
+        'number' => '02',
+        'title' => 'B2B Platform',
+        'content' => 'Importwale is intended for business and commercial transactions relating to artificial jewellery. Product listings, buyer enquiries, customer support and order-related communications are handled directly through Importwale. Users must provide accurate information and use the website only for lawful purposes.'
+    ],
+    [
+        'id' => 'product-information',
+        'number' => '03',
+        'title' => 'Product Information',
+        'content' => 'We make reasonable efforts to present product information accurately. However, colours, finishes, dimensions, weight and appearance may vary due to photography, screens, manufacturing processes and reasonable product variation. Final specifications and commercial terms applicable to an order will be those confirmed for that order.'
+    ],
+    [
+        'id' => 'pricing-and-availability',
+        'number' => '04',
+        'title' => 'Pricing and Availability',
+        'content' => 'Prices, availability, minimum order quantities, taxes, shipping charges and other commercial terms may change without prior notice. A quotation or website display does not guarantee availability. Orders are subject to confirmation by Importwale.'
+    ],
+    [
+        'id' => 'user-responsibilities',
+        'number' => '05',
+        'title' => 'User Responsibilities',
+        'content' => 'Users must not provide false information, misuse the website, attempt unauthorised access, interfere with security or functionality, introduce malicious software, or infringe the rights of others.'
+    ],
+    [
+        'id' => 'intellectual-property',
+        'number' => '06',
+        'title' => 'Intellectual Property',
+        'content' => 'The Importwale name, website content, product presentation, graphics, layouts and other protected materials may not be copied, reproduced or commercially exploited without prior permission, except where permitted by applicable law.'
+    ],
+    [
+        'id' => 'website-availability',
+        'number' => '07',
+        'title' => 'Website Availability',
+        'content' => 'We may modify, update, suspend or discontinue any part of the website when reasonably required for maintenance, security, operational or business purposes.'
+    ],
+    [
+        'id' => 'governing-law',
+        'number' => '08',
+        'title' => 'Governing Law',
+        'content' => 'These Terms are governed by applicable laws of India. Any dispute will be subject to applicable law and the jurisdiction of competent courts.'
+    ]
+];
+
 ob_start();
-?>
-
-<div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px 32px; margin-bottom: 32px;">
-  <span style="background: #f3f4f6; color: #374151; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 12px;">
-    Legal Agreement
-  </span>
-  <h1 style="font-size: 28px; font-weight: 800; color: #111827; margin-bottom: 10px;">Terms & Conditions</h1>
-  <p style="font-size: 14px; color: #6b7280; margin: 0;">Website usage, B2B wholesale transaction guidelines, and buyer agreements.</p>
-</div>
-
-<div style="display: flex; flex-direction: column; gap: 24px; max-width: 960px; margin-bottom: 50px;">
-
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">1. Wholesale Buyer Accounts</h3>
-    <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
-      ImportWale is a dedicated B2B wholesale platform. By registering an account or placing an order, buyers represent that they are purchasing goods for commercial resale, trade, or business consumption.
-    </p>
-  </div>
-
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">2. Pricing & Custom Quotations</h3>
-    <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
-      Catalog prices are shown exclusive or inclusive of applicable GST taxes as specified at checkout. Custom RFQ quotations are valid for the timeframe stated in the formal quote document.
-    </p>
-  </div>
-
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">3. Governing Law & Jurisdiction</h3>
-    <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
-      All commercial transactions on ImportWale are governed by and construed in accordance with the laws of India. Courts at New Delhi, India shall have exclusive jurisdiction over any legal disputes.
-    </p>
-  </div>
-
-</div>
-
-<?php
+require __DIR__ . '/partials/policy_template.php';
 $content = ob_get_clean();
+
 require __DIR__ . '/layout.php';
 ?>

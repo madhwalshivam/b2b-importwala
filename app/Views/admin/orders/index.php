@@ -6,9 +6,10 @@ include __DIR__ . '/../layouts/header.php';
 <main class="p-6 max-w-7xl mx-auto space-y-6">
 
     <!-- Header & Filter Bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
+    <div
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200 shadow-2xs">
         <div>
-            <h1 class="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+            <h1 class="text-xl font-semibold text-gray-900 tracking-tight flex items-center gap-2">
                 <i data-lucide="shopping-bag" class="w-6 h-6 text-[#f05a29]"></i>
                 <span>Direct Online Orders</span>
             </h1>
@@ -16,10 +17,14 @@ include __DIR__ . '/../layouts/header.php';
         </div>
 
         <div class="flex items-center gap-2">
-            <a href="<?= url('admin/orders') ?>" class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= empty($currentStatus) ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">All</a>
-            <a href="<?= url('admin/orders?status=confirmed') ?>" class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'confirmed' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Confirmed</a>
-            <a href="<?= url('admin/orders?status=shipped') ?>" class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'shipped' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Shipped</a>
-            <a href="<?= url('admin/orders?status=delivered') ?>" class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'delivered' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Delivered</a>
+            <a href="<?= url('admin/orders') ?>"
+                class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= empty($currentStatus) ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">All</a>
+            <a href="<?= url('admin/orders?status=confirmed') ?>"
+                class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'confirmed' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Confirmed</a>
+            <a href="<?= url('admin/orders?status=shipped') ?>"
+                class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'shipped' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Shipped</a>
+            <a href="<?= url('admin/orders?status=delivered') ?>"
+                class="px-3.5 py-2 text-xs font-semibold rounded-xl border <?= $currentStatus === 'delivered' ? 'bg-[#f05a29] text-white border-[#f05a29]' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100' ?>">Delivered</a>
         </div>
     </div>
 
@@ -28,7 +33,8 @@ include __DIR__ . '/../layouts/header.php';
         <div class="overflow-x-auto">
             <table class="w-full text-xs text-left border-collapse">
                 <thead>
-                    <tr class="bg-gray-50/80 text-gray-700 font-bold uppercase tracking-wider text-[11px] border-b border-gray-200">
+                    <tr
+                        class="bg-gray-50/80 text-gray-700 font-semibold uppercase tracking-wider text-[11px] border-b border-gray-200">
                         <th class="py-3.5 px-4">Order #</th>
                         <th class="py-3.5 px-4">Customer Details</th>
                         <th class="py-3.5 px-4">Total Amount</th>
@@ -42,34 +48,39 @@ include __DIR__ . '/../layouts/header.php';
                     <?php if (!empty($orders)): ?>
                         <?php foreach ($orders as $o): ?>
                             <tr class="hover:bg-gray-50/60 transition">
-                                <td class="py-3.5 px-4 font-bold text-gray-900">
+                                <td class="py-3.5 px-4 font-semibold text-gray-900">
                                     <?= htmlspecialchars($o['order_number']) ?>
                                     <?php if (!empty($o['razorpay_payment_id'])): ?>
-                                        <div class="text-[10px] text-gray-400 font-mono mt-0.5"><?= htmlspecialchars($o['razorpay_payment_id']) ?></div>
+                                        <div class="text-[10px] text-gray-400 font-mono mt-0.5">
+                                            <?= htmlspecialchars($o['razorpay_payment_id']) ?></div>
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <div class="font-semibold text-gray-900"><?= htmlspecialchars($o['customer_name']) ?></div>
                                     <div class="text-[11px] text-gray-500"><?= htmlspecialchars($o['customer_phone']) ?></div>
                                 </td>
-                                <td class="py-3.5 px-4 font-bold text-[#f05a29] text-sm">
-                                    ₹<?= number_format((float)$o['total_amount'], 2) ?>
+                                <td class="py-3.5 px-4 font-semibold text-[#f05a29] text-sm">
+                                    ₹<?= number_format((float) $o['total_amount'], 2) ?>
                                 </td>
                                 <td class="py-3.5 px-4">
                                     <?php if ($o['payment_status'] === 'paid'): ?>
-                                        <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-bold text-[10px] uppercase">Paid</span>
+                                        <span
+                                            class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold text-[10px] uppercase">Paid</span>
                                     <?php else: ?>
-                                        <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-bold text-[10px] uppercase"><?= htmlspecialchars($o['payment_status']) ?></span>
+                                        <span
+                                            class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-semibold text-[10px] uppercase"><?= htmlspecialchars($o['payment_status']) ?></span>
                                     <?php endif; ?>
                                 </td>
                                 <td class="py-3.5 px-4">
-                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full font-bold text-[10px] uppercase"><?= htmlspecialchars($o['order_status']) ?></span>
+                                    <span
+                                        class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full font-semibold text-[10px] uppercase"><?= htmlspecialchars($o['order_status']) ?></span>
                                 </td>
                                 <td class="py-3.5 px-4 text-gray-500 text-[11px]">
                                     <?= date('d M Y, h:i A', strtotime($o['created_at'])) ?>
                                 </td>
                                 <td class="py-3.5 px-4 text-right space-x-1">
-                                    <button type="button" onclick="viewOrderDetails(<?= (int)$o['id'] ?>)" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition inline-flex items-center gap-1 cursor-pointer">
+                                    <button type="button" onclick="viewOrderDetails(<?= (int) $o['id'] ?>)"
+                                        class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition inline-flex items-center gap-1 cursor-pointer">
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                         <span>View</span>
                                     </button>
@@ -78,7 +89,8 @@ include __DIR__ . '/../layouts/header.php';
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="py-8 text-center text-gray-400 font-medium">No direct online orders found.</td>
+                            <td colspan="7" class="py-8 text-center text-gray-400 font-medium">No direct online orders
+                                found.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -90,32 +102,34 @@ include __DIR__ . '/../layouts/header.php';
 <!-- Order Details Modal -->
 <div id="orderDetailsModal" class="fixed inset-0 bg-black/60 z-[100] hidden items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative">
-        <button onclick="closeOrderModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-lg">✕</button>
-        <h2 class="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
+        <button onclick="closeOrderModal()"
+            class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-lg">✕</button>
+        <h2 class="text-lg font-semibold text-gray-900 border-b border-gray-100 pb-3 flex items-center gap-2">
             <i data-lucide="package" class="w-5 h-5 text-[#f05a29]"></i>
             <span>Order Details #<span id="modalOrderNum"></span></span>
         </h2>
 
         <div class="grid grid-cols-2 gap-4 text-xs bg-gray-50 p-4 rounded-xl border border-gray-100">
             <div>
-                <strong class="text-gray-900 block font-bold mb-1">Customer Info:</strong>
+                <strong class="text-gray-900 block font-semibold mb-1">Customer Info:</strong>
                 <div id="modalCustomer"></div>
             </div>
             <div>
-                <strong class="text-gray-900 block font-bold mb-1">Shipping Address:</strong>
+                <strong class="text-gray-900 block font-semibold mb-1">Shipping Address:</strong>
                 <div id="modalAddress"></div>
             </div>
         </div>
 
         <div>
-            <strong class="text-xs text-gray-900 block font-bold mb-2">Ordered Items:</strong>
+            <strong class="text-xs text-gray-900 block font-semibold mb-2">Ordered Items:</strong>
             <div id="modalItems" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
         </div>
 
         <div class="flex items-center justify-between border-t border-gray-100 pt-3 text-xs">
             <div>
                 <label class="block text-gray-600 font-semibold mb-1">Update Order Status:</label>
-                <select id="modalStatusSelect" class="h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+                <select id="modalStatusSelect"
+                    class="h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
                     <option value="pending">Pending</option>
                     <option value="confirmed">Confirmed</option>
                     <option value="shipped">Shipped</option>
@@ -123,7 +137,9 @@ include __DIR__ . '/../layouts/header.php';
                     <option value="cancelled">Cancelled</option>
                 </select>
             </div>
-            <button type="button" onclick="saveOrderStatus()" class="px-5 h-9 bg-[#f05a29] hover:bg-[#d94e20] text-white font-bold rounded-lg shadow-xs transition">Save Status</button>
+            <button type="button" onclick="saveOrderStatus()"
+                class="px-5 h-9 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold rounded-lg shadow-xs transition">Save
+                Status</button>
         </div>
     </div>
 </div>
@@ -153,7 +169,7 @@ include __DIR__ . '/../layouts/header.php';
             if (parsed && typeof parsed === 'object') {
                 addrStr = `${parsed.address || ''}, ${parsed.city || ''}, ${parsed.state || ''} - ${parsed.pincode || ''}`;
             }
-        } catch(e){}
+        } catch (e) { }
 
         document.getElementById('modalAddress').innerHTML = `
             <div>${addrStr}</div>
@@ -164,10 +180,10 @@ include __DIR__ . '/../layouts/header.php';
             itemsHtml += `
                 <div class="flex items-center justify-between p-2.5 bg-white border border-gray-200 rounded-lg">
                     <div>
-                        <div class="font-bold text-gray-900">${item.product_name}</div>
+                        <div class="font-semibold text-gray-900">${item.product_name}</div>
                         <div class="text-[10px] text-gray-400">SKU: ${item.sku} &bull; Qty: ${item.quantity}</div>
                     </div>
-                    <div class="font-bold text-gray-900">₹${parseFloat(item.total_amount).toFixed(2)}</div>
+                    <div class="font-semibold text-gray-900">₹${parseFloat(item.total_amount).toFixed(2)}</div>
                 </div>
             `;
         });

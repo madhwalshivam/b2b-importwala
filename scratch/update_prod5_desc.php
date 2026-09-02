@@ -25,30 +25,30 @@ $richDescription = <<<HTML
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 my-4">
         <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-200/80 flex items-start gap-3">
-            <div class="w-6 h-6 rounded-lg bg-orange-100 text-[#f05a29] flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">🛡️</div>
+            <div class="w-6 h-6 rounded-lg bg-orange-100 text-[#f05a29] flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">🛡️</div>
             <div>
-                <strong class="text-xs text-gray-900 block font-bold">10Ft Military Drop Protection</strong>
+                <strong class="text-xs text-gray-900 block font-semibold">10Ft Military Drop Protection</strong>
                 <span class="text-[11px] text-gray-500 leading-tight block mt-0.5">Reinforced dual-layer TPU shock-absorbing corner bumpers mitigate drops up to 10 feet.</span>
             </div>
         </div>
         <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-200/80 flex items-start gap-3">
-            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">⚡</div>
+            <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">⚡</div>
             <div>
-                <strong class="text-xs text-gray-900 block font-bold">MagSafe &amp; Wireless Compatible</strong>
+                <strong class="text-xs text-gray-900 block font-semibold">MagSafe &amp; Wireless Compatible</strong>
                 <span class="text-[11px] text-gray-500 leading-tight block mt-0.5">Integrated 36 N52 magnet array ensures effortless alignment with wireless chargers &amp; wallets.</span>
             </div>
         </div>
         <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-200/80 flex items-start gap-3">
-            <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">✨</div>
+            <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">✨</div>
             <div>
-                <strong class="text-xs text-gray-900 block font-bold">Anti-Scratch Oleophobic Finish</strong>
+                <strong class="text-xs text-gray-900 block font-semibold">Anti-Scratch Oleophobic Finish</strong>
                 <span class="text-[11px] text-gray-500 leading-tight block mt-0.5">Nano-matte protective coating repels fingerprints, oils, and daily scratches.</span>
             </div>
         </div>
         <div class="p-3.5 bg-gray-50/80 rounded-xl border border-gray-200/80 flex items-start gap-3">
-            <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">📷</div>
+            <div class="w-6 h-6 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center font-semibold text-xs shrink-0 mt-0.5">📷</div>
             <div>
-                <strong class="text-xs text-gray-900 block font-bold">Raised Lens &amp; Screen Ring</strong>
+                <strong class="text-xs text-gray-900 block font-semibold">Raised Lens &amp; Screen Ring</strong>
                 <span class="text-[11px] text-gray-500 leading-tight block mt-0.5">1.5mm raised display lips &amp; 2.0mm camera bezel prevent direct flat surface contact.</span>
             </div>
         </div>
@@ -69,4 +69,5 @@ echo "Updated product ID {$productId} description successfully.\n";
 try {
     \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
     echo "Cache flushed.\n";
-} catch (\Throwable $e) {}
+} catch (\Throwable $e) {
+}

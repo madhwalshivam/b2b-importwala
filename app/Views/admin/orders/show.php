@@ -34,10 +34,13 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-gray-700 mb-1">Order Status</label>
                     <select name="order_status"
                         class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl font-semibold">
-                        <option value="pending" <?= in_array($order['order_status'], ['pending']) ? 'selected' : '' ?>>Pending</option>
+                        <option value="pending" <?= in_array($order['order_status'], ['pending']) ? 'selected' : '' ?>>
+                            Pending</option>
                         <option value="confirmed" <?= in_array($order['order_status'], ['confirmed']) ? 'selected' : '' ?>>Confirmed</option>
-                        <option value="packed" <?= in_array($order['order_status'], ['packed']) ? 'selected' : '' ?>>Packed</option>
-                        <option value="shipped" <?= in_array($order['order_status'], ['shipped']) ? 'selected' : '' ?>>Shipped</option>
+                        <option value="packed" <?= in_array($order['order_status'], ['packed']) ? 'selected' : '' ?>>
+                            Packed</option>
+                        <option value="shipped" <?= in_array($order['order_status'], ['shipped']) ? 'selected' : '' ?>>
+                            Shipped</option>
                         <option value="delivered" <?= in_array($order['order_status'], ['completed', 'delivered']) ? 'selected' : '' ?>>Delivered / Completed</option>
                         <option value="cancelled" <?= in_array($order['order_status'], ['cancelled']) ? 'selected' : '' ?>>Cancelled</option>
                     </select>
@@ -49,7 +52,8 @@ include __DIR__ . '/../layouts/header.php';
                         class="w-full p-3 bg-gray-50 border border-gray-300 rounded-xl font-semibold">
                         <option value="not_shipped" <?= ($order['shipping_status'] ?? '') === 'not_shipped' ? 'selected' : '' ?>>NOT SHIPPED</option>
                         <option value="processing" <?= ($order['shipping_status'] ?? '') === 'processing' ? 'selected' : '' ?>>PROCESSING</option>
-                        <option value="shipped" <?= ($order['shipping_status'] ?? '') === 'shipped' ? 'selected' : '' ?>>SHIPPED</option>
+                        <option value="shipped" <?= ($order['shipping_status'] ?? '') === 'shipped' ? 'selected' : '' ?>>
+                            SHIPPED</option>
                         <option value="delivered" <?= ($order['shipping_status'] ?? '') === 'delivered' ? 'selected' : '' ?>>DELIVERED</option>
                         <option value="cancelled" <?= ($order['shipping_status'] ?? '') === 'cancelled' ? 'selected' : '' ?>>CANCELLED</option>
                     </select>
@@ -66,13 +70,13 @@ include __DIR__ . '/../layouts/header.php';
                 </div>
 
                 <button type="submit"
-                    class="w-full py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition shadow-xs">Update
+                    class="w-full py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition shadow-xs">Update
                     Status & Shipping</button>
             </form>
 
             <!-- Shiprocket Fulfillment Controls -->
             <div class="border-t pt-4 space-y-3">
-                <h4 class="font-bold text-gray-900 text-xs">Shiprocket Integration</h4>
+                <h4 class="font-semibold text-gray-900 text-xs">Shiprocket Integration</h4>
                 <div class="space-y-1 text-[11px] text-gray-600">
                     <div><strong>Shipping Status:</strong> <span
                             class="uppercase font-semibold text-gray-800"><?= htmlspecialchars($order['shipping_status'] ?? 'not_shipped') ?></span>
@@ -81,7 +85,7 @@ include __DIR__ . '/../layouts/header.php';
                             class="font-mono"><?= htmlspecialchars($order['shiprocket_shipment_id'] ?? 'N/A') ?></span>
                     </div>
                     <div><strong>AWB Code:</strong> <span
-                            class="font-mono text-red-600 font-bold"><?= htmlspecialchars($order['awb_code'] ?? 'N/A') ?></span>
+                            class="font-mono text-red-600 font-semibold"><?= htmlspecialchars($order['awb_code'] ?? 'N/A') ?></span>
                     </div>
                 </div>
 
@@ -169,19 +173,20 @@ include __DIR__ . '/../layouts/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($items as $item): 
-                        $grossPrice = (float)($item['price'] ?? 0);
-                        $gstPercent = (float)($item['tax_percent'] ?? 18);
-                        $qty = (int)($item['quantity'] ?? 1);
+                    <?php foreach ($items as $item):
+                        $grossPrice = (float) ($item['price'] ?? 0);
+                        $gstPercent = (float) ($item['tax_percent'] ?? 18);
+                        $qty = (int) ($item['quantity'] ?? 1);
                         $unitBase = $grossPrice / (1 + ($gstPercent / 100));
                         $unitTax = $grossPrice - $unitBase;
-                        $lineTaxAmt = isset($item['tax_amount']) && (float)$item['tax_amount'] > 0 ? (float)$item['tax_amount'] : ($unitTax * $qty);
-                    ?>
+                        $lineTaxAmt = isset($item['tax_amount']) && (float) $item['tax_amount'] > 0 ? (float) $item['tax_amount'] : ($unitTax * $qty);
+                        ?>
                         <tr class="border-b">
                             <td class="p-3 font-semibold text-gray-900"><?= htmlspecialchars($item['product_name']) ?></td>
-                            <td class="p-3 font-mono font-semibold text-gray-700"><?= htmlspecialchars($item['hsn_code'] ?? '8714.99.90') ?></td>
+                            <td class="p-3 font-mono font-semibold text-gray-700">
+                                <?= htmlspecialchars($item['hsn_code'] ?? '8714.99.90') ?></td>
                             <td class="p-3 font-mono text-gray-500"><?= htmlspecialchars($item['sku']) ?></td>
-                            <td class="p-3 font-mono font-bold"><?= format_price($grossPrice) ?></td>
+                            <td class="p-3 font-mono font-semibold"><?= format_price($grossPrice) ?></td>
                             <td class="p-3 font-mono"><?= number_format($gstPercent, 0) ?>%</td>
                             <td class="p-3 font-mono text-red-600 font-semibold"><?= format_price($lineTaxAmt) ?></td>
                             <td class="p-3 font-semibold"><?= $qty ?></td>

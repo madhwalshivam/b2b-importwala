@@ -46,12 +46,12 @@ include __DIR__ . '/layouts/header.php';
                                 class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
                                 onerror="this.onerror=null; this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
                             <div
-                                class="hidden w-full h-full bg-slate-900 flex items-center justify-center text-white/40 font-bold text-xl uppercase">
+                                class="hidden w-full h-full bg-slate-900 flex items-center justify-center text-white/40 font-semibold text-xl uppercase">
                                 <?= htmlspecialchars(substr($cat['name'], 0, 2)) ?>
                             </div>
                         <?php else: ?>
                             <div
-                                class="w-full h-full bg-slate-900 flex items-center justify-center text-white/40 font-bold text-xl uppercase">
+                                class="w-full h-full bg-slate-900 flex items-center justify-center text-white/40 font-semibold text-xl uppercase">
                                 <?= htmlspecialchars(substr($cat['name'], 0, 2)) ?>
                             </div>
                         <?php endif; ?>

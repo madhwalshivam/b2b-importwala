@@ -6,6 +6,7 @@ $title = htmlspecialchars($product['name'] ?? 'Product') . ' | ImportWale Wholes
 $productName = htmlspecialchars($product['name'] ?? 'Wholesale Product');
 $sku = htmlspecialchars($product['sku'] ?? 'N/A');
 $canonicalUrl = url('product/' . ($product['slug'] ?? $product['id']));
+$initialVariantCode = $selectedVariantCode ?? $_GET['variant'] ?? '';
 $moq = (int) ($product['moq'] ?? 1);
 $descHtml = !empty($product['description']) ? htmlspecialchars_decode($product['description']) : '';
 
@@ -166,7 +167,7 @@ ob_start();
 
             <!-- Product Title Card Container -->
             <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                <h1 class="text-lg sm:text-xl font-bold text-gray-900 leading-snug tracking-tight">
+                <h1 class="text-lg sm:text-xl font-semibold text-gray-900 leading-snug tracking-tight">
                     <?= $productName ?>
                 </h1>
 
@@ -199,7 +200,7 @@ ob_start();
                     <!-- Single Price Display (One-Piece Mode) -->
                     <div id="singlePriceRow" class="pt-0.5 hidden">
                         <div
-                            class="text-xl sm:text-2xl font-bold text-[#f05a29] flex items-baseline gap-0.5 whitespace-nowrap">
+                            class="text-xl sm:text-2xl font-semibold text-[#f05a29] flex items-baseline gap-0.5 whitespace-nowrap">
                             <span>₹</span><span id="priceDisplay"><?= number_format($onePieceStartPrice, 2) ?></span>
                             <span class="text-xs text-gray-500 font-normal ml-1">/ piece</span>
                         </div>
@@ -225,12 +226,12 @@ ob_start();
                                 <div class="tier-card p-2.5 rounded-xl border transition-all text-center min-w-[105px] shrink-0 <?= $tIdx === 0 ? 'border-[#f05a29] bg-orange-50/40 shadow-2xs' : 'border-gray-200 bg-white hover:border-gray-300' ?>"
                                     data-tier-idx="<?= $tIdx ?>">
                                     <div
-                                        class="text-sm sm:text-base font-bold <?= $tIdx === 0 ? 'text-[#f05a29]' : 'text-gray-900' ?>">
+                                        class="text-sm sm:text-base font-semibold <?= $tIdx === 0 ? 'text-[#f05a29]' : 'text-gray-900' ?>">
                                         ₹<?= number_format($tPrice, 0) ?> <span
                                             class="text-[10px] font-normal text-gray-500">/ piece</span>
                                     </div>
                                     <div
-                                        class="text-[11px] <?= $tIdx === 0 ? 'text-gray-800 font-bold' : 'text-gray-500 font-medium' ?> mt-0.5">
+                                        class="text-[11px] <?= $tIdx === 0 ? 'text-gray-800 font-semibold' : 'text-gray-500 font-medium' ?> mt-0.5">
                                         <?= $rangeLabel ?>
                                     </div>
                                 </div>
@@ -260,7 +261,7 @@ ob_start();
             <!-- Need Help? Strip with SVG WhatsApp Icon -->
             <div class="bg-white border border-gray-200 rounded-2xl px-4 py-3 flex items-center justify-between">
                 <div>
-                    <div class="text-xs font-bold text-gray-900">Need Help?</div>
+                    <div class="text-xs font-semibold text-gray-900">Need Help?</div>
                     <div class="text-[11px] text-gray-400">Mon to Sat (9:30AM to 6:00PM)</div>
                 </div>
                 <a id="helpWhatsappBtn"
@@ -299,7 +300,7 @@ ob_start();
             <?php if (!empty($variants)): ?>
                 <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
                     <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                        <h3 class="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                        <h3 class="text-xs font-semibold text-gray-800 uppercase tracking-wider">
                             <?= htmlspecialchars($variants[0]['attribute_label'] ?? 'Color') ?>
                         </h3>
                     </div>
@@ -329,7 +330,7 @@ ob_start();
 
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-xs font-bold text-gray-900 truncate"><?= $vName ?></span>
+                                        <span class="text-xs font-semibold text-gray-900 truncate"><?= $vName ?></span>
                                     </div>
                                     <div class="text-[11px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-1">
                                         <?php if ($vWeight): ?><span>Wt: <?= $vWeight ?></span> &bull; <?php endif; ?>
@@ -355,7 +356,7 @@ ob_start();
                                     </div>
 
                                     <div class="text-right">
-                                        <div class="text-xs font-bold text-[#f05a29] variant-price-display"
+                                        <div class="text-xs font-semibold text-[#f05a29] variant-price-display"
                                             data-wholesale="<?= number_format($vWholesale, 2) ?>"
                                             data-onepiece="<?= number_format($vOnePiece, 2) ?>">
                                             ₹<?= number_format($vWholesale, 2) ?>
@@ -378,16 +379,16 @@ ob_start();
                     <div
                         class="flex items-center justify-between border border-gray-300 rounded-xl bg-gray-50 h-11 px-2 select-none shrink-0">
                         <button type="button" onclick="changeDetailQty(-1)"
-                            class="w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 rounded-lg transition font-bold text-sm cursor-pointer border-0 bg-transparent">-</button>
+                            class="w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 rounded-lg transition font-semibold text-sm cursor-pointer border-0 bg-transparent">-</button>
                         <input type="number" id="detailQtyInput" value="1" min="1" onchange="onDetailQtyInputChange()"
-                            class="w-12 text-center text-gray-900 font-bold text-xs bg-transparent border-0 focus:outline-none">
+                            class="w-12 text-center text-gray-900 font-semibold text-xs bg-transparent border-0 focus:outline-none">
                         <button type="button" onclick="changeDetailQty(1)"
-                            class="w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 rounded-lg transition font-bold text-sm cursor-pointer border-0 bg-transparent">+</button>
+                            class="w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 rounded-lg transition font-semibold text-sm cursor-pointer border-0 bg-transparent">+</button>
                     </div>
 
                     <!-- Add to Cart Button -->
-                    <button type="button" onclick="addToCartFromDetail()"
-                        class="flex-1 h-11 bg-[#f05a29] hover:bg-[#d94e20] text-white font-bold text-xs rounded-xl shadow-xs transition inline-flex items-center justify-center gap-2 cursor-pointer border-0">
+                    <button type="button" id="mainAddToCartBtn" onclick="addToCartFromDetail()"
+                        class="flex-1 h-11 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl shadow-xs transition inline-flex items-center justify-center gap-2 cursor-pointer border-0">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
@@ -397,7 +398,7 @@ ob_start();
 
                     <!-- Buy Now Button -->
                     <button type="button" onclick="buyNowFromDetail()"
-                        class="px-5 h-11 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer border-0">
+                        class="px-5 h-11 bg-gray-900 hover:bg-black text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer border-0">
                         Buy Now
                     </button>
                 </div>
@@ -406,7 +407,7 @@ ob_start();
             <!-- Navy Blue RFQ Banner -->
             <div class="bg-[#0F172A] rounded-2xl p-4 text-white flex items-center justify-between gap-4 shadow-xs">
                 <div>
-                    <div class="text-xs font-bold text-white">Need a Better Price?</div>
+                    <div class="text-xs font-semibold text-white">Need a Better Price?</div>
                     <div class="text-[11px] text-gray-300 mt-0.5">Share your required quantity &amp; target price for a
                         tailored quote.</div>
                 </div>
@@ -422,7 +423,7 @@ ob_start();
             <?php if (!empty($specs)): ?>
                 <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
                     <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                        <h2 class="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider">Product
+                        <h2 class="text-xs sm:text-sm font-semibold text-gray-900 uppercase tracking-wider">Product
                             Specifications</h2>
                     </div>
 
@@ -508,12 +509,12 @@ ob_start();
                                         ?>
                                         <div class="p-3 bg-gray-50/80 rounded-xl border border-gray-200/80 flex items-start gap-2.5">
                                             <div
-                                                class="w-5 h-5 rounded-full bg-orange-100 text-[#f05a29] flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                                                class="w-5 h-5 rounded-full bg-orange-100 text-[#f05a29] flex items-center justify-center font-semibold text-[10px] shrink-0 mt-0.5">
                                                 ✓</div>
                                             <div class="text-xs text-gray-700 leading-snug">
                                                 <?php if ($bTitle): ?>
                                                     <strong
-                                                        class="text-gray-900 font-bold block mb-0.5"><?= htmlspecialchars($bTitle) ?></strong>
+                                                        class="text-gray-900 font-semibold block mb-0.5"><?= htmlspecialchars($bTitle) ?></strong>
                                                 <?php endif; ?>
                                                 <span><?= htmlspecialchars($bBody) ?></span>
                                             </div>
@@ -531,7 +532,7 @@ ob_start();
                     <div class="px-5 py-4 bg-gray-50/50 flex items-center justify-between cursor-pointer select-none"
                         onclick="toggleProductDesc()">
                         <h2
-                            class="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                            class="text-xs sm:text-sm font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
                             <svg class="w-4 h-4 text-[#f05a29] shrink-0" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -568,12 +569,12 @@ ob_start();
             <!-- Importerr Order Summary Card -->
             <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-3">
                 <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                    <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">Order Summary</h3>
+                    <h3 class="text-xs font-semibold text-gray-900 uppercase tracking-wider">Order Summary</h3>
                     <div class="flex items-center gap-1.5">
                         <span
-                            class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded uppercase">WHOLESALE</span>
+                            class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded uppercase">WHOLESALE</span>
                         <span
-                            class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded uppercase">MOQ
+                            class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold rounded uppercase">MOQ
                             1</span>
                     </div>
                 </div>
@@ -581,16 +582,16 @@ ob_start();
                 <div class="space-y-2 text-xs">
                     <div class="flex items-center justify-between text-gray-600">
                         <span>Quantity</span>
-                        <span class="font-bold text-gray-900" id="summaryQtyText">0 units</span>
+                        <span class="font-semibold text-gray-900" id="summaryQtyText">0 units</span>
                     </div>
                     <div class="flex items-center justify-between text-gray-600">
                         <span>Gross Total Amount</span>
-                        <span class="font-bold text-[#f05a29] text-sm" id="summaryTotalText">₹0.00</span>
+                        <span class="font-semibold text-[#f05a29] text-sm" id="summaryTotalText">₹0.00</span>
                     </div>
                 </div>
 
                 <button type="button" onclick="buyNowFromDetail()"
-                    class="w-full py-3 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer border-0">
+                    class="w-full py-3 bg-gray-900 hover:bg-black text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer border-0">
                     Buy Now
                 </button>
             </div>
@@ -603,7 +604,7 @@ ob_start();
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                     </svg>
-                    <span class="text-xs font-bold tracking-wide">ImportWale <span
+                    <span class="text-xs font-semibold tracking-wide">ImportWale <span
                             class="font-normal text-gray-300 text-[10px] uppercase">order protection</span></span>
                 </div>
 
@@ -616,7 +617,7 @@ ob_start();
                                 d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                         </svg>
                         <div>
-                            <div class="font-bold text-gray-900 flex items-center gap-1 flex-wrap">
+                            <div class="font-semibold text-gray-900 flex items-center gap-1 flex-wrap">
                                 <span>Secure payments*</span>
                             </div>
                             <p class="text-[11px] text-gray-400 mt-0.5">Every payment you make on ImportWale is secured
@@ -634,7 +635,7 @@ ob_start();
                                 d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
                         </svg>
                         <div>
-                            <div class="font-bold text-gray-900">Delivery arranged by ImportWale*</div>
+                            <div class="font-semibold text-gray-900">Delivery arranged by ImportWale*</div>
                             <p class="text-[11px] text-gray-400 mt-0.5">Expect your order to be delivered before
                                 scheduled dates.</p>
                         </div>
@@ -650,7 +651,7 @@ ob_start();
                                 d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                         </svg>
                         <div>
-                            <div class="font-bold text-gray-900">Easy Return*</div>
+                            <div class="font-semibold text-gray-900">Easy Return*</div>
                             <p class="text-[11px] text-gray-400 mt-0.5">Make free local returns for defects on
                                 qualifying request.</p>
                         </div>
@@ -666,7 +667,7 @@ ob_start();
                                 d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                         </svg>
                         <div>
-                            <div class="font-bold text-gray-900">Full Money-back protection*</div>
+                            <div class="font-semibold text-gray-900">Full Money-back protection*</div>
                             <p class="text-[11px] text-gray-400 mt-0.5">Claim a refund if your order doesn't ship or is
                                 missing.</p>
                         </div>
@@ -767,10 +768,10 @@ ob_start();
 
             html += `
                 <div class="tier-card p-2.5 rounded-xl border transition-all text-center min-w-[105px] shrink-0 ${isActive ? 'border-[#f05a29] bg-orange-50/40 shadow-2xs' : 'border-gray-200 bg-white hover:border-gray-300'}" data-tier-idx="${i}">
-                    <div class="text-sm sm:text-base font-bold ${isActive ? 'text-[#f05a29]' : 'text-gray-900'}">
+                    <div class="text-sm sm:text-base font-semibold ${isActive ? 'text-[#f05a29]' : 'text-gray-900'}">
                         ₹${formatNumNoDec(price)} <span class="text-[10px] font-normal text-gray-500">/ piece</span>
                     </div>
-                    <div class="text-[11px] ${isActive ? 'text-gray-800 font-bold' : 'text-gray-500 font-medium'} mt-0.5">${label}</div>
+                    <div class="text-[11px] ${isActive ? 'text-gray-800 font-semibold' : 'text-gray-500 font-medium'} mt-0.5">${label}</div>
                 </div>
             `;
         });
@@ -899,9 +900,44 @@ ob_start();
         modal.classList.remove('flex');
     }
 
+    window.rfqGetProductContextFromPage = function () {
+        const activeMode = typeof currentMode !== 'undefined' ? currentMode : 'wholesale';
+        const detailQty = parseInt(document.getElementById('detailQtyInput')?.value) || 1;
+        const mainImg = document.getElementById('mainProductImage')?.src || <?= json_encode($mainImage) ?>;
+
+        const vars = (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST) ? VARIANTS_LIST.map((v) => {
+            return {
+                id: v.id,
+                code: v.code,
+                label: v.label,
+                value: v.value,
+                stock: v.stock,
+                wholesale_price: v.wholesale_price,
+                one_piece_price: v.one_piece_price,
+                image: v.image,
+                checked: false,
+                qty: 0
+            };
+        }) : [];
+
+        return {
+            id: <?= (int) $product['id'] ?>,
+            name: <?= json_encode($product['name'] ?? '') ?>,
+            sku: <?= json_encode($product['sku'] ?? '') ?>,
+            moq: <?= (int) ($product['moq'] ?? 1) ?>,
+            url: window.location.href,
+            main_image: mainImg,
+            gallery: (typeof GALLERY_IMAGES !== 'undefined' && GALLERY_IMAGES) ? GALLERY_IMAGES : [mainImg],
+            pricingMode: activeMode,
+            selectedVariantIndex: (typeof selectedVariantIndex !== 'undefined') ? selectedVariantIndex : 0,
+            variants: vars
+        };
+    };
+
     function openRfqWithProducts() {
+        const prodData = window.rfqGetProductContextFromPage();
         if (typeof openRfqModal === 'function') {
-            openRfqModal();
+            openRfqModal(prodData);
         } else {
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hi, I want a quote for: ' + PRODUCT_NAME)}`, '_blank');
         }
@@ -971,11 +1007,13 @@ ob_start();
         const priceEl = document.getElementById('priceDisplay');
         if (priceEl && targetPrice > 0) priceEl.textContent = formatNum(targetPrice);
 
-        // 6. Update URL query string without page reload
+        // 6. Update URL to clean SEO route without page reload
+        const baseUrl = <?= json_encode($canonicalUrl) ?>;
         if (v.code) {
-            const url = new URL(window.location.href);
-            url.searchParams.set('variant', v.code);
-            window.history.replaceState(null, '', url.toString());
+            const cleanUrl = baseUrl + '/' + encodeURIComponent(v.code);
+            window.history.replaceState(null, '', cleanUrl);
+        } else {
+            window.history.replaceState(null, '', baseUrl);
         }
 
         // 7. Sync Bottom Accordion if present
@@ -1032,12 +1070,22 @@ ob_start();
     document.addEventListener('DOMContentLoaded', () => {
         setPricingMode('wholesale');
 
-        // Check URL query param for deep-linked variant ?variant=...
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlVariantCode = urlParams.get('variant');
+        // Check for deep-linked variant from route or URL param
+        let urlVariantCode = <?= json_encode($initialVariantCode ?? '') ?>;
+        if (!urlVariantCode) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlVariantCode = urlParams.get('variant');
+            if (!urlVariantCode) {
+                const pathSegments = window.location.pathname.split('/').filter(Boolean);
+                const prodIndex = pathSegments.indexOf('product');
+                if (prodIndex !== -1 && pathSegments.length > prodIndex + 2) {
+                    urlVariantCode = decodeURIComponent(pathSegments[prodIndex + 2]);
+                }
+            }
+        }
 
         if (urlVariantCode && VARIANTS_LIST && VARIANTS_LIST.length > 0) {
-            const foundIdx = VARIANTS_LIST.findIndex(v => v.code.toLowerCase() === urlVariantCode.toLowerCase());
+            const foundIdx = VARIANTS_LIST.findIndex(v => v.code && v.code.toLowerCase() === urlVariantCode.toLowerCase());
             if (foundIdx !== -1) {
                 selectAmazonVariant(foundIdx);
                 return;
@@ -1059,17 +1107,11 @@ ob_start();
     let cartSyncDebounceTimers = {};
 
     function updateVariantQty(vi, delta) {
-        selectAmazonVariant(vi);
         const span = document.getElementById('vQtyVal_' + vi);
         if (!span) return;
         let val = parseInt(span.textContent) || 0;
         val = Math.max(0, val + delta);
         span.textContent = val;
-
-        const mainInp = document.getElementById('detailQtyInput');
-        if (mainInp) {
-            mainInp.value = Math.max(1, val);
-        }
 
         // Auto Sync with Cart via AJAX in background on stepper click!
         if (cartSyncDebounceTimers[vi]) clearTimeout(cartSyncDebounceTimers[vi]);
@@ -1081,6 +1123,9 @@ ob_start();
     async function syncVariantToCart(vi, qty) {
         if (!VARIANTS_LIST || !VARIANTS_LIST[vi]) return;
         const v = VARIANTS_LIST[vi];
+        const span = document.getElementById('vQtyVal_' + vi);
+        const oldVal = span ? span.textContent : '0';
+
         const payload = new URLSearchParams();
         payload.append('product_id', <?= (int) $product['id'] ?>);
         if (v.id) payload.append('variant_id', v.id);
@@ -1099,15 +1144,42 @@ ob_start();
                 if (typeof renderCartDrawerUI === 'function') {
                     renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
                 }
-                if (qty > 0 && typeof showCartToast === 'function') {
-                    showCartToast('Item added to cart!');
+                if (typeof showCartToast === 'function') {
+                    showCartToast(qty > 0 ? 'Cart updated!' : 'Item removed from cart');
+                }
+            } else {
+                if (span) span.textContent = oldVal;
+                if (typeof showCartToast === 'function') {
+                    showCartToast(data.message || 'Failed to update cart');
                 }
             }
-        } catch (e) { }
+        } catch (e) {
+            if (span) span.textContent = oldVal;
+            if (typeof showCartToast === 'function') {
+                showCartToast('Network error while updating cart');
+            }
+        }
     }
 
+    function handleCartRemoveResponse(data) {
+        if (!data || !VARIANTS_LIST) return;
+        const currentProductId = <?= (int) $product['id'] ?>;
+        if (parseInt(data.product_id) !== currentProductId) return;
+        if (data.pricing_mode && data.pricing_mode !== currentMode) return;
+
+        if (data.variant_id) {
+            const vi = VARIANTS_LIST.findIndex(v => parseInt(v.id) === parseInt(data.variant_id));
+            if (vi !== -1) {
+                const span = document.getElementById('vQtyVal_' + vi);
+                if (span) span.textContent = data.cart_qty !== undefined ? data.cart_qty : 0;
+            }
+        }
+    }
+
+    let initialCartSynced = false;
     function syncExistingCartToSteppers(items) {
-        if (!VARIANTS_LIST || !items) return;
+        if (initialCartSynced || !VARIANTS_LIST || !items) return;
+        initialCartSynced = true;
         const currentProductId = <?= (int) $product['id'] ?>;
         items.forEach(item => {
             if (parseInt(item.product_id) === currentProductId) {
@@ -1149,23 +1221,12 @@ ob_start();
         detailAddToCartInFlight = true;
 
         const qtyInp = document.getElementById('detailQtyInput');
-        let qty = parseInt(qtyInp ? qtyInp.value : 1) || 1;
-
-        let selectedVariantId = null;
-        if (selectedVariantIndex !== null && VARIANTS_LIST && VARIANTS_LIST[selectedVariantIndex]) {
-            selectedVariantId = VARIANTS_LIST[selectedVariantIndex].id;
-            const vSpan = document.getElementById('vQtyVal_' + selectedVariantIndex);
-            if (vSpan) {
-                const vQty = parseInt(vSpan.textContent) || 0;
-                if (vQty > 0) qty = vQty;
-            }
-        }
+        let qty = parseInt(qtyInp ? qtyInp.value : 1);
+        if (isNaN(qty) || qty < 1) qty = 1;
 
         const payload = new URLSearchParams();
         payload.append('product_id', <?= (int) $product['id'] ?>);
-        if (selectedVariantId) payload.append('variant_id', selectedVariantId);
         payload.append('quantity', qty);
-        payload.append('set_exact_qty', '1');
         payload.append('pricing_mode', currentMode);
 
         try {
@@ -1180,6 +1241,7 @@ ob_start();
                 if (typeof updateHeaderCartBadge === 'function') {
                     updateHeaderCartBadge(data.cart_count);
                 }
+                updateOrderSummarySidebar(data.cart_count, data.subtotal);
                 if (typeof renderCartDrawerUI === 'function') {
                     renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
                 }
@@ -1286,7 +1348,7 @@ ob_start();
     <div
         class="bg-white border border-gray-200 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative animate-scale-in">
         <button type="button" onclick="closeVariantQuickView()"
-            class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm border-0 cursor-pointer">
+            class="absolute top-4 right-4 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center font-semibold text-sm border-0 cursor-pointer">
             ✕
         </button>
         <div class="flex items-center gap-4 border-b border-gray-100 pb-4">
@@ -1294,18 +1356,18 @@ ob_start();
                 <img id="vModalImg" src="" class="w-full h-full object-cover">
             </div>
             <div>
-                <h4 id="vModalTitle" class="text-base font-bold text-gray-900"></h4>
+                <h4 id="vModalTitle" class="text-base font-semibold text-gray-900"></h4>
                 <div id="vModalStock" class="text-xs text-emerald-600 font-semibold mt-0.5"></div>
             </div>
         </div>
         <div class="grid grid-cols-2 gap-3 text-xs">
             <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/80">
                 <div class="text-[10px] text-gray-400 font-semibold uppercase">Wholesale Price</div>
-                <div id="vModalWholesale" class="text-base font-bold text-[#f05a29]"></div>
+                <div id="vModalWholesale" class="text-base font-semibold text-[#f05a29]"></div>
             </div>
             <div class="bg-gray-50 p-3 rounded-xl border border-gray-200/80">
                 <div class="text-[10px] text-gray-400 font-semibold uppercase">One-Piece Price</div>
-                <div id="vModalOnePiece" class="text-base font-bold text-emerald-600"></div>
+                <div id="vModalOnePiece" class="text-base font-semibold text-emerald-600"></div>
             </div>
         </div>
         <div class="pt-2 flex items-center gap-2">

@@ -1,52 +1,55 @@
 <?php
-$title = $pageTitle ?? "Refund & Replacement Policy | ImportWale Wholesale";
+$title = "Return, Replacement and Refund Policy | ImportWale Wholesale";
+
+$pageTitle = "Return, Replacement and Refund Policy";
+$badgeText = "Claims & Refunds";
+$badgeIcon = "refresh";
+$lastUpdated = "January 15, 2026";
+$currentSlug = "refund-policy";
+$showBusinessAddress = true;
+
+$sections = [
+    [
+        'id' => 'b2b-transactions',
+        'number' => '01',
+        'title' => 'B2B Transactions',
+        'content' => 'Transactions through Importwale are intended for business purposes. Returns are therefore not accepted for change of mind, unsold inventory, reduced demand or a change in buyer preference unless expressly agreed otherwise.'
+    ],
+    [
+        'id' => 'eligible-claims',
+        'number' => '02',
+        'title' => 'Eligible Claims',
+        'content' => 'A claim may be considered where a verified issue exists, including a wrong product, material shortage, transit damage or significant mismatch from the confirmed order specification.'
+    ],
+    [
+        'id' => 'reporting-an-issue',
+        'number' => '03',
+        'title' => 'Reporting an Issue',
+        'content' => 'The buyer should report the issue promptly through the official Importwale support channel and provide the relevant order reference and supporting evidence, such as clear photographs or videos where appropriate.'
+    ],
+    [
+        'id' => 'review-and-resolution',
+        'number' => '04',
+        'title' => 'Review and Resolution',
+        'content' => 'After reviewing the claim, Importwale may offer an appropriate resolution depending on the circumstances and confirmed order terms. A resolution may include replacement, credit, price adjustment or refund.'
+    ],
+    [
+        'id' => 'return-authorisation',
+        'number' => '05',
+        'title' => 'Return Authorisation',
+        'content' => 'Products must not be returned without prior instructions or approval from Importwale. Unauthorised returns may not be accepted.'
+    ],
+    [
+        'id' => 'refund-processing',
+        'number' => '06',
+        'title' => 'Refund Processing',
+        'content' => 'Where a refund is approved, it will be processed through an appropriate payment method or commercial arrangement. Actual processing time may depend on banking or payment service providers.'
+    ]
+];
+
 ob_start();
-?>
-
-<!-- Policy Header -->
-<div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 40px 32px; margin-bottom: 32px;">
-  <span style="background: #ecfdf5; color: #059669; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 4px 12px; border-radius: 20px; display: inline-block; margin-bottom: 12px;">
-    7-Day Quality Inspection Guarantee
-  </span>
-  <h1 style="font-size: 28px; font-weight: 800; color: #111827; margin-bottom: 10px;">Refund & Replacement Policy</h1>
-  <p style="font-size: 14px; color: #6b7280; margin: 0;">Our commitment to 100% quality assurance, damaged goods replacement, and store credit refunds for B2B buyers.</p>
-</div>
-
-<div style="display: flex; flex-direction: column; gap: 24px; max-width: 960px; margin-bottom: 50px;">
-
-  <!-- Section 1 -->
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">1. 7-Day Quality Inspection Window</h3>
-    <p style="font-size: 14px; color: #4b5563; line-height: 1.7;">
-      Upon receipt of your wholesale shipment, buyers have <strong>7 calendar days</strong> to inspect product quality, quantities, and specifications. Any quality claims, missing items, or transit damages reported within this window are fully covered under our Replacement & Refund guarantee.
-    </p>
-  </div>
-
-  <!-- Section 2 -->
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">2. Eligible Replacement Claims</h3>
-    <ul style="font-size: 14px; color: #4b5563; line-height: 1.8; margin: 0; padding-left: 20px;">
-      <li>Goods physically damaged or broken during transit.</li>
-      <li>Manufacturing defects or functional failure upon unboxing.</li>
-      <li>Incorrect item or wrong color/variant delivered vs order confirmation.</li>
-      <li>Quantity shortage vs packing slip invoice.</li>
-    </ul>
-  </div>
-
-  <!-- Section 3 -->
-  <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 28px;">
-    <h3 style="font-size: 18px; font-weight: 800; color: #111827; margin-bottom: 12px;">3. How to Submit a Claim</h3>
-    <ol style="font-size: 14px; color: #4b5563; line-height: 1.8; margin: 0; padding-left: 20px;">
-      <li>Navigate to our <a href="<?= url('contact-us') ?>" style="color:#f05a29; font-weight:700;">Contact Support page</a> or email <a href="mailto:support@importwale.com" style="color:#f05a29; font-weight:700;">support@importwale.com</a>.</li>
-      <li>Provide your Order ID and photo/video proof showing the defective or damaged unit.</li>
-      <li>Our Quality Assurance team will review the claim within <strong>24 business hours</strong>.</li>
-      <li>Approved claims receive instant replacement dispatches or store credit refunds to your account balance.</li>
-    </ol>
-  </div>
-
-</div>
-
-<?php
+require __DIR__ . '/partials/policy_template.php';
 $content = ob_get_clean();
+
 require __DIR__ . '/layout.php';
 ?>

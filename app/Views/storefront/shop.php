@@ -230,7 +230,8 @@ include __DIR__ . '/layouts/header.php';
 
                                 <div class="pt-2 sm:pt-3 flex-1 flex flex-col justify-between space-y-2">
                                     <div>
-                                        <h3 class="text-xs font-semibold text-gray-900 group-hover:text-red-600 transition line-clamp-2 leading-snug">
+                                        <h3
+                                            class="text-xs font-semibold text-gray-900 group-hover:text-red-600 transition line-clamp-2 leading-snug">
                                             <a href="<?= url('product/' . $pSlug) ?>"
                                                 class="hover:text-red-600 transition"><?= htmlspecialchars($prod['name']) ?></a>
                                         </h3>
@@ -239,7 +240,7 @@ include __DIR__ . '/layouts/header.php';
                                     <div class="pt-2 border-t border-red-100/70 space-y-2">
                                         <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
                                             <span
-                                                class="text-xs sm:text-sm font-bold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
+                                                class="text-xs sm:text-sm font-semibold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
                                             <?php if ($prod['sale_price']): ?>
                                                 <span
                                                     class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>

@@ -27,8 +27,9 @@ class ProductDetailController extends BaseController
         $this->imageModel = new ProductImage();
     }
 
-    public function show(string $slug): void
+    public function show(string $slug, ?string $variantCode = null): void
     {
+        $selectedVariantCode = $variantCode ?: ($_GET['variant'] ?? null);
         $product = $this->productRepo->findBySlug($slug);
         if (!$product && is_numeric($slug)) {
             $product = $this->productRepo->find((int)$slug);
@@ -134,6 +135,7 @@ class ProductDetailController extends BaseController
             'whatsappNumber'        => $whatsappNumber,
             'productTiers'          => $productTiers,
             'variantTiersMap'       => $variantTiersMap,
+            'selectedVariantCode'   => $selectedVariantCode,
         ]);
     }
 }

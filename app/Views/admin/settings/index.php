@@ -5,14 +5,16 @@ include __DIR__ . '/../layouts/header.php';
 <div class="max-w-5xl mx-auto space-y-6 pb-12">
 
     <!-- Top Header Banner Card -->
-    <div class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div
+        class="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex items-center space-x-3.5">
             <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center shrink-0">
                 <i data-lucide="sliders" class="w-6 h-6"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold text-slate-900 tracking-tight">Website & General Settings</h1>
-                <p class="text-xs text-slate-500 mt-0.5">Manage business identity, GST legal details, shipping rates, and storefront social links.</p>
+                <h1 class="text-xl font-semibold text-slate-900 tracking-tight">Website & General Settings</h1>
+                <p class="text-xs text-slate-500 mt-0.5">Manage business identity, GST legal details, shipping rates,
+                    and storefront social links.</p>
             </div>
         </div>
     </div>
@@ -25,12 +27,14 @@ include __DIR__ . '/../layouts/header.php';
         <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
             <div class="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
                 <i data-lucide="building-2" class="w-5 h-5 text-red-600"></i>
-                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">1. Company & GST Legal Details</h3>
+                <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">1. Company & GST Legal Details
+                </h3>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1.5">Brand Name <span class="text-red-600">*</span></label>
+                    <label class="block font-semibold text-slate-700 mb-1.5">Brand Name <span
+                            class="text-red-600">*</span></label>
                     <input type="text" name="site_name"
                         value="<?= htmlspecialchars($settings['site_name'] ?? 'Mudsor') ?>" required
                         class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white transition">
@@ -77,7 +81,7 @@ include __DIR__ . '/../layouts/header.php';
         <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
             <div class="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
                 <i data-lucide="truck" class="w-5 h-5 text-red-600"></i>
-                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">2. Shipping & Tax Rates</h3>
+                <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">2. Shipping & Tax Rates</h3>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs">
@@ -101,7 +105,8 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-slate-700 mb-1.5">Default GST Rate (%)</label>
                     <input type="number" name="tax_rate" value="<?= htmlspecialchars($settings['tax_rate'] ?? '18') ?>"
                         class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white transition">
-                    <p class="text-[10px] text-slate-400 mt-1">Default percentage applied for invoice tax computation.</p>
+                    <p class="text-[10px] text-slate-400 mt-1">Default percentage applied for invoice tax computation.
+                    </p>
                 </div>
             </div>
         </div>
@@ -110,7 +115,8 @@ include __DIR__ . '/../layouts/header.php';
         <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
             <div class="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
                 <i data-lucide="cloud" class="w-5 h-5 text-red-600"></i>
-                <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">3. Cloud Storage & Media Assets</h3>
+                <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">3. Cloud Storage & Media
+                    Assets</h3>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
@@ -129,9 +135,11 @@ include __DIR__ . '/../layouts/header.php';
             <div class="border-b border-slate-100 pb-3">
                 <div class="flex items-center space-x-2.5">
                     <i data-lucide="share-2" class="w-5 h-5 text-red-600"></i>
-                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">4. Social Media & Header Links</h3>
+                    <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">4. Social Media & Header
+                        Links</h3>
                 </div>
-                <p class="text-xs text-slate-500 mt-1">Configure profile links and toggle visibility on the storefront header and footer.</p>
+                <p class="text-xs text-slate-500 mt-1">Configure profile links and toggle visibility on the storefront
+                    header and footer.</p>
             </div>
 
             <?php
@@ -148,7 +156,8 @@ include __DIR__ . '/../layouts/header.php';
             <div class="space-y-3 text-xs">
                 <?php foreach ($socials as $s): ?>
                     <?php $isEnabled = ($settings[$s['show_key']] ?? '0') === '1'; ?>
-                    <div class="flex items-center gap-3.5 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 hover:border-slate-300 transition">
+                    <div
+                        class="flex items-center gap-3.5 p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 hover:border-slate-300 transition">
                         <!-- Toggle -->
                         <label class="relative inline-flex items-center cursor-pointer shrink-0"
                             title="Show / Hide <?= $s['label'] ?> on storefront">
@@ -168,58 +177,72 @@ include __DIR__ . '/../layouts/header.php';
                     </div>
                 <?php endforeach; ?>
             </div>
-        <!-- SECTION 5: WhatsApp B2B & Wishlist Settings -->
-        <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
-            <div class="border-b border-slate-100 pb-3">
-                <div class="flex items-center space-x-2.5">
-                    <i data-lucide="message-circle" class="w-5 h-5 text-emerald-600"></i>
-                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">5. WhatsApp B2B & Wishlist Settings</h3>
+            <!-- SECTION 5: WhatsApp B2B & Wishlist Settings -->
+            <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+                <div class="border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2.5">
+                        <i data-lucide="message-circle" class="w-5 h-5 text-emerald-600"></i>
+                        <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">5. WhatsApp B2B &
+                            Wishlist Settings</h3>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Configure business WhatsApp number, max wishlist limits, and
+                        customizable enquiry message templates.</p>
                 </div>
-                <p class="text-xs text-slate-500 mt-1">Configure business WhatsApp number, max wishlist limits, and customizable enquiry message templates.</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1.5">WhatsApp Business Phone Number <span
+                                class="text-red-600">*</span></label>
+                        <input type="text" name="whatsapp_business_number"
+                            value="<?= htmlspecialchars($settings['whatsapp_business_number'] ?? '919217714452') ?>"
+                            required placeholder="e.g. 919217714452 (country code + number without spaces or +)"
+                            class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                        <p class="text-[10px] text-slate-400 mt-1">Format: Country code + phone number without + or
+                            spaces (e.g., 919217714452).</p>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1.5">Wishlist Maximum Items Limit <span
+                                class="text-red-600">*</span></label>
+                        <input type="number" name="wishlist_max_limit" min="1" max="1000"
+                            value="<?= htmlspecialchars($settings['wishlist_max_limit'] ?? '100') ?>" required
+                            class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
+                        <p class="text-[10px] text-slate-400 mt-1">Maximum products allowed per user/guest wishlist
+                            (default: 100).</p>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-700 mb-1.5">Single-Product WhatsApp Enquiry
+                            Template</label>
+                        <textarea name="whatsapp_single_product_template" rows="4"
+                            class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition"><?= htmlspecialchars($settings['whatsapp_single_product_template'] ?? "Hi, I want to enquire about this product:\n*Product:* {product_name}\n*SKU:* {sku}\n*URL:* {product_url}\n\nPlease share wholesale price & availability details.") ?></textarea>
+                        <p class="text-[10px] text-slate-400 mt-1">Available placeholders: <code
+                                class="bg-slate-100 px-1 rounded">{product_name}</code>, <code
+                                class="bg-slate-100 px-1 rounded">{product_url}</code>, <code
+                                class="bg-slate-100 px-1 rounded">{sku}</code>, <code
+                                class="bg-slate-100 px-1 rounded">{price}</code>.</p>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block font-semibold text-slate-700 mb-1.5">Wishlist Bulk WhatsApp Enquiry
+                            Template</label>
+                        <textarea name="whatsapp_wishlist_template" rows="5"
+                            class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition"><?= htmlspecialchars($settings['whatsapp_wishlist_template'] ?? "Hi, I am interested in wholesale pricing for the following wishlist items:\n\n{product_list}\n\nPlease provide a bulk quotation and delivery timeline.") ?></textarea>
+                        <p class="text-[10px] text-slate-400 mt-1">Available placeholders: <code
+                                class="bg-slate-100 px-1 rounded">{product_list}</code> (automatically formatted with
+                            product names & links).</p>
+                    </div>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1.5">WhatsApp Business Phone Number <span class="text-red-600">*</span></label>
-                    <input type="text" name="whatsapp_business_number"
-                        value="<?= htmlspecialchars($settings['whatsapp_business_number'] ?? '919217714452') ?>" required
-                        placeholder="e.g. 919217714452 (country code + number without spaces or +)"
-                        class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
-                    <p class="text-[10px] text-slate-400 mt-1">Format: Country code + phone number without + or spaces (e.g., 919217714452).</p>
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1.5">Wishlist Maximum Items Limit <span class="text-red-600">*</span></label>
-                    <input type="number" name="wishlist_max_limit" min="1" max="1000"
-                        value="<?= htmlspecialchars($settings['wishlist_max_limit'] ?? '100') ?>" required
-                        class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
-                    <p class="text-[10px] text-slate-400 mt-1">Maximum products allowed per user/guest wishlist (default: 100).</p>
-                </div>
-
-                <div class="sm:col-span-2">
-                    <label class="block font-semibold text-slate-700 mb-1.5">Single-Product WhatsApp Enquiry Template</label>
-                    <textarea name="whatsapp_single_product_template" rows="4"
-                        class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition"><?= htmlspecialchars($settings['whatsapp_single_product_template'] ?? "Hi, I want to enquire about this product:\n*Product:* {product_name}\n*SKU:* {sku}\n*URL:* {product_url}\n\nPlease share wholesale price & availability details.") ?></textarea>
-                    <p class="text-[10px] text-slate-400 mt-1">Available placeholders: <code class="bg-slate-100 px-1 rounded">{product_name}</code>, <code class="bg-slate-100 px-1 rounded">{product_url}</code>, <code class="bg-slate-100 px-1 rounded">{sku}</code>, <code class="bg-slate-100 px-1 rounded">{price}</code>.</p>
-                </div>
-
-                <div class="sm:col-span-2">
-                    <label class="block font-semibold text-slate-700 mb-1.5">Wishlist Bulk WhatsApp Enquiry Template</label>
-                    <textarea name="whatsapp_wishlist_template" rows="5"
-                        class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-xs text-slate-800 focus:outline-none focus:border-emerald-600 focus:bg-white transition"><?= htmlspecialchars($settings['whatsapp_wishlist_template'] ?? "Hi, I am interested in wholesale pricing for the following wishlist items:\n\n{product_list}\n\nPlease provide a bulk quotation and delivery timeline.") ?></textarea>
-                    <p class="text-[10px] text-slate-400 mt-1">Available placeholders: <code class="bg-slate-100 px-1 rounded">{product_list}</code> (automatically formatted with product names & links).</p>
-                </div>
+            <!-- Submit Button Row -->
+            <div class="flex items-center justify-end pt-2">
+                <button type="submit"
+                    class="h-11 px-7 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center space-x-2 shrink-0 cursor-pointer">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>Save Global Settings</span>
+                </button>
             </div>
-        </div>
-
-        <!-- Submit Button Row -->
-        <div class="flex items-center justify-end pt-2">
-            <button type="submit"
-                class="h-11 px-7 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center space-x-2 shrink-0 cursor-pointer">
-                <i data-lucide="save" class="w-4 h-4"></i>
-                <span>Save Global Settings</span>
-            </button>
-        </div>
 
     </form>
 

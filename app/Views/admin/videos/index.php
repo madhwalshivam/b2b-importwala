@@ -5,10 +5,12 @@ include __DIR__ . '/../layouts/header.php';
 <div class="p-6 max-w-7xl mx-auto space-y-6 font-sans">
 
     <!-- Top Header -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+    <div
+        class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
         <div>
             <div class="flex items-center space-x-2">
-                <span class="px-2.5 py-1 text-[11px] font-semibold uppercase bg-red-50 text-red-600 rounded-lg tracking-wider border border-red-100">
+                <span
+                    class="px-2.5 py-1 text-[11px] font-semibold uppercase bg-red-50 text-red-600 rounded-lg tracking-wider border border-red-100">
                     Media Center
                 </span>
                 <span class="text-slate-400 text-xs">•</span>
@@ -16,7 +18,8 @@ include __DIR__ . '/../layouts/header.php';
             </div>
             <h1 class="text-2xl font-semibold text-slate-900 mt-1 tracking-tight">Homepage Videos Manager</h1>
             <p class="text-xs text-slate-500 mt-0.5 font-medium max-w-2xl">
-                Add YouTube, Instagram Reels/Posts, Facebook Video URLs, or upload custom video files to show product demos and testing videos on the storefront homepage.
+                Add YouTube, Instagram Reels/Posts, Facebook Video URLs, or upload custom video files to show product
+                demos and testing videos on the storefront homepage.
             </p>
         </div>
 
@@ -42,7 +45,8 @@ include __DIR__ . '/../layouts/header.php';
                     <i data-lucide="video-off" class="w-8 h-8"></i>
                 </div>
                 <p class="text-sm font-semibold text-slate-700">No Homepage Videos Added Yet</p>
-                <p class="text-xs text-slate-500 max-w-sm mx-auto">Add your YouTube, Instagram, Facebook, or custom video files to demonstrate product features.</p>
+                <p class="text-xs text-slate-500 max-w-sm mx-auto">Add your YouTube, Instagram, Facebook, or custom video
+                    files to demonstrate product features.</p>
                 <button type="button" onclick="openAddVideoModal()"
                     class="px-4 py-2 bg-red-600 text-white text-xs font-semibold rounded-xl hover:bg-red-700 transition">
                     + Add First Video
@@ -51,14 +55,18 @@ include __DIR__ . '/../layouts/header.php';
         <?php else: ?>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
                 <?php foreach ($videos as $v): ?>
-                    <?php 
-                        $vType = strtolower($v['video_type'] ?? 'youtube');
-                        $typeBadgeClass = 'bg-slate-800 text-white';
-                        if ($vType === 'youtube') $typeBadgeClass = 'bg-red-600 text-white';
-                        elseif ($vType === 'instagram') $typeBadgeClass = 'bg-gradient-to-r from-purple-600 to-pink-600 text-white';
-                        elseif ($vType === 'facebook') $typeBadgeClass = 'bg-blue-600 text-white';
+                    <?php
+                    $vType = strtolower($v['video_type'] ?? 'youtube');
+                    $typeBadgeClass = 'bg-slate-800 text-white';
+                    if ($vType === 'youtube')
+                        $typeBadgeClass = 'bg-red-600 text-white';
+                    elseif ($vType === 'instagram')
+                        $typeBadgeClass = 'bg-gradient-to-r from-purple-600 to-pink-600 text-white';
+                    elseif ($vType === 'facebook')
+                        $typeBadgeClass = 'bg-blue-600 text-white';
                     ?>
-                    <div class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between group hover:border-slate-400 transition shadow-xs">
+                    <div
+                        class="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between group hover:border-slate-400 transition shadow-xs">
                         <div class="relative aspect-video bg-black overflow-hidden flex items-center justify-center">
                             <?php if (!empty($v['thumbnail'])): ?>
                                 <img src="<?= asset($v['thumbnail']) ?>"
@@ -77,7 +85,8 @@ include __DIR__ . '/../layouts/header.php';
                                 </a>
                             </div>
 
-                            <span class="absolute top-3 left-3 text-[10px] font-bold uppercase px-2 py-0.5 rounded-md tracking-wider shadow-sm <?= $typeBadgeClass ?>">
+                            <span
+                                class="absolute top-3 left-3 text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md tracking-wider shadow-sm <?= $typeBadgeClass ?>">
                                 <?= htmlspecialchars(strtoupper($vType)) ?>
                             </span>
                         </div>
@@ -93,10 +102,13 @@ include __DIR__ . '/../layouts/header.php';
                             </div>
 
                             <div class="pt-3 border-t border-slate-200/60 flex items-center justify-between">
-                                <span class="text-[11px] font-mono text-slate-400">Order: #<?= (int) $v['display_order'] ?></span>
+                                <span class="text-[11px] font-mono text-slate-400">Order:
+                                    #<?= (int) $v['display_order'] ?></span>
                                 <div class="flex items-center space-x-2">
-                                    <button type="button" onclick='openEditVideoModal(<?= json_encode($v, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)' 
-                                        class="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer" title="Edit Video">
+                                    <button type="button"
+                                        onclick='openEditVideoModal(<?= json_encode($v, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
+                                        class="p-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition cursor-pointer"
+                                        title="Edit Video">
                                         <i data-lucide="pencil" class="w-4 h-4"></i>
                                     </button>
                                     <a href="<?= url('admin/videos/delete/' . $v['id']) ?>"
@@ -116,8 +128,10 @@ include __DIR__ . '/../layouts/header.php';
 </div>
 
 <!-- ADD VIDEO MODAL -->
-<div id="add-video-modal" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-[99999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto z-[100000] max-h-[90vh] sm:max-h-[85vh] overflow-y-auto flex flex-col">
+<div id="add-video-modal"
+    class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-[99999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div
+        class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto z-[100000] max-h-[90vh] sm:max-h-[85vh] overflow-y-auto flex flex-col">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-semibold text-slate-900 flex items-center space-x-2">
                 <i data-lucide="video" class="w-5 h-5 text-red-600"></i>
@@ -128,12 +142,14 @@ include __DIR__ . '/../layouts/header.php';
             </button>
         </div>
 
-        <form action="<?= url('admin/videos/store') ?>" method="POST" enctype="multipart/form-data" onsubmit="return validateVideoForm(this, 'add')" class="space-y-4">
+        <form action="<?= url('admin/videos/store') ?>" method="POST" enctype="multipart/form-data"
+            onsubmit="return validateVideoForm(this, 'add')" class="space-y-4">
             <?= csrf_field() ?>
 
             <div class="space-y-1">
                 <label class="block text-xs font-semibold text-slate-700 uppercase">Video Title *</label>
-                <input type="text" name="title" placeholder="e.g. Mudsor Heavy Stainless Steel Crash Guard Testing" required
+                <input type="text" name="title" placeholder="e.g. Mudsor Heavy Stainless Steel Crash Guard Testing"
+                    required
                     class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
             </div>
 
@@ -151,30 +167,36 @@ include __DIR__ . '/../layouts/header.php';
             <div id="add-link-input-group" class="space-y-2">
                 <div class="flex items-center justify-between">
                     <label class="block text-xs font-semibold text-slate-700 uppercase">Paste Video Link *</label>
-                    <span id="add-platform-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs"></span>
+                    <span id="add-platform-badge"
+                        class="hidden text-[10px] font-semibold px-2 py-0.5 rounded shadow-2xs"></span>
                 </div>
                 <input type="url" name="video_url" id="add-video-url" oninput="previewVideoLink('add')"
                     placeholder="https://www.youtube.com/watch?v=... or Instagram Reel / Facebook Video link"
                     class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
-                <p class="text-[11px] text-slate-500 font-medium">Supports YouTube (videos/shorts), Instagram (reels/posts), and Facebook videos.</p>
+                <p class="text-[11px] text-slate-500 font-medium">Supports YouTube (videos/shorts), Instagram
+                    (reels/posts), and Facebook videos.</p>
 
                 <!-- URL Error Message -->
-                <div id="add-url-error" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 font-semibold">
+                <div id="add-url-error"
+                    class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 font-semibold">
                     ⚠️ Please enter a valid YouTube, Instagram, or Facebook video link
                 </div>
 
                 <!-- LIVE EMBED PREVIEW BOX -->
                 <div id="add-preview-container" class="hidden space-y-1.5 pt-1">
                     <label class="block text-[11px] font-semibold text-slate-500 uppercase">Live Embed Preview</label>
-                    <div class="relative aspect-video bg-black rounded-xl overflow-hidden border border-slate-300 shadow-sm">
-                        <iframe id="add-preview-iframe" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+                    <div
+                        class="relative aspect-video bg-black rounded-xl overflow-hidden border border-slate-300 shadow-sm">
+                        <iframe id="add-preview-iframe" class="w-full h-full" src="" frameborder="0" allowfullscreen
+                            allow="autoplay"></iframe>
                     </div>
                 </div>
             </div>
 
             <!-- FILE UPLOAD GROUP -->
             <div id="add-upload-input-group" class="space-y-1 hidden">
-                <label class="block text-xs font-semibold text-slate-700 uppercase">Select Video File (.mp4, .webm)</label>
+                <label class="block text-xs font-semibold text-slate-700 uppercase">Select Video File (.mp4,
+                    .webm)</label>
                 <input type="file" name="video_file" accept="video/mp4,video/webm"
                     class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700">
             </div>
@@ -191,7 +213,8 @@ include __DIR__ . '/../layouts/header.php';
             <div class="space-y-1">
                 <label class="block text-xs font-semibold text-slate-700 uppercase flex items-center justify-between">
                     <span>Showcase Product Link (Optional)</span>
-                    <span class="text-[10px] text-red-600 font-medium lowercase">e.g. /product/mudsor-9h-tempered-glass</span>
+                    <span class="text-[10px] text-red-600 font-medium lowercase">e.g.
+                        /product/mudsor-9h-tempered-glass</span>
                 </label>
                 <input type="text" name="product_url" placeholder="e.g. /product/scooter-crash-guard or https://..."
                     class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
@@ -199,7 +222,8 @@ include __DIR__ . '/../layouts/header.php';
 
             <div class="space-y-1">
                 <label class="block text-xs font-semibold text-slate-700 uppercase">Short Description (Optional)</label>
-                <textarea name="description" rows="2" placeholder="Brief caption describing what this video demonstrates..."
+                <textarea name="description" rows="2"
+                    placeholder="Brief caption describing what this video demonstrates..."
                     class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition"></textarea>
             </div>
 
@@ -224,19 +248,23 @@ include __DIR__ . '/../layouts/header.php';
 </div>
 
 <!-- EDIT VIDEO MODAL -->
-<div id="edit-video-modal" class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-[99999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto z-[100000] max-h-[90vh] sm:max-h-[85vh] overflow-y-auto flex flex-col">
+<div id="edit-video-modal"
+    class="hidden fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-[99999] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div
+        class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 border border-slate-200 my-auto z-[100000] max-h-[90vh] sm:max-h-[85vh] overflow-y-auto flex flex-col">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-semibold text-slate-900 flex items-center space-x-2">
                 <i data-lucide="pencil" class="w-5 h-5 text-red-600"></i>
                 <span>Edit Homepage Video</span>
             </h3>
-            <button type="button" onclick="closeEditVideoModal()" class="text-slate-400 hover:text-slate-700 transition">
+            <button type="button" onclick="closeEditVideoModal()"
+                class="text-slate-400 hover:text-slate-700 transition">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
 
-        <form id="edit-video-form" action="" method="POST" enctype="multipart/form-data" onsubmit="return validateVideoForm(this, 'edit')" class="space-y-4">
+        <form id="edit-video-form" action="" method="POST" enctype="multipart/form-data"
+            onsubmit="return validateVideoForm(this, 'edit')" class="space-y-4">
             <?= csrf_field() ?>
 
             <div class="space-y-1">
@@ -259,36 +287,42 @@ include __DIR__ . '/../layouts/header.php';
             <div id="edit-link-input-group" class="space-y-2">
                 <div class="flex items-center justify-between">
                     <label class="block text-xs font-semibold text-slate-700 uppercase">Paste Video Link *</label>
-                    <span id="edit-platform-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs"></span>
+                    <span id="edit-platform-badge"
+                        class="hidden text-[10px] font-semibold px-2 py-0.5 rounded shadow-2xs"></span>
                 </div>
                 <input type="url" name="video_url" id="edit-video-url" oninput="previewVideoLink('edit')"
                     placeholder="https://www.youtube.com/watch?v=... or Instagram Reel / Facebook Video link"
                     class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
-                
+
                 <!-- URL Error Message -->
-                <div id="edit-url-error" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 font-semibold">
+                <div id="edit-url-error"
+                    class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded-xl border border-red-200 font-semibold">
                     ⚠️ Please enter a valid YouTube, Instagram, or Facebook video link
                 </div>
 
                 <!-- LIVE EMBED PREVIEW BOX -->
                 <div id="edit-preview-container" class="hidden space-y-1.5 pt-1">
                     <label class="block text-[11px] font-semibold text-slate-500 uppercase">Live Embed Preview</label>
-                    <div class="relative aspect-video bg-black rounded-xl overflow-hidden border border-slate-300 shadow-sm">
-                        <iframe id="edit-preview-iframe" class="w-full h-full" src="" frameborder="0" allowfullscreen allow="autoplay"></iframe>
+                    <div
+                        class="relative aspect-video bg-black rounded-xl overflow-hidden border border-slate-300 shadow-sm">
+                        <iframe id="edit-preview-iframe" class="w-full h-full" src="" frameborder="0" allowfullscreen
+                            allow="autoplay"></iframe>
                     </div>
                 </div>
             </div>
 
             <!-- FILE UPLOAD GROUP -->
             <div id="edit-upload-input-group" class="space-y-1 hidden">
-                <label class="block text-xs font-semibold text-slate-700 uppercase">Select New Video File (.mp4, .webm - Optional)</label>
+                <label class="block text-xs font-semibold text-slate-700 uppercase">Select New Video File (.mp4, .webm -
+                    Optional)</label>
                 <input type="file" name="video_file" accept="video/mp4,video/webm"
                     class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700">
             </div>
 
             <!-- Thumbnail Upload (Optional) -->
             <div class="space-y-1">
-                <label class="block text-xs font-semibold text-slate-700 uppercase">New Thumbnail Image (Optional)</label>
+                <label class="block text-xs font-semibold text-slate-700 uppercase">New Thumbnail Image
+                    (Optional)</label>
                 <input type="file" name="thumbnail" accept="image/*"
                     class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700">
             </div>
@@ -297,9 +331,11 @@ include __DIR__ . '/../layouts/header.php';
             <div class="space-y-1">
                 <label class="block text-xs font-semibold text-slate-700 uppercase flex items-center justify-between">
                     <span>Showcase Product Link (Optional)</span>
-                    <span class="text-[10px] text-red-600 font-medium lowercase">e.g. /product/mudsor-9h-tempered-glass</span>
+                    <span class="text-[10px] text-red-600 font-medium lowercase">e.g.
+                        /product/mudsor-9h-tempered-glass</span>
                 </label>
-                <input type="text" name="product_url" id="edit-product-url" placeholder="e.g. /product/scooter-crash-guard or https://..."
+                <input type="text" name="product_url" id="edit-product-url"
+                    placeholder="e.g. /product/scooter-crash-guard or https://..."
                     class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
             </div>
 
@@ -414,7 +450,7 @@ include __DIR__ . '/../layouts/header.php';
         if (errorBox) errorBox.classList.add('hidden');
         if (badge) {
             badge.innerText = '✓ ' + res.badge;
-            badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded shadow-2xs ' + res.badgeClass;
+            badge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded shadow-2xs ' + res.badgeClass;
             badge.classList.remove('hidden');
         }
         if (previewContainer && iframe) {
@@ -475,7 +511,7 @@ include __DIR__ . '/../layouts/header.php';
         form.action = '<?= url('admin/videos/update/') ?>' + v.id;
 
         document.getElementById('edit-video-title').value = v.title || '';
-        
+
         const isUpload = (v.video_type === 'upload');
         const selectVal = isUpload ? 'upload' : 'link';
         document.getElementById('edit-video-type').value = selectVal;

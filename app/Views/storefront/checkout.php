@@ -61,7 +61,7 @@ $countryVal = htmlspecialchars($savedAddress['country'] ?? 'India');
                         class="bg-gray-50/80 border border-gray-900 rounded-xl p-4 space-y-2 text-xs">
                         <div class="flex items-center space-x-2">
                             <span
-                                class="font-bold text-gray-900 text-sm"><?= htmlspecialchars($savedAddress['full_name']) ?></span>
+                                class="font-semibold text-gray-900 text-sm"><?= htmlspecialchars($savedAddress['full_name']) ?></span>
                             <span
                                 class="bg-red-50 text-red-700 border border-red-200 text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase">Default
                                 Saved Address</span>
@@ -260,7 +260,8 @@ $countryVal = htmlspecialchars($savedAddress['country'] ?? 'India');
                         <span
                             class="font-semibold text-gray-900"><?= $cart['shipping_charge'] == 0 ? 'FREE' : format_price($cart['shipping_charge']) ?></span>
                     </div>
-                    <div class="bg-red-50/70 border border-red-200/80 text-theme-primary text-[11px] p-2 rounded-lg font-medium flex items-center space-x-1.5 mt-1">
+                    <div
+                        class="bg-red-50/70 border border-red-200/80 text-theme-primary text-[11px] p-2 rounded-lg font-medium flex items-center space-x-1.5 mt-1">
                         <i data-lucide="info" class="w-3.5 h-3.5 shrink-0"></i>
                         <span>Price <strong>Inclusive of GST</strong></span>
                     </div>

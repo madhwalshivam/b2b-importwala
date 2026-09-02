@@ -55,6 +55,13 @@ class SupportController extends BaseController
         ]);
     }
 
+    public function payment(): void
+    {
+        $this->renderView('web/payment_policy', [
+            'pageTitle' => 'Payment Policy | ImportWale Wholesale'
+        ]);
+    }
+
     public function submitContact(): void
     {
         $name = trim($_POST['name'] ?? '');

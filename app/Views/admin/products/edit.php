@@ -27,26 +27,31 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
     $inquiryModel = new \App\Models\Inquiry();
     $inqStats = $inquiryModel->getProductInquiryStats($product['id']);
     ?>
-    <div class="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-2xl border border-orange-200 shadow-xs flex items-center justify-between">
+    <div
+        class="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-2xl border border-orange-200 shadow-xs flex items-center justify-between">
         <div class="flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-xl shrink-0 shadow-sm">
+            <div
+                class="w-12 h-12 rounded-xl bg-orange-500 text-white flex items-center justify-center font-semibold text-xl shrink-0 shadow-sm">
                 📋
             </div>
             <div>
-                <h3 class="font-bold text-base text-gray-900">Product Inquiry Requests</h3>
-                <p class="text-xs text-gray-600 font-medium">Dynamic tracking calculated from all B2B customer inquiries containing this product.</p>
+                <h3 class="font-semibold text-base text-gray-900">Product Inquiry Requests</h3>
+                <p class="text-xs text-gray-600 font-medium">Dynamic tracking calculated from all B2B customer inquiries
+                    containing this product.</p>
             </div>
         </div>
         <div class="flex items-center space-x-6 text-right">
             <div>
-                <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Total Inquiries</div>
+                <div class="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">Total Inquiries</div>
                 <div class="text-2xl font-black text-gray-900"><?= $inqStats['total_inquiries'] ?></div>
             </div>
             <div class="border-l border-orange-200 pl-6">
-                <div class="text-[10px] text-orange-600 font-bold uppercase tracking-wider">Total Requested Units</div>
+                <div class="text-[10px] text-orange-600 font-semibold uppercase tracking-wider">Total Requested Units
+                </div>
                 <div class="text-2xl font-black text-orange-600"><?= $inqStats['total_requested_units'] ?> Units</div>
             </div>
-            <a href="<?= url('admin/inquiries?search=' . urlencode($product['sku'])) ?>" class="px-4 py-2.5 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition shadow-xs">
+            <a href="<?= url('admin/inquiries?search=' . urlencode($product['sku'])) ?>"
+                class="px-4 py-2.5 bg-slate-900 text-white text-xs font-semibold rounded-xl hover:bg-slate-800 transition shadow-xs">
                 View Inquiries &rsaquo;
             </a>
         </div>
@@ -119,13 +124,15 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-gray-700 uppercase mb-1">Retail Single-Piece Price (₹) *</label>
+                    <label class="block font-semibold text-gray-700 uppercase mb-1">Retail Single-Piece Price (₹)
+                        *</label>
                     <input type="number" step="0.01" name="price" required value="<?= $product['price'] ?>"
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-gray-700 uppercase mb-1">Retail Discounted Sale Price (₹)</label>
+                    <label class="block font-semibold text-gray-700 uppercase mb-1">Retail Discounted Sale Price
+                        (₹)</label>
                     <input type="number" step="0.01" name="sale_price" value="<?= $product['sale_price'] ?>"
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
@@ -140,14 +147,18 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Status</label>
                     <select name="status"
                         class="w-full h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
-                        <option value="active" <?= ($product['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>Active</option>
-                        <option value="inactive" <?= ($product['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                        <option value="active" <?= ($product['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>
+                            Active</option>
+                        <option value="inactive" <?= ($product['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>
+                            Inactive</option>
                     </select>
                 </div>
 
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">HSN Code</label>
-                    <input type="text" name="hsn_code" value="<?= htmlspecialchars($product['hsn_code'] ?? '8714.99.90') ?>" placeholder="e.g. 8714.99.90"
+                    <input type="text" name="hsn_code"
+                        value="<?= htmlspecialchars($product['hsn_code'] ?? '8714.99.90') ?>"
+                        placeholder="e.g. 8714.99.90"
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-mono font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
@@ -155,7 +166,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     <label class="block font-semibold text-gray-700 uppercase mb-1">GST Rate (%) *</label>
                     <select name="tax_percent" required
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
-                        <?php $currentGst = (float)($product['tax_percent'] ?? 18); ?>
+                        <?php $currentGst = (float) ($product['tax_percent'] ?? 18); ?>
                         <option value="0" <?= $currentGst == 0 ? 'selected' : '' ?>>0% (Exempt / Nil Rated)</option>
                         <option value="5" <?= $currentGst == 5 ? 'selected' : '' ?>>5% GST</option>
                         <option value="12" <?= $currentGst == 12 ? 'selected' : '' ?>>12% GST</option>
@@ -174,10 +185,10 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="tag" class="w-4 h-4 text-[#f05a29]"></i>
-                    <h3 class="font-bold text-sm text-gray-900">B2B Wholesale Pricing &amp; Volume Discounts</h3>
+                    <h3 class="font-semibold text-sm text-gray-900">B2B Wholesale Pricing &amp; Volume Discounts</h3>
                 </div>
                 <button type="button" onclick="addTierRow()"
-                    class="px-3.5 py-1.5 bg-orange-50 text-[#f05a29] border border-orange-200 font-bold text-xs rounded-xl hover:bg-orange-100 transition flex items-center space-x-1 cursor-pointer">
+                    class="px-3.5 py-1.5 bg-orange-50 text-[#f05a29] border border-orange-200 font-semibold text-xs rounded-xl hover:bg-orange-100 transition flex items-center space-x-1 cursor-pointer">
                     <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                     <span>Add Tier Row</span>
                 </button>
@@ -186,23 +197,27 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Wholesale Base Price (₹) *</label>
-                    <input type="number" step="0.01" name="base_price" value="<?= (float)($product['base_price'] ?? $product['price']) ?>" placeholder="e.g. 350.00"
+                    <input type="number" step="0.01" name="base_price"
+                        value="<?= (float) ($product['base_price'] ?? $product['price']) ?>" placeholder="e.g. 350.00"
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
 
                 <div>
-                    <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity (MOQ) *</label>
-                    <input type="number" name="moq" value="<?= (int)($product['moq'] ?? 1) ?>" min="1"
+                    <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity (MOQ)
+                        *</label>
+                    <input type="number" name="moq" value="<?= (int) ($product['moq'] ?? 1) ?>" min="1"
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
                 </div>
             </div>
 
             <div>
-                <label class="block font-bold text-gray-700 uppercase mb-2 text-xs">Volume Discount Tiers (Min Qty &rarr; Unit Price)</label>
+                <label class="block font-semibold text-gray-700 uppercase mb-2 text-xs">Volume Discount Tiers (Min Qty
+                    &rarr; Unit Price)</label>
                 <div class="overflow-x-auto border border-gray-200 rounded-xl">
                     <table class="w-full text-xs text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 text-gray-700 font-bold uppercase tracking-wider text-[10px] border-b border-gray-200">
+                            <tr
+                                class="bg-gray-50 text-gray-700 font-semibold uppercase tracking-wider text-[10px] border-b border-gray-200">
                                 <th class="py-2.5 px-3">Min Qty</th>
                                 <th class="py-2.5 px-3">Max Qty (Blank for &infin;)</th>
                                 <th class="py-2.5 px-3">Wholesale Unit Price (₹)</th>
@@ -214,16 +229,25 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                 <?php foreach ($tieredPrices as $tier): ?>
                                     <tr>
                                         <td class="py-2 px-3">
-                                            <input type="number" name="tier_min_qty[]" value="<?= (int)$tier['min_qty'] ?>" min="1" required class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+                                            <input type="number" name="tier_min_qty[]" value="<?= (int) $tier['min_qty'] ?>"
+                                                min="1" required
+                                                class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
                                         </td>
                                         <td class="py-2 px-3">
-                                            <input type="number" name="tier_max_qty[]" value="<?= $tier['max_qty'] !== null ? (int)$tier['max_qty'] : '' ?>" placeholder="&infin;" class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+                                            <input type="number" name="tier_max_qty[]"
+                                                value="<?= $tier['max_qty'] !== null ? (int) $tier['max_qty'] : '' ?>"
+                                                placeholder="&infin;"
+                                                class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
                                         </td>
                                         <td class="py-2 px-3">
-                                            <input type="number" step="0.01" name="tier_unit_price[]" value="<?= (float)$tier['unit_price'] ?>" required class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
+                                            <input type="number" step="0.01" name="tier_unit_price[]"
+                                                value="<?= (float) $tier['unit_price'] ?>" required
+                                                class="w-full h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
                                         </td>
                                         <td class="py-2 px-3 text-right">
-                                            <button type="button" onclick="this.closest('tr').remove()" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                            <button type="button" onclick="this.closest('tr').remove()"
+                                                class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg"><i data-lucide="trash-2"
+                                                    class="w-4 h-4"></i></button>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -239,7 +263,9 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             <div class="flex items-center space-x-2 border-b border-gray-100 pb-3">
                 <i data-lucide="git-compare" class="w-4 h-4 text-red-600"></i>
                 <h3 class="font-semibold text-sm text-gray-900">Warranty &amp; OEM Comparison Data</h3>
-                <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold ml-auto">Shown in Compare Page</span>
+                <span
+                    class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-semibold ml-auto">Shown
+                    in Compare Page</span>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
@@ -247,8 +273,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">Mudsor Warranty (Months)</label>
                     <input type="number" name="warranty_months" id="edit_warranty_months"
-                        value="<?= (int)($product['warranty_months'] ?? 12) ?>"
-                        min="0" max="120" placeholder="e.g. 12"
+                        value="<?= (int) ($product['warranty_months'] ?? 12) ?>" min="0" max="120" placeholder="e.g. 12"
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                     <p class="text-[10px] text-gray-500 mt-1">Mudsor product ki warranty (months mein)</p>
                 </div>
@@ -259,8 +284,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         <span class="text-gray-400 font-normal normal-case">(vehicle brand ka price)</span>
                     </label>
                     <input type="number" step="0.01" name="oem_price" id="edit_oem_price"
-                        value="<?= (float)($product['oem_price'] ?? 0) ?: '' ?>"
-                        placeholder="Auto-estimated if blank"
+                        value="<?= (float) ($product['oem_price'] ?? 0) ?: '' ?>" placeholder="Auto-estimated if blank"
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                     <p class="text-[10px] text-gray-500 mt-1">Blank raho to auto-estimate (price × 1.4x) hoga</p>
                 </div>
@@ -269,8 +293,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div>
                     <label class="block font-semibold text-gray-700 uppercase mb-1">OEM Warranty (Months)</label>
                     <input type="number" name="oem_warranty_months" id="edit_oem_warranty"
-                        value="<?= (int)($product['oem_warranty_months'] ?? 6) ?>"
-                        min="0" max="60" placeholder="e.g. 6"
+                        value="<?= (int) ($product['oem_warranty_months'] ?? 6) ?>" min="0" max="60" placeholder="e.g. 6"
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                     <p class="text-[10px] text-gray-500 mt-1">Vehicle brand ki warranty (usually 3–12 months)</p>
                 </div>
@@ -286,43 +309,49 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
                 <!-- Live Preview -->
                 <div class="sm:col-span-2 bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                    <p class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider mb-2">🏆 Compare Page Preview (Live)</p>
+                    <p class="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider mb-2">🏆 Compare Page
+                        Preview (Live)</p>
                     <div class="grid grid-cols-3 text-[11px] font-semibold gap-2">
-                        <div class="text-gray-500">Mudsor Price: <span class="text-gray-900" id="prev_mudsor_price">₹<?= number_format((float)($product['sale_price'] ?: $product['price']), 0) ?></span></div>
-                        <div class="text-gray-500">OEM Price: <span class="text-emerald-700" id="prev_oem_price">auto</span></div>
+                        <div class="text-gray-500">Mudsor Price: <span class="text-gray-900"
+                                id="prev_mudsor_price">₹<?= number_format((float) ($product['sale_price'] ?: $product['price']), 0) ?></span>
+                        </div>
+                        <div class="text-gray-500">OEM Price: <span class="text-emerald-700"
+                                id="prev_oem_price">auto</span></div>
                         <div class="text-emerald-700" id="prev_saving">Saving: calculating...</div>
                     </div>
                     <div class="grid grid-cols-2 text-[11px] font-semibold gap-2 mt-1.5">
-                        <div class="text-gray-500">Mudsor Warranty: <span class="text-gray-900" id="prev_m_warranty">—</span></div>
-                        <div class="text-gray-500">OEM Warranty: <span class="text-gray-900" id="prev_o_warranty">—</span></div>
+                        <div class="text-gray-500">Mudsor Warranty: <span class="text-gray-900"
+                                id="prev_m_warranty">—</span></div>
+                        <div class="text-gray-500">OEM Warranty: <span class="text-gray-900"
+                                id="prev_o_warranty">—</span></div>
                     </div>
                 </div>
             </div>
         </div>
 
         <script>
-        (function() {
-            var mudsorPrice = <?= (float)($product['sale_price'] ?: $product['price']) ?>;
-            function updatePreview() {
-                var oemVal = parseFloat(document.getElementById('edit_oem_price').value) || 0;
-                var oemPrice = oemVal > 0 ? oemVal : Math.round(mudsorPrice * 1.4);
-                var saving = oemPrice - mudsorPrice;
-                var savingPct = oemPrice > 0 ? Math.round((saving / oemPrice) * 100) : 0;
-                document.getElementById('prev_oem_price').textContent = '₹' + Math.round(oemPrice).toLocaleString('en-IN') + (oemVal <= 0 ? ' (est.)' : '');
-                document.getElementById('prev_saving').textContent = saving > 0
-                    ? '✅ Save ' + savingPct + '% (₹' + Math.round(saving).toLocaleString('en-IN') + ')'
-                    : 'No saving vs OEM';
-                var mw = document.getElementById('edit_warranty_months').value;
-                var ow = document.getElementById('edit_oem_warranty').value;
-                document.getElementById('prev_m_warranty').textContent = mw ? mw + ' Months' : '—';
-                document.getElementById('prev_o_warranty').textContent = ow ? ow + ' Months' : '—';
-            }
-            ['edit_oem_price', 'edit_warranty_months', 'edit_oem_warranty'].forEach(function(id) {
-                var el = document.getElementById(id);
-                if (el) el.addEventListener('input', updatePreview);
-            });
-            updatePreview();
-        })();
+            (function () {
+                var mudsorPrice = <?= (float) ($product['sale_price'] ?: $product['price']) ?>;
+                function updatePreview() {
+                    var oemVal = parseFloat(document.getElementById('edit_oem_price').value) || 0;
+                    var oemPrice = oemVal > 0 ? oemVal : Math.round(mudsorPrice * 1.4);
+                    var saving = oemPrice - mudsorPrice;
+                    var savingPct = oemPrice > 0 ? Math.round((saving / oemPrice) * 100) : 0;
+                    document.getElementById('prev_oem_price').textContent = '₹' + Math.round(oemPrice).toLocaleString('en-IN') + (oemVal <= 0 ? ' (est.)' : '');
+                    document.getElementById('prev_saving').textContent = saving > 0
+                        ? '✅ Save ' + savingPct + '% (₹' + Math.round(saving).toLocaleString('en-IN') + ')'
+                        : 'No saving vs OEM';
+                    var mw = document.getElementById('edit_warranty_months').value;
+                    var ow = document.getElementById('edit_oem_warranty').value;
+                    document.getElementById('prev_m_warranty').textContent = mw ? mw + ' Months' : '—';
+                    document.getElementById('prev_o_warranty').textContent = ow ? ow + ' Months' : '—';
+                }
+                ['edit_oem_price', 'edit_warranty_months', 'edit_oem_warranty'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) el.addEventListener('input', updatePreview);
+                });
+                updatePreview();
+            })();
         </script>
 
         <!-- SECTION 2: CATEGORIES & BRANDS -->
@@ -434,7 +463,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         </div>
 
         <!-- SECTION: PRODUCT DEMO VIDEO & COVER THUMBNAIL -->
-        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-4 shadow-xs" x-data="{ videoSource: '<?= (!empty($product['video_url']) && str_contains($product['video_url'], '/uploads/videos/')) ? 'upload' : 'url' ?>' }">
+        <div class="bg-white p-6 rounded-2xl border border-gray-900 space-y-4 shadow-xs"
+            x-data="{ videoSource: '<?= (!empty($product['video_url']) && str_contains($product['video_url'], '/uploads/videos/')) ? 'upload' : 'url' ?>' }">
             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                 <div class="flex items-center space-x-2">
                     <i data-lucide="video" class="w-4 h-4 text-red-600"></i>
@@ -465,33 +495,41 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     </div>
 
                     <div x-show="videoSource === 'upload'" class="space-y-1" x-cloak>
-                        <label class="block font-semibold text-gray-700 uppercase">Select New Video File (.mp4, .webm)</label>
+                        <label class="block font-semibold text-gray-700 uppercase">Select New Video File (.mp4,
+                            .webm)</label>
                         <input type="file" name="video_file" accept="video/mp4,video/webm"
                             onchange="extractFrameThumbnail(this, 'edit')"
                             class="w-full p-2 bg-gray-50 border border-gray-900 rounded-xl text-xs">
-                        <p class="text-[11px] text-gray-500">Auto-extracts frame at 1-sec mark for poster thumbnail if no custom cover photo is uploaded.</p>
+                        <p class="text-[11px] text-gray-500">Auto-extracts frame at 1-sec mark for poster thumbnail if
+                            no custom cover photo is uploaded.</p>
                     </div>
                 </div>
 
                 <!-- Cover Photo (Manual Override & Auto-Preview) -->
                 <div class="space-y-2">
-                    <label class="block font-semibold text-gray-700 uppercase">Cover Photo / Video Poster (Manual Override)</label>
+                    <label class="block font-semibold text-gray-700 uppercase">Cover Photo / Video Poster (Manual
+                        Override)</label>
                     <input type="file" name="video_thumbnail" accept="image/*"
                         class="w-full p-2 bg-gray-50 border border-gray-900 rounded-xl text-xs">
-                    <p class="text-[11px] text-gray-500">Optional custom cover image. Overrides auto-generated video frame thumbnail.</p>
+                    <p class="text-[11px] text-gray-500">Optional custom cover image. Overrides auto-generated video
+                        frame thumbnail.</p>
 
                     <!-- Effective Cover Preview Display -->
-                    <?php 
-                        $effectivePoster = \App\Helpers\VideoThumbnailHelper::resolveThumbnail(
-                            $product['video_thumbnail'] ?? null,
-                            $product['auto_video_thumbnail'] ?? null,
-                            $product['video_url'] ?? null
-                        );
+                    <?php
+                    $effectivePoster = \App\Helpers\VideoThumbnailHelper::resolveThumbnail(
+                        $product['video_thumbnail'] ?? null,
+                        $product['auto_video_thumbnail'] ?? null,
+                        $product['video_url'] ?? null
+                    );
                     ?>
-                    <div id="edit-poster-preview-box" class="pt-2 flex items-center space-x-3 <?= empty($effectivePoster) ? 'hidden' : '' ?>">
-                        <div class="relative w-24 aspect-video rounded-lg overflow-hidden bg-black border border-gray-300 shrink-0">
-                            <img id="edit-poster-preview-img" src="<?= $effectivePoster ?>" class="w-full h-full object-cover" onerror="this.style.display='none'">
-                            <span class="absolute bottom-0.5 right-0.5 text-[8px] bg-black/80 text-white font-bold px-1 rounded">POSTER</span>
+                    <div id="edit-poster-preview-box"
+                        class="pt-2 flex items-center space-x-3 <?= empty($effectivePoster) ? 'hidden' : '' ?>">
+                        <div
+                            class="relative w-24 aspect-video rounded-lg overflow-hidden bg-black border border-gray-300 shrink-0">
+                            <img id="edit-poster-preview-img" src="<?= $effectivePoster ?>"
+                                class="w-full h-full object-cover" onerror="this.style.display='none'">
+                            <span
+                                class="absolute bottom-0.5 right-0.5 text-[8px] bg-black/80 text-white font-semibold px-1 rounded">POSTER</span>
                         </div>
                         <div class="text-[11px] text-gray-500 font-medium">
                             <span id="edit-poster-type-label" class="font-semibold text-gray-800">
@@ -515,11 +553,11 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 video.muted = true;
                 video.playsInline = true;
 
-                video.onloadeddata = function() {
+                video.onloadeddata = function () {
                     video.currentTime = Math.min(1.0, (video.duration || 2) / 2);
                 };
 
-                video.onseeked = function() {
+                video.onseeked = function () {
                     const canvas = document.createElement('canvas');
                     canvas.width = video.videoWidth || 640;
                     canvas.height = video.videoHeight || 360;
@@ -559,16 +597,19 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
             <div class="space-y-4 text-xs">
                 <div>
-                    <label class="block font-semibold text-red-600 uppercase mb-2">Promotional Badges &amp; Status</label>
+                    <label class="block font-semibold text-red-600 uppercase mb-2">Promotional Badges &amp;
+                        Status</label>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <label
                             class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
-                            <input type="checkbox" name="is_new" value="1" <?= (!empty($product['is_new']) || !empty($product['is_new_arrival'])) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
+                            <input type="checkbox" name="is_new" value="1" <?= (!empty($product['is_new']) || !empty($product['is_new_arrival'])) ? 'checked' : '' ?>
+                                class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
                             <span>New Product [ON/OFF]</span>
                         </label>
                         <label
                             class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-900 cursor-pointer font-semibold hover:border-red-600 transition">
-                            <input type="checkbox" name="is_free_shipping" value="1" <?= (!isset($product['is_free_shipping']) || !empty($product['is_free_shipping'])) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
+                            <input type="checkbox" name="is_free_shipping" value="1"
+                                <?= (!isset($product['is_free_shipping']) || !empty($product['is_free_shipping'])) ? 'checked' : '' ?> class="rounded text-red-600 focus:ring-red-500 w-4 h-4">
                             <span>Free Delivery [ON/OFF]</span>
                         </label>
                         <label
@@ -587,16 +628,22 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div>
                         <label class="block font-semibold text-gray-700 uppercase mb-1">Total Sold Count</label>
-                        <input type="number" name="total_sold" min="0" value="<?= (int)($product['total_sold'] ?? $product['sales_count'] ?? 0) ?>" placeholder="e.g. 1250"
+                        <input type="number" name="total_sold" min="0"
+                            value="<?= (int) ($product['total_sold'] ?? $product['sales_count'] ?? 0) ?>"
+                            placeholder="e.g. 1250"
                             class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
-                        <p class="text-[11px] text-gray-500 mt-1">Displayed on frontend as "{Total Sold}+ sold". Admin controlled value.</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Displayed on frontend as "{Total Sold}+ sold". Admin
+                            controlled value.</p>
                     </div>
 
                     <div>
-                        <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity (MOQ)</label>
-                        <input type="number" name="moq" min="1" value="<?= (int)($product['moq'] ?? 1) ?>" placeholder="e.g. 50"
+                        <label class="block font-semibold text-gray-700 uppercase mb-1">Minimum Order Quantity
+                            (MOQ)</label>
+                        <input type="number" name="moq" min="1" value="<?= (int) ($product['moq'] ?? 1) ?>"
+                            placeholder="e.g. 50"
                             class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
-                        <p class="text-[11px] text-gray-500 mt-1">Minimum units customer must order in an inquiry. Default minimum 1.</p>
+                        <p class="text-[11px] text-gray-500 mt-1">Minimum units customer must order in an inquiry.
+                            Default minimum 1.</p>
                     </div>
                 </div>
 
@@ -615,7 +662,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     <i data-lucide="layers" class="w-4 h-4 text-red-600"></i>
                     <h3 class="font-semibold text-sm text-gray-900">Frequently Bought Together Bundle Items</h3>
                 </div>
-                <span class="text-[11px] text-gray-400 font-medium">Max 5 bundle items • Bidirectionally Synchronized</span>
+                <span class="text-[11px] text-gray-400 font-medium">Max 5 bundle items • Bidirectionally
+                    Synchronized</span>
             </div>
 
             <!-- Hidden Field for Form Submission -->
@@ -631,10 +679,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div class="relative z-30" id="bundleSearchWrapper">
                     <div class="relative">
                         <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3 text-gray-400"></i>
-                        <input type="text" id="bundleSearchInput"
-                            oninput="doBundleSearch(this.value)"
-                            onfocus="doBundleSearch(this.value)"
-                            onkeyup="doBundleSearch(this.value)"
+                        <input type="text" id="bundleSearchInput" oninput="doBundleSearch(this.value)"
+                            onfocus="doBundleSearch(this.value)" onkeyup="doBundleSearch(this.value)"
                             placeholder="Search bundle items by name, SKU, category, or brand..."
                             class="w-full h-10 pl-10 pr-4 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
                     </div>
@@ -646,7 +692,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 </div>
 
                 <!-- Selected List Container -->
-                <div id="bundleSelectedContainer" class="min-h-[60px] bg-gray-50 p-3 rounded-xl border border-dashed border-gray-300 flex flex-col gap-2">
+                <div id="bundleSelectedContainer"
+                    class="min-h-[60px] bg-gray-50 p-3 rounded-xl border border-dashed border-gray-300 flex flex-col gap-2">
                 </div>
             </div>
         </div>
@@ -665,7 +712,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 <script>
     const PRODUCT_ID = <?= (int) $product['id'] ?>;
     const CSRF_TOKEN = '<?= csrf_token() ?>';
-    const BASE_URL   = '<?= url('') ?>';
+    const BASE_URL = '<?= url('') ?>';
 
     let selectedBundleItems = <?= json_encode(array_map(fn($p) => [
         'id' => (int) $p['id'],
@@ -679,12 +726,12 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
     let searchMap = {};
 
     function renderSelectedBundleItems() {
-        const container   = document.getElementById('bundleSelectedContainer');
+        const container = document.getElementById('bundleSelectedContainer');
         const hiddenInput = document.getElementById('frequently_bought_input');
-        const countBadge  = document.getElementById('bundleCountBadge');
+        const countBadge = document.getElementById('bundleCountBadge');
 
         if (hiddenInput) hiddenInput.value = selectedBundleItems.map(i => i.id).join(',');
-        if (countBadge)  countBadge.textContent = selectedBundleItems.length;
+        if (countBadge) countBadge.textContent = selectedBundleItems.length;
 
         if (!container) return;
 
@@ -753,7 +800,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 const res = await fetch(`<?= url('admin/products/search-api') ?>?q=${encodeURIComponent(q)}`, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
-                
+
                 if (!res.ok) {
                     drop.innerHTML = `<div class="p-3 text-center text-red-500 italic">Server error (${res.status}). Please refresh page.</div>`;
                     return;
@@ -768,7 +815,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         drop.innerHTML = filtered.map(p => {
                             searchMap[p.id] = p;
                             const safeName = (p.name || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                            const safeSku  = (p.sku || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            const safeSku = (p.sku || 'N/A').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                             return `
                                 <div class="p-3 flex items-center justify-between hover:bg-red-50/50 transition cursor-pointer"
                                     onclick="addBundleItemById(${p.id})">
@@ -776,10 +823,10 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                         <img src="${p.main_image}" onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'" class="w-9 h-9 rounded-lg object-contain bg-gray-50 border border-gray-200 p-0.5 shrink-0">
                                         <div class="min-w-0">
                                             <p class="font-semibold text-gray-900 leading-tight truncate">${safeName}</p>
-                                            <p class="text-[11px] text-gray-500 font-mono mt-0.5">SKU: ${safeSku} • <span class="text-red-600 font-bold">${p.price}</span></p>
+                                            <p class="text-[11px] text-gray-500 font-mono mt-0.5">SKU: ${safeSku} • <span class="text-red-600 font-semibold">${p.price}</span></p>
                                         </div>
                                     </div>
-                                    <span class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-gray-900 hover:bg-red-600 text-white transition shrink-0 ml-2">+ Add</span>
+                                    <span class="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-gray-900 hover:bg-red-600 text-white transition shrink-0 ml-2">+ Add</span>
                                 </div>
                             `;
                         }).join('');
@@ -789,14 +836,14 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 }
                 drop.innerHTML = `<div class="p-4 text-center text-gray-500 italic">No matching products found.</div>`;
                 drop.classList.remove('hidden');
-            } catch(e) {
+            } catch (e) {
                 console.error('Search error:', e);
                 drop.innerHTML = `<div class="p-3 text-center text-red-500 italic">Search error: ${e.message}</div>`;
             }
         }, 120);
     }
 
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
         const wrap = document.getElementById('bundleSearchWrapper');
         const drop = document.getElementById('bundleSearchResults');
         if (wrap && drop && !wrap.contains(e.target)) {
@@ -836,73 +883,145 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
     }
 </script>
 
-    <!-- ========================================================================= -->
-    <!-- PRODUCT VARIANTS MANAGER (DUAL PRICING: WHOLESALE & ONE-PIECE) -->
-    <!-- ========================================================================= -->
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
-        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
-            <div>
-                <div class="flex items-center space-x-2">
-                    <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase bg-orange-50 text-[#f05a29] rounded-md border border-orange-200">
-                        Multi-Variant System
-                    </span>
-                    <span class="text-xs font-bold text-slate-400">•</span>
-                    <span class="text-xs font-semibold text-slate-500"><?= count($variants ?? []) ?> Variants Configured</span>
-                </div>
-                <h3 class="text-base font-bold text-slate-900 mt-1">Product Variants &amp; Dual Pricing</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Manage variant attributes, stock, and explicit Wholesale &amp; One-Piece prices per variant.</p>
+<!-- ========================================================================= -->
+<!-- PRODUCT VARIANTS MANAGER (DUAL PRICING: WHOLESALE & ONE-PIECE) -->
+<!-- ========================================================================= -->
+<div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+    <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+        <div>
+            <div class="flex items-center space-x-2">
+                <span
+                    class="px-2.5 py-0.5 text-[10px] font-semibold uppercase bg-orange-50 text-[#f05a29] rounded-md border border-orange-200">
+                    Multi-Variant System
+                </span>
+                <span class="text-xs font-semibold text-slate-400">•</span>
+                <span class="text-xs font-semibold text-slate-500"><?= count($variants ?? []) ?> Variants
+                    Configured</span>
             </div>
-            <button type="button" onclick="openVariantModal()"
-                class="px-4 py-2 bg-[#f05a29] hover:bg-[#d8481b] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Variant
-            </button>
+            <h3 class="text-base font-semibold text-slate-900 mt-1">Product Variants &amp; Dual Pricing</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Manage variant attributes, stock, and explicit Wholesale &amp;
+                One-Piece prices per variant.</p>
         </div>
+        <button type="button" onclick="openVariantModal()"
+            class="px-4 py-2 bg-[#f05a29] hover:bg-[#d8481b] text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Variant
+        </button>
+    </div>
 
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+            <thead>
+                <tr
+                    class="bg-slate-50 border-b border-gray-200 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3 px-4">Code</th>
+                    <th class="py-3 px-4">Attribute &amp; Value</th>
+                    <th class="py-3 px-4 text-center">Stock</th>
+                    <th class="py-3 px-4 text-right">Wholesale Price (₹)</th>
+                    <th class="py-3 px-4 text-right">One-Piece Price (₹)</th>
+                    <th class="py-3 px-4 text-center">Status</th>
+                    <th class="py-3 px-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 text-slate-700">
+                <?php if (empty($variants)): ?>
+                    <tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400">
+                            No variants configured yet. Click "Add Variant" above to add color/size/style variations.
+                        </td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($variants as $v): ?>
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-4 font-mono font-semibold text-slate-900">
+                                <?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?></td>
+                            <td class="py-3 px-4">
+                                <div class="font-semibold text-slate-900"><?= htmlspecialchars($v['attribute_value']) ?></div>
+                                <div class="text-[10px] text-slate-400"><?= htmlspecialchars($v['attribute_label']) ?>
+                                    <?= !empty($v['weight']) ? '&bull; ' . htmlspecialchars($v['weight']) : '' ?></div>
+                            </td>
+                            <td class="py-3 px-4 text-center font-semibold text-slate-900"><?= $v['stock_quantity'] ?></td>
+                            <td class="py-3 px-4 text-right font-semibold text-slate-900">
+                                ₹<?= number_format($v['wholesale_price'], 2) ?></td>
+                            <td class="py-3 px-4 text-right font-semibold text-emerald-600">
+                                ₹<?= number_format($v['one_piece_price'], 2) ?></td>
+                            <td class="py-3 px-4 text-center">
+                                <span
+                                    class="px-2 py-0.5 text-[10px] font-semibold rounded-full border <?= $v['is_active'] ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">
+                                    <?= $v['is_active'] ? 'Active' : 'Disabled' ?>
+                                </span>
+                            </td>
+                            <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
+                                <button type="button"
+                                    onclick='editVariant(<?= json_encode($v, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
+                                    class="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition border border-blue-200 cursor-pointer"
+                                    title="Edit Variant">
+                                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button type="button" onclick="deleteVariant(<?= $v['id'] ?>)"
+                                    class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer"
+                                    title="Delete Variant">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- DYNAMIC SPECIFICATIONS MANAGER -->
+<!-- ========================================================================= -->
+<div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
+    <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+        <div>
+            <h3 class="text-base font-semibold text-slate-900">Product Technical Specifications</h3>
+            <p class="text-xs text-slate-500 mt-0.5">Dynamic key-value specifications displayed on the storefront
+                product detail page.</p>
+        </div>
+        <button type="button" onclick="addSpecRow()"
+            class="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add Spec Row
+        </button>
+    </div>
+
+    <form id="specsForm" onsubmit="saveSpecifications(event)" class="space-y-4">
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
                 <thead>
-                    <tr class="bg-slate-50 border-b border-gray-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        <th class="py-3 px-4">Code</th>
-                        <th class="py-3 px-4">Attribute &amp; Value</th>
-                        <th class="py-3 px-4 text-center">Stock</th>
-                        <th class="py-3 px-4 text-right">Wholesale Price (₹)</th>
-                        <th class="py-3 px-4 text-right">One-Piece Price (₹)</th>
-                        <th class="py-3 px-4 text-center">Status</th>
-                        <th class="py-3 px-4 text-right">Actions</th>
+                    <tr
+                        class="bg-slate-50 border-b border-gray-200 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                        <th class="py-2.5 px-4 w-1/3">Specification Key</th>
+                        <th class="py-2.5 px-4">Specification Value</th>
+                        <th class="py-2.5 px-4 text-right w-16">Action</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 text-slate-700">
-                    <?php if (empty($variants)): ?>
+                <tbody id="specsTableBody" class="divide-y divide-gray-100">
+                    <?php if (empty($specifications)): ?>
                         <tr>
-                            <td colspan="7" class="py-8 text-center text-slate-400">
-                                No variants configured yet. Click "Add Variant" above to add color/size/style variations.
+                            <td colspan="3" class="py-6 text-center text-slate-400" id="noSpecsMsg">
+                                No specifications added yet. Click "Add Spec Row" above to add technical parameters.
                             </td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($variants as $v): ?>
-                            <tr class="hover:bg-slate-50 transition">
-                                <td class="py-3 px-4 font-mono font-bold text-slate-900"><?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?></td>
-                                <td class="py-3 px-4">
-                                    <div class="font-bold text-slate-900"><?= htmlspecialchars($v['attribute_value']) ?></div>
-                                    <div class="text-[10px] text-slate-400"><?= htmlspecialchars($v['attribute_label']) ?> <?= !empty($v['weight']) ? '&bull; ' . htmlspecialchars($v['weight']) : '' ?></div>
+                        <?php foreach ($specifications as $s): ?>
+                            <tr>
+                                <td class="py-2 px-3">
+                                    <input type="text" name="spec_key[]" value="<?= htmlspecialchars($s['spec_key']) ?>"
+                                        placeholder="e.g. Material" required
+                                        class="w-full h-9 px-3 bg-slate-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#f05a29]">
                                 </td>
-                                <td class="py-3 px-4 text-center font-bold text-slate-900"><?= $v['stock_quantity'] ?></td>
-                                <td class="py-3 px-4 text-right font-bold text-slate-900">₹<?= number_format($v['wholesale_price'], 2) ?></td>
-                                <td class="py-3 px-4 text-right font-bold text-emerald-600">₹<?= number_format($v['one_piece_price'], 2) ?></td>
-                                <td class="py-3 px-4 text-center">
-                                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full border <?= $v['is_active'] ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">
-                                        <?= $v['is_active'] ? 'Active' : 'Disabled' ?>
-                                    </span>
+                                <td class="py-2 px-3">
+                                    <input type="text" name="spec_value[]" value="<?= htmlspecialchars($s['spec_value']) ?>"
+                                        placeholder="e.g. Stainless Steel 316L" required
+                                        class="w-full h-9 px-3 bg-slate-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#f05a29]">
                                 </td>
-                                <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
-                                    <button type="button" onclick='editVariant(<?= json_encode($v, JSON_HEX_APOS | JSON_HEX_QUOT) ?>)'
-                                        class="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition border border-blue-200 cursor-pointer" title="Edit Variant">
-                                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                                    </button>
-                                    <button type="button" onclick="deleteVariant(<?= $v['id'] ?>)"
-                                        class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer" title="Delete Variant">
-                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                    </button>
+                                <td class="py-2 px-3 text-right">
+                                    <button type="button" onclick="this.closest('tr').remove()"
+                                        class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition"><i
+                                            data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -910,76 +1029,25 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <!-- ========================================================================= -->
-    <!-- DYNAMIC SPECIFICATIONS MANAGER -->
-    <!-- ========================================================================= -->
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
-        <div class="flex items-center justify-between border-b border-gray-100 pb-4">
-            <div>
-                <h3 class="text-base font-bold text-slate-900">Product Technical Specifications</h3>
-                <p class="text-xs text-slate-500 mt-0.5">Dynamic key-value specifications displayed on the storefront product detail page.</p>
-            </div>
-            <button type="button" onclick="addSpecRow()"
-                class="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                <i data-lucide="plus" class="w-4 h-4"></i> Add Spec Row
+        <div class="flex justify-end pt-2">
+            <button type="submit"
+                class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="save" class="w-4 h-4"></i> Save All Specifications
             </button>
         </div>
-
-        <form id="specsForm" onsubmit="saveSpecifications(event)" class="space-y-4">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead>
-                        <tr class="bg-slate-50 border-b border-gray-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                            <th class="py-2.5 px-4 w-1/3">Specification Key</th>
-                            <th class="py-2.5 px-4">Specification Value</th>
-                            <th class="py-2.5 px-4 text-right w-16">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="specsTableBody" class="divide-y divide-gray-100">
-                        <?php if (empty($specifications)): ?>
-                            <tr>
-                                <td colspan="3" class="py-6 text-center text-slate-400" id="noSpecsMsg">
-                                    No specifications added yet. Click "Add Spec Row" above to add technical parameters.
-                                </td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($specifications as $s): ?>
-                                <tr>
-                                    <td class="py-2 px-3">
-                                        <input type="text" name="spec_key[]" value="<?= htmlspecialchars($s['spec_key']) ?>" placeholder="e.g. Material" required
-                                            class="w-full h-9 px-3 bg-slate-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#f05a29]">
-                                    </td>
-                                    <td class="py-2 px-3">
-                                        <input type="text" name="spec_value[]" value="<?= htmlspecialchars($s['spec_value']) ?>" placeholder="e.g. Stainless Steel 316L" required
-                                            class="w-full h-9 px-3 bg-slate-50 border border-gray-200 rounded-lg text-xs font-semibold focus:outline-none focus:border-[#f05a29]">
-                                    </td>
-                                    <td class="py-2 px-3 text-right">
-                                        <button type="button" onclick="this.closest('tr').remove()" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="flex justify-end pt-2">
-                <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                    <i data-lucide="save" class="w-4 h-4"></i> Save All Specifications
-                </button>
-            </div>
-        </form>
-    </div>
+    </form>
+</div>
 
 </div>
 
 <!-- VARIANT MODAL -->
-<div id="variantModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
-    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
+<div id="variantModal"
+    class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center hidden p-4">
+    <div
+        class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 class="text-sm font-bold text-slate-900" id="variantModalTitle">Add Product Variant</h3>
+            <h3 class="text-sm font-semibold text-slate-900" id="variantModalTitle">Add Product Variant</h3>
             <button onclick="closeVariantModal()" class="text-slate-400 hover:text-slate-700 transition">✕</button>
         </div>
 
@@ -988,12 +1056,15 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Attribute Label <span class="text-rose-500">*</span></label>
-                    <input type="text" id="v_attribute_label" required placeholder="e.g. Color, Size, Style" value="Color / Style"
+                    <label class="block font-semibold text-slate-700 mb-1">Attribute Label <span
+                            class="text-rose-500">*</span></label>
+                    <input type="text" id="v_attribute_label" required placeholder="e.g. Color, Size, Style"
+                        value="Color / Style"
                         class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold">
                 </div>
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Attribute Value <span class="text-rose-500">*</span></label>
+                    <label class="block font-semibold text-slate-700 mb-1">Attribute Value <span
+                            class="text-rose-500">*</span></label>
                     <input type="text" id="v_attribute_value" required placeholder="e.g. Onyx Black, XL"
                         class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold">
                 </div>
@@ -1014,14 +1085,16 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block font-bold text-slate-900 mb-1">Wholesale Price (₹) <span class="text-rose-500">*</span></label>
+                    <label class="block font-semibold text-slate-900 mb-1">Wholesale Price (₹) <span
+                            class="text-rose-500">*</span></label>
                     <input type="number" step="0.01" id="v_wholesale_price" required placeholder="0.00"
-                        class="w-full h-9 px-3 bg-orange-50 border border-orange-200 rounded-lg text-xs font-bold text-[#f05a29]">
+                        class="w-full h-9 px-3 bg-orange-50 border border-orange-200 rounded-lg text-xs font-semibold text-[#f05a29]">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-900 mb-1">One-Piece Price (₹) <span class="text-rose-500">*</span></label>
+                    <label class="block font-semibold text-slate-900 mb-1">One-Piece Price (₹) <span
+                            class="text-rose-500">*</span></label>
                     <input type="number" step="0.01" id="v_one_piece_price" required placeholder="0.00"
-                        class="w-full h-9 px-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700">
+                        class="w-full h-9 px-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-semibold text-emerald-700">
                 </div>
             </div>
 
@@ -1050,8 +1123,10 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             </div>
 
             <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
-                <button type="button" onclick="closeVariantModal()" class="px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl">Cancel</button>
-                <button type="submit" class="px-5 py-2 bg-[#f05a29] text-white font-bold rounded-xl shadow-xs">Save Variant</button>
+                <button type="button" onclick="closeVariantModal()"
+                    class="px-4 py-2 bg-slate-100 text-slate-700 font-semibold rounded-xl">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-[#f05a29] text-white font-semibold rounded-xl shadow-xs">Save
+                    Variant</button>
             </div>
         </form>
     </div>

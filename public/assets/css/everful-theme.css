@@ -784,10 +784,10 @@ a {
 
 /* --- Section Headings --- */
 .section-header-title {
-  font-size: 22px;
-  font-weight: 800;
+  font-size: 20px;
+  font-weight: 600;
   color: var(--dark-color);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -949,49 +949,404 @@ a {
   border-radius: var(--radius-full);
 }
 
-/* --- Footer --- */
+/* --- Footer Redesign (Premium B2B Wholesale Level) --- */
 .footer-container {
-  background: var(--dark-color);
-  color: var(--white);
-  padding: 48px 24px 24px 24px;
-  margin-top: 60px;
+  background: #0F172A;
+  color: #9CA3AF;
+  padding: 0;
+  margin-top: 64px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
 }
 
-.footer-inner {
+/* Footer Top B2B Trust & Newsletter Strip */
+.footer-trust-strip {
+  background: #1E293B;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 20px 24px;
+}
+
+.footer-trust-inner {
   max-width: 1440px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+
+.footer-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer-trust-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(240, 90, 41, 0.12);
+  color: #f05a29;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(240, 90, 41, 0.2);
+}
+
+.footer-trust-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+}
+
+.footer-trust-desc {
+  font-size: 11.5px;
+  color: #9CA3AF;
+  margin-top: 2px;
+}
+
+.footer-newsletter-box {
+  background: rgba(15, 23, 42, 0.7);
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.footer-newsletter-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.footer-newsletter-input {
+  background: #0F172A;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.footer-newsletter-input:focus {
+  border-color: #f05a29;
+  box-shadow: 0 0 0 2px rgba(240, 90, 41, 0.2);
+}
+
+.footer-newsletter-btn {
+  background: #f05a29;
+  color: #FFFFFF;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.footer-newsletter-btn:hover {
+  background: #d8481b;
+  transform: translateY(-1px);
+}
+
+/* Footer Main Wrapper */
+.footer-main-wrapper {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 48px 24px 32px 24px;
+}
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 48px;
   margin-bottom: 40px;
 }
 
+.footer-col {
+  padding-top: 4px;
+}
+
+.footer-brand-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  text-decoration: none;
+}
+
+.footer-logo-card {
+  background: #FFFFFF;
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.footer-logo-img {
+  height: 28px;
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.footer-badge {
+  font-size: 9.5px;
+  font-weight: 800;
+  background: rgba(240, 90, 41, 0.18);
+  color: #f05a29;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid rgba(240, 90, 41, 0.3);
+  display: inline-flex;
+  align-items: center;
+}
+
+.footer-desc {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #9CA3AF;
+  margin-bottom: 20px;
+  font-weight: 400;
+}
+
+.footer-contact-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.footer-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #CBD5E1;
+  text-decoration: none;
+  transition: color 0.2s, transform 0.2s;
+  font-weight: 500;
+}
+
+.footer-contact-item svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  color: #f05a29;
+}
+
+.footer-contact-item.whatsapp-link svg {
+  color: #10B981;
+}
+
+.footer-contact-item:hover {
+  color: #FFFFFF;
+  transform: translateX(3px);
+}
+
+/* Social Media Buttons */
+.footer-social-links {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-social-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #CBD5E1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.footer-social-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.footer-social-btn:hover {
+  background: #f05a29;
+  border-color: #f05a29;
+  color: #FFFFFF;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(240, 90, 41, 0.35);
+}
+
+/* Column Headings & Links */
 .footer-col h4 {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  margin-bottom: 16px;
-  color: var(--primary-color);
+  color: #FFFFFF;
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 10px;
+  letter-spacing: 0.02em;
+}
+
+.footer-col h4::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 28px;
+  height: 2px;
+  background: #f05a29;
+  border-radius: 2px;
 }
 
 .footer-col ul {
   list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
 }
 
-.footer-col ul li {
-  margin-bottom: 10px;
-  font-size: 14px;
-  color: var(--gray-300);
+.footer-col ul li a {
+  font-size: 13.5px;
+  font-weight: 400;
+  color: #9CA3AF;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
-/* --- Footer Bottom & Floating Widgets --- */
+.footer-col ul li a::before {
+  content: '›';
+  margin-right: 6px;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: all 0.2s ease;
+  color: #f05a29;
+  font-weight: 700;
+}
+
+.footer-col ul li a:hover {
+  color: #FFFFFF;
+  transform: translateX(4px);
+}
+
+.footer-col ul li a:hover::before {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Divider & Bottom Copyright Bar */
+.footer-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 24px;
+}
+
 .footer-bottom {
   max-width: 1440px;
   margin: 0 auto;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  padding-top: 24px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--gray-500);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12.5px;
+  color: #9CA3AF;
+}
+
+.footer-bottom-copy {
+  color: #9CA3AF;
+}
+
+.footer-payment-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.payment-badge {
+  height: 28px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #CBD5E1;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.payment-badge:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.payment-badge svg {
+  height: 14px;
+  width: auto;
+  fill: currentColor;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1200px) {
+  .footer-trust-inner {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-trust-inner {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .footer-inner {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 }
 
 /* Floating "Need Help?" Pill Widget */
