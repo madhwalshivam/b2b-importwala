@@ -39,7 +39,7 @@ class HomepageSectionsController extends Controller {
 
         $promoSettings = [
             'badge'       => \App\Models\Setting::get('featured_promo_badge', 'SPECIAL OFFER'),
-            'title'       => \App\Models\Setting::get('featured_promo_title', 'Mudsor Heavy-Duty EV Protection'),
+            'title'       => \App\Models\Setting::get('featured_promo_title', 'ImportWale Heavy-Duty Protection'),
             'description' => \App\Models\Setting::get('featured_promo_description', 'Heavy gauge stainless steel crash guards and all-weather body covers precision-fit for your electric scooter.'),
             'btn_text'    => \App\Models\Setting::get('featured_promo_btn_text', 'Shop Now'),
             'link'        => \App\Models\Setting::get('featured_promo_link', 'shop'),

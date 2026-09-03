@@ -89,7 +89,7 @@ include __DIR__ . '/layouts/header.php';
                                                 srcset="<?= htmlspecialchars($tabletSrc) ?>">
                                         <?php endif; ?>
                                         <img src="<?= htmlspecialchars($src) ?>"
-                                            alt="<?= htmlspecialchars($banner['title'] ?: 'Mudsor Banner') ?>"
+                                            alt="<?= htmlspecialchars($banner['title'] ?: 'ImportWale Banner') ?>"
                                             class="w-full max-h-[330px] xl:max-h-[360px] block object-cover"
                                             style="display:block; max-width:100%; width:100%; max-height:360px; object-fit:cover;"
                                             loading="<?= $i === 0 ? 'eager' : 'lazy' ?>">
@@ -105,7 +105,7 @@ include __DIR__ . '/layouts/header.php';
                                             srcset="<?= htmlspecialchars($tabletSrc) ?>">
                                     <?php endif; ?>
                                     <img src="<?= htmlspecialchars($src) ?>"
-                                        alt="<?= htmlspecialchars($banner['title'] ?: 'Mudsor Banner') ?>"
+                                        alt="<?= htmlspecialchars($banner['title'] ?: 'ImportWale Banner') ?>"
                                         class="w-full max-h-[330px] xl:max-h-[360px] block object-cover"
                                         style="display:block; max-width:100%; width:100%; max-height:360px; object-fit:cover;"
                                         loading="<?= $i === 0 ? 'eager' : 'lazy' ?>">
@@ -468,7 +468,7 @@ include __DIR__ . '/layouts/header.php';
 
                 <?php
                 $promoBadge = \App\Models\Setting::get('featured_promo_badge', 'SPECIAL OFFER');
-                $promoTitle = \App\Models\Setting::get('featured_promo_title', 'Mudsor Heavy-Duty EV Protection');
+                $promoTitle = \App\Models\Setting::get('featured_promo_title', 'ImportWale Heavy-Duty Protection');
                 $promoDesc = \App\Models\Setting::get('featured_promo_description', 'Heavy gauge stainless steel crash guards and all-weather body covers precision-fit for your electric scooter.');
                 $promoBtn = \App\Models\Setting::get('featured_promo_btn_text', 'Shop Now');
                 $promoLink = \App\Models\Setting::get('featured_promo_link', 'shop');
@@ -833,7 +833,7 @@ include __DIR__ . '/layouts/header.php';
 
 <!-- SECTION 7: GOOGLE REVIEWS SECTION ("Google Backed Trust in Every Order") -->
 <?php if (!empty($googleReviews)): ?>
-    <section class="py-5 md:py-7 bg-theme-bg border-b border-gray-100 font-sans overflow-hidden reveal-on-scroll">
+    <section class="py-5 md:py-7 bg-theme-bg border-b border-gray-100 dark:border-slate-800 font-sans overflow-hidden reveal-on-scroll">
         <div class="container mx-auto px-4">
 
             <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
@@ -952,6 +952,99 @@ include __DIR__ . '/layouts/header.php';
             </div>
         </div>
     </section>
+<?php endif; ?>
+
+<!-- Swiper 11 CSS & JS Bundle for Blog Carousel -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<!-- HOMEPAGE BLOG CAROUSEL SECTION (Placed Directly Below Reviews) -->
+<?php if (!empty($latestArticles)): ?>
+    <style>
+        .swiper-articles .swiper-wrapper {
+            display: flex;
+            align-items: stretch;
+        }
+        .swiper-articles .swiper-slide {
+            height: auto;
+            display: flex;
+            flex-shrink: 0;
+        }
+        @media (max-width: 639px) {
+            .swiper-articles .swiper-slide { width: 85% !important; margin-right: 12px; }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+            .swiper-articles .swiper-slide { width: 48% !important; margin-right: 16px; }
+        }
+        @media (min-width: 1024px) {
+            .swiper-articles .swiper-slide { width: calc(25% - 15px) !important; margin-right: 20px; }
+        }
+        .swiper-articles .swiper-slide:last-child { margin-right: 0 !important; }
+    </style>
+
+    <div class="blog-carousel-section" style="margin-top: 36px; margin-bottom: 36px;">
+        <!-- Section Header: Exact match with other homepage sections -->
+        <div class="section-header-title">
+            <span>From the ImportWale Journal</span>
+            <a href="<?= url('blog') ?>" style="font-size:14px; color:#f05a29; font-weight:600; text-decoration: underline; text-underline-offset: 3px;">Visit our blog</a>
+        </div>
+
+        <!-- Articles Cards Swiper Slider with Hover Navigation Arrows -->
+        <div class="relative group/carousel">
+            <div class="swiper swiper-articles w-full py-1 overflow-hidden">
+                <div class="swiper-wrapper">
+                    <?php foreach ($latestArticles as $article): ?>
+                        <div class="swiper-slide">
+                            <a href="<?= url('blog/' . $article['slug']) ?>"
+                                class="group block w-full h-full flex flex-col justify-between transition-all duration-300">
+                                <div>
+                                    <!-- Thumbnail Image Container (Fixed Height & Aspect Ratio) -->
+                                    <div class="aspect-[4/3] h-44 sm:h-40 md:h-44 w-full rounded-2xl overflow-hidden bg-[#f3f4f6] relative shrink-0">
+                                        <?php if (!empty($article['featured_image'])): ?>
+                                            <img src="<?= asset($article['featured_image']) ?>"
+                                                alt="<?= htmlspecialchars($article['featured_image_alt'] ?: $article['title']) ?>"
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                                                loading="lazy">
+                                            <div class="hidden w-full h-full flex items-center justify-center text-gray-400 bg-[#f3f4f6]">
+                                                <svg class="w-10 h-10 opacity-30 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="w-full h-full flex items-center justify-center text-gray-400 bg-[#f3f4f6]">
+                                                <svg class="w-10 h-10 opacity-30 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Article Title -->
+                                    <h3 class="group-hover:text-[#f05a29] transition-colors duration-200 line-clamp-2" style="font-size: 15px; font-weight: 700; color: #111827; margin-top: 10px; line-height: 1.35;">
+                                        <?= htmlspecialchars(htmlspecialchars_decode($article['title'], ENT_QUOTES), ENT_QUOTES, 'UTF-8') ?>
+                                    </h3>
+
+                                    <!-- Short Excerpt -->
+                                    <p class="line-clamp-2" style="font-size: 13px; color: #6b7280; margin-top: 4px; line-height: 1.5;">
+                                        <?= htmlspecialchars($article['excerpt'] ?: mb_strimwidth(strip_tags($article['content']), 0, 90, '...')) ?>
+                                    </p>
+                                </div>
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Circular Navigation Arrows -->
+            <button type="button" id="articles-prev"
+                class="absolute left-1 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-800 shadow-md opacity-0 group-hover/carousel:opacity-100 transition duration-300 flex items-center justify-center hover:bg-[#f05a29] hover:text-white hover:border-[#f05a29] cursor-pointer"
+                aria-label="Previous">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button type="button" id="articles-next"
+                class="absolute right-1 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-800 shadow-md opacity-0 group-hover/carousel:opacity-100 transition duration-300 flex items-center justify-center hover:bg-[#f05a29] hover:text-white hover:border-[#f05a29] cursor-pointer"
+                aria-label="Next">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </div>
 <?php endif; ?>
 
 
@@ -1094,130 +1187,6 @@ include __DIR__ . '/layouts/header.php';
             }
         });
     </script>
-<?php endif; ?>
-
-<!-- LATEST BLOG ARTICLES & GUIDES SECTION -->
-<?php if (!empty($latestArticles)): ?>
-    <section
-        class="py-12 md:py-16 bg-gradient-to-b from-gray-50/50 to-white dark:from-slate-900 dark:to-slate-900 border-t border-gray-100 dark:border-slate-800 font-sans reveal-on-scroll">
-        <div class="container mx-auto px-4 space-y-8">
-
-            <!-- Section Header -->
-            <div
-                class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-100 dark:border-slate-800 pb-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-1.5 h-8 rounded-full shrink-0" style="background-color: var(--color-primary);"></div>
-                    <div>
-                        <div class="flex items-center space-x-2">
-                            <span
-                                class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-red-50 dark:bg-red-950/60 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-900/60">Mudsor
-                                Blog</span>
-                            <span class="text-xs text-gray-400 font-normal">• EV Maintenance & Guides</span>
-                        </div>
-                        <h2
-                            class="text-xl md:text-2xl lg:text-3xl font-semibold text-gray-900 dark:text-gray-100 tracking-tight mt-1">
-                            Latest
-                            EV Articles & Guides</h2>
-                    </div>
-                </div>
-                <a href="<?= url('blog') ?>"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-gray-800 dark:text-gray-200 hover:text-white hover:bg-red-600 hover:border-red-600 shadow-2xs hover:shadow-md transition group shrink-0">
-                    <span>View All Articles</span>
-                    <i data-lucide="arrow-right"
-                        class="w-4 h-4 text-red-600 group-hover:text-white transition-transform group-hover:translate-x-0.5"></i>
-                </a>
-            </div>
-
-            <!-- Articles Cards Swiper Slider -->
-            <div class="relative">
-                <div class="swiper swiper-articles w-full py-1">
-                    <div class="swiper-wrapper items-stretch">
-                        <?php foreach ($latestArticles as $article): ?>
-                            <div class="swiper-slide h-auto flex">
-                                <article
-                                    class="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-xs hover:shadow-xl hover:border-red-500/30 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col justify-between group h-full w-full">
-                                    <div class="space-y-3.5 p-4 pb-0">
-                                        <!-- Thumbnail Image Container -->
-                                        <a href="<?= url('blog/' . $article['slug']) ?>"
-                                            class="block aspect-[16/9] rounded-xl overflow-hidden bg-gray-100 relative group/img">
-                                            <?php if (!empty($article['featured_image'])): ?>
-                                                <img src="<?= asset($article['featured_image']) ?>"
-                                                    alt="<?= htmlspecialchars($article['featured_image_alt'] ?: $article['title']) ?>"
-                                                    class="w-full h-full object-cover group-hover/img:scale-108 transition-transform duration-500"
-                                                    loading="lazy">
-                                            <?php else: ?>
-                                                <div
-                                                    class="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
-                                                    <i data-lucide="image" class="w-8 h-8 opacity-40"></i>
-                                                </div>
-                                            <?php endif; ?>
-                                            <span
-                                                class="absolute top-2.5 left-2.5 px-2.5 py-0.5 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-semibold rounded-full border border-white/20 shadow-xs">
-                                                EV Guide
-                                            </span>
-                                        </a>
-
-                                        <!-- Date & Views Metadata -->
-                                        <div class="flex items-center justify-between text-[11px] text-gray-400 font-medium">
-                                            <div class="flex items-center space-x-1.5">
-                                                <i data-lucide="calendar" class="w-3.5 h-3.5 text-gray-400"></i>
-                                                <span><?= date('M d, Y', strtotime($article['published_at'] ?: $article['created_at'])) ?></span>
-                                            </div>
-                                            <span
-                                                class="font-mono text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md">
-                                                <?= number_format((int) ($article['views'] ?? 0)) ?> views
-                                            </span>
-                                        </div>
-
-                                        <!-- Title -->
-                                        <h3
-                                            class="text-sm font-semibold text-gray-900 group-hover:text-red-600 transition-colors line-clamp-2 leading-snug">
-                                            <a href="<?= url('blog/' . $article['slug']) ?>">
-                                                <?= htmlspecialchars(htmlspecialchars_decode($article['title'], ENT_QUOTES), ENT_QUOTES, 'UTF-8') ?>
-                                            </a>
-                                        </h3>
-
-                                        <!-- Excerpt -->
-                                        <p class="text-xs text-gray-500 font-normal line-clamp-2 leading-relaxed">
-                                            <?= htmlspecialchars($article['excerpt'] ?: mb_strimwidth(strip_tags($article['content']), 0, 90, '...')) ?>
-                                        </p>
-                                    </div>
-
-                                    <!-- Card Footer -->
-                                    <div class="p-4 pt-3 mt-3 border-t border-gray-100 flex items-center justify-between">
-                                        <div class="flex items-center space-x-2">
-                                            <div
-                                                class="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center font-semibold text-[10px]">
-                                                <?= strtoupper(substr($article['author_name'] ?: 'M', 0, 1)) ?>
-                                            </div>
-                                            <span class="text-[11px] font-medium text-gray-600 truncate max-w-[90px]">
-                                                <?= htmlspecialchars($article['author_name'] ?: 'Mudsor') ?>
-                                            </span>
-                                        </div>
-
-                                        <a href="<?= url('blog/' . $article['slug']) ?>"
-                                            class="inline-flex items-center space-x-1 text-xs font-semibold text-red-600 group-hover:translate-x-0.5 transition-transform">
-                                            <span>Read More</span>
-                                            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-                                        </a>
-                                    </div>
-                                </article>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <!-- Overlay Navigation Arrows -->
-                <button type="button" id="articles-prev" class="carousel-nav-btn carousel-nav-prev" aria-label="Previous">
-                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                </button>
-                <button type="button" id="articles-next" class="carousel-nav-btn carousel-nav-next" aria-label="Next">
-                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-        </div>
-    </section>
 <?php endif; ?>
 
 <!-- Video Player Modal -->

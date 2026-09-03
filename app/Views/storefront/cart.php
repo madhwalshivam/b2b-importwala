@@ -282,7 +282,7 @@ include __DIR__ . '/layouts/header.php';
                             <label class="block text-[11px] font-semibold text-gray-700 uppercase tracking-wider">Have a Promo
                                 Code?</label>
                             <div class="flex space-x-2">
-                                <input type="text" name="code" placeholder="Enter Code (e.g. MUDSOR20)"
+                                <input type="text" name="code" placeholder="Enter Code (e.g. IMPORTWALE20)"
                                     class="flex-1 h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs uppercase font-semibold text-gray-900 focus:outline-none focus:border-red-600 transition">
                                 <button type="submit"
                                     class="h-11 px-5 bg-gray-900 text-white font-semibold text-xs rounded-xl hover:bg-black transition shadow-xs">Apply</button>

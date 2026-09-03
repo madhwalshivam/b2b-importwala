@@ -65,16 +65,6 @@ class ProductDetailController extends BaseController
             }
         }
 
-        // Variant images merge
-        foreach ($variants as $v) {
-            if (!empty($v['image_url'])) {
-                $vImg = asset($v['image_url']);
-                if ($vImg && !in_array($vImg, $galleryImages)) {
-                    $galleryImages[] = $vImg;
-                }
-            }
-        }
-
         // 4. Compute Dynamic Starting Prices for Dual Modes
         $baseWholesale = (float)($product['price'] ?? 0);
         $baseOnePiece  = !empty($product['sale_price']) ? (float)$product['sale_price'] : $baseWholesale;

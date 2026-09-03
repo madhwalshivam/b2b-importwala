@@ -4,6 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?= csrf_token() ?>">
+    <script>
+        window.CSRF_TOKEN = "<?= csrf_token() ?>";
+        var CSRF_TOKEN = window.CSRF_TOKEN;
+    </script>
     <title>ImportWala Admin Panel</title>
 
     <!-- Central Theme Design Tokens & Fonts -->
@@ -53,6 +58,26 @@
             font-family: var(--font-sans);
             background-color: var(--color-bg-soft, #f9fafb);
             color: var(--color-text, #111827);
+        }
+
+        /* Custom Sleek Grey Vertical Scrollbar for Admin Panel Right Corner */
+        ::-webkit-scrollbar {
+            width: 8px !important;
+            height: 8px !important;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9 !important;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1 !important;
+            border-radius: 9999px !important;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8 !important;
+        }
+        * {
+            scrollbar-width: thin !important;
+            scrollbar-color: #cbd5e1 #f1f5f9 !important;
         }
 
         .line-clamp-1 {
@@ -230,14 +255,6 @@
             </h1>
 
             <div class="flex items-center space-x-3">
-                <button type="button" onclick="toggleMudsorTheme()"
-                    class="px-3.5 py-1.5 rounded-xl border border-gray-900 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-neutral-200 font-semibold text-xs flex items-center space-x-2 shadow-2xs hover:bg-gray-100 dark:hover:bg-neutral-700 transition cursor-pointer"
-                    title="Toggle Light / Dark Mode">
-                    <i data-lucide="sun" class="w-4 h-4 text-amber-500 dark:hidden"></i>
-                    <i data-lucide="moon" class="w-4 h-4 text-amber-400 hidden dark:inline-block"></i>
-                    <span id="theme-btn-label">Light Mode</span>
-                </button>
-
                 <!-- Admin Logout Header Button -->
                 <a href="<?= url('admin/logout') ?>"
                     onclick="openLogoutModal('<?= url('admin/logout') ?>'); return false;"

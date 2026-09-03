@@ -39,6 +39,9 @@ class HomeController extends BaseController
         $bannerModel = new \App\Models\Banner();
         $heroBanners = $bannerModel->getActiveBanners();
 
+        $blogModel = new \App\Models\BlogPost();
+        $latestArticles = $blogModel->getRecentPublished(4);
+
         $this->renderView('web/home', [
             'categories'         => $categories,
             'featuredProducts'   => $featuredProducts,
@@ -48,6 +51,7 @@ class HomeController extends BaseController
             'heroBanners'        => $heroBanners,
             'collectionCards'    => $collectionCards,
             'testimonials'       => $testimonials,
+            'latestArticles'     => $latestArticles,
         ]);
     }
 }

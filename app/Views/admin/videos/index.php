@@ -148,7 +148,7 @@ include __DIR__ . '/../layouts/header.php';
 
             <div class="space-y-1">
                 <label class="block text-xs font-semibold text-slate-700 uppercase">Video Title *</label>
-                <input type="text" name="title" placeholder="e.g. Mudsor Heavy Stainless Steel Crash Guard Testing"
+                <input type="text" name="title" placeholder="e.g. ImportWale Heavy Stainless Steel Crash Guard Testing"
                     required
                     class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
             </div>
@@ -332,7 +332,7 @@ include __DIR__ . '/../layouts/header.php';
                 <label class="block text-xs font-semibold text-slate-700 uppercase flex items-center justify-between">
                     <span>Showcase Product Link (Optional)</span>
                     <span class="text-[10px] text-red-600 font-medium lowercase">e.g.
-                        /product/mudsor-9h-tempered-glass</span>
+                        /product/9h-tempered-glass</span>
                 </label>
                 <input type="text" name="product_url" id="edit-product-url"
                     placeholder="e.g. /product/scooter-crash-guard or https://..."

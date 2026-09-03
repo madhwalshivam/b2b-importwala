@@ -47,18 +47,18 @@ include __DIR__ . '/layouts/header.php';
         <form action="<?= url('admin/product-compatibility/update/' . $product['id']) ?>" method="POST" class="space-y-6">
             <?= csrf_field() ?>
 
-            <!-- 1. OEM VS MUDSOR COMPARISON BENCHMARKS -->
+            <!-- 1. OEM VS IMPORTWALE COMPARISON BENCHMARKS -->
             <div class="bg-white p-6 rounded-2xl border border-gray-900 shadow-xs space-y-4">
                 <h3
                     class="text-sm font-semibold text-gray-900 uppercase tracking-wider border-b border-gray-100 pb-2 flex items-center space-x-2">
                     <i data-lucide="git-compare" class="w-4 h-4 text-red-600"></i>
-                    <span>OEM vs MUDSOR Comparison Data</span>
+                    <span>OEM vs IMPORTWALE Comparison Data</span>
                 </h3>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
-                    <!-- MUDSOR SPECS -->
+                    <!-- IMPORTWALE SPECS -->
                     <div class="space-y-4 bg-red-50/50 p-4 rounded-xl border border-red-100">
-                        <h4 class="font-semibold text-red-700 uppercase tracking-wider">MUDSOR Accessory Specs</h4>
+                        <h4 class="font-semibold text-red-700 uppercase tracking-wider">IMPORTWALE Accessory Specs</h4>
                         <div>
                             <label class="block font-semibold text-gray-700 mb-1">Material</label>
                             <input type="text" name="material" value="<?= htmlspecialchars($product['material']) ?>"

@@ -1,6 +1,6 @@
 <?php
 /**
- * Mudsor Custom B2C E-Commerce CMS Platform
+ * ImportWale Custom E-Commerce CMS Platform
  * Standard Native PHP MVC Bootstrapper
  */
 

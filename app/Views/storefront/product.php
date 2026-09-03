@@ -413,14 +413,14 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                             <?php
                             $fbPrice = (float) ($fb['sale_price'] ?: $fb['price']);
                             $fbSlug = !empty($fb['slug']) ? trim($fb['slug']) : (int) $fb['id'];
-                            $fbImg = !empty($fb['main_image']) ? asset($fb['main_image']) : asset('assets/images/mudsor-logo.png');
+                            $fbImg = !empty($fb['main_image']) ? asset($fb['main_image']) : asset('assets/images/importwale-logo.png');
                             ?>
                             <a href="<?= url('product/' . $fbSlug) ?>" target="_self"
                                 class="group/card bg-white rounded-2xl border border-gray-200 hover:border-gray-300 p-2.5 text-center transition shadow-2xs hover:shadow-md flex flex-col items-center w-28 sm:w-32 shrink-0 cursor-pointer relative snap-start">
                                 <div
                                     class="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl p-1 overflow-hidden flex items-center justify-center border border-gray-100 group-hover/card:scale-105 transition duration-200">
                                     <img src="<?= $fbImg ?>"
-                                        onerror="this.onerror=null;this.src='<?= asset('assets/images/mudsor-logo.png') ?>';"
+                                        onerror="this.onerror=null;this.src='<?= asset('assets/images/importwale-logo.png') ?>';"
                                         alt="<?= htmlspecialchars($fb['name']) ?>" class="w-full h-full object-contain">
                                 </div>
                                 <p class="text-[10px] font-medium text-gray-600 transition truncate w-full mt-1.5"
@@ -738,7 +738,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                         <div class="mt-2 p-3 bg-red-50/50 border border-red-200/60 rounded-lg text-xs space-y-1">
                                             <p class="font-semibold text-red-700 text-[11px] flex items-center space-x-1">
                                                 <i data-lucide="shield-check" class="w-3.5 h-3.5 text-red-600"></i>
-                                                <span>Mudsor Official Reply:</span>
+                                                <span>ImportWale Official Reply:</span>
                                             </p>
                                             <p class="text-gray-700 italic"><?= htmlspecialchars($rev['admin_reply']) ?></p>
                                         </div>

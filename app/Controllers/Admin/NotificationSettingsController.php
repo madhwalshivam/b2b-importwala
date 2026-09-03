@@ -13,7 +13,7 @@ class NotificationSettingsController extends Controller {
             $this->redirect(url('admin/dashboard'));
         }
 
-        $email = NotificationService::getSetting('notification_email', 'mudsorinfo@gmail.com');
+        $email = NotificationService::getSetting('notification_email', 'info@importwale.com');
         $whatsapp = NotificationService::getSetting('notification_whatsapp', '9217714452');
         $apiToken = NotificationService::getSetting('whatsapp_api_token', '');
         $phoneId = NotificationService::getSetting('whatsapp_phone_number_id', '');
@@ -41,7 +41,7 @@ class NotificationSettingsController extends Controller {
             $this->redirect(url('admin/notification-settings'));
         }
 
-        $email = trim($this->request->input('notification_email', 'mudsorinfo@gmail.com'));
+        $email = trim($this->request->input('notification_email', 'info@importwale.com'));
         $whatsapp = trim($this->request->input('notification_whatsapp', '9217714452'));
         $apiToken = trim($this->request->input('whatsapp_api_token', ''));
         $phoneId = trim($this->request->input('whatsapp_phone_number_id', ''));
@@ -65,12 +65,12 @@ class NotificationSettingsController extends Controller {
         $channel = $this->request->input('channel', 'email');
 
         if ($channel === 'email') {
-            $email = NotificationService::getSetting('notification_email', 'mudsorinfo@gmail.com');
-            $sent = NotificationService::sendEmail('Test Ping', $email, 'Mudsor Test Email', 'This is a test notification email from Mudsor Admin Panel.');
+            $email = NotificationService::getSetting('notification_email', 'info@importwale.com');
+            $sent = NotificationService::sendEmail('Test Ping', $email, 'ImportWale Test Email', 'This is a test notification email from ImportWale Admin Panel.');
             $this->setFlash($sent ? 'success' : 'error', $sent ? "Test email sent to {$email}" : "Email failed to send. Check server logs.");
         } else {
             $phone = NotificationService::getSetting('notification_whatsapp', '9217714452');
-            $sent = NotificationService::sendWhatsApp('Test Ping', $phone, "🚀 Mudsor Admin Test WhatsApp alert to {$phone}!");
+            $sent = NotificationService::sendWhatsApp('Test Ping', $phone, "🚀 ImportWale Admin Test WhatsApp alert to {$phone}!");
             $this->setFlash('success', "Test WhatsApp trigger executed for {$phone}. Check log below.");
         }
 

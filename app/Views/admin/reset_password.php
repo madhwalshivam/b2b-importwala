@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password | Mudsor Admin Portal</title>
+    <title>Reset Password | ImportWale Admin Portal</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,8 +30,8 @@
     <div class="max-w-md w-full bg-white border border-gray-900 rounded-[10px] p-8 shadow-2xl space-y-6">
 
         <div class="text-center space-y-2">
-            <img src="<?= asset('images/mudsor-logo.png') ?>" alt="Mudsor Logo" class="h-10 mx-auto object-contain"
-                onerror="this.onerror=null; this.src='https://via.placeholder.com/140x40?text=MUDSOR';">
+            <img src="<?= asset('images/importwale-logo.png') ?>" alt="ImportWale Logo" class="h-10 mx-auto object-contain"
+                onerror="this.onerror=null; this.src='https://via.placeholder.com/140x40?text=IMPORTWALE';">
             <h2 class="text-xl font-semibold text-gray-900">Set New Password</h2>
             <p class="text-xs text-gray-500">Create a new secure password for your admin account</p>
         </div>

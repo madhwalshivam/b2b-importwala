@@ -54,7 +54,12 @@ class BulkProductImportController extends BaseController
 
         $autoCreateCat = !isset($_POST['auto_create_category']) || $_POST['auto_create_category'] === '1';
 
-        $result = $this->importService->parseAndValidate($tmpFile, $zipTmpFile, $autoCreateCat);
+        try {
+            $result = $this->importService->parseAndValidate($tmpFile, $zipTmpFile, $autoCreateCat);
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'error' => 'File parsing failed: ' . $e->getMessage()]);
+            return;
+        }
 
         if ($result['success']) {
             $_SESSION['bulk_import_preview'] = $result;
@@ -76,10 +81,15 @@ class BulkProductImportController extends BaseController
             return;
         }
 
-        $result = $this->importService->commitImport(
-            $previewData['products'],
-            $previewData['extracted_zip_dir'] ?? null
-        );
+        try {
+            $result = $this->importService->commitImport(
+                $previewData['products'],
+                $previewData['extracted_zip_dir'] ?? null
+            );
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'error' => 'Import commit failed: ' . $e->getMessage()]);
+            return;
+        }
 
         if ($result['success']) {
             $_SESSION['bulk_import_last_errors'] = $result['errors'] ?? [];

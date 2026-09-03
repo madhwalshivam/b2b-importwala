@@ -424,5 +424,36 @@ class Product extends Model {
         }
     }
 
+    /**
+     * Save variation types / variants for a product.
+     */
+    public function saveVariationTypes(int $productId, array $types): void {
+        if (empty($types)) return;
+
+        $variantModel = new ProductVariant();
+
+        foreach ($types as $index => $typeData) {
+            if (!is_array($typeData)) continue;
+
+            $variantData = [
+                'product_id'      => $productId,
+                'variant_code'    => $typeData['variant_code'] ?? $typeData['sku'] ?? null,
+                'image_url'       => $typeData['image_url'] ?? $typeData['image'] ?? null,
+                'attribute_label' => $typeData['attribute_label'] ?? $typeData['name'] ?? $typeData['label'] ?? 'Variant',
+                'attribute_value' => $typeData['attribute_value'] ?? $typeData['value'] ?? 'Default',
+                'weight'          => $typeData['weight'] ?? null,
+                'dimensions'      => $typeData['dimensions'] ?? null,
+                'stock_quantity'  => (int)($typeData['stock_quantity'] ?? $typeData['stock'] ?? 0),
+                'wholesale_price' => (float)($typeData['wholesale_price'] ?? $typeData['price'] ?? 0),
+                'one_piece_price' => (float)($typeData['one_piece_price'] ?? $typeData['price'] ?? 0),
+                'sort_order'      => (int)($typeData['sort_order'] ?? $index),
+                'is_active'       => isset($typeData['is_active']) ? (int)$typeData['is_active'] : 1,
+            ];
+
+            $variantModel->createVariant($variantData);
+        }
+    }
+
 }
+
 

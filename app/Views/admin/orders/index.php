@@ -78,11 +78,16 @@ include __DIR__ . '/../layouts/header.php';
                                 <td class="py-3.5 px-4 text-gray-500 text-[11px]">
                                     <?= date('d M Y, h:i A', strtotime($o['created_at'])) ?>
                                 </td>
-                                <td class="py-3.5 px-4 text-right space-x-1">
+                                <td class="py-3.5 px-4 text-right space-x-1 whitespace-nowrap">
                                     <button type="button" onclick="viewOrderDetails(<?= (int) $o['id'] ?>)"
                                         class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg text-xs transition inline-flex items-center gap-1 cursor-pointer">
                                         <i data-lucide="eye" class="w-3.5 h-3.5"></i>
                                         <span>View</span>
+                                    </button>
+                                    <button type="button" onclick="deleteOrder(<?= (int) $o['id'] ?>, '<?= htmlspecialchars($o['order_number'], ENT_QUOTES) ?>')"
+                                        class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold rounded-lg text-xs transition inline-flex items-center gap-1 cursor-pointer">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        <span>Delete</span>
                                     </button>
                                 </td>
                             </tr>
@@ -126,8 +131,12 @@ include __DIR__ . '/../layouts/header.php';
         </div>
 
         <div class="flex items-center justify-between border-t border-gray-100 pt-3 text-xs">
-            <div>
-                <label class="block text-gray-600 font-semibold mb-1">Update Order Status:</label>
+            <button type="button" onclick="deleteActiveOrder()"
+                class="px-4 h-9 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <span>Delete Order</span>
+            </button>
+            <div class="flex items-center gap-2">
                 <select id="modalStatusSelect"
                     class="h-9 px-3 bg-gray-50 border border-gray-300 rounded-lg text-xs font-semibold">
                     <option value="pending">Pending</option>
@@ -136,16 +145,17 @@ include __DIR__ . '/../layouts/header.php';
                     <option value="delivered">Delivered</option>
                     <option value="cancelled">Cancelled</option>
                 </select>
+                <button type="button" onclick="saveOrderStatus()"
+                    class="px-5 h-9 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold rounded-lg shadow-xs transition cursor-pointer">Save
+                    Status</button>
             </div>
-            <button type="button" onclick="saveOrderStatus()"
-                class="px-5 h-9 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold rounded-lg shadow-xs transition">Save
-                Status</button>
         </div>
     </div>
 </div>
 
 <script>
     let activeModalOrderId = null;
+    let activeModalOrderNum = '';
 
     async function viewOrderDetails(orderId) {
         activeModalOrderId = orderId;
@@ -157,6 +167,7 @@ include __DIR__ . '/../layouts/header.php';
         }
 
         const o = data.order;
+        activeModalOrderNum = o.order_number;
         document.getElementById('modalOrderNum').textContent = o.order_number;
         document.getElementById('modalCustomer').innerHTML = `
             <div>${o.customer_name}</div>
@@ -214,11 +225,53 @@ include __DIR__ . '/../layouts/header.php';
         });
         const d = await res.json();
         if (d.success) {
-            alert('Order status updated');
-            location.reload();
+            if (window.showToast) window.showToast('Order status updated successfully', 'success');
+            setTimeout(() => location.reload(), 400);
         } else {
-            alert(d.message || 'Error updating status');
+            if (window.showToast) window.showToast(d.message || 'Error updating status', 'error');
+            else alert(d.message || 'Error updating status');
         }
+    }
+
+    function deleteOrder(orderId, orderNum) {
+        const executeDelete = async () => {
+            try {
+                const res = await fetch('<?= url('admin/orders/delete/') ?>' + orderId, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (window.showToast) window.showToast('Order deleted successfully', 'success');
+                    setTimeout(() => location.reload(), 400);
+                } else {
+                    if (window.showToast) window.showToast(data.message || 'Error deleting order', 'error');
+                    else alert(data.message || 'Error deleting order');
+                }
+            } catch (e) {
+                if (window.showToast) window.showToast('An error occurred while deleting the order.', 'error');
+                else alert('An error occurred while deleting the order.');
+            }
+        };
+
+        if (window.showConfirmModal) {
+            window.showConfirmModal({
+                title: 'Delete Order',
+                message: `Are you sure you want to delete order ${orderNum || '#' + orderId}? This action cannot be undone.`,
+                confirmText: 'Delete Order',
+                onConfirm: executeDelete
+            });
+        } else if (confirm(`Are you sure you want to delete order ${orderNum || '#' + orderId}? This action cannot be undone.`)) {
+            executeDelete();
+        }
+    }
+
+    function deleteActiveOrder() {
+        if (!activeModalOrderId) return;
+        closeOrderModal();
+        deleteOrder(activeModalOrderId, activeModalOrderNum);
     }
 </script>
 

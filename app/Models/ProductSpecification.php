@@ -37,6 +37,26 @@ class ProductSpecification extends Model {
     }
 
     /**
+     * Save or update a single specification record.
+     */
+    public function saveSingleSpec(int $productId, int $specId, string $key, string $value): int {
+        if ($specId > 0) {
+            $stmt = $this->db->prepare("UPDATE `{$this->table}` SET `spec_key` = ?, `spec_value` = ? WHERE `id` = ? AND `product_id` = ?");
+            $stmt->execute([$key, $value, $specId, $productId]);
+            return $specId;
+        } else {
+            $maxStmt = $this->db->prepare("SELECT MAX(sort_order) as max_ord FROM `{$this->table}` WHERE `product_id` = ?");
+            $maxStmt->execute([$productId]);
+            $row = $maxStmt->fetch();
+            $maxOrd = (int)($row['max_ord'] ?? 0) + 1;
+
+            $stmt = $this->db->prepare("INSERT INTO `{$this->table}` (`product_id`, `spec_key`, `spec_value`, `sort_order`) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$productId, $key, $value, $maxOrd]);
+            return (int)$this->db->lastInsertId();
+        }
+    }
+
+    /**
      * Delete single spec by ID.
      */
     public function deleteSpec(int $id): bool {

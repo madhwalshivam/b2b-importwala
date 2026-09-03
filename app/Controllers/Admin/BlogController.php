@@ -26,22 +26,50 @@ class BlogController extends Controller {
         $where = "1=1";
         $params = [];
 
-        if (!empty($status) && in_array($status, ['published', 'draft'])) {
-            $where .= " AND status = ?";
+        if (!empty($status) && in_array($status, ['published', 'draft', 'scheduled'])) {
+            $where .= " AND bp.status = ?";
             $params[] = $status;
         }
 
         if (!empty($search)) {
-            $where .= " AND (title LIKE ? OR content LIKE ? OR author_name LIKE ?)";
+            $where .= " AND (bp.title LIKE ? OR bp.content LIKE ? OR bp.author_name LIKE ?)";
             $params[] = "%{$search}%";
             $params[] = "%{$search}%";
             $params[] = "%{$search}%";
         }
 
-        $pagination = $this->blogModel->paginate($page, 15, $where, $params, "created_at DESC");
+        // Custom pagination with category join
+        $perPage = 15;
+        $db = \App\Core\Database::getInstance();
+        $countSql = "SELECT COUNT(*) FROM blog_posts bp WHERE {$where}";
+        $countStmt = $db->prepare($countSql);
+        $countStmt->execute($params);
+        $total = (int)$countStmt->fetchColumn();
+
+        $lastPage = max(1, (int)ceil($total / $perPage));
+        $page = max(1, min($page, $lastPage));
+        $offset = ($page - 1) * $perPage;
+
+        $sql = "SELECT bp.*, c.name as category_name 
+                FROM blog_posts bp 
+                LEFT JOIN blog_categories c ON bp.category_id = c.id 
+                WHERE {$where} 
+                ORDER BY bp.created_at DESC 
+                LIMIT {$perPage} OFFSET {$offset}";
+        $stmt = $db->prepare($sql);
+        $stmt->execute($params);
+        $posts = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $pagination = [
+            'items' => $posts,
+            'current_page' => $page,
+            'last_page' => $lastPage,
+            'total' => $total,
+            'per_page' => $perPage
+        ];
 
         return $this->render('admin/blogs/index', [
-            'posts' => $pagination['items'],
+            'posts' => $posts,
             'pagination' => $pagination,
             'statusFilter' => $status,
             'searchQuery' => $search
@@ -55,18 +83,17 @@ class BlogController extends Controller {
         if (!Auth::check()) $this->redirect(url('admin/login'));
 
         $currentUser = Auth::user();
-        $defaultAuthor = $currentUser['name'] ?? 'Mudsor Team';
+        $defaultAuthor = $currentUser['name'] ?? 'ImportWale Team';
+        $categories = $this->blogModel->getAllCategories();
 
         return $this->render('admin/blogs/form', [
             'title' => 'Add New Blog Post',
             'post' => null,
+            'categories' => $categories,
             'defaultAuthor' => $defaultAuthor
         ]);
     }
 
-    /**
-     * Store new Blog Post
-     */
     /**
      * Store new Blog Post
      */
@@ -75,6 +102,7 @@ class BlogController extends Controller {
 
         $title = trim($this->request->input('title', ''));
         $customSlug = trim($this->request->input('slug', ''));
+        $categoryId = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
         $excerpt = trim($this->request->input('excerpt', ''));
         $content = $_POST['content'] ?? '';
         $metaTitle = trim($this->request->input('meta_title', ''));
@@ -82,7 +110,8 @@ class BlogController extends Controller {
         $focusKeyword = trim($this->request->input('focus_keyword', ''));
         $authorName = trim($this->request->input('author_name', ''));
         $featuredImageAlt = trim($this->request->input('featured_image_alt', ''));
-        $status = in_array($this->request->input('status'), ['published', 'draft']) ? $this->request->input('status') : 'draft';
+        $status = in_array($this->request->input('status'), ['published', 'draft', 'scheduled']) ? $this->request->input('status') : 'draft';
+        $customPublishedAt = trim($this->request->input('published_at', ''));
 
         if (empty($title)) {
             $_SESSION['flash_error'] = 'Blog title is required.';
@@ -102,15 +131,12 @@ class BlogController extends Controller {
             $featuredImagePath = $uploadResult['path'];
         }
 
-        // Featured Image Alt Text Auto-Fallback (Use title if alt text is not provided)
         if (empty($featuredImageAlt)) {
             $featuredImageAlt = $title;
         }
 
-        // Generate unique clean slug
         $uniqueSlug = $this->blogModel->generateUniqueSlug($title, null, $customSlug);
 
-        // Auto-generate excerpt if empty
         if (empty($excerpt) && !empty($content)) {
             $plainText = strip_tags($content);
             $excerpt = mb_strimwidth($plainText, 0, 160, '...');
@@ -118,13 +144,18 @@ class BlogController extends Controller {
 
         $currentUser = Auth::user();
         if (empty($authorName)) {
-            $authorName = $currentUser['name'] ?? 'Mudsor Team';
+            $authorName = $currentUser['name'] ?? 'ImportWale Team';
         }
 
-        $publishedAt = ($status === 'published') ? date('Y-m-d H:i:s') : null;
+        if (!empty($customPublishedAt)) {
+            $publishedAt = date('Y-m-d H:i:s', strtotime($customPublishedAt));
+        } else {
+            $publishedAt = ($status === 'published' || $status === 'scheduled') ? date('Y-m-d H:i:s') : null;
+        }
 
         try {
             $postId = $this->blogModel->insert([
+                'category_id' => $categoryId,
                 'title' => $title,
                 'slug' => $uniqueSlug,
                 'excerpt' => $excerpt,
@@ -163,10 +194,13 @@ class BlogController extends Controller {
             $this->redirect(url('admin/blogs'));
         }
 
+        $categories = $this->blogModel->getAllCategories();
+
         return $this->render('admin/blogs/form', [
             'title' => 'Edit Blog Post',
             'post' => $post,
-            'defaultAuthor' => $post['author_name'] ?? 'Mudsor Team'
+            'categories' => $categories,
+            'defaultAuthor' => $post['author_name'] ?? 'ImportWale Team'
         ]);
     }
 
@@ -186,6 +220,7 @@ class BlogController extends Controller {
 
         $title = trim($this->request->input('title', ''));
         $customSlug = trim($this->request->input('slug', ''));
+        $categoryId = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
         $excerpt = trim($this->request->input('excerpt', ''));
         $content = $_POST['content'] ?? '';
         $metaTitle = trim($this->request->input('meta_title', ''));
@@ -193,7 +228,8 @@ class BlogController extends Controller {
         $focusKeyword = trim($this->request->input('focus_keyword', ''));
         $authorName = trim($this->request->input('author_name', ''));
         $featuredImageAlt = trim($this->request->input('featured_image_alt', ''));
-        $status = in_array($this->request->input('status'), ['published', 'draft']) ? $this->request->input('status') : 'draft';
+        $status = in_array($this->request->input('status'), ['published', 'draft', 'scheduled']) ? $this->request->input('status') : 'draft';
+        $customPublishedAt = trim($this->request->input('published_at', ''));
 
         if (empty($title)) {
             $_SESSION['flash_error'] = 'Blog title is required.';
@@ -210,7 +246,7 @@ class BlogController extends Controller {
                 return;
             }
 
-            // Remove old featured image file if present
+            // Remove old featured image file
             if (!empty($post['featured_image'])) {
                 $rootPath = defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 3);
                 $oldFilePath = $rootPath . '/public/' . ltrim($post['featured_image'], '/');
@@ -222,15 +258,12 @@ class BlogController extends Controller {
             $featuredImagePath = $uploadResult['path'];
         }
 
-        // Featured Image Alt Text Auto-Fallback (Use title if alt text is not provided)
         if (empty($featuredImageAlt)) {
             $featuredImageAlt = $title;
         }
 
-        // Generate unique clean slug (excluding current post ID)
         $uniqueSlug = $this->blogModel->generateUniqueSlug($title, $postId, $customSlug);
 
-        // Auto-generate excerpt if empty
         if (empty($excerpt) && !empty($content)) {
             $plainText = strip_tags($content);
             $excerpt = mb_strimwidth($plainText, 0, 160, '...');
@@ -238,16 +271,21 @@ class BlogController extends Controller {
 
         if (empty($authorName)) {
             $currentUser = Auth::user();
-            $authorName = $currentUser['name'] ?? 'Mudsor Team';
+            $authorName = $currentUser['name'] ?? 'ImportWale Team';
         }
 
-        $publishedAt = $post['published_at'];
-        if ($status === 'published' && empty($publishedAt)) {
-            $publishedAt = date('Y-m-d H:i:s');
+        if (!empty($customPublishedAt)) {
+            $publishedAt = date('Y-m-d H:i:s', strtotime($customPublishedAt));
+        } else {
+            $publishedAt = $post['published_at'];
+            if ($status === 'published' && empty($publishedAt)) {
+                $publishedAt = date('Y-m-d H:i:s');
+            }
         }
 
         try {
             $this->blogModel->update($postId, [
+                'category_id' => $categoryId,
                 'title' => $title,
                 'slug' => $uniqueSlug,
                 'excerpt' => $excerpt,

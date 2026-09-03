@@ -40,7 +40,7 @@ class CategoryFrontendController extends Controller {
         return $this->render('storefront/categories', [
             'categories' => $categories,
             'seoOptions' => [
-                'title' => 'Explore All EV Accessory Categories | Mudsor',
+                'title' => 'Explore All Categories | ImportWale',
                 'description' => 'Browse our complete catalog of electric scooter accessories including Mobile Holders, Body Covers, Crash Guards, Seat Covers, Chargers, and Storage Solutions.'
             ]
         ]);

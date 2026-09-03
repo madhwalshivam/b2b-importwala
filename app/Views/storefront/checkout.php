@@ -324,7 +324,7 @@ $countryVal = htmlspecialchars($savedAddress['country'] ?? 'India');
                             "key": data.key_id,
                             "amount": data.amount,
                             "currency": data.currency || "INR",
-                            "name": "Mudsor",
+                            "name": "ImportWale",
                             "description": "Order #" + data.order_number,
                             "order_id": data.razorpay_order_id,
                             "handler": function (response) {

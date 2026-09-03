@@ -85,4 +85,76 @@ class OrderController extends BaseController
             'message' => 'Order status updated successfully'
         ]);
     }
+
+    public function delete(string $id): void
+    {
+        if (!Auth::hasPermission('orders.delete') && !Auth::hasPermission('orders.view') && !Auth::hasPermission('dashboard.view')) {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Unauthorized action']);
+                return;
+            }
+            header('Location: ' . url('admin/orders'));
+            exit;
+        }
+
+        $db = Database::getInstance();
+        $orderId = (int)$id;
+
+        if ($orderId <= 0) {
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Invalid order ID']);
+                return;
+            }
+            header('Location: ' . url('admin/orders'));
+            exit;
+        }
+
+        try {
+            $db->beginTransaction();
+
+            // 1. Delete associated coupon usage if table exists
+            try {
+                $db->prepare("DELETE FROM coupon_usage WHERE order_id = ?")->execute([$orderId]);
+            } catch (\Throwable $e) {
+                // Table might not exist or ignore harmless schema differences
+            }
+
+            // 2. Delete order items
+            $db->prepare("DELETE FROM order_items WHERE order_id = ?")->execute([$orderId]);
+
+            // 3. Delete order record
+            $stmt = $db->prepare("DELETE FROM orders WHERE id = ?");
+            $stmt->execute([$orderId]);
+
+            $db->commit();
+
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Order deleted successfully']);
+                return;
+            }
+
+            header('Location: ' . url('admin/orders'));
+            exit;
+        } catch (\Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            if ($this->isAjaxRequest()) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Failed to delete order: ' . $e->getMessage()]);
+                return;
+            }
+            header('Location: ' . url('admin/orders'));
+            exit;
+        }
+    }
+
+    private function isAjaxRequest(): bool
+    {
+        return (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')
+            || (str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json'));
+    }
 }

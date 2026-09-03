@@ -1233,6 +1233,126 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Customer Reviews / Testimonials Section (Everful Style) -->
 <?php require __DIR__ . '/partials/testimonials_section.php'; ?>
 
+<!-- Swiper 11 CSS & JS Bundle for Blog Carousel -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<!-- HOMEPAGE BLOG CAROUSEL SECTION (Placed Directly Below Reviews / Testimonials) -->
+<?php if (!empty($latestArticles)): ?>
+    <style>
+        .swiper-articles .swiper-wrapper {
+            display: flex;
+            align-items: stretch;
+        }
+        .swiper-articles .swiper-slide {
+            height: auto;
+            display: flex;
+            flex-shrink: 0;
+        }
+        @media (max-width: 639px) {
+            .swiper-articles .swiper-slide { width: 85% !important; margin-right: 12px; }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+            .swiper-articles .swiper-slide { width: 48% !important; margin-right: 16px; }
+        }
+        @media (min-width: 1024px) {
+            .swiper-articles .swiper-slide { width: calc(25% - 15px) !important; margin-right: 20px; }
+        }
+        .swiper-articles .swiper-slide:last-child { margin-right: 0 !important; }
+    </style>
+
+    <div class="blog-carousel-section" style="margin-top: 36px; margin-bottom: 36px;">
+        <!-- Section Header: Exact match with other homepage sections -->
+        <div class="section-header-title">
+            <span>From the ImportWale Journal</span>
+            <a href="<?= url('blog') ?>" style="font-size:14px; color:#f05a29; font-weight:600; text-decoration: underline; text-underline-offset: 3px;">Visit our blog</a>
+        </div>
+
+        <!-- Articles Cards Swiper Slider with Hover Navigation Arrows -->
+        <div class="relative group/carousel">
+            <div class="swiper swiper-articles w-full py-1 overflow-hidden">
+                <div class="swiper-wrapper">
+                    <?php foreach ($latestArticles as $article): ?>
+                        <div class="swiper-slide">
+                            <a href="<?= url('blog/' . $article['slug']) ?>"
+                                class="group block w-full h-full flex flex-col justify-between transition-all duration-300">
+                                <div>
+                                    <!-- Thumbnail Image Container (Fixed Height & Aspect Ratio) -->
+                                    <div class="aspect-[4/3] h-44 sm:h-40 md:h-44 w-full rounded-2xl overflow-hidden bg-[#f3f4f6] relative shrink-0">
+                                        <?php if (!empty($article['featured_image'])): ?>
+                                            <img src="<?= asset($article['featured_image']) ?>"
+                                                alt="<?= htmlspecialchars($article['featured_image_alt'] ?: $article['title']) ?>"
+                                                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');"
+                                                loading="lazy">
+                                            <div class="hidden w-full h-full flex items-center justify-center text-gray-400 bg-[#f3f4f6]">
+                                                <svg class="w-10 h-10 opacity-30 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                            </div>
+                                        <?php else: ?>
+                                            <div class="w-full h-full flex items-center justify-center text-gray-400 bg-[#f3f4f6]">
+                                                <svg class="w-10 h-10 opacity-30 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <!-- Article Title -->
+                                    <h3 class="group-hover:text-[#f05a29] transition-colors duration-200 line-clamp-2" style="font-size: 15px; font-weight: 700; color: #111827; margin-top: 10px; line-height: 1.35;">
+                                        <?= htmlspecialchars(htmlspecialchars_decode($article['title'], ENT_QUOTES), ENT_QUOTES, 'UTF-8') ?>
+                                    </h3>
+
+                                    <!-- Short Excerpt -->
+                                    <p class="line-clamp-2" style="font-size: 13px; color: #6b7280; margin-top: 4px; line-height: 1.5;">
+                                        <?= htmlspecialchars($article['excerpt'] ?: mb_strimwidth(strip_tags($article['content']), 0, 90, '...')) ?>
+                                    </p>
+                                </div>
+                            </a>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- Circular Navigation Arrows -->
+            <button type="button" id="articles-prev"
+                class="absolute left-1 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-800 shadow-md opacity-0 group-hover/carousel:opacity-100 transition duration-300 flex items-center justify-center hover:bg-[#f05a29] hover:text-white hover:border-[#f05a29] cursor-pointer"
+                aria-label="Previous">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button type="button" id="articles-next"
+                class="absolute right-1 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-800 shadow-md opacity-0 group-hover/carousel:opacity-100 transition duration-300 flex items-center justify-center hover:bg-[#f05a29] hover:text-white hover:border-[#f05a29] cursor-pointer"
+                aria-label="Next">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Initialize Articles Swiper -->
+    <script>
+        function initArticlesSwiper() {
+            if (typeof Swiper !== 'undefined' && document.querySelector('.swiper-articles')) {
+                new Swiper('.swiper-articles', {
+                    slidesPerView: 1.1,
+                    spaceBetween: 12,
+                    grabCursor: true,
+                    navigation: {
+                        nextEl: '#articles-next',
+                        prevEl: '#articles-prev',
+                    },
+                    breakpoints: {
+                        480: { slidesPerView: 2, spaceBetween: 14 },
+                        768: { slidesPerView: 3, spaceBetween: 16 },
+                        1024: { slidesPerView: 4, spaceBetween: 20 }
+                    }
+                });
+            }
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initArticlesSwiper);
+        } else {
+            initArticlesSwiper();
+        }
+    </script>
+<?php endif; ?>
+
 <?php
 $content = ob_get_clean();
 require __DIR__ . '/layout.php';

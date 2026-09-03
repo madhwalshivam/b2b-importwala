@@ -23,9 +23,10 @@ $totalImages    = count($images);
 $mainImage      = $images[0] ?? asset('assets/images/placeholder.jpg');
 $cardId         = 'pcard_' . ($product['id'] ?? rand(1000, 9999)) . '_' . rand(100, 999);
 
-// Thumbnails setup: show up to 4 images + remaining badge
-$displayThumbs  = array_slice($images, 0, 4);
-$remainingCount = max(0, $totalImages - 4);
+// Thumbnails setup: show up to 5 images (or 4 + remaining badge if > 5)
+$maxThumbsToShow = ($totalImages == 5) ? 5 : 4;
+$displayThumbs  = array_slice($images, 0, $maxThumbsToShow);
+$remainingCount = max(0, $totalImages - $maxThumbsToShow);
 $categoryName   = htmlspecialchars($product['category_name'] ?? 'Wholesale');
 
 // Admin-Controlled Flags & Sold Count

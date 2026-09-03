@@ -123,10 +123,10 @@ class AuthController extends Controller {
         $resetUrl = url('admin/reset-password?token=' . $token);
 
         if (!empty($admin['email'])) {
-            $emailSubject = "Mudsor Admin Password Reset Request";
+            $emailSubject = "ImportWale Admin Password Reset Request";
             $emailBody = "
                 <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;'>
-                    <h2 style='color: #dc2626; margin-bottom: 12px;'>Mudsor Admin Portal</h2>
+                    <h2 style='color: #dc2626; margin-bottom: 12px;'>ImportWale Admin Portal</h2>
                     <p>Hello <strong>" . htmlspecialchars($admin['name']) . "</strong>,</p>
                     <p>We received a request to reset your admin portal password.</p>
                     <p style='margin: 20px 0;'>
@@ -436,12 +436,12 @@ class AuthController extends Controller {
         $resetUrl = url('reset-password?token=' . $token);
 
         if (!empty($email)) {
-            $emailSubject = "Mudsor Account Password Reset";
+            $emailSubject = "ImportWale Account Password Reset";
             $emailBody = "
                 <div style='font-family: Arial, sans-serif; max-width: 600px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;'>
-                    <h2 style='color: #dc2626; margin-bottom: 12px;'>Mudsor Accessories</h2>
+                    <h2 style='color: #dc2626; margin-bottom: 12px;'>ImportWale</h2>
                     <p>Hello,</p>
-                    <p>We received a request to reset your Mudsor account password.</p>
+                    <p>We received a request to reset your ImportWale account password.</p>
                     <p style='margin: 20px 0;'>
                         <a href='{$resetUrl}' style='background-color: #dc2626; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;'>Reset Password Now</a>
                     </p>

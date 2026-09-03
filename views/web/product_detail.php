@@ -167,13 +167,9 @@ ob_start();
 
             <!-- Product Title Card Container -->
             <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                <h1 class="text-lg sm:text-xl font-semibold text-gray-900 leading-snug tracking-tight">
+                <h1 class="text-sm sm:text-base font-medium text-gray-800 leading-snug tracking-normal">
                     <?= $productName ?>
                 </h1>
-
-                <div class="flex items-center gap-2 text-xs text-gray-500">
-                    <span id="activeStockBadge" class="font-semibold text-emerald-600">In Stock</span>
-                </div>
 
                 <!-- Pricing Box inside Title Card -->
                 <div class="bg-[#F8FAFC] border border-gray-100 rounded-xl p-3.5 space-y-3">
@@ -299,12 +295,6 @@ ob_start();
             <!-- Variant List (Expandable Color/Size Container - Max Height 3 Rows Scrollable) -->
             <?php if (!empty($variants)): ?>
                 <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
-                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                        <h3 class="text-xs font-semibold text-gray-800 uppercase tracking-wider">
-                            <?= htmlspecialchars($variants[0]['attribute_label'] ?? 'Color') ?>
-                        </h3>
-                    </div>
-
                     <!-- Scrollable Container: Capped to 3 rows max-height (~235px), slide/scroll for 4+ variants -->
                     <div class="divide-y divide-gray-100 max-h-[235px] overflow-y-auto scroll-smooth" id="variantsList">
                         <?php foreach ($variants as $vi => $v):
@@ -317,7 +307,7 @@ ob_start();
                             $vImg = !empty($v['image_url']) ? asset($v['image_url']) : $mainImage;
                             $vWeight = htmlspecialchars($v['weight'] ?? '');
                             ?>
-                            <div class="variant-row flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/80 transition border-b border-gray-100 last:border-0 <?= $vi === 0 ? 'bg-orange-50/40 border-l-4 border-l-[#f05a29]' : '' ?>"
+                            <div class="variant-row flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/80 transition border-b border-gray-100 last:border-0"
                                 data-variant-idx="<?= $vi ?>" data-wholesale="<?= $vWholesale ?>"
                                 data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
                                 data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)">
@@ -332,15 +322,13 @@ ob_start();
                                     <div class="flex items-center gap-2">
                                         <span class="text-xs font-semibold text-gray-900 truncate"><?= $vName ?></span>
                                     </div>
-                                    <div class="text-[11px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-1">
-                                        <?php if ($vWeight): ?><span>Wt: <?= $vWeight ?></span> &bull; <?php endif; ?>
-                                        <?php if ($vDim): ?><span>Fit: <?= $vDim ?></span> &bull; <?php endif; ?>
-                                        <?php if ($vStock > 0): ?>
-                                            <span class="text-emerald-600 font-semibold">In stock</span>
-                                        <?php else: ?>
-                                            <span class="text-red-500 font-semibold">Out of stock</span>
-                                        <?php endif; ?>
-                                    </div>
+                                    <?php if ($vWeight || $vDim): ?>
+                                        <div class="text-[11px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-1">
+                                            <?php if ($vWeight): ?><span>Wt: <?= $vWeight ?></span><?php endif; ?>
+                                            <?php if ($vWeight && $vDim): ?> &bull; <?php endif; ?>
+                                            <?php if ($vDim): ?><span>Fit: <?= $vDim ?></span><?php endif; ?>
+                                        </div>
+                                    <?php endif; ?>
                                 </div>
 
                                 <!-- Stepper & Price Section -->
@@ -1090,12 +1078,6 @@ ob_start();
                 selectAmazonVariant(foundIdx);
                 return;
             }
-        }
-
-        // Default: select first available in-stock variant on load
-        if (VARIANTS_LIST && VARIANTS_LIST.length > 0) {
-            const firstInStock = VARIANTS_LIST.findIndex(v => v.stock > 0);
-            selectAmazonVariant(firstInStock !== -1 ? firstInStock : 0);
         }
 
         checkDetailWishlistStatus();

@@ -257,7 +257,9 @@ $router->post('/admin/coupons/store', 'Admin\CouponController@store', [AdminMidd
 $router->get('/admin/coupons/edit/{id}', 'Admin\CouponController@edit', [AdminMiddleware::class]);
 $router->post('/admin/coupons/update/{id}', 'Admin\CouponController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/coupons/delete/{id}', 'Admin\CouponController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/coupons/delete/{id}', 'Admin\CouponController@delete', [AdminMiddleware::class]);
 $router->post('/admin/coupons/toggle/{id}', 'Admin\CouponController@toggleStatus', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/coupons/toggle/{id}', 'Admin\CouponController@toggleStatus', [AdminMiddleware::class]);
 $router->get('/admin/coupons/usage/{id}', 'Admin\CouponController@usage', [AdminMiddleware::class]);
 
 // Products Management
@@ -281,6 +283,7 @@ $router->get('/admin/products/search-api', 'Admin\ProductController@searchApi', 
 $router->post('/admin/products/{id}/variants/save', 'Admin\ProductController@saveVariant', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/variants/delete/{variantId}', 'Admin\ProductController@deleteVariant', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/{id}/specs/save', 'Admin\ProductController@saveSpecs', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/specs/delete/{specId}', 'Admin\ProductController@deleteSpec', [AdminMiddleware::class, CsrfMiddleware::class]);
 
 
 
@@ -325,6 +328,8 @@ $router->post('/admin/subcategories/delete/{id}', 'Admin\SubcategoryController@d
 $router->get('/admin/orders', 'Admin\OrderController@index', [AdminMiddleware::class]);
 $router->get('/admin/orders/view/{id}', 'Admin\OrderController@view', [AdminMiddleware::class]);
 $router->post('/admin/orders/update-status', 'Admin\OrderController@updateStatus', [AdminMiddleware::class]);
+$router->post('/admin/orders/delete/{id}', 'Admin\OrderController@delete', [AdminMiddleware::class]);
+$router->get('/admin/orders/delete/{id}', 'Admin\OrderController@delete', [AdminMiddleware::class]);
 $router->get('/admin/orders/invoice/{id}', 'Admin\OrderController@invoice', [AdminMiddleware::class, fn() => (new PermissionMiddleware('orders.view'))->execute()]);
 
 // Sales & Tax Reports

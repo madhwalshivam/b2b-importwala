@@ -8,14 +8,14 @@
 
         <!-- Company Info & Newsletter Mobile -->
         <div class="bg-white border-b border-gray-100 px-4 py-6 space-y-4">
-            <img src="<?= asset('images/mudsor-logo.png') ?>" alt="Mudsor Logo"
+            <img src="<?= asset('images/importwale-logo.png') ?>" alt="ImportWale Logo"
                 class="h-12 max-w-[180px] object-contain"
-                onerror="this.onerror=null; this.src='https://via.placeholder.com/160x48?text=MUDSOR';">
+                onerror="this.onerror=null; this.src='https://via.placeholder.com/160x48?text=IMPORTWALE';">
             <p class="text-xs text-gray-500 font-normal leading-relaxed">
                 India's premier manufacturer of high-grade electric scooter accessories, crash guards, and protective
                 equipment. Engineered for maximum safety &amp; style.
             </p>
-            <form action="#" method="POST" @submit.prevent="alert('Thank you for subscribing to Mudsor updates!')"
+            <form action="#" method="POST" @submit.prevent="alert('Thank you for subscribing to ImportWale updates!')"
                 class="space-y-2 pt-1">
                 <p class="text-xs font-semibold text-gray-900">Subscribe for Exclusive Deals</p>
                 <div class="flex gap-2">
@@ -49,7 +49,7 @@
                     <a href="<?= url('categories') ?>"
                         class="block text-gray-600 hover:text-red-600 font-medium">Categories</a>
                     <a href="<?= url('about-us') ?>" class="block text-gray-600 hover:text-red-600 font-medium">About
-                        Mudsor</a>
+                        ImportWale</a>
                     <a href="<?= url('contact-us') ?>"
                         class="block text-gray-600 hover:text-red-600 font-medium">Contact Us</a>
                 </div>
@@ -96,7 +96,7 @@
                         Products</a>
                     <a href="<?= url('cart') ?>" class="block text-gray-600 hover:text-red-600 font-medium">Shopping
                         Cart</a>
-                    <a href="https://wa.me/919217714452?text=Hi%20Mudsor%2C%20I%20need%20help%20with%20my%20order."
+                    <a href="https://wa.me/919217714452?text=Hi%20ImportWale%2C%20I%20need%20help%20with%20my%20order."
                         target="_blank" rel="noopener noreferrer"
                         class="flex items-center space-x-1.5 text-emerald-600 hover:text-emerald-700 font-medium">
                         <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -115,7 +115,7 @@
         <!-- Mobile Copyright & Payment Icons -->
         <div class="bg-gray-900 px-4 pt-5 pb-20 text-center space-y-3">
             <p class="text-[10px] text-gray-400 leading-relaxed">
-                &copy; <?= date('Y') ?> Mudsor (Rughwani Enterprises) &middot; GSTIN: 07FLOPR6641L1Z8 &middot; All
+                &copy; <?= date('Y') ?> ImportWale (Rughwani Enterprises) &middot; GSTIN: 07FLOPR6641L1Z8 &middot; All
                 Rights Reserved.
             </p>
             <div class="flex items-center justify-center flex-wrap gap-1.5">
@@ -152,7 +152,7 @@
                     </div>
                 </div>
 
-                <form action="#" method="POST" @submit.prevent="alert('Thank you for subscribing to Mudsor updates!')"
+                <form action="#" method="POST" @submit.prevent="alert('Thank you for subscribing to ImportWale updates!')"
                     class="flex items-center gap-2 w-full lg:w-auto">
                     <input type="text" required placeholder="First Name"
                         class="h-11 px-4 bg-white border border-gray-300 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-red-600 transition">
@@ -172,25 +172,25 @@
             <!-- Column 1: Company About (Span 4) -->
             <div class="lg:col-span-4 space-y-4">
                 <div class="flex items-center space-x-2">
-                    <img src="<?= asset('images/mudsor-logo.png') ?>" alt="Mudsor Logo"
+                    <img src="<?= asset('images/importwale-logo.png') ?>" alt="ImportWale Logo"
                         class="h-14 md:h-16 max-w-[240px] object-contain"
-                        onerror="this.onerror=null; this.src='https://via.placeholder.com/220x60?text=MUDSOR';">
+                        onerror="this.onerror=null; this.src='https://via.placeholder.com/220x60?text=IMPORTWALE';">
                 </div>
                 <p class="text-xs text-gray-500 font-normal leading-relaxed pr-4">
-                    Mudsor is India's leading brand for heavy-duty electric scooter accessories, crash guards, and
+                    ImportWale is India's leading brand for heavy-duty electric scooter accessories, crash guards, and
                     protective equipment. Engineered for maximum safety, precision fitment, and long-lasting durability
                     across Ola, Ather, TVS, Honda, Bajaj, and Hero EV models.
                 </p>
                 <div class="space-y-2 text-xs font-medium text-gray-700 pt-1">
                     <div class="flex items-center space-x-2">
                         <i data-lucide="mail" class="w-4 h-4 text-red-600 shrink-0"></i>
-                        <span>support@mudsor.com</span>
+                        <span>support@importwale.com</span>
                     </div>
                     <a href="tel:+919217714452" class="flex items-center space-x-2 hover:text-red-600 transition">
                         <i data-lucide="phone" class="w-4 h-4 text-red-600 shrink-0"></i>
                         <span>+91 92177 14452 (Mon - Sat, 10 AM - 7 PM)</span>
                     </a>
-                    <a href="https://wa.me/919217714452?text=Hi%20Mudsor%2C%20I%20need%20help%20with%20my%20order."
+                    <a href="https://wa.me/919217714452?text=Hi%20ImportWale%2C%20I%20need%20help%20with%20my%20order."
                         target="_blank" rel="noopener noreferrer"
                         class="flex items-center space-x-2 text-emerald-600 hover:text-emerald-700 transition">
                         <svg class="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -217,7 +217,7 @@
                     <li><a href="<?= url('brands') ?>" class="hover:text-red-600 transition">Scooter Brands</a></li>
                     <li><a href="<?= url('categories') ?>" class="hover:text-red-600 transition">Product Categories</a>
                     </li>
-                    <li><a href="<?= url('about-us') ?>" class="hover:text-red-600 transition">About Mudsor</a></li>
+                    <li><a href="<?= url('about-us') ?>" class="hover:text-red-600 transition">About ImportWale</a></li>
                     <li><a href="<?= url('contact-us') ?>" class="hover:text-red-600 transition">Contact Us</a></li>
                 </ul>
             </div>
@@ -263,7 +263,7 @@
                             class="hover:text-red-600 transition flex items-center space-x-1.5"><i
                                 data-lucide="shopping-cart" class="w-3.5 h-3.5 text-red-600"></i><span>Shopping
                                 Cart</span></a></li>
-                    <li><a href="https://wa.me/919217714452?text=Hi%20Mudsor%2C%20I%20need%20help%20with%20my%20order."
+                    <li><a href="https://wa.me/919217714452?text=Hi%20ImportWale%2C%20I%20need%20help%20with%20my%20order."
                             target="_blank" rel="noopener noreferrer"
                             class="text-emerald-600 hover:text-emerald-700 transition flex items-center space-x-1.5">
                             <svg class="w-3.5 h-3.5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
@@ -280,7 +280,7 @@
         <!-- Bottom Bar: Copyright + Sleek Payment Badges -->
         <div class="bg-gray-50 border-t border-gray-900 py-5 text-gray-500">
             <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                <p class="text-xs font-medium">© <?= date('Y') ?> Mudsor (Rughwani Enterprises). GSTIN: 07FLOPR6641L1Z8.
+                <p class="text-xs font-medium">© <?= date('Y') ?> ImportWale (Rughwani Enterprises). GSTIN: 07FLOPR6641L1Z8.
                     All Rights Reserved.</p>
 
                 <!-- Professional Payment Icons & Badges -->
@@ -879,6 +879,16 @@ $userAccountUrl = $isLoggedIn ? url('account') : url('login');
 $userAccountLabel = $isLoggedIn ? 'Account' : 'Login';
 ?>
 
+<!-- Floating Sitewide "Need Help?" WhatsApp Button -->
+<a href="https://wa.me/919217714452?text=Hi%20ImportWale%2C%20I%20need%20help%20with%20a%20wholesale%20order." 
+   target="_blank" rel="noopener noreferrer"
+   class="fixed bottom-20 right-5 md:bottom-8 md:right-8 z-[999] px-4 py-2.5 bg-[#f05a29] text-white font-bold text-xs rounded-full shadow-lg hover:bg-orange-600 transition-all duration-300 flex items-center space-x-2 border border-white/20 hover:scale-105 active:scale-95">
+    <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+    <span>Need Help?</span>
+</a>
+
 <!-- NATIVE MOBILE BOTTOM APP NAVIGATION BAR -->
 <?php $isCompare = (strpos($currentUri, 'compare') !== false); ?>
 <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-900 shadow-2xl md:hidden flex items-center justify-around h-16 px-0 text-gray-700 font-sans"
@@ -933,7 +943,7 @@ $userAccountLabel = $isLoggedIn ? 'Account' : 'Login';
     </a>
 
     <!-- 5. WhatsApp -->
-    <a href="https://wa.me/919217714452?text=Hi%20Mudsor%2C%20I%20am%20interested%20in%20wholesale%20scooter%20accessories."
+    <a href="https://wa.me/919217714452?text=Hi%20ImportWale%2C%20I%20am%20interested%20in%20wholesale%20scooter%20accessories."
         target="_blank" rel="noopener noreferrer"
         class="flex flex-col items-center justify-center flex-1 h-full py-1 text-emerald-600 hover:text-emerald-700 transition"
         style="min-width: 40px; min-height: 44px;">
@@ -1138,7 +1148,7 @@ $userAccountLabel = $isLoggedIn ? 'Account' : 'Login';
                 });
             }
 
-            // 9. Articles Swiper (1 per row on mobile)
+            // 9. Articles Swiper (1 per row on mobile, 2 on tablet, 4 on desktop)
             if (document.querySelector('.swiper-articles')) {
                 new Swiper('.swiper-articles', {
                     slidesPerView: 1,
@@ -1149,9 +1159,9 @@ $userAccountLabel = $isLoggedIn ? 'Account' : 'Login';
                         prevEl: '#articles-prev',
                     },
                     breakpoints: {
-                        481: { slidesPerView: 1, spaceBetween: 16 },
-                        768: { slidesPerView: 3.1, spaceBetween: 20 },
-                        1025: { slidesPerView: 4, spaceBetween: 24 }
+                        320: { slidesPerView: 1, spaceBetween: 16 },
+                        640: { slidesPerView: 2, spaceBetween: 20 },
+                        1024: { slidesPerView: 4, spaceBetween: 24 }
                     }
                 });
             }

@@ -15,6 +15,11 @@ include __DIR__ . '/../layouts/header.php';
                 <i data-lucide="printer" class="w-4 h-4"></i>
                 <span>Print GST Tax Invoice</span>
             </a>
+            <button type="button" onclick="deleteThisOrder(<?= (int)$order['id'] ?>, '<?= htmlspecialchars($order['order_number'], ENT_QUOTES) ?>')"
+                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl transition flex items-center space-x-1 cursor-pointer">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                <span>Delete Order</span>
+            </button>
             <a href="<?= url('admin/orders') ?>"
                 class="px-4 py-2 bg-gray-100 text-gray-700 font-semibold text-xs rounded-xl hover:bg-gray-900 transition">Back
                 to List</a>
@@ -199,6 +204,45 @@ include __DIR__ . '/../layouts/header.php';
     </div>
 
 </div>
+
+<script>
+    function deleteThisOrder(orderId, orderNum) {
+        const executeDelete = async () => {
+            try {
+                const res = await fetch('<?= url('admin/orders/delete/') ?>' + orderId, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (window.showToast) window.showToast('Order deleted successfully', 'success');
+                    setTimeout(() => {
+                        window.location.href = '<?= url('admin/orders') ?>';
+                    }, 400);
+                } else {
+                    if (window.showToast) window.showToast(data.message || 'Error deleting order', 'error');
+                    else alert(data.message || 'Error deleting order');
+                }
+            } catch (e) {
+                if (window.showToast) window.showToast('An error occurred while deleting the order.', 'error');
+                else alert('An error occurred while deleting the order.');
+            }
+        };
+
+        if (window.showConfirmModal) {
+            window.showConfirmModal({
+                title: 'Delete Order',
+                message: `Are you sure you want to delete order ${orderNum || '#' + orderId}? This action cannot be undone.`,
+                confirmText: 'Delete Order',
+                onConfirm: executeDelete
+            });
+        } else if (confirm(`Are you sure you want to delete order ${orderNum || '#' + orderId}? This action cannot be undone.`)) {
+            executeDelete();
+        }
+    }
+</script>
 
 <?php
 include __DIR__ . '/../layouts/footer.php';

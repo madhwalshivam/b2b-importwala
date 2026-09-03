@@ -45,15 +45,15 @@ class WholesaleController {
         }
 
         // Email Notification to Admin
-        $adminEmail = NotificationService::getSetting('admin_email', 'sales@mudsor.com');
+        $adminEmail = NotificationService::getSetting('admin_email', 'sales@importwale.com');
         if (empty($adminEmail)) {
-            $adminEmail = 'sales@mudsor.com';
+            $adminEmail = 'sales@importwale.com';
         }
 
-        $subject = "New Wholesale Inquiry from " . $name . " - Mudsor";
+        $subject = "New Wholesale Inquiry from " . $name . " - ImportWale";
         $emailBody = "
         <div style='font-family: Arial, sans-serif; padding: 20px; color: #333;'>
-            <h2 style='color: #A8111C;'>New Wholesale Inquiry — Mudsor EV Accessories</h2>
+            <h2 style='color: #A8111C;'>New Wholesale Inquiry — ImportWale</h2>
             <p><strong>Client Name:</strong> " . htmlspecialchars($name) . "</p>
             <p><strong>Phone / WhatsApp:</strong> " . htmlspecialchars($phone) . "</p>
             <p><strong>Email:</strong> " . htmlspecialchars($email) . "</p>
@@ -64,7 +64,7 @@ class WholesaleController {
                 " . nl2br(htmlspecialchars($message ?: 'No additional message provided.')) . "
             </blockquote>
             <hr style='border: none; border-top: 1px solid #eee; margin-top: 20px;'>
-            <p style='font-size: 11px; color: #777;'>Submitted from Mudsor Wholesale Inquiry Form on " . date('Y-m-d H:i:s') . "</p>
+            <p style='font-size: 11px; color: #777;'>Submitted from ImportWale Wholesale Inquiry Form on " . date('Y-m-d H:i:s') . "</p>
         </div>";
 
         NotificationService::sendEmail('wholesale_inquiry', $adminEmail, $subject, $emailBody);

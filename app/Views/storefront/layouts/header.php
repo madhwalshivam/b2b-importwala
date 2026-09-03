@@ -1038,9 +1038,9 @@ $isBlog = str_contains($currentUri, 'blog');
 
                     <!-- Header Logo -->
                     <a href="<?= url('/') ?>" class="flex items-center shrink-0 group py-0.5 h-[38px] md:h-[48px]">
-                        <img src="<?= asset('images/mudsor-logo.png') ?>" alt="Mudsor Logo"
+                        <img src="<?= asset('images/importwale-logo.png') ?>" alt="ImportWale Logo"
                             class="h-full w-auto max-h-[38px] md:max-h-[48px] min-h-[32px] md:min-h-[42px] object-contain transition-transform group-hover:scale-105"
-                            onerror="this.onerror=null; this.src='https://via.placeholder.com/180x48?text=MUDSOR';">
+                            onerror="this.onerror=null; this.src='https://via.placeholder.com/180x48?text=IMPORTWALE';">
                     </a>
 
                     <!-- Large Centered Search Bar -->
@@ -1083,7 +1083,7 @@ $isBlog = str_contains($currentUri, 'blog');
                                         <div
                                             class="w-4 h-4 border-2 border-theme-primary border-t-transparent rounded-full animate-spin">
                                         </div>
-                                        <span>Searching Mudsor store...</span>
+                                        <span>Searching ImportWale store...</span>
                                     </div>
                                 </template>
 
@@ -1094,7 +1094,7 @@ $isBlog = str_contains($currentUri, 'blog');
                                                 class="p-2 flex items-center justify-between hover:bg-red-50/50 rounded-lg transition group">
                                                 <div class="flex items-center space-x-3 min-w-0">
                                                     <img :src="item.main_image"
-                                                        @error="$el.src='<?= asset('assets/images/mudsor-logo.png') ?>'"
+                                                        @error="$el.src='<?= asset('assets/images/importwale-logo.png') ?>'"
                                                         class="w-10 h-10 rounded-md object-contain bg-white border border-gray-100 p-1 shrink-0">
                                                     <div class="min-w-0">
                                                         <p class="text-[11px] font-semibold text-gray-900 group-hover:text-theme-primary transition truncate"
@@ -1133,17 +1133,8 @@ $isBlog = str_contains($currentUri, 'blog');
                         </div>
                     </div>
 
-                    <!-- Right-Side Icon Group: Theme | Compare | Orders | Wishlist | Account | Cart -->
+                    <!-- Right-Side Icon Group: Compare | Orders | Wishlist | Account | Cart -->
                     <div class="flex items-center space-x-1 sm:space-x-5 text-gray-700 text-xs font-semibold shrink-0">
-                        <!-- Theme Switcher Button -->
-                        <button type="button" onclick="toggleStorefrontTheme()"
-                            class="w-10 h-10 sm:w-auto sm:h-auto flex flex-row sm:flex-col items-center justify-center hover:text-theme-primary transition focus:outline-none cursor-pointer p-1"
-                            title="Toggle Light / Dark Mode">
-                            <i data-lucide="sun" id="sf-icon-sun" class="w-5 h-5 text-amber-500"></i>
-                            <i data-lucide="moon" id="sf-icon-moon" class="w-5 h-5 text-indigo-400"
-                                style="display: none;"></i>
-                            <span class="hidden sm:inline text-[11px] mt-0.5" id="sf-theme-label">Light</span>
-                        </button>
 
                         <!-- Compare Icon with Live Badge -->
                         <a href="<?= url('compare') ?>"
@@ -1376,7 +1367,7 @@ $isBlog = str_contains($currentUri, 'blog');
                                             class="p-2 flex items-center justify-between hover:bg-red-50/50 rounded-lg transition group">
                                             <div class="flex items-center space-x-2 min-w-0">
                                                 <img :src="item.main_image"
-                                                    @error="$el.src='<?= asset('assets/images/mudsor-logo.png') ?>'"
+                                                    @error="$el.src='<?= asset('assets/images/importwale-logo.png') ?>'"
                                                     class="w-8 h-8 rounded object-contain bg-white border border-gray-100 p-0.5 shrink-0">
                                                 <div class="min-w-0">
                                                     <p class="text-[10px] font-semibold text-gray-900 truncate"
@@ -1489,7 +1480,6 @@ $isBlog = str_contains($currentUri, 'blog');
 
                             <a href="<?= url('shop') ?>"
                                 class="py-2 font-semibold transition <?= $isShop ? 'border-b-2 border-theme-primary text-theme-primary' : 'text-gray-700 hover:text-theme-primary' ?>">Shop</a>
-
                             <a href="<?= url('brands') ?>"
                                 class="py-2 font-semibold transition <?= $isBrand ? 'border-b-2 border-theme-primary text-theme-primary' : 'text-gray-700 hover:text-theme-primary' ?>">Brands</a>
 
@@ -1498,7 +1488,7 @@ $isBlog = str_contains($currentUri, 'blog');
 
                             <a href="<?= url('about-us') ?>"
                                 class="py-2 font-semibold transition <?= $isAbout ? 'border-b-2 border-theme-primary text-theme-primary font-semibold' : 'text-gray-700 hover:text-theme-primary' ?>">About
-                                Mudsor</a>
+                                ImportWale</a>
 
                             <a href="<?= url('contact-us') ?>"
                                 class="py-2 font-semibold transition <?= $isContact ? 'border-b-2 border-theme-primary text-theme-primary font-semibold' : 'text-gray-700 hover:text-theme-primary' ?>">Contact
@@ -1619,8 +1609,8 @@ $isBlog = str_contains($currentUri, 'blog');
         <!-- ── Sidebar Header ── -->
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 shrink-0 bg-white">
             <a href="<?= url('/') ?>" @click="mobileMenu = false" class="flex items-center h-10">
-                <img src="<?= asset('images/mudsor-logo.png') ?>" alt="Mudsor" class="h-10 w-auto object-contain"
-                    onerror="this.src='https://via.placeholder.com/140x40?text=MUDSOR';">
+                <img src="<?= asset('images/importwale-logo.png') ?>" alt="ImportWale" class="h-10 w-auto object-contain"
+                    onerror="this.src='https://via.placeholder.com/140x40?text=IMPORTWALE';">
             </a>
             <button type="button" @click="mobileMenu = false"
                 class="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-theme-primary hover:bg-gray-100 rounded-xl transition"
@@ -1925,7 +1915,7 @@ $isBlog = str_contains($currentUri, 'blog');
                 </div>
                 <div>
                     <h3 class="text-base font-extrabold text-gray-900 leading-tight">Inquire for Wholesale</h3>
-                    <p class="text-xs text-gray-500 font-medium">Get bulk pricing & dealer quotes directly from Mudsor.
+                    <p class="text-xs text-gray-500 font-medium">Get bulk pricing & dealer quotes directly from ImportWale.
                     </p>
                 </div>
             </div>

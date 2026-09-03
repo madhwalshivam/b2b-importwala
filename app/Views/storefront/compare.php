@@ -184,7 +184,7 @@ if (!empty($products) && count($products) > 1) {
                                                 <div class="text-center space-y-1">
                                                     <span
                                                         class="text-[10px] font-semibold text-red-400 uppercase tracking-wider block">
-                                                        <?= htmlspecialchars($p['brand_name'] ?? 'Mudsor') ?>
+                                                        <?= htmlspecialchars($p['brand_name'] ?? 'ImportWale') ?>
                                                     </span>
                                                     <h3
                                                         class="text-xs sm:text-sm font-semibold text-white line-clamp-2 leading-snug">
@@ -354,7 +354,7 @@ if (!empty($products) && count($products) > 1) {
                     </div>
 
                     <!-- ============================================================ -->
-                    <!-- OEM vs MUDSOR — Direct Comparison (Always Shown)             -->
+                    <!-- OEM vs IMPORTWALE — Direct Comparison (Always Shown)             -->
                     <!-- ============================================================ -->
                     <div class="space-y-4">
                         <!-- Section Header -->
@@ -364,11 +364,11 @@ if (!empty($products) && count($products) > 1) {
                                 <i data-lucide="git-compare" class="w-5 h-5"></i>
                             </div>
                             <div>
-                                <h2 class="text-sm font-semibold text-gray-900 leading-tight">OEM vs Mudsor — Price & Value
+                                <h2 class="text-sm font-semibold text-gray-900 leading-tight">OEM vs ImportWale — Price & Value
                                     Comparison</h2>
                                 <p class="text-[11px] text-gray-500 font-medium mt-0.5">
                                     <strong>OEM</strong> = Original company part price &nbsp;·&nbsp;
-                                    <strong class="text-red-600">Mudsor</strong> = Our price (sasta + better quality)
+                                    <strong class="text-red-600">ImportWale</strong> = Our price (sasta + better quality)
                                 </p>
                             </div>
                         </div>
@@ -429,7 +429,7 @@ if (!empty($products) && count($products) > 1) {
                                         </div>
                                         <div
                                             class="col-span-1 p-2.5 bg-emerald-50 text-emerald-700 text-center border-l border-gray-200">
-                                            🏷️ Mudsor
+                                            🏷️ ImportWale
                                         </div>
                                     </div>
 
@@ -537,7 +537,7 @@ if (!empty($products) && count($products) > 1) {
                                                     $wins[] = format_price($priceSaving) . ' sasta';
                                                 if ($warrantyMultiplier > 1)
                                                     $wins[] = $warrantyMultiplier . 'x warranty';
-                                                echo 'Mudsor: ' . (count($wins) ? implode(' · ', $wins) : 'Better Value');
+                                                echo 'ImportWale: ' . (count($wins) ? implode(' · ', $wins) : 'Better Value');
                                                 ?>
                                             </span>
                                         </div>
@@ -555,7 +555,7 @@ if (!empty($products) && count($products) > 1) {
                         <p class="text-[10px] text-gray-400 text-center font-medium">
                             * OEM = Original Equipment Manufacturer — vehicle brand (Ola, TVS, Honda, etc.) ka original
                             spare part price.
-                            Mudsor = hamare aftermarket parts jo saste hain aur better quality dete hain.
+                            ImportWale = hamare aftermarket parts jo saste hain aur better quality dete hain.
                             <?php if (array_filter($products, fn($p) => !((float) ($p['oem_price'] ?? 0) > 0))): ?>
                                 &nbsp;† Est. prices are market estimates.
                             <?php endif; ?>

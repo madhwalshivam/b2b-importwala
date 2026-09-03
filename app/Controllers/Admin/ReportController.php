@@ -33,7 +33,7 @@ class ReportController extends Controller {
         $stats = $data['stats'];
         $filterLabel = $data['filter_label'];
 
-        $filename = 'Mudsor_Sales_Tax_Report_' . str_replace(' ', '_', $filterLabel) . '.csv';
+        $filename = 'ImportWale_Sales_Tax_Report_' . str_replace(' ', '_', $filterLabel) . '.csv';
 
         // Clear any previous output buffers so CSV stream downloads cleanly
         while (ob_get_level() > 0) {
@@ -51,7 +51,7 @@ class ReportController extends Controller {
         fputs($output, "\xEF\xBB\xBF");
 
         // Header info rows
-        fputcsv($output, ['Mudsor - Monthly Sales & Tax Report']);
+        fputcsv($output, ['ImportWale - Monthly Sales & Tax Report']);
         fputcsv($output, ['Period / Filter', $filterLabel]);
         fputcsv($output, ['Generated On', date('d M Y, h:i A')]);
         fputcsv($output, []);
@@ -268,11 +268,11 @@ class ReportController extends Controller {
         $settings = $settingModel->getAllAsKeyValue();
 
         $company = [
-            'brand'      => $settings['site_name'] ?? 'Mudsor',
+            'brand'      => $settings['site_name'] ?? 'ImportWale',
             'legal_name' => $settings['company_legal_name'] ?? 'Rughwani Enterprises',
             'gstin'      => $settings['gstin'] ?? '07FLOPR6641L1Z8',
             'phone'      => $settings['contact_phone'] ?? '+91 9217714452',
-            'email'      => $settings['contact_email'] ?? 'mudsorinfo@gmail.com',
+            'email'      => $settings['contact_email'] ?? 'info@importwale.com',
             'owner'      => $settings['owner_name'] ?? 'Jass Rughwani',
         ];
 

@@ -36,7 +36,7 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-slate-700 mb-1.5">Brand Name <span
                             class="text-red-600">*</span></label>
                     <input type="text" name="site_name"
-                        value="<?= htmlspecialchars($settings['site_name'] ?? 'Mudsor') ?>" required
+                        value="<?= htmlspecialchars($settings['site_name'] ?? 'ImportWale') ?>" required
                         class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:outline-none focus:border-red-600 focus:bg-white transition">
                 </div>
 
@@ -71,7 +71,7 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1.5">Support Email Address</label>
                     <input type="email" name="contact_email"
-                        value="<?= htmlspecialchars($settings['contact_email'] ?? 'mudsorinfo@gmail.com') ?>"
+                        value="<?= htmlspecialchars($settings['contact_email'] ?? 'info@importwale.com') ?>"
                         class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-red-600 focus:bg-white transition">
                 </div>
             </div>
@@ -123,7 +123,7 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1.5">Cloudflare R2 Bucket Name</label>
                     <input type="text" name="cloudflare_r2_bucket"
-                        value="<?= htmlspecialchars($settings['cloudflare_r2_bucket'] ?? 'mudsor-assets') ?>"
+                        value="<?= htmlspecialchars($settings['cloudflare_r2_bucket'] ?? 'importwale-assets') ?>"
                         class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono text-slate-800 focus:outline-none focus:border-red-600 focus:bg-white transition">
                     <p class="text-[10px] text-slate-400 mt-1">S3-compatible bucket name for storing product media.</p>
                 </div>

@@ -204,7 +204,7 @@ include __DIR__ . '/../layouts/header.php';
                     <label class="block font-semibold text-gray-700 mb-1">Shiprocket Email Address <span
                             class="text-red-500">*</span></label>
                     <input type="email" id="shiprocket_email" name="email"
-                        value="<?= htmlspecialchars($shiprocket['email'] ?? '') ?>" placeholder="admin@mudsor.com"
+                        value="<?= htmlspecialchars($shiprocket['email'] ?? '') ?>" placeholder="admin@importwale.com"
                         required
                         class="w-full h-11 px-4 bg-gray-50 border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                 </div>

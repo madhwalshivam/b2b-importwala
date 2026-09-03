@@ -27,7 +27,7 @@ class BrandFrontendController extends Controller {
         return $this->render('storefront/brands', [
             'brands' => $brands,
             'seoOptions' => [
-                'title' => 'Electric Scooter Brands & Manufacturers | Mudsor',
+                'title' => 'Brands & Manufacturers | ImportWale',
                 'description' => 'Browse custom accessories and spare parts engineered specifically for Ola, Ather, TVS, Bajaj Chetak, Hero Vida, and top EV manufacturers.'
             ]
         ]);
@@ -85,7 +85,7 @@ class BrandFrontendController extends Controller {
             'compareList'     => $_SESSION['compare'] ?? [],
             'wishlistProductIds' => !empty($_SESSION['user_id']) ? [] : ($_SESSION['guest_wishlist'] ?? []),
             'seoOptions'      => [
-                'title'       => htmlspecialchars($brand['name']) . ' Accessories & Spare Parts | Mudsor',
+                'title'       => htmlspecialchars($brand['name']) . ' Accessories & Spare Parts | ImportWale',
                 'description' => 'Explore precision-fit accessories engineered specifically for ' . htmlspecialchars($brand['name']) . ' electric scooters.'
             ]
         ]);

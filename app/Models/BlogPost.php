@@ -11,18 +11,14 @@ class BlogPost extends Model {
      * Converts a string into a clean, URL-friendly slug
      */
     public static function slugify(string $text): string {
-        // Convert to lowercase
         $slug = mb_strtolower($text, 'UTF-8');
-        // Replace non-alphanumeric characters with hyphens
         $slug = preg_replace('/[^a-z0-9]+/u', '-', $slug);
-        // Trim leading and trailing hyphens
         $slug = trim($slug, '-');
         return $slug ?: 'n-a';
     }
 
     /**
      * Generates a unique URL slug for blog posts.
-     * Auto-appends -1, -2, etc. if duplicate exists.
      */
     public function generateUniqueSlug(string $title, ?int $ignoreId = null, ?string $customSlug = null): string {
         $baseSlug = !empty($customSlug) ? self::slugify($customSlug) : self::slugify($title);
@@ -51,36 +47,108 @@ class BlogPost extends Model {
     }
 
     /**
-     * Get paginated published posts for storefront with optional ID exclusion
+     * Get all blog categories
      */
-    public function getPublishedPosts(int $page = 1, int $perPage = 9, array $excludeIds = []): array {
-        $where = "status = 'published'";
+    public function getAllCategories(): array {
+        $stmt = $this->db->query("SELECT * FROM blog_categories ORDER BY name ASC");
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Get recent published posts for homepage / widgets
+     */
+    public function getRecentPublished(int $limit = 4, array|int|null $excludeId = null): array {
+        $where = "((bp.status = 'published' AND (bp.published_at IS NULL OR bp.published_at <= NOW())) OR (bp.status = 'scheduled' AND bp.published_at <= NOW()))";
         $params = [];
 
-        if (!empty($excludeIds)) {
-            $cleanIds = implode(',', array_map('intval', array_filter($excludeIds)));
-            if (!empty($cleanIds)) {
-                $where .= " AND id NOT IN ({$cleanIds})";
+        if (!empty($excludeId)) {
+            if (is_array($excludeId)) {
+                $cleanIds = implode(',', array_map('intval', array_filter($excludeId)));
+                if (!empty($cleanIds)) {
+                    $where .= " AND bp.id NOT IN ({$cleanIds})";
+                }
+            } else {
+                $where .= " AND bp.id != ?";
+                $params[] = (int)$excludeId;
             }
         }
 
-        return $this->paginate(
-            $page,
-            $perPage,
-            $where,
-            $params,
-            "published_at DESC, id DESC"
-        );
+        $sql = "SELECT bp.*, c.name as category_name, c.slug as category_slug 
+                FROM {$this->table} bp 
+                LEFT JOIN blog_categories c ON bp.category_id = c.id 
+                WHERE {$where} 
+                ORDER BY bp.published_at DESC, bp.id DESC 
+                LIMIT {$limit}";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
      * Find a published post by slug
      */
     public function findPublishedBySlug(string $slug): ?array {
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE slug = ? AND status = 'published' LIMIT 1");
+        $sql = "SELECT bp.*, c.name as category_name, c.slug as category_slug 
+                FROM {$this->table} bp 
+                LEFT JOIN blog_categories c ON bp.category_id = c.id 
+                WHERE bp.slug = ? 
+                AND ((bp.status = 'published' AND (bp.published_at IS NULL OR bp.published_at <= NOW())) OR (bp.status = 'scheduled' AND bp.published_at <= NOW())) 
+                LIMIT 1";
+        $stmt = $this->db->prepare($sql);
         $stmt->execute([$slug]);
-        $result = $stmt->fetch();
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $result ?: null;
+    }
+
+    /**
+     * Get paginated published posts for storefront with category & search filter
+     */
+    public function getPublishedPostsFiltered(int $page = 1, int $perPage = 9, ?string $categorySlug = null, ?string $search = null): array {
+        $where = "((bp.status = 'published' AND (bp.published_at IS NULL OR bp.published_at <= NOW())) OR (bp.status = 'scheduled' AND bp.published_at <= NOW()))";
+        $params = [];
+
+        if (!empty($categorySlug)) {
+            $where .= " AND c.slug = ?";
+            $params[] = $categorySlug;
+        }
+
+        if (!empty($search)) {
+            $where .= " AND (bp.title LIKE ? OR bp.content LIKE ? OR bp.excerpt LIKE ? OR bp.author_name LIKE ?)";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+        }
+
+        // Count total matching
+        $countSql = "SELECT COUNT(*) FROM {$this->table} bp LEFT JOIN blog_categories c ON bp.category_id = c.id WHERE {$where}";
+        $countStmt = $this->db->prepare($countSql);
+        $countStmt->execute($params);
+        $total = (int)$countStmt->fetchColumn();
+
+        $lastPage = max(1, (int)ceil($total / $perPage));
+        $page = max(1, min($page, $lastPage));
+        $offset = ($page - 1) * $perPage;
+
+        $sql = "SELECT bp.*, c.name as category_name, c.slug as category_slug 
+                FROM {$this->table} bp 
+                LEFT JOIN blog_categories c ON bp.category_id = c.id 
+                WHERE {$where} 
+                ORDER BY bp.published_at DESC, bp.id DESC 
+                LIMIT {$perPage} OFFSET {$offset}";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        $items = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return [
+            'items' => $items,
+            'current_page' => $page,
+            'last_page' => $lastPage,
+            'total' => $total,
+            'per_page' => $perPage
+        ];
     }
 
     /**
@@ -88,76 +156,47 @@ class BlogPost extends Model {
      */
     public function getRelatedPosts(array $currentPost, int $limit = 3): array {
         $currentId = (int)$currentPost['id'];
-        $focusKeyword = trim($currentPost['focus_keyword'] ?? '');
-        $title = trim($currentPost['title'] ?? '');
-
-        // Extract key search terms from title / focus keyword
-        $searchTerms = [];
-        if (!empty($focusKeyword)) {
-            $searchTerms[] = $focusKeyword;
-        }
-        
-        $words = array_filter(explode(' ', preg_replace('/[^a-zA-Z0-9\s]/', '', $title)), fn($w) => strlen($w) > 3);
-        $searchTerms = array_merge($searchTerms, array_slice($words, 0, 3));
+        $categoryId = !empty($currentPost['category_id']) ? (int)$currentPost['category_id'] : null;
 
         $related = [];
         $foundIds = [$currentId];
 
-        if (!empty($searchTerms)) {
-            $likeConditions = [];
-            $params = [];
-            foreach ($searchTerms as $term) {
-                $likeConditions[] = "(title LIKE ? OR content LIKE ? OR focus_keyword LIKE ?)";
-                $params[] = "%{$term}%";
-                $params[] = "%{$term}%";
-                $params[] = "%{$term}%";
-            }
-
-            $sql = "SELECT DISTINCT * FROM {$this->table} WHERE status = 'published' AND id != ? AND (" . implode(' OR ', $likeConditions) . ") ORDER BY published_at DESC, id DESC LIMIT {$limit}";
+        // 1. First try same category
+        if ($categoryId) {
+            $sql = "SELECT bp.*, c.name as category_name, c.slug as category_slug 
+                    FROM {$this->table} bp 
+                    LEFT JOIN blog_categories c ON bp.category_id = c.id 
+                    WHERE bp.id != ? AND bp.category_id = ? 
+                    AND ((bp.status = 'published' AND (bp.published_at IS NULL OR bp.published_at <= NOW())) OR (bp.status = 'scheduled' AND bp.published_at <= NOW())) 
+                    ORDER BY bp.published_at DESC, bp.id DESC 
+                    LIMIT {$limit}";
             $stmt = $this->db->prepare($sql);
-            $stmt->execute(array_merge([$currentId], $params));
-            $related = $stmt->fetchAll();
+            $stmt->execute([$currentId, $categoryId]);
+            $related = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
             foreach ($related as $r) {
                 $foundIds[] = (int)$r['id'];
             }
         }
 
-        // Fill remaining slots with recent published posts if needed
+        // 2. Fill remaining slots with latest published posts
         $remaining = $limit - count($related);
         if ($remaining > 0) {
             $inClause = implode(',', $foundIds);
-            $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE status = 'published' AND id NOT IN ({$inClause}) ORDER BY published_at DESC, id DESC LIMIT {$remaining}");
+            $sql = "SELECT bp.*, c.name as category_name, c.slug as category_slug 
+                    FROM {$this->table} bp 
+                    LEFT JOIN blog_categories c ON bp.category_id = c.id 
+                    WHERE bp.id NOT IN ({$inClause}) 
+                    AND ((bp.status = 'published' AND (bp.published_at IS NULL OR bp.published_at <= NOW())) OR (bp.status = 'scheduled' AND bp.published_at <= NOW())) 
+                    ORDER BY bp.published_at DESC, bp.id DESC 
+                    LIMIT {$remaining}";
+            $stmt = $this->db->prepare($sql);
             $stmt->execute();
-            $fallback = $stmt->fetchAll();
+            $fallback = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             $related = array_merge($related, $fallback);
         }
 
         return $related;
-    }
-
-    /**
-     * Fetch recent published articles for sidebar/footer widgets with array support for excluded IDs
-     */
-    public function getRecentPublished(int $limit = 5, array|int|null $excludeId = null): array {
-        $where = "status = 'published'";
-        $params = [];
-
-        if (!empty($excludeId)) {
-            if (is_array($excludeId)) {
-                $cleanIds = implode(',', array_map('intval', array_filter($excludeId)));
-                if (!empty($cleanIds)) {
-                    $where .= " AND id NOT IN ({$cleanIds})";
-                }
-            } else {
-                $where .= " AND id != ?";
-                $params[] = (int)$excludeId;
-            }
-        }
-
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE {$where} ORDER BY published_at DESC, id DESC LIMIT {$limit}");
-        $stmt->execute($params);
-        return $stmt->fetchAll();
     }
 
     /**

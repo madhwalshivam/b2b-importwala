@@ -207,11 +207,15 @@ include __DIR__ . '/../layouts/header.php';
                 const formData = new FormData();
                 formData.append('id', id);
                 formData.append('field', field);
+                formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
 
                 fetch('<?= url("admin/products/toggle-flag") ?>', {
                     method: 'POST',
                     body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    headers: { 
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
+                    }
                 })
                     .then(res => res.json())
                     .then(data => {
@@ -285,7 +289,7 @@ include __DIR__ . '/../layouts/header.php';
                     <i data-lucide="upload-cloud" class="w-5 h-5 text-emerald-600"></i>
                     <span>Bulk Product Listing Importer</span>
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5">Upload .xlsx / .csv catalog spreadsheet (+ optional companion ZIP for images)</p>
+                <p class="text-xs text-slate-500 mt-0.5">Upload .xlsx / .csv catalog spreadsheet</p>
             </div>
             <button onclick="closeBulkImportModal()" type="button" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition border-0 cursor-pointer">
                 <i data-lucide="x" class="w-5 h-5"></i>
@@ -298,33 +302,19 @@ include __DIR__ . '/../layouts/header.php';
             <!-- STEP 1: FILE UPLOAD SECTION -->
             <div id="importStepUpload" class="space-y-5">
                 <form id="bulkUploadForm" onsubmit="handleParseSpreadsheet(event)" class="space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <!-- Spreadsheet File Input -->
-                        <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-5 bg-slate-50/50 text-center transition group">
-                            <i data-lucide="file-spreadsheet" class="w-8 h-8 mx-auto text-emerald-600 mb-2 group-hover:scale-110 transition"></i>
-                            <label class="block text-xs font-bold text-slate-800 mb-1 cursor-pointer">Select Spreadsheet (.xlsx / .csv)</label>
-                            <input type="file" id="importSpreadsheetFile" accept=".xlsx, .csv" required class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
-                            <span class="text-[11px] text-slate-400 block mt-1">Fixed 55-column v1 schema</span>
-                        </div>
-
-                        <!-- Companion ZIP Input -->
-                        <div class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-5 bg-slate-50/50 text-center transition group">
-                            <i data-lucide="archive" class="w-8 h-8 mx-auto text-blue-600 mb-2 group-hover:scale-110 transition"></i>
-                            <label class="block text-xs font-bold text-slate-800 mb-1 cursor-pointer">Optional Image ZIP Archive (.zip)</label>
-                            <input type="file" id="importZipFile" accept=".zip" class="block w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
-                            <span class="text-[11px] text-slate-400 block mt-1">Pack product &amp; variant image files</span>
-                        </div>
+                    <!-- Single Spreadsheet File Input -->
+                    <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-8 bg-slate-50/50 text-center transition group">
+                        <i data-lucide="file-spreadsheet" class="w-10 h-10 mx-auto text-emerald-600 mb-3 group-hover:scale-110 transition"></i>
+                        <label class="block text-sm font-bold text-slate-800 mb-1 cursor-pointer">Select Spreadsheet (.xlsx / .csv)</label>
+                        <p class="text-xs text-slate-400 mb-4">Fixed 55-column v1 catalog spreadsheet schema</p>
+                        <input type="file" id="importSpreadsheetFile" accept=".xlsx, .csv" required class="block w-full max-w-md mx-auto text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
                     </div>
 
-                    <div class="flex items-center justify-between bg-slate-100 p-3 rounded-xl">
+                    <div class="flex items-center justify-between bg-slate-100 p-3.5 rounded-xl">
                         <label class="flex items-center space-x-2 text-xs font-medium text-slate-700 cursor-pointer select-none">
                             <input type="checkbox" id="chkAutoCreateCategory" checked class="rounded text-emerald-600 focus:ring-0 w-4 h-4 cursor-pointer">
                             <span>Auto-create Category, Subcategory &amp; Brand if missing in database</span>
                         </label>
-                        <a href="<?= url('admin/products/import/template') ?>" class="text-xs font-bold text-[#f05a29] hover:underline flex items-center space-x-1">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                            <span>Download Template</span>
-                        </a>
                     </div>
 
                     <div class="pt-2 flex justify-end">
@@ -478,10 +468,11 @@ include __DIR__ . '/../layouts/header.php';
 
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        if (zipInput.files && zipInput.files.length > 0) {
+        if (zipInput && zipInput.files && zipInput.files.length > 0) {
             formData.append('zip_file', zipInput.files[0]);
         }
         formData.append('auto_create_category', chkAuto.checked ? '1' : '0');
+        formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
 
         document.getElementById('importStepUpload').classList.add('hidden');
         document.getElementById('importStepLoader').classList.remove('hidden');
@@ -490,13 +481,16 @@ include __DIR__ . '/../layouts/header.php';
             const resp = await fetch('<?= url('admin/products/import/parse') ?>', {
                 method: 'POST',
                 body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
+                }
             });
             const data = await resp.json();
             document.getElementById('importStepLoader').classList.add('hidden');
 
             if (!data.success) {
-                alert(data.error || 'Validation error while parsing file.');
+                alert(data.error || data.message || 'Validation error while parsing file.');
                 document.getElementById('importStepUpload').classList.remove('hidden');
                 return;
             }
@@ -584,15 +578,22 @@ include __DIR__ . '/../layouts/header.php';
         btn.disabled = true;
         btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Importing...</span>';
 
+        const formData = new FormData();
+        formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
+
         try {
             const resp = await fetch('<?= url('admin/products/import/commit') ?>', {
                 method: 'POST',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                body: formData,
+                headers: { 
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
+                }
             });
             const data = await resp.json();
 
             if (!data.success) {
-                alert(data.error || 'Commit failed.');
+                alert(data.error || data.message || 'Commit failed.');
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Confirm & Import Products</span>';
                 if (typeof lucide !== 'undefined') lucide.createIcons();

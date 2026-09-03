@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales & Tax Report - <?= htmlspecialchars($filter_label) ?> | Mudsor</title>
+    <title>Sales & Tax Report - <?= htmlspecialchars($filter_label) ?> | ImportWale</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -53,7 +53,7 @@
         <div class="flex items-center space-x-3">
             <span class="w-3 h-3 bg-emerald-500 rounded-full animate-ping"></span>
             <div>
-                <h3 class="text-xs font-semibold">Mudsor Official Tax Report Document</h3>
+                <h3 class="text-xs font-semibold">ImportWale Official Tax Report Document</h3>
                 <p class="text-[10px] text-slate-400">Period: <?= htmlspecialchars($filter_label) ?></p>
             </div>
         </div>
@@ -89,7 +89,7 @@
         <!-- Document Header: Company Info + Report Title -->
         <div class="flex flex-col md:flex-row justify-between items-start border-b border-slate-200 pb-6 mb-6 mt-2">
             <div>
-                <h1 class="text-3xl font-black text-brand-red tracking-tight mb-1">MUDSOR</h1>
+                <h1 class="text-3xl font-black text-brand-red tracking-tight mb-1">IMPORTWALE</h1>
                 <p class="font-semibold text-slate-900 text-sm uppercase tracking-wide">
                     <?= htmlspecialchars($company['legal_name'] ?? 'Rughwani Enterprises') ?>
                 </p>
@@ -230,7 +230,7 @@
         <!-- Footer Sign & Notes -->
         <div class="pt-6 border-t border-slate-200 flex justify-between items-end text-xs">
             <div class="text-slate-500 space-y-1">
-                <p class="font-semibold text-slate-800">Mudsor Financial Intelligence Unit</p>
+                <p class="font-semibold text-slate-800">ImportWale Financial Intelligence Unit</p>
                 <p class="text-[10px] text-slate-400 max-w-sm">This is a system-generated monthly sales and tax report.
                     All figures are based on logged customer order records.</p>
             </div>
@@ -251,7 +251,7 @@
             const element = document.getElementById('pdf-report-content');
             const opt = {
                 margin: [8, 8, 8, 8],
-                filename: 'Mudsor_Sales_Tax_Report_<?= str_replace(' ', '_', $filter_label) ?>.pdf',
+                filename: 'ImportWale_Sales_Tax_Report_<?= str_replace(' ', '_', $filter_label) ?>.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }

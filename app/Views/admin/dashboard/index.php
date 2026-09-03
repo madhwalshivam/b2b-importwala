@@ -10,7 +10,7 @@ include __DIR__ . '/../layouts/header.php';
         <div>
             <span
                 class="inline-block px-3 py-1 bg-red-600 text-white font-semibold text-[10px] uppercase rounded tracking-wider mb-2">
-                Mudsor Executive CMS
+                ImportWale Executive CMS
             </span>
             <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-slate-100">Welcome back, Admin
 

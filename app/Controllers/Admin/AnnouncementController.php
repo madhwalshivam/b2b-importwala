@@ -11,7 +11,7 @@ class AnnouncementController extends Controller {
         $stmt = $db->query("SELECT * FROM announcements ORDER BY id DESC LIMIT 1");
         $announcement = $stmt->fetch() ?: [
             'id' => null,
-            'message' => 'Mudsor EV Special: Flat 15% OFF on Stainless Steel Crash Guards & Accessories! Use Code: MUDSOR15',
+            'message' => 'ImportWale Special: Flat 15% OFF on Crash Guards & Accessories! Use Code: IMPORTWALE15',
             'cta_text' => 'Shop Deals',
             'cta_link' => '/shop',
             'is_active' => 1

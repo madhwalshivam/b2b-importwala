@@ -13,7 +13,7 @@ include __DIR__ . '/../layouts/header.php';
                     <i data-lucide="user" class="w-6 h-6"></i>
                 </div>
                 <h1 class="text-2xl font-semibold text-gray-900">Customer Login</h1>
-                <p class="text-xs text-gray-500">Access your Mudsor account, track orders & manage wishlist</p>
+                <p class="text-xs text-gray-500">Access your ImportWale account, track orders & manage wishlist</p>
             </div>
 
             <?php if (!empty($error)): ?>

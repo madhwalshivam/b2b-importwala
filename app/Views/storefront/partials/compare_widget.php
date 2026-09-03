@@ -26,7 +26,7 @@ foreach ($rawProducts as $p) {
         'price' => (float) $p['price'],
         'sale_price' => $p['sale_price'] ? (float) $p['sale_price'] : null,
         'main_image' => asset(ltrim($p['main_image'], '/')),
-        'brand_name' => (string) ($p['brand_name'] ?? 'Mudsor')
+        'brand_name' => (string) ($p['brand_name'] ?? 'ImportWale')
     ];
 }
 $initialCompareIds = $_SESSION['compare'] ?? [];

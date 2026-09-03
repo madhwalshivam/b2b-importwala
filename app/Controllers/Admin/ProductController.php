@@ -11,23 +11,26 @@ use App\Models\ScooterModel;
 use App\Helpers\Paginator;
 use App\Services\CloudflareR2;
 
-class ProductController extends Controller {
+class ProductController extends Controller
+{
     protected Product $productModel;
     protected ProductImage $imageModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         parent::__construct();
         $this->productModel = new Product();
-        $this->imageModel   = new ProductImage();
+        $this->imageModel = new ProductImage();
     }
 
-    public function index(): string {
+    public function index(): string
+    {
         if (!Auth::hasPermission('products.view')) {
             $this->redirect(url('admin/dashboard'));
         }
 
-        $page = (int)($this->request->input('page', 1));
-        $perPage = (int)($this->request->input('per_page', 20));
+        $page = (int) ($this->request->input('page', 1));
+        $perPage = (int) ($this->request->input('per_page', 20));
         $search = $this->request->input('search', '');
         $status = $this->request->input('status', '');
 
@@ -50,7 +53,7 @@ class ProductController extends Controller {
         $db = \App\Core\Database::getInstance();
         $countStmt = $db->prepare("SELECT COUNT(*) FROM products p WHERE {$whereSql}");
         $countStmt->execute($params);
-        $total = (int)$countStmt->fetchColumn();
+        $total = (int) $countStmt->fetchColumn();
 
         $offset = ($page - 1) * $perPage;
         $sql = "SELECT p.*, c.name as category_name 
@@ -73,7 +76,8 @@ class ProductController extends Controller {
         ]);
     }
 
-    public function create(): string {
+    public function create(): string
+    {
         if (!Auth::hasPermission('products.add')) {
             $this->redirect(url('admin/products'));
         }
@@ -91,27 +95,28 @@ class ProductController extends Controller {
         ]);
     }
 
-    public function store(): void {
+    public function store(): void
+    {
         if (!Auth::hasPermission('products.add')) {
             $this->redirect(url('admin/products'));
         }
 
         $name = htmlspecialchars_decode($this->request->input('name'));
         $sku = trim($this->request->input('sku'));
-        $price = (float)$this->request->input('price', 0);
-        $salePrice = $this->request->input('sale_price') ? (float)$this->request->input('sale_price') : null;
-        
+        $price = (float) $this->request->input('price', 0);
+        $salePrice = $this->request->input('sale_price') ? (float) $this->request->input('sale_price') : null;
+
         $categoryIds = $_POST['categories'] ?? [];
         $brandIds = $_POST['brands'] ?? [];
 
         $inputCatId = $this->request->input('category_id');
-        $primaryCategoryId = !empty($inputCatId) ? (int)$inputCatId : (!empty($categoryIds[0]) ? (int)$categoryIds[0] : 0);
+        $primaryCategoryId = !empty($inputCatId) ? (int) $inputCatId : (!empty($categoryIds[0]) ? (int) $categoryIds[0] : 0);
         if ($primaryCategoryId <= 0) {
             $catModel = new Category();
             $allCats = $catModel->all('id ASC');
             $firstCategory = $allCats[0] ?? null;
             if ($firstCategory) {
-                $primaryCategoryId = (int)$firstCategory['id'];
+                $primaryCategoryId = (int) $firstCategory['id'];
             }
         }
         if ($primaryCategoryId > 0 && !in_array($primaryCategoryId, $categoryIds)) {
@@ -119,9 +124,9 @@ class ProductController extends Controller {
         }
 
         $inputBrandId = $this->request->input('brand_id');
-        $primaryBrandId = !empty($inputBrandId) ? (int)$inputBrandId : (!empty($brandIds[0]) ? (int)$brandIds[0] : null);
+        $primaryBrandId = !empty($inputBrandId) ? (int) $inputBrandId : (!empty($brandIds[0]) ? (int) $brandIds[0] : null);
 
-        $stock = (int)$this->request->input('stock', 0);
+        $stock = (int) $this->request->input('stock', 0);
         $description = trim($_POST['description'] ?? '');
 
         // Handle Main Image
@@ -182,53 +187,53 @@ class ProductController extends Controller {
             $videoThumbnail = trim($_POST['video_thumbnail_url']);
         }
 
-        $subcategoryId = !empty($_POST['subcategory_id']) ? (int)$_POST['subcategory_id'] : null;
-        $basePrice = isset($_POST['base_price']) && $_POST['base_price'] !== '' ? (float)$_POST['base_price'] : $price;
-        $moq = isset($_POST['moq']) && (int)$_POST['moq'] > 0 ? (int)$_POST['moq'] : 1;
-        $totalSold = isset($_POST['total_sold']) && (int)$_POST['total_sold'] >= 0 ? (int)$_POST['total_sold'] : 0;
+        $subcategoryId = !empty($_POST['subcategory_id']) ? (int) $_POST['subcategory_id'] : null;
+        $basePrice = isset($_POST['base_price']) && $_POST['base_price'] !== '' ? (float) $_POST['base_price'] : $price;
+        $moq = isset($_POST['moq']) && (int) $_POST['moq'] > 0 ? (int) $_POST['moq'] : 1;
+        $totalSold = isset($_POST['total_sold']) && (int) $_POST['total_sold'] >= 0 ? (int) $_POST['total_sold'] : 0;
         $isBestSeller = isset($_POST['is_best_seller']) ? 1 : 0;
         $isNew = isset($_POST['is_new']) || isset($_POST['is_new_arrival']) ? 1 : 0;
 
         $productId = $this->productModel->insert([
-            'name'                 => $name,
-            'slug'                 => $slug,
-            'sku'                  => $sku,
-            'barcode'              => $this->request->input('barcode'),
-            'hsn_code'             => $this->request->input('hsn_code'),
-            'category_id'          => $primaryCategoryId,
-            'subcategory_id'       => $subcategoryId,
-            'brand_id'             => $primaryBrandId,
-            'price'                => $price,
-            'sale_price'           => $salePrice,
-            'base_price'           => $basePrice,
-            'moq'                  => $moq,
-            'total_sold'           => $totalSold,
-            'sales_count'          => $totalSold,
-            'tax_percent'          => (float)$this->request->input('tax_percent', 18),
-            'stock'                => $stock,
-            'main_image'           => $mainImage,
-            'video_url'            => $videoUrl,
-            'video_thumbnail'      => $videoThumbnail,
+            'name' => $name,
+            'slug' => $slug,
+            'sku' => $sku,
+            'barcode' => $this->request->input('barcode'),
+            'hsn_code' => $this->request->input('hsn_code'),
+            'category_id' => $primaryCategoryId,
+            'subcategory_id' => $subcategoryId,
+            'brand_id' => $primaryBrandId,
+            'price' => $price,
+            'sale_price' => $salePrice,
+            'base_price' => $basePrice,
+            'moq' => $moq,
+            'total_sold' => $totalSold,
+            'sales_count' => $totalSold,
+            'tax_percent' => (float) $this->request->input('tax_percent', 18),
+            'stock' => $stock,
+            'main_image' => $mainImage,
+            'video_url' => $videoUrl,
+            'video_thumbnail' => $videoThumbnail,
             'auto_video_thumbnail' => $autoVideoThumbnail,
-            'pdf_manual'           => $this->request->input('pdf_manual'),
-            'description'          => $description,
-            'warranty_info'        => $this->request->input('warranty_info'),
-            'tags'                 => $this->request->input('tags'),
-            'meta_title'           => $name,
-            'meta_description'     => $this->request->input('meta_description'),
-            'is_featured'          => isset($_POST['is_featured']) ? 1 : 0,
-            'is_best_seller'       => $isBestSeller,
-            'is_new'               => $isNew,
-            'is_new_arrival'       => $isNew,
-            'is_free_shipping'      => isset($_POST['is_free_shipping']) ? 1 : 0,
-            'is_flash_sale'        => isset($_POST['is_flash_sale']) ? 1 : 0,
-            'status'               => $this->request->input('status', 'active'),
+            'pdf_manual' => $this->request->input('pdf_manual'),
+            'description' => $description,
+            'warranty_info' => $this->request->input('warranty_info'),
+            'tags' => $this->request->input('tags'),
+            'meta_title' => $name,
+            'meta_description' => $this->request->input('meta_description'),
+            'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
+            'is_best_seller' => $isBestSeller,
+            'is_new' => $isNew,
+            'is_new_arrival' => $isNew,
+            'is_free_shipping' => isset($_POST['is_free_shipping']) ? 1 : 0,
+            'is_flash_sale' => isset($_POST['is_flash_sale']) ? 1 : 0,
+            'status' => $this->request->input('status', 'active'),
             // OEM & Warranty fields (shown in Compare page)
-            'warranty_months'      => (int)$this->request->input('warranty_months', 12),
-            'oem_price'            => $this->request->input('oem_price') !== '' && $this->request->input('oem_price') !== null
-                                        ? (float)$this->request->input('oem_price') : null,
-            'oem_warranty_months'  => (int)$this->request->input('oem_warranty_months', 6),
-            'oem_material'         => trim($this->request->input('oem_material', 'Standard Steel / Plastic')),
+            'warranty_months' => (int) $this->request->input('warranty_months', 12),
+            'oem_price' => $this->request->input('oem_price') !== '' && $this->request->input('oem_price') !== null
+                ? (float) $this->request->input('oem_price') : null,
+            'oem_warranty_months' => (int) $this->request->input('oem_warranty_months', 6),
+            'oem_material' => trim($this->request->input('oem_material', 'Standard Steel / Plastic')),
         ]);
 
         // Sync Categories & Brands
@@ -241,7 +246,7 @@ class ProductController extends Controller {
         // Main Image into product_images as primary
         $this->imageModel->insert([
             'product_id' => $productId,
-            'image_url'  => $mainImage,
+            'image_url' => $mainImage,
             'sort_order' => 0,
             'is_primary' => 1,
         ]);
@@ -255,7 +260,7 @@ class ProductController extends Controller {
                 if (!empty($gUrl)) {
                     $this->imageModel->insert([
                         'product_id' => $productId,
-                        'image_url'  => $gUrl,
+                        'image_url' => $gUrl,
                         'sort_order' => $gIdx++,
                         'is_primary' => 0,
                     ]);
@@ -294,13 +299,17 @@ class ProductController extends Controller {
         activity_log('Create Product', 'Products', $productId, "Created product: {$name} (SKU: {$sku})");
 
         // Flush Cache
-        try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+        try {
+            \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+        } catch (\Throwable $e) {
+        }
 
         $this->setFlash('success', 'Product created successfully!');
         $this->redirect(url('admin/products/edit/' . $productId));
     }
 
-    public function edit(int $id): string {
+    public function edit(int $id): string
+    {
         if (!Auth::hasPermission('products.edit')) {
             $this->redirect(url('admin/products'));
         }
@@ -319,15 +328,34 @@ class ProductController extends Controller {
         $selectedModelIds = array_column($compatibles, 'id');
         $selectedCategoryIds = $this->productModel->getProductCategoryIds($id);
         if ($product['category_id'] && !in_array($product['category_id'], $selectedCategoryIds)) {
-            $selectedCategoryIds[] = (int)$product['category_id'];
+            $selectedCategoryIds[] = (int) $product['category_id'];
         }
 
         $selectedBrandIds = $this->productModel->getProductBrandIds($id);
         if ($product['brand_id'] && !in_array($product['brand_id'], $selectedBrandIds)) {
-            $selectedBrandIds[] = (int)$product['brand_id'];
+            $selectedBrandIds[] = (int) $product['brand_id'];
         }
 
-        $galleryImages    = $this->imageModel->getByProduct($id);
+        $galleryImages = $this->imageModel->getByProduct($id);
+        if (!empty($product['main_image'])) {
+            $mainImgVal = $product['main_image'];
+            $hasMainInGallery = false;
+            foreach ($galleryImages as $gi) {
+                if (($gi['image_url'] ?? $gi['image_path'] ?? '') === $mainImgVal) {
+                    $hasMainInGallery = true;
+                    break;
+                }
+            }
+            if (!$hasMainInGallery) {
+                try {
+                    $db = \App\Core\Database::getInstance();
+                    $insM = $db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, 0, 1)");
+                    $insM->execute([$id, $mainImgVal]);
+                    $galleryImages = $this->imageModel->getByProduct($id);
+                } catch (\Throwable $e) {
+                }
+            }
+        }
         $frequentlyBought = $this->productModel->getRelatedProducts($id, 'frequently_bought', 10);
 
         $db = \App\Core\Database::getInstance();
@@ -336,7 +364,7 @@ class ProductController extends Controller {
         $tieredPrices = $tierStmt->fetchAll();
 
         $subcatModel = new \App\Models\Subcategory();
-        $subcategories = !empty($product['category_id']) ? $subcatModel->getByCategoryId((int)$product['category_id']) : [];
+        $subcategories = !empty($product['category_id']) ? $subcatModel->getByCategoryId((int) $product['category_id']) : [];
 
         $variantModel = new \App\Models\ProductVariant();
         $variants = $variantModel->getByProduct($id, false);
@@ -345,23 +373,24 @@ class ProductController extends Controller {
         $specifications = $specModel->getByProduct($id);
 
         return $this->render('admin/products/edit', [
-            'product'             => $product,
-            'categories'          => $categoryModel->all('name ASC'),
-            'subcategories'       => $subcategories,
-            'tieredPrices'        => $tieredPrices,
-            'brands'              => $brandModel->all('name ASC'),
-            'scooterModels'       => $scooterModel->getAllWithBrand(),
-            'selectedModelIds'    => $selectedModelIds,
+            'product' => $product,
+            'categories' => $categoryModel->all('name ASC'),
+            'subcategories' => $subcategories,
+            'tieredPrices' => $tieredPrices,
+            'brands' => $brandModel->all('name ASC'),
+            'scooterModels' => $scooterModel->getAllWithBrand(),
+            'selectedModelIds' => $selectedModelIds,
             'selectedCategoryIds' => $selectedCategoryIds,
-            'selectedBrandIds'    => $selectedBrandIds,
-            'galleryImages'       => $galleryImages,
-            'frequentlyBought'    => $frequentlyBought,
-            'variants'            => $variants,
-            'specifications'      => $specifications
+            'selectedBrandIds' => $selectedBrandIds,
+            'galleryImages' => $galleryImages,
+            'frequentlyBought' => $frequentlyBought,
+            'variants' => $variants,
+            'specifications' => $specifications
         ]);
     }
 
-    public function update(int $id): void {
+    public function update(int $id): void
+    {
         if (!Auth::hasPermission('products.edit')) {
             $this->redirect(url('admin/products'));
         }
@@ -373,20 +402,20 @@ class ProductController extends Controller {
 
         $name = htmlspecialchars_decode($this->request->input('name'));
         $sku = trim($this->request->input('sku'));
-        $price = (float)$this->request->input('price', 0);
-        $salePrice = $this->request->input('sale_price') ? (float)$this->request->input('sale_price') : null;
-        
+        $price = (float) $this->request->input('price', 0);
+        $salePrice = $this->request->input('sale_price') ? (float) $this->request->input('sale_price') : null;
+
         $categoryIds = $_POST['categories'] ?? [];
         $brandIds = $_POST['brands'] ?? [];
 
         $inputCatId = $this->request->input('category_id');
-        $primaryCategoryId = !empty($inputCatId) ? (int)$inputCatId : (!empty($categoryIds[0]) ? (int)$categoryIds[0] : (int)($product['category_id'] ?? 0));
+        $primaryCategoryId = !empty($inputCatId) ? (int) $inputCatId : (!empty($categoryIds[0]) ? (int) $categoryIds[0] : (int) ($product['category_id'] ?? 0));
         if ($primaryCategoryId <= 0) {
             $catModel = new Category();
             $allCats = $catModel->all('id ASC');
             $firstCategory = $allCats[0] ?? null;
             if ($firstCategory) {
-                $primaryCategoryId = (int)$firstCategory['id'];
+                $primaryCategoryId = (int) $firstCategory['id'];
             }
         }
         if ($primaryCategoryId > 0 && !in_array($primaryCategoryId, $categoryIds)) {
@@ -394,7 +423,7 @@ class ProductController extends Controller {
         }
 
         $inputBrandId = $this->request->input('brand_id');
-        $primaryBrandId = !empty($inputBrandId) ? (int)$inputBrandId : (!empty($brandIds[0]) ? (int)$brandIds[0] : (!empty($product['brand_id']) ? (int)$product['brand_id'] : null));
+        $primaryBrandId = !empty($inputBrandId) ? (int) $inputBrandId : (!empty($brandIds[0]) ? (int) $brandIds[0] : (!empty($product['brand_id']) ? (int) $product['brand_id'] : null));
 
         // RAW DESCRIPTION FROM $_POST to avoid sanitization corruption
         $description = trim($_POST['description'] ?? '');
@@ -443,50 +472,50 @@ class ProductController extends Controller {
             $videoThumbnail = trim($_POST['video_thumbnail_url']);
         }
 
-        $subcategoryId = !empty($_POST['subcategory_id']) ? (int)$_POST['subcategory_id'] : null;
-        $basePrice = isset($_POST['base_price']) && $_POST['base_price'] !== '' ? (float)$_POST['base_price'] : $price;
-        $moq = isset($_POST['moq']) && (int)$_POST['moq'] > 0 ? (int)$_POST['moq'] : 1;
-        $totalSold = isset($_POST['total_sold']) && (int)$_POST['total_sold'] >= 0 ? (int)$_POST['total_sold'] : (int)($product['total_sold'] ?? 0);
+        $subcategoryId = !empty($_POST['subcategory_id']) ? (int) $_POST['subcategory_id'] : null;
+        $basePrice = isset($_POST['base_price']) && $_POST['base_price'] !== '' ? (float) $_POST['base_price'] : $price;
+        $moq = isset($_POST['moq']) && (int) $_POST['moq'] > 0 ? (int) $_POST['moq'] : 1;
+        $totalSold = isset($_POST['total_sold']) && (int) $_POST['total_sold'] >= 0 ? (int) $_POST['total_sold'] : (int) ($product['total_sold'] ?? 0);
         $isBestSeller = isset($_POST['is_best_seller']) ? 1 : 0;
         $isNew = isset($_POST['is_new']) || isset($_POST['is_new_arrival']) ? 1 : 0;
 
         $data = [
-            'name'                 => $name,
-            'sku'                  => $sku,
-            'barcode'              => $this->request->input('barcode'),
-            'hsn_code'             => $this->request->input('hsn_code'),
-            'category_id'          => $primaryCategoryId,
-            'subcategory_id'       => $subcategoryId,
-            'brand_id'             => $primaryBrandId,
-            'price'                => $price,
-            'sale_price'           => $salePrice,
-            'base_price'           => $basePrice,
-            'moq'                  => $moq,
-            'total_sold'           => $totalSold,
-            'sales_count'          => $totalSold,
-            'tax_percent'          => (float)$this->request->input('tax_percent', 18),
-            'stock'                => (int)$this->request->input('stock', 0),
-            'video_url'            => $videoUrl,
-            'video_thumbnail'      => $videoThumbnail,
+            'name' => $name,
+            'sku' => $sku,
+            'barcode' => $this->request->input('barcode'),
+            'hsn_code' => $this->request->input('hsn_code'),
+            'category_id' => $primaryCategoryId,
+            'subcategory_id' => $subcategoryId,
+            'brand_id' => $primaryBrandId,
+            'price' => $price,
+            'sale_price' => $salePrice,
+            'base_price' => $basePrice,
+            'moq' => $moq,
+            'total_sold' => $totalSold,
+            'sales_count' => $totalSold,
+            'tax_percent' => (float) $this->request->input('tax_percent', 18),
+            'stock' => (int) $this->request->input('stock', 0),
+            'video_url' => $videoUrl,
+            'video_thumbnail' => $videoThumbnail,
             'auto_video_thumbnail' => $autoVideoThumbnail,
-            'description'          => $description,
-            'warranty_info'        => $this->request->input('warranty_info'),
-            'tags'                 => $this->request->input('tags'),
-            'meta_title'           => $name,
-            'meta_description'     => $this->request->input('meta_description'),
-            'is_featured'          => isset($_POST['is_featured']) ? 1 : 0,
-            'is_best_seller'       => $isBestSeller,
-            'is_new'               => $isNew,
-            'is_new_arrival'       => $isNew,
-            'is_free_shipping'      => isset($_POST['is_free_shipping']) ? 1 : 0,
-            'is_flash_sale'        => isset($_POST['is_flash_sale']) ? 1 : 0,
-            'status'               => $this->request->input('status', 'active'),
+            'description' => $description,
+            'warranty_info' => $this->request->input('warranty_info'),
+            'tags' => $this->request->input('tags'),
+            'meta_title' => $name,
+            'meta_description' => $this->request->input('meta_description'),
+            'is_featured' => isset($_POST['is_featured']) ? 1 : 0,
+            'is_best_seller' => $isBestSeller,
+            'is_new' => $isNew,
+            'is_new_arrival' => $isNew,
+            'is_free_shipping' => isset($_POST['is_free_shipping']) ? 1 : 0,
+            'is_flash_sale' => isset($_POST['is_flash_sale']) ? 1 : 0,
+            'status' => $this->request->input('status', 'active'),
             // OEM & Warranty fields (shown in Compare page)
-            'warranty_months'      => (int)$this->request->input('warranty_months', 12),
-            'oem_price'            => $this->request->input('oem_price') !== '' && $this->request->input('oem_price') !== null
-                                        ? (float)$this->request->input('oem_price') : null,
-            'oem_warranty_months'  => (int)$this->request->input('oem_warranty_months', 6),
-            'oem_material'         => trim($this->request->input('oem_material', 'Standard Steel / Plastic')),
+            'warranty_months' => (int) $this->request->input('warranty_months', 12),
+            'oem_price' => $this->request->input('oem_price') !== '' && $this->request->input('oem_price') !== null
+                ? (float) $this->request->input('oem_price') : null,
+            'oem_warranty_months' => (int) $this->request->input('oem_warranty_months', 6),
+            'oem_material' => trim($this->request->input('oem_material', 'Standard Steel / Plastic')),
         ];
 
         // Handle Main Image: 1. Uploaded File or 2. Direct Image URL
@@ -508,7 +537,7 @@ class ProductController extends Controller {
         $this->saveTieredPrices($id, $_POST['tier_min_qty'] ?? [], $_POST['tier_max_qty'] ?? [], $_POST['tier_unit_price'] ?? []);
 
         // 1. Handle Primary Image Radio selection from single image section
-        $primaryImageId = (int)($this->request->input('primary_image_id', 0));
+        $primaryImageId = (int) ($this->request->input('primary_image_id', 0));
         if ($primaryImageId > 0) {
             $this->imageModel->setPrimary($primaryImageId, $id);
         }
@@ -548,18 +577,22 @@ class ProductController extends Controller {
         if (is_string($frequentlyBoughtIds)) {
             $frequentlyBoughtIds = array_filter(explode(',', $frequentlyBoughtIds));
         }
-        $this->productModel->saveRelatedProducts($id, (array)$frequentlyBoughtIds, 'frequently_bought');
+        $this->productModel->saveRelatedProducts($id, (array) $frequentlyBoughtIds, 'frequently_bought');
 
         activity_log('Update Product', 'Products', $id, "Updated product: {$name}");
 
         // Flush Cache
-        try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+        try {
+            \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+        } catch (\Throwable $e) {
+        }
 
         $this->setFlash('success', 'Product saved successfully!');
         $this->redirect(url('admin/products/edit/' . $id));
     }
 
-    public function delete(int $id): void {
+    public function delete(int $id): void
+    {
         if (!Auth::hasPermission('products.delete')) {
             $this->redirect(url('admin/products'));
         }
@@ -568,7 +601,10 @@ class ProductController extends Controller {
         if ($product) {
             $this->productModel->delete($id);
             activity_log('Delete Product', 'Products', $id, "Deleted product ID: {$id}");
-            try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+            try {
+                \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+            } catch (\Throwable $e) {
+            }
             $this->setFlash('success', 'Product deleted successfully.');
         }
         $this->redirect(url('admin/products'));
@@ -578,27 +614,33 @@ class ProductController extends Controller {
     // Gallery Image AJAX Methods
     // ─────────────────────────────────────────────────────────────────────────────
 
-    private function jsonResponse(array $data, int $code = 200): void {
+    private function jsonResponse(array $data, int $code = 200): void
+    {
         http_response_code($code);
         header('Content-Type: application/json');
         echo json_encode($data);
         exit;
     }
 
-    private function uploadImageFile(array $file, string $folder = 'products'): ?string {
-        if (empty($file['tmp_name'])) return null;
+    private function uploadImageFile(array $file, string $folder = 'products'): ?string
+    {
+        if (empty($file['tmp_name']))
+            return null;
         try {
             if (class_exists('\App\Services\CloudflareR2')) {
                 $r2 = new CloudflareR2();
                 $url = $r2->upload($file);
-                if (!empty($url)) return $url;
+                if (!empty($url))
+                    return $url;
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // Fallback to local
         $uploadDir = __DIR__ . '/../../../public/uploads/' . $folder . '/';
-        if (!is_dir($uploadDir)) @mkdir($uploadDir, 0777, true);
-        $ext  = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION)) ?: 'jpg';
+        if (!is_dir($uploadDir))
+            @mkdir($uploadDir, 0777, true);
+        $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION)) ?: 'jpg';
         $name = time() . '_' . uniqid() . '.' . $ext;
         if (@move_uploaded_file($file['tmp_name'], $uploadDir . $name)) {
             return '/uploads/' . $folder . '/' . $name;
@@ -606,14 +648,18 @@ class ProductController extends Controller {
         return null;
     }
 
-    public function galleryUpload(int $productId): void {
-        if (!Auth::hasPermission('products.edit')) $this->jsonResponse(['error' => 'Forbidden'], 403);
+    public function galleryUpload(int $productId): void
+    {
+        if (!Auth::hasPermission('products.edit'))
+            $this->jsonResponse(['error' => 'Forbidden'], 403);
         $product = $this->productModel->find($productId);
-        if (!$product) $this->jsonResponse(['error' => 'Product not found'], 404);
+        if (!$product)
+            $this->jsonResponse(['error' => 'Product not found'], 404);
 
         // Count existing images
         $existing = $this->imageModel->getByProduct($productId);
-        if (count($existing) >= 8) $this->jsonResponse(['error' => 'Maximum 8 images allowed per product'], 422);
+        if (count($existing) >= 8)
+            $this->jsonResponse(['error' => 'Maximum 8 images allowed per product'], 422);
 
         $url = null;
         // File upload
@@ -624,12 +670,13 @@ class ProductController extends Controller {
         if (!$url) {
             $url = trim(htmlspecialchars_decode($_POST['image_url'] ?? ''));
         }
-        if (!$url) $this->jsonResponse(['error' => 'No image provided'], 422);
+        if (!$url)
+            $this->jsonResponse(['error' => 'No image provided'], 422);
 
         $isPrimary = (count($existing) === 0) ? 1 : 0;
         $imageId = $this->imageModel->insert([
             'product_id' => $productId,
-            'image_url'  => $url,
+            'image_url' => $url,
             'sort_order' => count($existing),
             'is_primary' => $isPrimary,
         ]);
@@ -640,29 +687,86 @@ class ProductController extends Controller {
         $this->jsonResponse(['success' => true, 'image_id' => $imageId, 'image_url' => $url, 'is_primary' => $isPrimary]);
     }
 
-    public function galleryDelete(int $imageId): void {
-        if (!Auth::hasPermission('products.edit')) $this->jsonResponse(['error' => 'Forbidden'], 403);
+    public function galleryDelete(int $imageId): void
+    {
+        header('Content-Type: application/json');
+        if (!Auth::hasPermission('products.edit')) {
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            exit;
+        }
+
+        $db = \App\Core\Database::getInstance();
+        $stmt = $db->prepare("SELECT product_id, image_url, image_path, is_primary FROM product_images WHERE id = ?");
+        $stmt->execute([$imageId]);
+        $img = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$img) {
+            echo json_encode(['success' => false, 'message' => 'Image not found']);
+            exit;
+        }
+
+        $productId = (int) $img['product_id'];
+
+        // Minimum 1 Image Guard
+        $countStmt = $db->prepare("SELECT COUNT(*) as total FROM product_images WHERE product_id = ?");
+        $countStmt->execute([$productId]);
+        $totalImgs = (int) ($countStmt->fetch()['total'] ?? 0);
+
+        if ($totalImgs <= 1) {
+            echo json_encode(['success' => false, 'message' => 'At least 1 product photo is required. Cannot delete the last remaining image.']);
+            exit;
+        }
+
+        // 1. Delete record from DB and handle primary re-assignment
         $url = $this->imageModel->delete($imageId);
-        $this->jsonResponse(['success' => true, 'deleted_url' => $url]);
+
+        // 2. Physical File Cleanup on Server Storage
+        if (!empty($url) && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+            $cleanUrl = ltrim($url, '/');
+            $absPath = __DIR__ . '/../../../public/' . $cleanUrl;
+            if (file_exists($absPath) && is_file($absPath)) {
+                @unlink($absPath);
+            }
+        }
+
+        // 3. Find current primary image ID after deletion
+        $primStmt = $db->prepare("SELECT id FROM product_images WHERE product_id = ? AND is_primary = 1 LIMIT 1");
+        $primStmt->execute([$productId]);
+        $newPrimaryRow = $primStmt->fetch(\PDO::FETCH_ASSOC);
+        $newPrimaryId = $newPrimaryRow ? (int) $newPrimaryRow['id'] : null;
+
+        echo json_encode([
+            'success' => true,
+            'deleted_id' => $imageId,
+            'new_primary_id' => $newPrimaryId,
+            'message' => 'Photo deleted successfully'
+        ]);
+        exit;
     }
 
-    public function gallerySetPrimary(int $imageId): void {
-        if (!Auth::hasPermission('products.edit')) $this->jsonResponse(['error' => 'Forbidden'], 403);
+    public function gallerySetPrimary(int $imageId): void
+    {
+        if (!Auth::hasPermission('products.edit'))
+            $this->jsonResponse(['error' => 'Forbidden'], 403);
         // Get product_id from image
         $db = \App\Core\Database::getInstance();
         $row = $db->prepare("SELECT product_id FROM product_images WHERE id = ?")->execute([$imageId]);
         $imgRow = $db->prepare("SELECT product_id FROM product_images WHERE id = ?");
         $imgRow->execute([$imageId]);
         $img = $imgRow->fetch();
-        if (!$img) $this->jsonResponse(['error' => 'Image not found'], 404);
-        $this->imageModel->setPrimary($imageId, (int)$img['product_id']);
+        if (!$img)
+            $this->jsonResponse(['error' => 'Image not found'], 404);
+        $this->imageModel->setPrimary($imageId, (int) $img['product_id']);
         $this->jsonResponse(['success' => true]);
     }
 
-    public function galleryReorder(int $productId): void {
-        if (!Auth::hasPermission('products.edit')) $this->jsonResponse(['error' => 'Forbidden'], 403);
+    public function galleryReorder(int $productId): void
+    {
+        if (!Auth::hasPermission('products.edit'))
+            $this->jsonResponse(['error' => 'Forbidden'], 403);
         $ids = $_POST['ids'] ?? [];
-        if (!is_array($ids)) $ids = json_decode($ids, true) ?: [];
+        if (!is_array($ids))
+            $ids = json_decode($ids, true) ?: [];
         $this->imageModel->reorder(array_map('intval', $ids));
         $this->jsonResponse(['success' => true]);
     }
@@ -670,21 +774,23 @@ class ProductController extends Controller {
     /**
      * Save wholesale tiered volume prices for product or variant
      */
-    protected function saveTieredPrices(int $productId, array $minQtys, array $maxQtys, array $unitPrices, ?int $variantId = null): void {
+    protected function saveTieredPrices(int $productId, array $minQtys, array $maxQtys, array $unitPrices, ?int $variantId = null): void
+    {
         $db = \App\Core\Database::getInstance();
         if ($variantId !== null) {
             $db->prepare("DELETE FROM tiered_prices WHERE product_id = ? AND variant_id = ?")->execute([$productId, $variantId]);
         } else {
             $db->prepare("DELETE FROM tiered_prices WHERE product_id = ? AND variant_id IS NULL")->execute([$productId]);
         }
-        
-        if (empty($minQtys)) return;
+
+        if (empty($minQtys))
+            return;
 
         $tiersToSave = [];
         foreach ($minQtys as $idx => $minQty) {
-            $min = (int)$minQty;
-            $max = isset($maxQtys[$idx]) && $maxQtys[$idx] !== '' && $maxQtys[$idx] !== null ? (int)$maxQtys[$idx] : null;
-            $unit = (float)($unitPrices[$idx] ?? 0);
+            $min = (int) $minQty;
+            $max = isset($maxQtys[$idx]) && $maxQtys[$idx] !== '' && $maxQtys[$idx] !== null ? (int) $maxQtys[$idx] : null;
+            $unit = (float) ($unitPrices[$idx] ?? 0);
             if ($min > 0 && $unit > 0) {
                 $tiersToSave[] = ['min' => $min, 'max' => $max, 'unit' => $unit];
             }
@@ -699,14 +805,15 @@ class ProductController extends Controller {
         }
     }
 
-    public function toggleFlag(): void {
+    public function toggleFlag(): void
+    {
         if (!Auth::hasPermission('products.edit')) {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Permission denied']);
             exit;
         }
 
-        $id = (int)($this->request->input('id', 0));
+        $id = (int) ($this->request->input('id', 0));
         $field = trim($this->request->input('field', ''));
 
         if ($id <= 0 || !in_array($field, ['is_best_seller', 'is_new', 'is_new_arrival', 'is_free_shipping', 'status'])) {
@@ -735,7 +842,10 @@ class ProductController extends Controller {
         }
 
         // Immediate Cache Flush
-        try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+        try {
+            \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+        } catch (\Throwable $e) {
+        }
 
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'id' => $id, 'field' => $field, 'newValue' => $newVal]);
@@ -745,7 +855,8 @@ class ProductController extends Controller {
     /**
      * AJAX Save / Create Variant
      */
-    public function saveVariant(int $id): void {
+    public function saveVariant(int $id): void
+    {
         header('Content-Type: application/json');
         if (!Auth::check()) {
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -753,20 +864,31 @@ class ProductController extends Controller {
         }
 
         $variantModel = new \App\Models\ProductVariant();
-        $variantId = (int)$this->request->input('variant_id', 0);
+        $variantId = (int) $this->request->input('variant_id', 0);
+
+        $imageUrl = trim($this->request->input('image_url', ''));
+
+        // Handle uploaded variant image file if present
+        if (!empty($_FILES['variant_image_file']['tmp_name'])) {
+            $uploadedUrl = $this->uploadImageFile($_FILES['variant_image_file'], 'variants');
+            if (!empty($uploadedUrl)) {
+                $imageUrl = $uploadedUrl;
+            }
+        }
+
         $data = [
-            'product_id'      => $id,
-            'variant_code'    => trim($this->request->input('variant_code', '')),
-            'image_url'       => trim($this->request->input('image_url', '')),
+            'product_id' => $id,
+            'variant_code' => trim($this->request->input('variant_code', '')),
+            'image_url' => $imageUrl,
             'attribute_label' => trim($this->request->input('attribute_label', 'Variant')),
             'attribute_value' => trim($this->request->input('attribute_value', '')),
-            'weight'          => trim($this->request->input('weight', '')),
-            'dimensions'      => trim($this->request->input('dimensions', '')),
-            'stock_quantity'  => (int)$this->request->input('stock_quantity', 0),
-            'wholesale_price' => (float)$this->request->input('wholesale_price', 0),
-            'one_piece_price' => (float)$this->request->input('one_piece_price', 0),
-            'sort_order'      => (int)$this->request->input('sort_order', 0),
-            'is_active'       => (int)$this->request->input('is_active', 1)
+            'weight' => trim($this->request->input('weight', '')),
+            'dimensions' => trim($this->request->input('dimensions', '')),
+            'stock_quantity' => (int) $this->request->input('stock_quantity', 0),
+            'wholesale_price' => (float) $this->request->input('wholesale_price', 0),
+            'one_piece_price' => (float) $this->request->input('one_piece_price', 0),
+            'sort_order' => (int) $this->request->input('sort_order', 0),
+            'is_active' => (int) $this->request->input('is_active', 1)
         ];
 
         if (empty($data['attribute_value'])) {
@@ -791,7 +913,8 @@ class ProductController extends Controller {
     /**
      * AJAX Delete Variant
      */
-    public function deleteVariant(int $variantId): void {
+    public function deleteVariant(int $variantId): void
+    {
         header('Content-Type: application/json');
         if (!Auth::check()) {
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -807,10 +930,29 @@ class ProductController extends Controller {
     /**
      * AJAX Save Specifications List
      */
-    public function saveSpecs(int $id): void {
+    public function saveSpecs(int $id): void
+    {
         header('Content-Type: application/json');
         if (!Auth::check()) {
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $specModel = new \App\Models\ProductSpecification();
+
+        $specId = isset($_POST['spec_id']) ? (int) $_POST['spec_id'] : -1;
+        $specKey = trim($this->request->input('spec_key', ''));
+        $specValue = trim($this->request->input('spec_value', ''));
+
+        if ($specId >= 0 && !empty($specKey) && !empty($specValue)) {
+            $savedId = $specModel->saveSingleSpec($id, $specId, $specKey, $specValue);
+            echo json_encode([
+                'success' => true,
+                'message' => $specId > 0 ? 'Specification updated successfully' : 'Specification created successfully',
+                'spec_id' => $savedId,
+                'spec_key' => $specKey,
+                'spec_value' => $specValue
+            ]);
             exit;
         }
 
@@ -819,7 +961,6 @@ class ProductController extends Controller {
             $specsRaw = json_decode($specsRaw, true) ?: [];
         }
 
-        $specModel = new \App\Models\ProductSpecification();
         $specModel->saveSpecifications($id, $specsRaw);
 
         echo json_encode(['success' => true, 'message' => 'Specifications saved successfully']);
@@ -827,9 +968,27 @@ class ProductController extends Controller {
     }
 
     /**
+     * AJAX Delete Single Specification
+     */
+    public function deleteSpec(int $specId): void
+    {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $specModel = new \App\Models\ProductSpecification();
+        $specModel->deleteSpec($specId);
+        echo json_encode(['success' => true, 'message' => 'Specification deleted successfully']);
+        exit;
+    }
+
+    /**
      * AJAX Product Search API for Admin Selectors
      */
-    public function searchApi(): void {
+    public function searchApi(): void
+    {
         header('Content-Type: application/json');
         if (!Auth::check()) {
             echo json_encode(['success' => false, 'message' => 'Unauthorized']);
@@ -857,19 +1016,19 @@ class ProductController extends Controller {
         $stmt->execute($params);
         $products = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
-        $items = array_map(function($p) {
+        $items = array_map(function ($p) {
             $priceVal = (($p['sale_price'] ?? 0) > 0) ? $p['sale_price'] : ($p['price'] ?? 0);
-            $formattedPrice = function_exists('format_price') ? \format_price($priceVal) : '₹' . number_format((float)$priceVal, 2);
+            $formattedPrice = function_exists('format_price') ? \format_price($priceVal) : '₹' . number_format((float) $priceVal, 2);
             $imgPath = $p['main_image'] ?? 'assets/images/placeholder.jpg';
             $imgUrl = function_exists('asset') ? \asset($imgPath) : $imgPath;
             return [
-                'id'         => (int)$p['id'],
-                'name'       => htmlspecialchars_decode($p['name'] ?? ''),
-                'slug'       => $p['slug'] ?? '',
-                'sku'        => $p['sku'] ?? '',
-                'price'      => $formattedPrice,
+                'id' => (int) $p['id'],
+                'name' => htmlspecialchars_decode($p['name'] ?? ''),
+                'slug' => $p['slug'] ?? '',
+                'sku' => $p['sku'] ?? '',
+                'price' => $formattedPrice,
                 'main_image' => $imgUrl,
-                'stock'      => (int)($p['stock'] ?? 0)
+                'stock' => (int) ($p['stock'] ?? 0)
             ];
         }, $products);
 

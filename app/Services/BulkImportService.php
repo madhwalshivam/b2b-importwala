@@ -21,6 +21,10 @@ class BulkImportService
     private ProductVariant $variantModel;
     private ProductSpecification $specModel;
 
+    private ?array $categoryCache = null;
+    private ?array $subcategoryCache = null;
+    private ?array $brandCache = null;
+
     public const HEADERS = [
         'Product Name',                          // 0
         'Product SKU',                           // 1
@@ -212,9 +216,16 @@ class BulkImportService
         }
 
         // Load Spreadsheet
-        $spreadsheet = IOFactory::load($filePath);
-        $sheet = $spreadsheet->getActiveSheet();
-        $rows = $sheet->toArray(null, true, true, true);
+        try {
+            $spreadsheet = IOFactory::load($filePath);
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+        } catch (\Throwable $e) {
+            return [
+                'success' => false,
+                'error' => 'Unable to parse spreadsheet file: ' . $e->getMessage()
+            ];
+        }
 
         if (count($rows) <= 1) {
             return [
@@ -552,13 +563,23 @@ class BulkImportService
                 // Sync All Metadata Specifications into `product_specifications`
                 $this->syncProductSpecifications($productId, $prod);
 
+                // Process Cover Main Image into product_images
+                if (!empty($mainImgPath)) {
+                    $chkM = $this->db->prepare("SELECT id FROM product_images WHERE product_id = ? AND (image_url = ? OR image_path = ?)");
+                    $chkM->execute([$productId, $mainImgPath, $mainImgPath]);
+                    if (!$chkM->fetch()) {
+                        $stmtM = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, 0, 1)");
+                        $stmtM->execute([$productId, $mainImgPath]);
+                    }
+                }
+
                 // Process Additional Gallery Images
                 if (!empty($prod['additional_images'])) {
                     $imgList = array_map('trim', explode(',', $prod['additional_images']));
                     foreach ($imgList as $gIdx => $gImgName) {
                         $gImgPath = $this->processImageSource($gImgName, $extractedZipDir);
-                        if ($gImgPath) {
-                            $stmtG = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order) VALUES (?, ?, ?)");
+                        if ($gImgPath && $gImgPath !== $mainImgPath) {
+                            $stmtG = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, ?, 0)");
                             $stmtG->execute([$productId, $gImgPath, $gIdx + 1]);
                         }
                     }
@@ -773,7 +794,7 @@ class BulkImportService
         if (empty($imgInput)) return null;
 
         if (filter_var($imgInput, FILTER_VALIDATE_URL)) {
-            return $this->downloadRemoteImage($imgInput);
+            return $imgInput;
         }
 
         if ($extractedZipDir) {
@@ -856,35 +877,44 @@ class BulkImportService
 
     private function getCategoryCache(): array
     {
+        if ($this->categoryCache !== null) {
+            return $this->categoryCache;
+        }
         $stmt = $this->db->query("SELECT id, name FROM categories");
         $cats = $stmt->fetchAll();
-        $cache = [];
+        $this->categoryCache = [];
         foreach ($cats as $c) {
-            $cache[strtolower(trim($c['name']))] = (int)$c['id'];
+            $this->categoryCache[strtolower(trim($c['name']))] = (int)$c['id'];
         }
-        return $cache;
+        return $this->categoryCache;
     }
 
     private function getSubcategoryCache(): array
     {
+        if ($this->subcategoryCache !== null) {
+            return $this->subcategoryCache;
+        }
         $stmt = $this->db->query("SELECT id, category_id, name FROM subcategories");
         $subs = $stmt->fetchAll();
-        $cache = [];
+        $this->subcategoryCache = [];
         foreach ($subs as $s) {
-            $cache[strtolower(trim($s['name']))] = (int)$s['id'];
+            $this->subcategoryCache[$s['category_id'] . '_' . strtolower(trim($s['name']))] = (int)$s['id'];
         }
-        return $cache;
+        return $this->subcategoryCache;
     }
 
     private function getBrandCache(): array
     {
+        if ($this->brandCache !== null) {
+            return $this->brandCache;
+        }
         $stmt = $this->db->query("SELECT id, name FROM brands");
         $brands = $stmt->fetchAll();
-        $cache = [];
+        $this->brandCache = [];
         foreach ($brands as $b) {
-            $cache[strtolower(trim($b['name']))] = (int)$b['id'];
+            $this->brandCache[strtolower(trim($b['name']))] = (int)$b['id'];
         }
-        return $cache;
+        return $this->brandCache;
     }
 
     private function resolveOrCreateCategory(string $name): int
@@ -897,20 +927,24 @@ class BulkImportService
         $slug = $this->slugify($name);
         $stmt = $this->db->prepare("INSERT INTO categories (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
         $stmt->execute([$name, $slug]);
-        return (int)$this->db->lastInsertId();
+        $newId = (int)$this->db->lastInsertId();
+        $this->categoryCache[$key] = $newId;
+        return $newId;
     }
 
     private function resolveOrCreateSubcategory(int $categoryId, string $name): int
     {
         $name = trim($name);
         $cache = $this->getSubcategoryCache();
-        $key = strtolower($name);
+        $key = $categoryId . '_' . strtolower($name);
         if (isset($cache[$key])) return $cache[$key];
 
         $slug = $this->slugify($name);
         $stmt = $this->db->prepare("INSERT INTO subcategories (category_id, name, slug, status, created_at, updated_at) VALUES (?, ?, ?, 'active', NOW(), NOW())");
         $stmt->execute([$categoryId, $name, $slug]);
-        return (int)$this->db->lastInsertId();
+        $newId = (int)$this->db->lastInsertId();
+        $this->subcategoryCache[$key] = $newId;
+        return $newId;
     }
 
     private function resolveOrCreateBrand(string $name): int
@@ -923,7 +957,9 @@ class BulkImportService
         $slug = $this->slugify($name);
         $stmt = $this->db->prepare("INSERT INTO brands (name, slug, created_at, updated_at) VALUES (?, ?, NOW(), NOW())");
         $stmt->execute([$name, $slug]);
-        return (int)$this->db->lastInsertId();
+        $newId = (int)$this->db->lastInsertId();
+        $this->brandCache[$key] = $newId;
+        return $newId;
     }
 
     private function parseBool(mixed $val): int

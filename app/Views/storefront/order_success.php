@@ -13,7 +13,7 @@ include __DIR__ . '/layouts/header.php';
 
             <div>
                 <span class="text-xs font-semibold text-red-600 uppercase tracking-widest">Order Confirmed</span>
-                <h1 class="text-3xl font-black text-gray-900 mt-1">Thank You For Riding With Mudsor!</h1>
+                <h1 class="text-3xl font-black text-gray-900 mt-1">Thank You For Shopping With ImportWale!</h1>
                 <p class="text-xs text-gray-500 mt-2">Your order number is <strong
                         class="text-gray-900"><?= htmlspecialchars($order['order_number']) ?></strong></p>
             </div>
