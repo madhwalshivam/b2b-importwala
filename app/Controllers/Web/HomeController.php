@@ -42,11 +42,15 @@ class HomeController extends BaseController
         $blogModel = new \App\Models\BlogPost();
         $latestArticles = $blogModel->getRecentPublished(4);
 
+        $homeSectionModel = new \App\Models\HomeSection();
+        $homepageSections = $homeSectionModel->getEnabledSectionsWithProducts();
+
         $this->renderView('web/home', [
             'categories'         => $categories,
             'featuredProducts'   => $featuredProducts,
             'newArrivals'        => $newArrivals,
             'bestSellers'        => $bestSellers,
+            'homepageSections'   => $homepageSections,
             'featuredCategories' => $featuredCategories,
             'heroBanners'        => $heroBanners,
             'collectionCards'    => $collectionCards,

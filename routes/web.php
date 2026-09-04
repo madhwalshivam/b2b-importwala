@@ -18,6 +18,8 @@ $router->get('/category/{cat_slug}/{sub_slug}', 'Web\CatalogController@subcatego
 $router->get('/search/{query}', 'Web\CatalogController@search');
 $router->get('/search', 'Web\CatalogController@searchQueryString');
 $router->get('/collection/{slug}', 'Web\CatalogController@collection');
+$router->get('/section/{slug}', 'Web\CatalogController@section');
+$router->get('/section', 'Web\CatalogController@sectionQueryString');
 $router->get('/brand/{slug}', 'Web\CatalogController@brand');
 $router->get('/categories', 'Web\CatalogController@categoriesDirectory');
 $router->get('/product/{slug}/{variant}', 'Web\ProductDetailController@show');
@@ -242,10 +244,13 @@ $router->post('/admin/collection-cards/reorder', 'Admin\CollectionCardController
 // Public API for Collection Cards (storefront)
 $router->get('/api/collection-cards', 'Admin\CollectionCardController@apiIndex');
 
-// Homepage Sections Manager (Featured, Deals, Best Sellers, New Arrivals, Flash Sale)
+// Homepage Sections Manager (Dynamic Admin-Manageable Sections)
 $router->get('/admin/homepage-sections', 'Admin\HomepageSectionsController@index', [AdminMiddleware::class]);
+$router->post('/admin/homepage-sections/store', 'Admin\HomepageSectionsController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->get('/admin/homepage-sections/search-products', 'Admin\HomepageSectionsController@searchProducts', [AdminMiddleware::class]);
 $router->post('/admin/homepage-sections/update/{key}', 'Admin\HomepageSectionsController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/homepage-sections/delete/{id}', 'Admin\HomepageSectionsController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/homepage-sections/delete/{id}', 'Admin\HomepageSectionsController@delete', [AdminMiddleware::class]);
 $router->post('/admin/homepage-sections/update-promo', 'Admin\HomepageSectionsController@updatePromo', [AdminMiddleware::class, CsrfMiddleware::class]);
 
 // API Endpoints for Homepage Sections

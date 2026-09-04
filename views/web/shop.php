@@ -100,6 +100,8 @@ ob_start();
 <!-- Shop Page Wrapper -->
 <div class="shop-page-wrapper" style="max-width: 1440px; margin: 0 auto; padding: 16px 20px 12px 20px; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
 
+
+
   <!-- ============================================================
        1. TOP CONTROL BAR (TOGGLE BTN + CHIPS + RESULT COUNT + SORT)
        ============================================================ -->
@@ -128,7 +130,7 @@ ob_start();
             </span>
           <?php endforeach; ?>
 
-          <a href="<?= url('shop') ?>" style="font-size: 12.5px; font-weight: 600; color: #ef4444; text-decoration: none; margin-left: 4px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+          <a href="<?= !empty($activeSection) ? url('section/' . ($activeSection['slug'] ?: $activeSection['section_key'])) : url('shop') ?>" style="font-size: 12.5px; font-weight: 600; color: #ef4444; text-decoration: none; margin-left: 4px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
             Clear All
           </a>
         </div>
@@ -173,13 +175,19 @@ ob_start();
         <span style="font-size: 13.5px; font-weight: 700; color: #0f172a;">
           <?= $activeFilterCount ?> filter<?= $activeFilterCount !== 1 ? 's' : '' ?> applied
         </span>
-        <a href="<?= url('shop') ?>" style="font-size: 12.5px; font-weight: 600; color: #1e293b; text-decoration: underline;">
+        <a href="<?= !empty($activeSection) ? url('section/' . ($activeSection['slug'] ?: $activeSection['section_key'])) : url('shop') ?>" style="font-size: 12.5px; font-weight: 600; color: #1e293b; text-decoration: underline;">
           Clear All
         </a>
       </div>
 
       <!-- FILTER FORM -->
-      <form id="shopFilterForm" action="<?= url('shop') ?>" method="GET">
+      <form id="shopFilterForm" action="<?= !empty($activeSection) ? url('section/' . ($activeSection['slug'] ?: $activeSection['section_key'])) : url('shop') ?>" method="GET">
+        <?php if (!empty($searchQuery)): ?>
+          <input type="hidden" name="q" value="<?= htmlspecialchars($searchQuery) ?>">
+        <?php endif; ?>
+        <?php if (!empty($activeSection)): ?>
+          <input type="hidden" name="section_id" value="<?= $activeSection['id'] ?>">
+        <?php endif; ?>
         <?php if (!empty($searchQuery)): ?>
           <input type="hidden" name="q" value="<?= htmlspecialchars($searchQuery) ?>">
         <?php endif; ?>

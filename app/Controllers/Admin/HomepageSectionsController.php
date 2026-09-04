@@ -25,16 +25,18 @@ class HomepageSectionsController extends Controller {
             $this->redirect(url('admin/dashboard'));
         }
 
-        $rawSections = $this->sectionModel->getProductSections();
+        $rawSections = $this->sectionModel->getAllSections();
         $sections = [];
 
-        foreach ($rawSections as $sec) {
+        foreach ($rawSections as &$sec) {
             $secId = (int)$sec['id'];
-            $sec['products'] = $this->sectionModel->getSectionProducts($secId);
-            $sections[$sec['section_key']] = $sec;
+            $sec['products'] = $this->sectionModel->getSectionProducts($secId, null, false);
+            $key = !empty($sec['slug']) ? $sec['slug'] : $sec['section_key'];
+            $sections[$key] = $sec;
         }
+        unset($sec);
 
-        // All active products for initial product selection dropdown
+        // All active products for product selector
         $allProducts = $this->productModel->getAllActiveProducts();
 
         $promoSettings = [
@@ -48,9 +50,47 @@ class HomepageSectionsController extends Controller {
 
         return $this->render('admin/homepage_sections/index', [
             'sections'      => $sections,
+            'rawSections'   => $rawSections,
             'allProducts'   => $allProducts,
             'promoSettings' => $promoSettings
         ]);
+    }
+
+    /**
+     * Create a new custom section
+     */
+    public function store(): void {
+        if (!Auth::check() || !Auth::canAccessModule('products')) {
+            $this->redirect(url('admin/dashboard'));
+            return;
+        }
+
+        $title        = trim($this->request->input('title', ''));
+        $slug         = trim($this->request->input('slug', ''));
+        $subtitle     = trim($this->request->input('subtitle', ''));
+        $maxProducts  = (int)$this->request->input('max_products', 0);
+        $displayCount = (int)$this->request->input('homepage_display_count', 5);
+        $sortOrder    = (int)$this->request->input('sort_order', 0);
+        $status       = $this->request->input('status', 'active');
+
+        if (empty($title)) {
+            $this->setFlash('error', 'Section Title is required.');
+            $this->redirect(url('admin/homepage-sections'));
+            return;
+        }
+
+        $sectionId = $this->sectionModel->createSection([
+            'title'                  => $title,
+            'slug'                   => $slug,
+            'subtitle'               => $subtitle,
+            'max_products'           => $maxProducts,
+            'homepage_display_count' => $displayCount,
+            'sort_order'             => $sortOrder,
+            'status'                 => $status
+        ]);
+
+        $this->setFlash('success', 'New homepage section "' . htmlspecialchars($title) . '" created successfully!');
+        $this->redirect(url('admin/homepage-sections'));
     }
 
     /**
@@ -78,32 +118,51 @@ class HomepageSectionsController extends Controller {
         $sectionId = (int)$section['id'];
 
         // Extract configuration parameters
-        $title       = $this->request->input('title', $section['title']);
-        $subtitle    = $this->request->input('subtitle', $section['subtitle']);
-        $enabled     = $this->request->input('enabled', '0');
-        $maxProducts = (int)$this->request->input('max_products', 8);
+        $title        = $this->request->input('title', $section['title']);
+        $slug         = $this->request->input('slug', $section['slug']);
+        $subtitle     = $this->request->input('subtitle', $section['subtitle']);
+        $enabled      = $this->request->input('enabled', null);
+        $status       = $this->request->input('status', null);
+        $maxProducts  = (int)$this->request->input('max_products', $section['max_products']);
+        $displayCount = (int)$this->request->input('homepage_display_count', $section['homepage_display_count'] ?? 5);
+        $sortOrder    = (int)$this->request->input('sort_order', $section['sort_order']);
+
+        $statusVal = 'inactive';
+        if ($status !== null) {
+            $statusVal = in_array(strtolower((string)$status), ['active', 'enabled', '1', 'true']) ? 'active' : 'inactive';
+        } elseif ($enabled !== null) {
+            $statusVal = (!empty($enabled) && $enabled !== '0' && $enabled !== 'false') ? 'active' : 'inactive';
+        } elseif ($this->request->input('title') !== null) {
+            $statusVal = 'inactive';
+        } else {
+            $statusVal = $section['status'];
+        }
 
         // Update Section Config
         $this->sectionModel->updateSectionConfig($sectionId, [
-            'title'        => $title,
-            'subtitle'     => $subtitle,
-            'status'       => !empty($enabled) && $enabled !== '0' && $enabled !== 'false' ? 'active' : 'inactive',
-            'max_products' => $maxProducts
+            'title'                  => $title,
+            'slug'                   => $slug,
+            'subtitle'               => $subtitle,
+            'status'                 => $statusVal,
+            'max_products'           => $maxProducts,
+            'homepage_display_count' => $displayCount,
+            'sort_order'             => $sortOrder
         ]);
 
         // Selected product IDs in order
-        $productIds = $this->request->input('product_ids', []);
-        if (is_string($productIds)) {
-            $productIds = array_filter(explode(',', $productIds));
-        }
-
-        if (is_array($productIds)) {
-            $this->sectionModel->saveSectionProducts($sectionId, $productIds);
+        $productIds = $this->request->input('product_ids', null);
+        if ($productIds !== null) {
+            if (is_string($productIds)) {
+                $productIds = array_filter(explode(',', $productIds));
+            }
+            if (is_array($productIds)) {
+                $this->sectionModel->saveSectionProducts($sectionId, $productIds);
+            }
         }
 
         if ($this->request->isAjax() || str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')) {
-            $updatedSection = $this->sectionModel->findByKey($key);
-            $updatedSection['products'] = $this->sectionModel->getSectionProducts($sectionId);
+            $updatedSection = $this->sectionModel->findByKey((string)$sectionId);
+            $updatedSection['products'] = $this->sectionModel->getSectionProducts($sectionId, null, false);
             $this->response->json([
                 'success' => true,
                 'message' => 'Section updated successfully',
@@ -113,6 +172,27 @@ class HomepageSectionsController extends Controller {
         }
 
         $this->setFlash('success', 'Homepage section "' . htmlspecialchars($title) . '" updated successfully!');
+        $this->redirect(url('admin/homepage-sections'));
+    }
+
+    /**
+     * Delete custom section
+     */
+    public function delete(int $id): void {
+        if (!Auth::check() || !Auth::canAccessModule('products')) {
+            $this->redirect(url('admin/dashboard'));
+            return;
+        }
+
+        $section = $this->sectionModel->find($id);
+        if ($section) {
+            $title = $section['title'];
+            $this->sectionModel->deleteSection($id);
+            $this->setFlash('success', 'Homepage section "' . htmlspecialchars($title) . '" deleted successfully!');
+        } else {
+            $this->setFlash('error', 'Section not found.');
+        }
+
         $this->redirect(url('admin/homepage-sections'));
     }
 
@@ -129,15 +209,48 @@ class HomepageSectionsController extends Controller {
                 FROM products p
                 LEFT JOIN categories c ON p.category_id = c.id
                 LEFT JOIN brands b ON p.brand_id = b.id
-                WHERE 1=1";
+                WHERE p.status = 'active'";
                 
         if (!empty($q)) {
-            $sql .= " AND (p.name LIKE ? OR p.sku LIKE ? OR c.name LIKE ? OR b.name LIKE ?)";
-            $searchTerm = '%' . $q . '%';
-            $params = [$searchTerm, $searchTerm, $searchTerm, $searchTerm];
+            $words = array_filter(explode(' ', preg_replace('/\s+/', ' ', $q)));
+            
+            $whereWords = [];
+            foreach ($words as $idx => $w) {
+                $pName = 'w_name_' . $idx;
+                $pSku = 'w_sku_' . $idx;
+                $pCat = 'w_cat_' . $idx;
+                $pBrand = 'w_brand_' . $idx;
+                
+                $whereWords[] = "(p.name LIKE :{$pName} OR p.sku LIKE :{$pSku} OR c.name LIKE :{$pCat} OR b.name LIKE :{$pBrand})";
+                $searchTerm = '%' . $w . '%';
+                $params[$pName] = $searchTerm;
+                $params[$pSku] = $searchTerm;
+                $params[$pCat] = $searchTerm;
+                $params[$pBrand] = $searchTerm;
+            }
+            
+            if (!empty($whereWords)) {
+                $sql .= " AND " . implode(" AND ", $whereWords);
+            }
+            
+            // Relevance sorting: Exact match > Title start match > Word boundary match > Title substring match > SKU match > Others
+            $sql .= " ORDER BY (CASE 
+                        WHEN p.name LIKE :rel_exact THEN 1
+                        WHEN p.name LIKE :rel_start THEN 2
+                        WHEN p.name REGEXP :rel_word THEN 3
+                        WHEN p.name LIKE :rel_contain THEN 4
+                        WHEN p.sku LIKE :rel_sku THEN 5
+                        ELSE 6
+                    END) ASC, p.id DESC LIMIT 30";
+                    
+            $params['rel_exact']   = $q;
+            $params['rel_start']   = $q . '%';
+            $params['rel_word']    = '(^|[[:space:]])' . preg_quote($q, '/') . '([[:space:]]|$)';
+            $params['rel_contain'] = '%' . $q . '%';
+            $params['rel_sku']     = '%' . $q . '%';
+        } else {
+            $sql .= " ORDER BY p.id DESC LIMIT 30";
         }
-        
-        $sql .= " ORDER BY p.name ASC LIMIT 30";
         
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
@@ -184,7 +297,7 @@ class HomepageSectionsController extends Controller {
             return;
         }
 
-        $section['products'] = $this->sectionModel->getSectionProducts((int)$section['id'], (int)$section['max_products']);
+        $section['products'] = $this->sectionModel->getSectionProducts((int)$section['id'], (int)($section['homepage_display_count'] ?: 5));
         $this->response->json([
             'success' => true,
             'data'    => $section

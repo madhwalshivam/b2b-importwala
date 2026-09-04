@@ -49,12 +49,23 @@ class SearchService extends BaseService
         $params = [];
 
         if (!empty($query)) {
-            $where[] = "(p.`name` LIKE :q1 OR p.`sku` LIKE :q2 OR p.`description` LIKE :q3 OR p.`tags` LIKE :q4)";
-            $searchTerm = '%' . trim($query) . '%';
-            $params['q1'] = $searchTerm;
-            $params['q2'] = $searchTerm;
-            $params['q3'] = $searchTerm;
-            $params['q4'] = $searchTerm;
+            $words = array_filter(explode(' ', preg_replace('/\s+/', ' ', trim($query))));
+            $whereWords = [];
+            foreach ($words as $idx => $w) {
+                $k1 = "qw1_" . $idx;
+                $k2 = "qw2_" . $idx;
+                $k3 = "qw3_" . $idx;
+                $k4 = "qw4_" . $idx;
+                $whereWords[] = "(p.`name` LIKE :{$k1} OR p.`sku` LIKE :{$k2} OR p.`description` LIKE :{$k3} OR p.`tags` LIKE :{$k4})";
+                $st = '%' . $w . '%';
+                $params[$k1] = $st;
+                $params[$k2] = $st;
+                $params[$k3] = $st;
+                $params[$k4] = $st;
+            }
+            if (!empty($whereWords)) {
+                $where[] = "(" . implode(" AND ", $whereWords) . ")";
+            }
         }
 
         if (!empty($filters['category_id'])) {
@@ -75,6 +86,32 @@ class SearchService extends BaseService
         if (!empty($filters['collection_id'])) {
             $where[] = "p.`id` IN (SELECT `product_id` FROM `collection_card_products` WHERE `collection_card_id` = :collection_id)";
             $params['collection_id'] = (int)$filters['collection_id'];
+        }
+
+        if (!empty($filters['section_id'])) {
+            $secId = (int)$filters['section_id'];
+            $checkStmt = $db->prepare("SELECT COUNT(*) FROM `homepage_section_products` WHERE `section_id` = ?");
+            $checkStmt->execute([$secId]);
+            $mappedCount = (int)$checkStmt->fetchColumn();
+
+            if ($mappedCount > 0) {
+                $where[] = "p.`id` IN (SELECT `product_id` FROM `homepage_section_products` WHERE `section_id` = :sec_id)";
+                $params['sec_id'] = $secId;
+            } else {
+                $secStmt = $db->prepare("SELECT * FROM `homepage_sections` WHERE id = ? LIMIT 1");
+                $secStmt->execute([$secId]);
+                $secRow = $secStmt->fetch();
+                if ($secRow) {
+                    $secKey = $secRow['section_key'] ?? '';
+                    if ($secKey === 'featured_products') {
+                        $where[] = "p.`is_featured` = 1";
+                    } elseif ($secKey === 'best_sellers') {
+                        $where[] = "p.`is_best_seller` = 1";
+                    } elseif ($secKey === 'new_arrivals') {
+                        $where[] = "p.`is_new_arrival` = 1";
+                    }
+                }
+            }
         }
 
         if (!empty($filters['similar_to'])) {
@@ -153,7 +190,7 @@ class SearchService extends BaseService
         $total = (int)($countStmt->fetch()['total'] ?? 0);
 
         // Fetch products
-        $sql = "SELECT p.*, c.name as category_name FROM `products` p JOIN `categories` c ON p.category_id = c.id WHERE {$whereSql} {$sortClause} LIMIT {$limit} OFFSET {$offset}";
+        $sql = "SELECT p.*, c.name as category_name FROM `products` p LEFT JOIN `categories` c ON p.category_id = c.id WHERE {$whereSql} {$sortClause} LIMIT {$limit} OFFSET {$offset}";
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
         $items = $stmt->fetchAll();

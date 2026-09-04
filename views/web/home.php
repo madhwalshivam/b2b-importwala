@@ -1202,33 +1202,61 @@ document.addEventListener('DOMContentLoaded', function() {
 </div><!-- /collection-cards-section -->
 <?php endif; // collectionCards ?>
 
-<!-- Featured Products Section -->
-<div class="section-header-title">
-  <span>Featured Wholesale Products</span>
-  <a href="<?= url('catalog') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
-</div>
+<!-- Dynamic Admin-Managed Homepage Sections -->
+<?php if (!empty($homepageSections)): ?>
+  <?php foreach ($homepageSections as $secKey => $sec): ?>
+    <?php
+      if (empty($sec) || (isset($sec['status']) && $sec['status'] !== 'active' && $sec['status'] !== 'enabled')) continue;
+      $secProducts = $sec['products'] ?? [];
+      if (empty($secProducts)) continue;
 
-<div class="product-grid">
+      $secSlug = !empty($sec['slug']) ? $sec['slug'] : slugify($sec['title'] ?? $secKey);
+      $secTitle = $sec['title'] ?? ucwords(str_replace(['_', '-'], ' ', $secKey));
+      $secSubtitle = $sec['subtitle'] ?? '';
+      $viewAllUrl = url('section/' . $secSlug);
+    ?>
+    <div class="section-header-title">
+      <div>
+        <span><?= htmlspecialchars($secTitle) ?></span>
+        <?php if (!empty($secSubtitle)): ?>
+          <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0; font-weight: 400; text-transform: none; font-family: sans-serif;"><?= htmlspecialchars($secSubtitle) ?></p>
+        <?php endif; ?>
+      </div>
+      <a href="<?= $viewAllUrl ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
+    </div>
+
+    <div class="product-grid" style="margin-bottom: 32px;">
+      <?php foreach ($secProducts as $product): ?>
+        <?php require __DIR__ . '/partials/product_card.php'; ?>
+      <?php endforeach; ?>
+    </div>
+  <?php endforeach; ?>
+<?php else: ?>
+  <!-- Fallback if no dynamic sections configured -->
   <?php if (!empty($featuredProducts)): ?>
-    <?php foreach ($featuredProducts as $product): ?>
-      <?php require __DIR__ . '/partials/product_card.php'; ?>
-    <?php endforeach; ?>
+    <div class="section-header-title">
+      <span>Featured Wholesale Products</span>
+      <a href="<?= url('catalog') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
+    </div>
+    <div class="product-grid" style="margin-bottom: 32px;">
+      <?php foreach ($featuredProducts as $product): ?>
+        <?php require __DIR__ . '/partials/product_card.php'; ?>
+      <?php endforeach; ?>
+    </div>
   <?php endif; ?>
-</div>
 
-<!-- Best Sellers Section -->
-<div class="section-header-title">
-  <span>High-Volume Best Sellers</span>
-  <a href="<?= url('catalog?sort=popular') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
-</div>
-
-<div class="product-grid" style="margin-bottom: 24px;">
   <?php if (!empty($bestSellers)): ?>
-    <?php foreach ($bestSellers as $product): ?>
-      <?php require __DIR__ . '/partials/product_card.php'; ?>
-    <?php endforeach; ?>
+    <div class="section-header-title">
+      <span>High-Volume Best Sellers</span>
+      <a href="<?= url('catalog?sort=popular') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View All &rarr;</a>
+    </div>
+    <div class="product-grid" style="margin-bottom: 32px;">
+      <?php foreach ($bestSellers as $product): ?>
+        <?php require __DIR__ . '/partials/product_card.php'; ?>
+      <?php endforeach; ?>
+    </div>
   <?php endif; ?>
-</div>
+<?php endif; ?>
 
 <!-- Customer Reviews / Testimonials Section (Everful Style) -->
 <?php require __DIR__ . '/partials/testimonials_section.php'; ?>

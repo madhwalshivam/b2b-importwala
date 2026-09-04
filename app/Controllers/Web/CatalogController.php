@@ -233,6 +233,53 @@ class CatalogController extends BaseController
     }
 
     /**
+     * Dedicated Section View All Page (/section/{slug})
+     */
+    public function section(string $slug): void
+    {
+        $slug = slugify($slug);
+        $sectionModel = new \App\Models\HomeSection();
+        $section = $sectionModel->findBySlug($slug);
+
+        if (!$section || ($section['status'] !== 'active' && $section['status'] !== 'enabled')) {
+            http_response_code(404);
+            $this->renderView('errors/404', [
+                'seoTitle' => 'Section Not Found | ImportWale'
+            ]);
+            return;
+        }
+
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $perPage = 16;
+        $paginatedData = $sectionModel->getSectionProductsPaginated((int)$section['id'], $page, $perPage);
+
+        $heading = $section['title'];
+        $seoTitle = $heading . ' Wholesale Catalog | ImportWale';
+        $seoDesc = !empty($section['subtitle']) ? $section['subtitle'] : ('Buy wholesale ' . $heading . ' at factory-direct prices from ImportWale.');
+        $canonical = url('section/' . ($section['slug'] ?: $section['section_key']));
+
+        $this->renderCatalogPage([
+            'section_id'     => (int)$section['id'],
+            'active_section' => $section,
+            'seo_title'      => $seoTitle,
+            'seo_description'=> $seoDesc,
+            'canonical_url'  => $canonical,
+            'page_heading'   => $heading,
+        ]);
+    }
+
+    public function sectionQueryString(): void
+    {
+        $slug = trim($_GET['slug'] ?? $_GET['section'] ?? '');
+        if (!empty($slug)) {
+            header('Location: ' . url('section/' . slugify($slug)), true, 301);
+            exit;
+        }
+        header('Location: ' . url('catalog'), true, 301);
+        exit;
+    }
+
+    /**
      * Clean Brand URL Handler (/brand/{slug})
      */
     public function brand(string $slug): void
@@ -262,9 +309,16 @@ class CatalogController extends BaseController
      */
     public function categoriesDirectory(): void
     {
-        $categoryModel = new \App\Models\Category();
-        $categories = $categoryModel->getActiveCategories();
-        $db = Database::getInstance();
+        $db = Database::getReadConnection();
+        
+        $catStmt = $db->query("
+            SELECT * FROM categories 
+            WHERE (status = 'active' OR status = 'enabled') AND (parent_id IS NULL OR parent_id = 0)
+            ORDER BY sort_order ASC, name ASC
+        ");
+        $categories = $catStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        $totalSubcategories = 0;
 
         foreach ($categories as &$cat) {
             $stmt = $db->prepare("
@@ -273,17 +327,30 @@ class CatalogController extends BaseController
                 WHERE p.category_id = ? AND p.status = 'active'
             ");
             $stmt->execute([$cat['id']]);
-            $countRow = $stmt->fetch();
+            $countRow = $stmt->fetch(\PDO::FETCH_ASSOC);
             $cat['product_count'] = (int)($countRow['total'] ?? 0);
-            $cat['subcategories'] = $categoryModel->getSubcategories((int)$cat['id']);
+
+            $subStmt = $db->prepare("
+                SELECT s.*, 
+                       (SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.subcategory_id = s.id AND p.status = 'active') as product_count
+                FROM subcategories s
+                WHERE s.category_id = ? AND (s.status = 'active' OR s.status = 'enabled')
+                ORDER BY s.sort_order ASC, s.name ASC
+            ");
+            $subStmt->execute([$cat['id']]);
+            $subcategories = $subStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+            $cat['subcategories'] = $subcategories;
+            $totalSubcategories += count($subcategories);
         }
         unset($cat);
 
         $this->renderView('web/categories_directory', [
-            'categories' => $categories,
-            'seoTitle' => 'Explore All Categories | ImportWale',
-            'seoDescription' => 'Browse our complete wholesale catalog across all categories and subcategories.',
-            'canonicalUrl' => url('categories'),
+            'categories'         => $categories,
+            'totalCategories'    => count($categories),
+            'totalSubcategories' => $totalSubcategories,
+            'seoTitle'           => 'All Wholesale Categories & Subcategories | ImportWale',
+            'seoDescription'     => 'Explore our complete factory-direct wholesale catalog across all categories and subcategories on ImportWale.',
+            'canonicalUrl'       => url('categories'),
         ]);
     }
 
@@ -296,7 +363,14 @@ class CatalogController extends BaseController
         $catId = (int)($options['category_id'] ?? $_GET['category_id'] ?? 0);
         $subId = (int)($options['subcategory_id'] ?? $_GET['subcategory_id'] ?? 0);
         $collectionId = (int)($options['collection_id'] ?? $_GET['collection_id'] ?? $_GET['collection'] ?? 0);
+        $sectionId = (int)($options['section_id'] ?? $_GET['section_id'] ?? $_GET['section'] ?? 0);
         $brandId = (int)($options['brand_id'] ?? $_GET['brand_id'] ?? 0);
+
+        $activeSection = $options['active_section'] ?? null;
+        if (!$activeSection && $sectionId > 0) {
+            $secModel = new \App\Models\HomeSection();
+            $activeSection = $secModel->find($sectionId);
+        }
 
         $minPrice = (isset($_GET['min_price']) && $_GET['min_price'] !== '') ? (float)$_GET['min_price'] : null;
         $maxPrice = (isset($_GET['max_price']) && $_GET['max_price'] !== '') ? (float)$_GET['max_price'] : null;
@@ -330,6 +404,7 @@ class CatalogController extends BaseController
             'category_id'    => $catId,
             'subcategory_id' => $subId,
             'collection_id'  => $collectionId,
+            'section_id'     => $sectionId,
             'brand_id'       => $brandId,
             'similar_to'     => $similarToId,
             'min_price'      => $minPrice,
@@ -375,6 +450,7 @@ class CatalogController extends BaseController
             'results'           => $searchResults,
             'categoriesTree'    => $categoriesTree,
             'collectionCard'    => $collectionCard,
+            'activeSection'     => $activeSection,
             'similarProduct'    => $similarProduct,
             'currentPage'       => $page,
             'perPage'           => $perPage,

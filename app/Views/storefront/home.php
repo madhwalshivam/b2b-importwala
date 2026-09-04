@@ -316,112 +316,232 @@ include __DIR__ . '/layouts/header.php';
 </section>
 
 
-<!-- SECTION 2: BEST SELLERS (Right Below Hero & Categories Section) -->
-<?php if (!empty($bestSellers)): ?>
-    <section class="py-5 md:py-7 bg-theme-bg border-b border-gray-100 font-sans reveal-on-scroll">
+<!-- DYNAMIC HOMEPAGE SECTIONS -->
+<?php if (!empty($homepageSections)): ?>
+    <?php foreach ($homepageSections as $secKey => $sec): ?>
+        <?php
+        if (empty($sec) || ($sec['status'] !== 'active' && $sec['status'] !== 'enabled')) continue;
+        $secProducts = $sec['products'] ?? [];
+        if (empty($secProducts)) continue;
 
-        <div class="container mx-auto px-4 space-y-6">
+        $secSlug = !empty($sec['slug']) ? $sec['slug'] : slugify($sec['title'] ?? $secKey);
+        $secTitle = $sec['title'] ?? ucwords(str_replace(['_', '-'], ' ', $secKey));
+        $secSubtitle = $sec['subtitle'] ?? '';
+        $viewAllUrl = url('section/' . $secSlug);
+        $sliderId = 'swiper-sec-' . preg_replace('/[^a-z0-9]/', '', $secSlug);
+        $prevId = 'sec-prev-' . preg_replace('/[^a-z0-9]/', '', $secSlug);
+        $nextId = 'sec-next-' . preg_replace('/[^a-z0-9]/', '', $secSlug);
+        $isFeaturedPromo = ($sec['section_key'] ?? '') === 'featured_products' || ($sec['slug'] ?? '') === 'featured-products' || $secKey === 'featured-products' || $secKey === 'featured_products';
+        ?>
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 tracking-tight">Best Sellers</h2>
+        <section class="py-5 md:py-7 bg-theme-bg border-b border-gray-100 dark:border-slate-800 font-sans reveal-on-scroll">
+            <div class="container mx-auto px-4 space-y-6">
 
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 dark:text-white tracking-tight"><?= htmlspecialchars($secTitle) ?></h2>
+                        <?php if (!empty($secSubtitle)): ?>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5"><?= htmlspecialchars($secSubtitle) ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <a href="<?= $viewAllUrl ?>"
+                        class="inline-flex items-center space-x-1 whitespace-nowrap text-xs font-semibold text-red-600 hover:underline shrink-0">
+                        <span>View All</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5 shrink-0"></i>
+                    </a>
                 </div>
-                <a href="<?= url('shop') ?>"
-                    class="inline-flex items-center space-x-1 whitespace-nowrap text-xs font-semibold text-red-600 hover:underline shrink-0">
-                    <span>View All</span>
-                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 shrink-0"></i>
-                </a>
-            </div>
 
-            <div class="relative">
-                <div class="swiper swiper-bestsellers w-full py-1">
-                    <div class="swiper-wrapper">
-                        <?php foreach ($bestSellers as $prod): ?>
-                            <div class="swiper-slide h-auto">
-                                <div
-                                    class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
-
-                                    <?php $isWished = in_array((int) $prod['id'], $wishlistProductIds ?? []); ?>
-                                    <button type="button" onclick="toggleWishlist(<?= $prod['id'] ?>, this)"
-                                        data-wishlist-id="<?= $prod['id'] ?>"
-                                        class="robu-wishlist-btn absolute top-2 right-2 sm:top-3 sm:right-3 z-10 p-1.5 rounded-full shadow-2xs"
-                                        title="<?= $isWished ? 'Remove from Wishlist' : 'Save to Wishlist' ?>">
-                                        <i data-lucide="heart" class="w-3.5 h-3.5 sm:w-4 sm:h-4" <?= $isWished ? 'fill="#A8111C" style="fill:#A8111C; color:#A8111C;"' : '' ?>></i>
-                                    </button>
-
-                                    <?php if ($prod['stock'] <= 0): ?>
-                                        <span
-                                            class="absolute top-2 left-0 sm:top-3 z-10 text-white text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-r uppercase shadow-xs"
-                                            style="background-color: var(--color-secondary);">
-                                            Out of Stock
-                                        </span>
-                                    <?php elseif (!empty($prod['sale_price'])): ?>
-                                        <span
-                                            class="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 bg-red-600 text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-md uppercase shadow-xs">
-                                            SAVE <?= round((($prod['price'] - $prod['sale_price']) / $prod['price']) * 100) ?>%
-                                        </span>
-                                    <?php endif; ?>
-
-                                    <?php $pSlug = !empty($prod['slug']) ? trim($prod['slug']) : (int) $prod['id']; ?>
-                                    <a href="<?= url('product/' . $pSlug) ?>"
-                                        class="block relative aspect-square bg-transparent dark:bg-transparent rounded-lg overflow-hidden mb-2.5 sm:mb-3 flex items-center justify-center p-1.5 pt-7 sm:pt-8 transition">
-                                        <img src="<?= asset($prod['main_image']) ?>"
-                                            alt="<?= htmlspecialchars($prod['name']) ?>"
-                                            class="w-full h-full object-contain max-h-[82%] group-hover:scale-105 transition-transform duration-300"
-                                            loading="lazy">
-                                    </a>
-
-                                    <div class="flex-1 flex flex-col justify-between space-y-2">
-                                        <div>
-                                            <h4
-                                                class="text-xs font-semibold text-gray-900 group-hover:text-red-600 transition line-clamp-2 leading-snug">
-                                                <a href="<?= url('product/' . $pSlug) ?>"
-                                                    class="hover:text-red-600 transition"><?= htmlspecialchars($prod['name']) ?></a>
-                                            </h4>
-                                        </div>
-
-                                        <div class="pt-2 border-t border-red-100/70 space-y-2">
-                                            <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
-                                                <span
-                                                    class="text-xs sm:text-sm font-semibold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
-                                                <?php if ($prod['sale_price']): ?>
-                                                    <span
-                                                        class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>
-                                                <?php endif; ?>
-                                            </div>
-
-                                            <form action="<?= url('cart/add') ?>" method="POST" class="w-full">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="product_id" value="<?= $prod['id'] ?>">
-                                                <input type="hidden" name="quantity" value="1">
-                                                <button type="submit" <?= $prod['stock'] <= 0 ? 'disabled' : '' ?>
-                                                    class="robu-cart-btn w-full h-8 sm:h-9 px-2 sm:px-3 text-[11px] sm:text-xs flex items-center justify-center gap-1.5 whitespace-nowrap <?= $prod['stock'] <= 0 ? 'opacity-50 cursor-not-allowed' : '' ?>">
-                                                    <span><?= $prod['stock'] > 0 ? 'Add to Cart' : 'Out' ?></span>
-                                                    <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
-                                                </button>
-                                            </form>
-                                        </div>
+                <?php if ($isFeaturedPromo): ?>
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                        <?php
+                        $promoBadge = \App\Models\Setting::get('featured_promo_badge', 'SPECIAL OFFER');
+                        $promoTitle = \App\Models\Setting::get('featured_promo_title', 'ImportWale Heavy-Duty Protection');
+                        $promoDesc = \App\Models\Setting::get('featured_promo_description', 'Heavy gauge stainless steel crash guards and all-weather body covers precision-fit for your electric scooter.');
+                        $promoBtn = \App\Models\Setting::get('featured_promo_btn_text', 'Shop Now');
+                        $promoLink = \App\Models\Setting::get('featured_promo_link', 'shop');
+                        $promoImg = \App\Models\Setting::get('featured_promo_image', '');
+                        ?>
+                        <div class="lg:col-span-4 featured-promo-card rounded-2xl overflow-hidden shadow-xs relative group w-full bg-slate-950 flex items-center justify-center border border-gray-900">
+                            <?php if (!empty($promoImg)): ?>
+                                <a href="<?= url($promoLink) ?>" class="block w-full h-full rounded-2xl overflow-hidden group-hover:opacity-95 transition flex items-center justify-center bg-slate-950">
+                                    <img src="<?= asset($promoImg) ?>" alt="<?= htmlspecialchars($promoTitle ?: 'Featured Offer') ?>"
+                                        class="w-full h-auto lg:h-full max-w-full object-contain lg:object-cover rounded-2xl transition-transform duration-500 group-hover:scale-105">
+                                </a>
+                            <?php else: ?>
+                                <div class="bg-gradient-to-br from-gray-900 via-gray-900 to-black p-6 text-white rounded-2xl" style="display:flex; flex-direction:column; justify-content:space-between; width:100%; height:100%; min-height:320px;">
+                                    <div class="relative z-10 space-y-3">
+                                        <?php if (!empty($promoBadge)): ?>
+                                            <span class="text-[10px] font-semibold uppercase px-2.5 py-1 rounded text-white bg-red-600 inline-block shadow-xs">
+                                                <?= htmlspecialchars($promoBadge) ?>
+                                            </span>
+                                        <?php endif; ?>
+                                        <h3 class="text-2xl font-black leading-tight text-white mt-2"><?= htmlspecialchars($promoTitle) ?></h3>
+                                        <?php if (!empty($promoDesc)): ?>
+                                            <p class="text-xs text-gray-300 leading-relaxed"><?= htmlspecialchars($promoDesc) ?></p>
+                                        <?php endif; ?>
+                                    </div>
+                                    <div class="relative z-10 pt-6">
+                                        <a href="<?= url($promoLink) ?>" class="inline-flex items-center space-x-2 h-10 px-5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-xs rounded-xl transition shadow-xs">
+                                            <span><?= htmlspecialchars($promoBtn) ?></span>
+                                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                                        </a>
                                     </div>
                                 </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="lg:col-span-8 relative flex flex-col justify-between">
+                            <div class="relative w-full h-full">
+                                <div class="swiper <?= $sliderId ?> w-full py-1">
+                                    <div class="swiper-wrapper">
+                                        <?php foreach ($secProducts as $prod): ?>
+                                            <div class="swiper-slide h-auto">
+                                                <div class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-xs hover:shadow-md transition">
+                                                    <?php $isWished = in_array((int)$prod['id'], $wishlistProductIds ?? []); ?>
+                                                    <button type="button" onclick="toggleWishlist(<?= $prod['id'] ?>, this)" data-wishlist-id="<?= $prod['id'] ?>" class="robu-wishlist-btn absolute top-2 right-2 sm:top-3 sm:right-3 z-10 p-1.5 rounded-full shadow-2xs" title="<?= $isWished ? 'Remove from Wishlist' : 'Save to Wishlist' ?>">
+                                                        <i data-lucide="heart" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-300" <?= $isWished ? 'fill="#A8111C" style="fill:#A8111C; color:#A8111C;"' : '' ?>></i>
+                                                    </button>
+
+                                                    <?php if ($prod['stock'] <= 0): ?>
+                                                        <span class="absolute top-2 left-0 sm:top-3 z-10 text-white text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-r uppercase shadow-xs bg-gray-800">Out of Stock</span>
+                                                    <?php elseif (!empty($prod['sale_price']) && $prod['price'] > $prod['sale_price']): ?>
+                                                        <span class="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 bg-red-600 text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-md uppercase shadow-xs">SAVE <?= round((($prod['price'] - $prod['sale_price']) / $prod['price']) * 100) ?>%</span>
+                                                    <?php endif; ?>
+
+                                                    <?php $pSlug = !empty($prod['slug']) ? trim($prod['slug']) : (int)$prod['id']; ?>
+                                                    <a href="<?= url('product/' . $pSlug) ?>" class="block relative aspect-square bg-transparent rounded-lg overflow-hidden mb-2.5 sm:mb-3 flex items-center justify-center p-1.5 pt-7 sm:pt-8 transition">
+                                                        <img src="<?= asset($prod['main_image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="w-full h-full object-contain max-h-[82%] group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                                                    </a>
+
+                                                    <div class="flex-1 flex flex-col justify-between space-y-2">
+                                                        <div>
+                                                            <h4 class="text-xs font-semibold text-gray-900 dark:text-white group-hover:text-red-600 transition line-clamp-2 leading-snug">
+                                                                <a href="<?= url('product/' . $pSlug) ?>" class="hover:text-red-600 transition"><?= htmlspecialchars($prod['name']) ?></a>
+                                                            </h4>
+                                                        </div>
+
+                                                        <div class="pt-2 border-t border-red-100/70 space-y-2">
+                                                            <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
+                                                                <span class="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
+                                                                <?php if ($prod['sale_price']): ?>
+                                                                    <span class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>
+                                                                <?php endif; ?>
+                                                            </div>
+
+                                                            <form action="<?= url('cart/add') ?>" method="POST" class="w-full">
+                                                                <?= csrf_field() ?>
+                                                                <input type="hidden" name="product_id" value="<?= $prod['id'] ?>">
+                                                                <input type="hidden" name="quantity" value="1">
+                                                                <button type="submit" <?= $prod['stock'] <= 0 ? 'disabled' : '' ?> class="robu-cart-btn w-full h-8 sm:h-9 px-2 sm:px-3 text-[11px] sm:text-xs flex items-center justify-center gap-1.5 whitespace-nowrap <?= $prod['stock'] <= 0 ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                                                                    <span><?= $prod['stock'] > 0 ? 'Add to Cart' : 'Out' ?></span>
+                                                                    <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+
+                                <button type="button" id="<?= $prevId ?>" class="carousel-nav-btn carousel-nav-prev" aria-label="Previous">
+                                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                                </button>
+                                <button type="button" id="<?= $nextId ?>" class="carousel-nav-btn carousel-nav-next" aria-label="Next">
+                                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                                </button>
                             </div>
-                        <?php endforeach; ?>
+                        </div>
                     </div>
-                </div>
+                <?php else: ?>
+                    <div class="relative">
+                        <div class="swiper <?= $sliderId ?> w-full py-1">
+                            <div class="swiper-wrapper">
+                                <?php foreach ($secProducts as $prod): ?>
+                                    <div class="swiper-slide h-auto">
+                                        <div class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-xs hover:shadow-md transition">
+                                            <?php $isWished = in_array((int)$prod['id'], $wishlistProductIds ?? []); ?>
+                                            <button type="button" onclick="toggleWishlist(<?= $prod['id'] ?>, this)" data-wishlist-id="<?= $prod['id'] ?>" class="robu-wishlist-btn absolute top-2 right-2 sm:top-3 sm:right-3 z-10 p-1.5 rounded-full shadow-2xs" title="<?= $isWished ? 'Remove from Wishlist' : 'Save to Wishlist' ?>">
+                                                <i data-lucide="heart" class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-300" <?= $isWished ? 'fill="#A8111C" style="fill:#A8111C; color:#A8111C;"' : '' ?>></i>
+                                            </button>
 
-                <!-- Overlay Navigation Arrows -->
-                <button type="button" id="bestsellers-prev" class="carousel-nav-btn carousel-nav-prev"
-                    aria-label="Previous">
-                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                </button>
-                <button type="button" id="bestsellers-next" class="carousel-nav-btn carousel-nav-next" aria-label="Next">
-                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                </button>
+                                            <?php if ($prod['stock'] <= 0): ?>
+                                                <span class="absolute top-2 left-0 sm:top-3 z-10 text-white text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-r uppercase shadow-xs bg-gray-800">Out of Stock</span>
+                                            <?php elseif (!empty($prod['sale_price']) && $prod['price'] > $prod['sale_price']): ?>
+                                                <span class="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 bg-red-600 text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-md uppercase shadow-xs">SAVE <?= round((($prod['price'] - $prod['sale_price']) / $prod['price']) * 100) ?>%</span>
+                                            <?php endif; ?>
+
+                                            <?php $pSlug = !empty($prod['slug']) ? trim($prod['slug']) : (int)$prod['id']; ?>
+                                            <a href="<?= url('product/' . $pSlug) ?>" class="block relative aspect-square bg-transparent rounded-lg overflow-hidden mb-2.5 sm:mb-3 flex items-center justify-center p-1.5 pt-7 sm:pt-8 transition">
+                                                <img src="<?= asset($prod['main_image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="w-full h-full object-contain max-h-[82%] group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                                            </a>
+
+                                            <div class="flex-1 flex flex-col justify-between space-y-2">
+                                                <div>
+                                                    <h4 class="text-xs font-semibold text-gray-900 dark:text-white group-hover:text-red-600 transition line-clamp-2 leading-snug">
+                                                        <a href="<?= url('product/' . $pSlug) ?>" class="hover:text-red-600 transition"><?= htmlspecialchars($prod['name']) ?></a>
+                                                    </h4>
+                                                </div>
+
+                                                <div class="pt-2 border-t border-red-100/70 space-y-2">
+                                                    <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
+                                                        <span class="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
+                                                        <?php if ($prod['sale_price']): ?>
+                                                            <span class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+
+                                                    <form action="<?= url('cart/add') ?>" method="POST" class="w-full">
+                                                        <?= csrf_field() ?>
+                                                        <input type="hidden" name="product_id" value="<?= $prod['id'] ?>">
+                                                        <input type="hidden" name="quantity" value="1">
+                                                        <button type="submit" <?= $prod['stock'] <= 0 ? 'disabled' : '' ?> class="robu-cart-btn w-full h-8 sm:h-9 px-2 sm:px-3 text-[11px] sm:text-xs flex items-center justify-center gap-1.5 whitespace-nowrap <?= $prod['stock'] <= 0 ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                                                            <span><?= $prod['stock'] > 0 ? 'Add to Cart' : 'Out' ?></span>
+                                                            <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                        <button type="button" id="<?= $prevId ?>" class="carousel-nav-btn carousel-nav-prev" aria-label="Previous">
+                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                        </button>
+                        <button type="button" id="<?= $nextId ?>" class="carousel-nav-btn carousel-nav-next" aria-label="Next">
+                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                <?php endif; ?>
+
             </div>
-
-        </div>
-    </section>
+        </section>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                if (typeof Swiper !== 'undefined') {
+                    new Swiper('.<?= $sliderId ?>', {
+                        slidesPerView: 2,
+                        spaceBetween: 12,
+                        navigation: {
+                            nextEl: '#<?= $nextId ?>',
+                            prevEl: '#<?= $prevId ?>',
+                        },
+                        breakpoints: {
+                            640: { slidesPerView: 3, spaceBetween: 16 },
+                            1024: { slidesPerView: <?= $isFeaturedPromo ? '3' : '4' ?>, spaceBetween: 20 },
+                            1280: { slidesPerView: <?= $isFeaturedPromo ? '3' : '5' ?>, spaceBetween: 20 }
+                        }
+                    });
+                }
+            });
+        </script>
+    <?php endforeach; ?>
 <?php endif; ?>
+
 
 
 <!-- SECTION 3: INTERACTIVE SCOOTER COMPARE SECTION -->
@@ -447,170 +567,7 @@ include __DIR__ . '/layouts/header.php';
 </section>
 
 
-<!-- SECTION 4: FEATURED PRODUCTS (With Left Promo Card + Right Product Slider UI as originally specced) -->
-<?php if (!empty($featuredProducts)): ?>
-    <section class="py-5 md:py-7 bg-theme-bg border-b border-gray-100 font-sans reveal-on-scroll">
-        <div class="container mx-auto px-4 space-y-6">
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 tracking-tight">Featured Products</h2>
-
-                </div>
-                <a href="<?= url('shop') ?>"
-                    class="text-xs font-semibold flex items-center space-x-1 transition text-red-600 hover:underline shrink-0">
-                    <span>View All</span>
-                    <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
-                </a>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-
-                <?php
-                $promoBadge = \App\Models\Setting::get('featured_promo_badge', 'SPECIAL OFFER');
-                $promoTitle = \App\Models\Setting::get('featured_promo_title', 'ImportWale Heavy-Duty Protection');
-                $promoDesc = \App\Models\Setting::get('featured_promo_description', 'Heavy gauge stainless steel crash guards and all-weather body covers precision-fit for your electric scooter.');
-                $promoBtn = \App\Models\Setting::get('featured_promo_btn_text', 'Shop Now');
-                $promoLink = \App\Models\Setting::get('featured_promo_link', 'shop');
-                $promoImg = \App\Models\Setting::get('featured_promo_image', '');
-                ?>
-                <!-- Left Special Offer Banner Card -->
-                <div
-                    class="lg:col-span-4 featured-promo-card rounded-2xl overflow-hidden shadow-xs relative group w-full bg-slate-950 flex items-center justify-center border border-gray-900">
-                    <?php if (!empty($promoImg)): ?>
-                        <!-- Full Clickable Image Banner -->
-                        <a href="<?= url($promoLink) ?>"
-                            class="block w-full h-full rounded-2xl overflow-hidden group-hover:opacity-95 transition flex items-center justify-center bg-slate-950">
-                            <img src="<?= asset($promoImg) ?>" alt="<?= htmlspecialchars($promoTitle ?: 'Featured Offer') ?>"
-                                class="w-full h-auto lg:h-full max-w-full object-contain lg:object-cover rounded-2xl transition-transform duration-500 group-hover:scale-105">
-                        </a>
-                    <?php else: ?>
-                        <!-- Text-Based Dark Banner Fallback -->
-                        <div class="bg-gradient-to-br from-gray-900 via-gray-900 to-black p-6 text-white rounded-2xl"
-                            style="display:flex; flex-direction:column; justify-content:space-between; width:100%; height:100%; min-height:320px;">
-                            <div class="relative z-10 space-y-3">
-                                <?php if (!empty($promoBadge)): ?>
-                                    <span
-                                        class="text-[10px] font-semibold uppercase px-2.5 py-1 rounded text-white bg-red-600 inline-block shadow-xs">
-                                        <?= htmlspecialchars($promoBadge) ?>
-                                    </span>
-                                <?php endif; ?>
-                                <h3 class="text-2xl font-black leading-tight text-white mt-2">
-                                    <?= htmlspecialchars($promoTitle) ?>
-                                </h3>
-                                <?php if (!empty($promoDesc)): ?>
-                                    <p class="text-xs text-gray-300 leading-relaxed">
-                                        <?= htmlspecialchars($promoDesc) ?>
-                                    </p>
-                                <?php endif; ?>
-                            </div>
-
-                            <div class="relative z-10 pt-6">
-                                <a href="<?= url($promoLink) ?>"
-                                    class="inline-flex items-center space-x-2 h-10 px-5 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-xs rounded-xl transition shadow-xs">
-                                    <span><?= htmlspecialchars($promoBtn) ?></span>
-                                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                                </a>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <!-- Right Products Slider -->
-                <div class="lg:col-span-8 relative flex flex-col justify-between">
-                    <div class="relative w-full h-full">
-                        <div class="swiper swiper-featured w-full py-1">
-                            <div class="swiper-wrapper">
-                                <?php foreach ($featuredProducts as $prod): ?>
-                                    <div class="swiper-slide h-auto">
-                                        <div
-                                            class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
-
-                                            <?php $isWished = in_array((int) $prod['id'], $wishlistProductIds ?? []); ?>
-                                            <button type="button" onclick="toggleWishlist(<?= $prod['id'] ?>, this)"
-                                                data-wishlist-id="<?= $prod['id'] ?>"
-                                                class="robu-wishlist-btn absolute top-2 right-2 sm:top-3 sm:right-3 z-10 p-1.5 rounded-full shadow-2xs"
-                                                title="<?= $isWished ? 'Remove from Wishlist' : 'Save to Wishlist' ?>">
-                                                <i data-lucide="heart" class="w-3.5 h-3.5 sm:w-4 sm:h-4" <?= $isWished ? 'fill="#A8111C" style="fill:#A8111C; color:#A8111C;"' : '' ?>></i>
-                                            </button>
-
-                                            <?php if ($prod['stock'] <= 0): ?>
-                                                <span
-                                                    class="absolute top-2 left-0 sm:top-3 z-10 text-white text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-r uppercase shadow-xs"
-                                                    style="background-color: var(--color-secondary);">
-                                                    Out of Stock
-                                                </span>
-                                            <?php elseif (!empty($prod['sale_price'])): ?>
-                                                <span
-                                                    class="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 bg-red-600 text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-md uppercase shadow-xs">
-                                                    SAVE
-                                                    <?= round((($prod['price'] - $prod['sale_price']) / $prod['price']) * 100) ?>%
-                                                </span>
-                                            <?php endif; ?>
-
-                                            <?php $fpSlug = !empty($prod['slug']) ? trim($prod['slug']) : (int) $prod['id']; ?>
-                                            <a href="<?= url('product/' . $fpSlug) ?>"
-                                                class="block relative aspect-square bg-transparent dark:bg-transparent rounded-lg overflow-hidden mb-2.5 sm:mb-3 flex items-center justify-center p-1.5 pt-7 sm:pt-8 transition">
-                                                <img src="<?= asset($prod['main_image']) ?>"
-                                                    alt="<?= htmlspecialchars($prod['name']) ?>"
-                                                    class="w-full h-full object-contain max-h-[82%] group-hover:scale-105 transition-transform duration-300"
-                                                    loading="lazy">
-                                            </a>
-
-                                            <div class="flex-1 flex flex-col justify-between space-y-2">
-                                                <div>
-                                                    <h4
-                                                        class="text-xs font-semibold text-gray-900 group-hover:text-red-600 transition line-clamp-2 leading-snug">
-                                                        <a href="<?= url('product/' . $fpSlug) ?>"
-                                                            class="hover:text-red-600 transition"><?= htmlspecialchars($prod['name']) ?></a>
-                                                    </h4>
-                                                </div>
-
-                                                <div class="pt-2 border-t border-red-100/70 space-y-2">
-                                                    <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
-                                                        <span
-                                                            class="text-xs sm:text-sm font-semibold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
-                                                        <?php if ($prod['sale_price']): ?>
-                                                            <span
-                                                                class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>
-                                                        <?php endif; ?>
-                                                    </div>
-
-                                                    <form action="<?= url('cart/add') ?>" method="POST" class="w-full">
-                                                        <?= csrf_field() ?>
-                                                        <input type="hidden" name="product_id" value="<?= $prod['id'] ?>">
-                                                        <input type="hidden" name="quantity" value="1">
-                                                        <button type="submit" <?= $prod['stock'] <= 0 ? 'disabled' : '' ?>
-                                                            class="robu-cart-btn w-full h-8 sm:h-9 px-2 sm:px-3 text-[11px] sm:text-xs flex items-center justify-center gap-1.5 whitespace-nowrap <?= $prod['stock'] <= 0 ? 'opacity-50 cursor-not-allowed' : '' ?>">
-                                                            <span><?= $prod['stock'] > 0 ? 'Add to Cart' : 'Out' ?></span>
-                                                            <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-
-                        <!-- Overlay Navigation Arrows -->
-                        <button type="button" id="featured-prev" class="carousel-nav-btn carousel-nav-prev"
-                            aria-label="Previous">
-                            <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                        </button>
-                        <button type="button" id="featured-next" class="carousel-nav-btn carousel-nav-next"
-                            aria-label="Next">
-                            <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-                </div>
-
-            </div>
-
-        </div>
-    </section>
-<?php endif; ?>
 
 
 <!-- SECTION 5: OUR VIDEOS SECTION (Matching Screenshot 2) -->
@@ -725,110 +682,7 @@ include __DIR__ . '/layouts/header.php';
 <?php endif; ?>
 
 
-<!-- SECTION 6: NEW ARRIVALS -->
-<?php if (!empty($newArrivals)): ?>
-    <section class="py-5 md:py-7 bg-theme-bg border-b border-gray-100 font-sans reveal-on-scroll">
-        <div class="container mx-auto px-4 space-y-6">
 
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-xl lg:text-2xl font-semibold text-gray-900 tracking-tight">New Arrivals</h2>
-                </div>
-                <a href="<?= url('shop') ?>"
-                    class="inline-flex items-center space-x-1 whitespace-nowrap text-xs font-semibold text-red-600 hover:underline shrink-0">
-                    <span>View All</span>
-                    <i data-lucide="arrow-right" class="w-3.5 h-3.5 shrink-0"></i>
-                </a>
-            </div>
-
-            <div class="relative">
-                <div class="swiper swiper-newarrivals w-full py-1">
-                    <div class="swiper-wrapper">
-                        <?php foreach ($newArrivals as $prod): ?>
-                            <div class="swiper-slide h-auto">
-                                <div
-                                    class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full">
-
-                                    <?php $isWished = in_array((int) $prod['id'], $wishlistProductIds ?? []); ?>
-                                    <button type="button" onclick="toggleWishlist(<?= $prod['id'] ?>, this)"
-                                        data-wishlist-id="<?= $prod['id'] ?>"
-                                        class="robu-wishlist-btn absolute top-2 right-2 sm:top-3 sm:right-3 z-10 p-1.5 rounded-full shadow-2xs"
-                                        title="<?= $isWished ? 'Remove from Wishlist' : 'Save to Wishlist' ?>">
-                                        <i data-lucide="heart" class="w-3.5 h-3.5 sm:w-4 sm:h-4" <?= $isWished ? 'fill="#A8111C" style="fill:#A8111C; color:#A8111C;"' : '' ?>></i>
-                                    </button>
-
-                                    <?php if ($prod['stock'] <= 0): ?>
-                                        <span
-                                            class="absolute top-2 left-0 sm:top-3 z-10 text-white text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-r uppercase shadow-xs"
-                                            style="background-color: var(--color-secondary);">
-                                            Out of Stock
-                                        </span>
-                                    <?php elseif (!empty($prod['sale_price'])): ?>
-                                        <span
-                                            class="absolute top-2 left-2 sm:top-3 sm:left-3 z-10 bg-red-600 text-white text-[9px] sm:text-[10px] font-semibold px-1.5 sm:px-2 py-0.5 rounded-md uppercase shadow-xs">
-                                            SAVE <?= round((($prod['price'] - $prod['sale_price']) / $prod['price']) * 100) ?>%
-                                        </span>
-                                    <?php endif; ?>
-
-                                    <?php $naSlug = !empty($prod['slug']) ? trim($prod['slug']) : (int) $prod['id']; ?>
-                                    <a href="<?= url('product/' . $naSlug) ?>"
-                                        class="block relative aspect-square bg-transparent dark:bg-transparent rounded-lg overflow-hidden mb-2.5 sm:mb-3 flex items-center justify-center p-1.5 pt-7 sm:pt-8 transition">
-                                        <img src="<?= asset($prod['main_image']) ?>"
-                                            alt="<?= htmlspecialchars($prod['name']) ?>"
-                                            class="w-full h-full object-contain max-h-[82%] group-hover:scale-105 transition-transform duration-300"
-                                            loading="lazy">
-                                    </a>
-
-                                    <div class="flex-1 flex flex-col justify-between space-y-2">
-                                        <div>
-                                            <h4
-                                                class="text-xs font-semibold text-gray-900 group-hover:text-red-600 transition line-clamp-2 leading-snug">
-                                                <a href="<?= url('product/' . $naSlug) ?>"
-                                                    class="hover:text-red-600 transition"><?= htmlspecialchars($prod['name']) ?></a>
-                                            </h4>
-                                        </div>
-
-                                        <div class="pt-2 border-t border-red-100/70 space-y-2">
-                                            <div class="flex items-baseline flex-wrap gap-1.5 min-w-0">
-                                                <span
-                                                    class="text-xs sm:text-sm font-semibold text-gray-900 leading-none"><?= format_price($prod['sale_price'] ?: $prod['price']) ?></span>
-                                                <?php if ($prod['sale_price']): ?>
-                                                    <span
-                                                        class="text-[10px] text-gray-400 line-through leading-tight"><?= format_price($prod['price']) ?></span>
-                                                <?php endif; ?>
-                                            </div>
-
-                                            <form action="<?= url('cart/add') ?>" method="POST" class="w-full">
-                                                <?= csrf_field() ?>
-                                                <input type="hidden" name="product_id" value="<?= $prod['id'] ?>">
-                                                <input type="hidden" name="quantity" value="1">
-                                                <button type="submit" <?= $prod['stock'] <= 0 ? 'disabled' : '' ?>
-                                                    class="robu-cart-btn w-full h-8 sm:h-9 px-2 sm:px-3 text-[11px] sm:text-xs flex items-center justify-center gap-1.5 whitespace-nowrap <?= $prod['stock'] <= 0 ? 'opacity-50 cursor-not-allowed' : '' ?>">
-                                                    <span><?= $prod['stock'] > 0 ? 'Add to Cart' : 'Out' ?></span>
-                                                    <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-
-                <!-- Overlay Navigation Arrows -->
-                <button type="button" id="newarrivals-prev" class="carousel-nav-btn carousel-nav-prev"
-                    aria-label="Previous">
-                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
-                </button>
-                <button type="button" id="newarrivals-next" class="carousel-nav-btn carousel-nav-next" aria-label="Next">
-                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-        </div>
-    </section>
-<?php endif; ?>
 
 
 <!-- SECTION 7: GOOGLE REVIEWS SECTION ("Google Backed Trust in Every Order") -->

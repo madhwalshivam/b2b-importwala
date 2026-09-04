@@ -14,10 +14,33 @@ class ApiController extends Controller
         }
 
         $db = Database::getInstance();
-        $term = '%' . $q . '%';
 
-        $stmtP = $db->prepare("SELECT id, name, slug, price, sale_price, main_image FROM products WHERE (name LIKE ? OR tags LIKE ?) AND status = 'active' LIMIT 20");
-        $stmtP->execute([$term, $term]);
+        $words = array_filter(explode(' ', preg_replace('/\s+/', ' ', $q)));
+        $whereWords = [];
+        $paramsP = [];
+        foreach ($words as $idx => $w) {
+            $whereWords[] = "(name LIKE ? OR tags LIKE ? OR sku LIKE ?)";
+            $st = '%' . $w . '%';
+            $paramsP[] = $st;
+            $paramsP[] = $st;
+            $paramsP[] = $st;
+        }
+        $whereSql = !empty($whereWords) ? implode(" AND ", $whereWords) : "1=1";
+
+        $sqlP = "SELECT id, name, slug, price, sale_price, main_image 
+                 FROM products 
+                 WHERE status = 'active' AND ({$whereSql}) 
+                 ORDER BY (CASE 
+                    WHEN name LIKE ? THEN 1 
+                    WHEN name LIKE ? THEN 2 
+                    ELSE 3 
+                 END) ASC, id DESC LIMIT 20";
+
+        $paramsP[] = $q . '%';
+        $paramsP[] = '%' . $q . '%';
+
+        $stmtP = $db->prepare($sqlP);
+        $stmtP->execute($paramsP);
         $products = $stmtP->fetchAll();
 
         // Brands
