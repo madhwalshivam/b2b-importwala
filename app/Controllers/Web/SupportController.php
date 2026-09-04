@@ -6,6 +6,14 @@ use App\Controllers\BaseController;
 
 class SupportController extends BaseController
 {
+    public function about(): void
+    {
+        $this->renderView('web/about', [
+            'pageTitle' => 'About ImportWale | B2B Wholesale Marketplace',
+            'seoDescription' => 'Discover ImportWale — India\'s premier B2B wholesale sourcing marketplace connecting buyers and retailers with 50,000+ factory-direct products.'
+        ]);
+    }
+
     public function index(): void
     {
         $this->renderView('web/support', [

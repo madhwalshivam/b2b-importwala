@@ -460,7 +460,6 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         </div>
                         <input type="text" onkeyup="filterCheckboxList(this, 'brand-list')" placeholder="Search brands..."
                             class="w-full h-8 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-slate-900">
-                        <div id="brand-list" class="grid grid-cols-1 gap-1 max-h-56 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
                             <?php foreach ($brands as $b): ?>
                                 <label class="checkbox-item flex items-center space-x-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer font-bold text-slate-800 text-xs">
                                     <input type="checkbox" name="brands[]" value="<?= $b['id'] ?>" <?= in_array($b['id'], $selectedBrandIds) ? 'checked' : '' ?>
@@ -470,7 +469,50 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             <?php endforeach; ?>
                         </div>
                     </div>
-                </div>
+
+                <!-- Filter Attributes (Storefront Sidebar) -->
+                <?php if (!empty($filterAttributes)): ?>
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 space-y-4 shadow-xs col-span-full">
+                        <div class="flex items-center space-x-2 border-b border-slate-100 pb-3">
+                            <i data-lucide="sliders" class="w-4 h-4 text-orange-600"></i>
+                            <h3 class="font-bold text-sm text-slate-900">Filter Attributes (Storefront Sidebar Filters)</h3>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                            <?php foreach ($filterAttributes as $attr): ?>
+                                <?php
+                                $attrId = $attr['id'];
+                                $assignedOptIds = $productFilterValues[$attrId]['option_ids'] ?? [];
+                                $assignedValues = $productFilterValues[$attrId]['values'] ?? [];
+                                ?>
+                                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                                    <label class="block font-bold text-slate-800 uppercase tracking-wider"><?= htmlspecialchars($attr['name']) ?></label>
+                                    <?php if ($attr['type'] === 'single_select'): ?>
+                                        <select name="filter_attributes[<?= $attrId ?>]" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none">
+                                            <option value="">-- None Selected --</option>
+                                            <?php foreach ($attr['options'] as $opt): ?>
+                                                <option value="<?= $opt['id'] ?>" <?= in_array($opt['id'], $assignedOptIds) ? 'selected' : '' ?>>
+                                                    <?= htmlspecialchars($opt['value']) ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    <?php elseif ($attr['type'] === 'multi_select'): ?>
+                                        <div class="space-y-1.5 max-h-36 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
+                                            <?php foreach ($attr['options'] as $opt): ?>
+                                                <label class="flex items-center space-x-2 font-medium text-slate-700 cursor-pointer text-xs">
+                                                    <input type="checkbox" name="filter_attributes[<?= $attrId ?>][]" value="<?= $opt['id'] ?>" <?= in_array($opt['id'], $assignedOptIds) ? 'checked' : '' ?> class="rounded border-slate-300 text-orange-600">
+                                                    <span><?= htmlspecialchars($opt['value']) ?></span>
+                                                </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <input type="text" name="filter_attributes[<?= $attrId ?>]" value="<?= htmlspecialchars(implode(', ', $assignedValues)) ?>" placeholder="Value" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900">
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
             </div>
         </div>
 

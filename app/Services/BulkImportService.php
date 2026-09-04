@@ -563,6 +563,9 @@ class BulkImportService
                 // Sync All Metadata Specifications into `product_specifications`
                 $this->syncProductSpecifications($productId, $prod);
 
+                // Sync Filter Attributes into `product_filter_attribute_values`
+                $this->syncProductFilterAttributes($productId, $prod);
+
                 // Process Cover Main Image into product_images
                 if (!empty($mainImgPath)) {
                     $chkM = $this->db->prepare("SELECT id FROM product_images WHERE product_id = ? AND (image_url = ? OR image_path = ?)");
@@ -976,5 +979,42 @@ class BulkImportService
         $text = trim($text, '-');
         $text = preg_replace('~-+~', '-', $text);
         return strtolower($text ?: 'n-a');
+    }
+
+    private function syncProductFilterAttributes(int $productId, array $prodData): void
+    {
+        try {
+            $filterService = new FilterAttributeService();
+            $attributes = $filterService->getAttributesForCategory($prodData['category_id'] ?? null);
+            $attrDataToSave = [];
+
+            foreach ($attributes as $attr) {
+                $attrName = $attr['name'];
+                $attrSlug = strtolower(str_replace([' ', '/', '-', '(', ')'], '_', $attrName));
+                
+                $val = $prodData[$attrSlug] ?? null;
+                if ($val === null) {
+                    // Try matching product data keys
+                    foreach ($prodData as $k => $v) {
+                        if (strcasecmp($k, $attrName) === 0 || strcasecmp(str_replace('_', ' ', $k), $attrName) === 0) {
+                            $val = $v;
+                            break;
+                        }
+                    }
+                }
+
+                if (!empty($val)) {
+                    $valStr = trim((string)$val);
+                    $optId = $filterService->getOrCreateOption($attr['id'], $valStr, true);
+                    if ($optId) {
+                        $attrDataToSave[$attr['id']] = [$optId];
+                    }
+                }
+            }
+
+            if (!empty($attrDataToSave)) {
+                $filterService->saveProductAttributeValues($productId, $attrDataToSave);
+            }
+        } catch (\Throwable $e) {}
     }
 }

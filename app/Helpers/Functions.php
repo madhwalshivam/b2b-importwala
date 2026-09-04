@@ -71,6 +71,55 @@ if (!function_exists('slugify')) {
     }
 }
 
+if (!function_exists('category_url')) {
+    function category_url(array|string|null $category): string
+    {
+        if (is_array($category)) {
+            $slug = $category['slug'] ?? slugify($category['name'] ?? '');
+        } else {
+            $slug = slugify((string)($category ?? ''));
+        }
+        return url('category/' . $slug);
+    }
+}
+
+if (!function_exists('subcategory_url')) {
+    function subcategory_url(array|string|null $category, array|string|null $subcategory): string
+    {
+        $catSlug = is_array($category) ? ($category['slug'] ?? slugify($category['name'] ?? '')) : slugify((string)($category ?? ''));
+        $subSlug = is_array($subcategory) ? ($subcategory['slug'] ?? slugify($subcategory['name'] ?? '')) : slugify((string)($subcategory ?? ''));
+        if (empty($catSlug)) {
+            return url('category/' . $subSlug);
+        }
+        return url('category/' . $catSlug . '/' . $subSlug);
+    }
+}
+
+if (!function_exists('search_url')) {
+    function search_url(string $query): string
+    {
+        $clean = trim($query);
+        if (empty($clean)) {
+            return url('catalog');
+        }
+        $clean = str_replace('&', 'and', $clean);
+        $slug = slugify($clean);
+        return url('search/' . $slug);
+    }
+}
+
+if (!function_exists('product_url')) {
+    function product_url(array|string|null $product): string
+    {
+        if (is_array($product)) {
+            $slug = $product['slug'] ?? slugify($product['name'] ?? '');
+        } else {
+            $slug = slugify((string)($product ?? ''));
+        }
+        return url('product/' . $slug);
+    }
+}
+
 if (!function_exists('csrf_token')) {
     function csrf_token(): string
     {

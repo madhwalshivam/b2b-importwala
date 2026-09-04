@@ -5,10 +5,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="<?= csrf_token() ?>">
-  <title><?= htmlspecialchars($title ?? 'ImportWale | World-Scale B2B Wholesale Platform') ?></title>
-  <?php if (!empty($canonicalUrl)): ?>
-    <link rel="canonical" href="<?= htmlspecialchars($canonicalUrl) ?>" />
+  <?php
+    $pageTitle = $title ?? $seoOptions['title'] ?? 'ImportWale | World-Scale B2B Wholesale Platform';
+    $pageDesc = $seoDescription ?? $seoOptions['description'] ?? 'ImportWale - India\'s premier wholesale supply platform for factory-direct products.';
+    $pageCanonical = $canonicalUrl ?? $seoOptions['canonical'] ?? null;
+  ?>
+  <title><?= htmlspecialchars($pageTitle) ?></title>
+  <meta name="description" content="<?= htmlspecialchars($pageDesc) ?>">
+  <?php if (!empty($pageCanonical)): ?>
+    <link rel="canonical" href="<?= htmlspecialchars($pageCanonical) ?>" />
+    <meta property="og:url" content="<?= htmlspecialchars($pageCanonical) ?>" />
   <?php endif; ?>
+  <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>" />
+  <meta property="og:description" content="<?= htmlspecialchars($pageDesc) ?>" />
 
   <!-- Tailwind CSS CDN (required for all utility classes across the site) -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -598,30 +607,38 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
         </div>
 
         <div class="footer-payment-badges">
-          <div class="payment-badge" title="Verified Trade Protection">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#f05a29" stroke-width="2.5">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <div class="payment-badge" title="Verified B2B Trade Protection">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="#FFF2ED" stroke="#f05a29" stroke-width="2" stroke-linejoin="round"/>
+              <path d="M9 11.5l2 2 4-4" stroke="#f05a29" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             <span>Trade Protection</span>
           </div>
           <div class="payment-badge" title="Razorpay Secure Payment Gateway">
-            <span
-              style="color:#0C2340; font-weight:800; background:#FFF; padding:1px 4px; border-radius:2px; font-size:10px;">Razorpay</span>
-            <span>Gateway</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M22.43 4.47L10.3 22H5.06l7.85-11.41L7.54 4.47h14.89z" fill="#0C2340"/>
+              <path d="M15.42 4.47l-7.88 11.43L4 12.35l6.54-7.88h4.88z" fill="#0284C7"/>
+            </svg>
+            <span>Razorpay Gateway</span>
           </div>
-          <div class="payment-badge" title="UPI Instant Payments">
-            <span style="color:#00B9F1; font-weight:800; font-size:10px;">UPI</span>
-            <span>Instant</span>
+          <div class="payment-badge" title="UPI Instant Direct Payments">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M17.4 3.6L12.9 12h3.4l-4.5 8.4 9-9.6h-3.4l4.5-7.2z" fill="#059669"/>
+              <path d="M6.6 3.6L2.1 12h3.4l-4.5 8.4 9-9.6H5.5l4.5-7.2z" fill="#0284C7"/>
+            </svg>
+            <span>UPI Instant</span>
           </div>
-          <div class="payment-badge" title="Visa / Mastercard Accepted">
-            <span
-              style="color:#1A1F71; font-weight:800; background:#FFF; padding:1px 3px; border-radius:2px; font-size:10px;">VISA</span>
-            <span
-              style="color:#EB001B; font-weight:800; background:#FFF; padding:1px 3px; border-radius:2px; font-size:10px; margin-left:-3px;">MC</span>
+          <div class="payment-badge" title="Mastercard Accepted">
+            <svg width="18" height="12" viewBox="0 0 24 16" fill="none">
+              <circle cx="7" cy="8" r="7" fill="#EB001B"/>
+              <circle cx="17" cy="8" r="7" fill="#F79E1B"/>
+              <path d="M12 2.7A6.97 6.97 0 009.6 8c0 2.2.9 4.2 2.4 5.3A6.97 6.97 0 0014.4 8c0-2.2-.9-4.2-2.4-5.3z" fill="#FF5F00"/>
+            </svg>
+            <span>Mastercard</span>
           </div>
           <div class="payment-badge" title="Direct Bank Wire Transfer">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
             </svg>
             <span>Bank Wire</span>
           </div>
@@ -2750,7 +2767,28 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
       }
     }
 
-    document.addEventListener('DOMContentLoaded', fetchCartData);
+    document.addEventListener('DOMContentLoaded', function() {
+      fetchCartData();
+      const searchForm = document.querySelector('form.search-bar-wrapper');
+      if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+          const qInput = searchForm.querySelector('#headerSearchInput') || searchForm.querySelector('input[name="q"]');
+          if (qInput && qInput.value.trim() !== '') {
+            e.preventDefault();
+            const raw = qInput.value.trim().replace(/&/g, 'and');
+            const slug = raw.toLowerCase()
+              .replace(/[^\w\s-]/g, '')
+              .replace(/[\s_-]+/g, '-')
+              .replace(/^-+|-+$/g, '');
+            if (slug.length > 0) {
+              window.location.href = '<?= url("search") ?>/' + encodeURIComponent(slug);
+            } else {
+              window.location.href = '<?= url("catalog") ?>';
+            }
+          }
+        });
+      }
+    });
   </script>
 </body>
 

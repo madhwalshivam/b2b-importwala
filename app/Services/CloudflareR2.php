@@ -1,14 +1,16 @@
 <?php
 namespace App\Services;
 
-class CloudflareR2 {
+class CloudflareR2
+{
     private string $accessKeyId = '6a2ae9571e41761b1c649cee097b8d21';
     private string $secretAccessKey = 'b00b9b4a5a9a644aa1ca02215e556db52b64ba6c3f1e2a4174bd8c2a20c170cc';
     private string $bucketName = 'tape';
     private string $endpoint = 'https://17a03ed838cff7b48ee24c1876e145fc.r2.cloudflarestorage.com';
     private string $uploadFolder = 'dfix';
 
-    public function upload(array $file): string {
+    public function upload(array $file): string
+    {
         if (empty($file['tmp_name']) || !file_exists($file['tmp_name'])) {
             return '';
         }
@@ -45,13 +47,15 @@ class CloudflareR2 {
         return $localUrl;
     }
 
-    private function uploadToR2Fast(string $filePath, string $r2Key, string $contentType): bool {
+    private function uploadToR2Fast(string $filePath, string $r2Key, string $contentType): bool
+    {
         $host = parse_url($this->endpoint, PHP_URL_HOST);
         $uri = '/' . $this->bucketName . '/' . ltrim($r2Key, '/');
         $url = $this->endpoint . $uri;
 
         $fileData = @file_get_contents($filePath);
-        if ($fileData === false) return false;
+        if ($fileData === false)
+            return false;
 
         $region = 'auto';
         $service = 's3';
@@ -89,16 +93,18 @@ class CloudflareR2 {
         ];
 
         $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PUT');
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $fileData);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_NOSIGNAL, 1);
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 200); // 200ms connect timeout
-        curl_setopt($ch, CURLOPT_TIMEOUT_MS, 500);        // 500ms max timeout
+        $httpMethod = 'PUT';
+        curl_setopt_array($ch, [
+            CURLOPT_CUSTOMREQUEST => $httpMethod,
+            CURLOPT_POSTFIELDS => $fileData,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_NOSIGNAL => 1,
+            CURLOPT_CONNECTTIMEOUT_MS => 200,
+            CURLOPT_TIMEOUT_MS => 500,
+        ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         return ($httpCode === 200 || $httpCode === 201);
     }

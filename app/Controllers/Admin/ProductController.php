@@ -296,7 +296,17 @@ class ProductController extends Controller
             }
         }
 
+        // Save Product Filter Attributes
+        if (isset($_POST['filter_attributes']) && is_array($_POST['filter_attributes'])) {
+            (new \App\Services\FilterAttributeService())->saveProductAttributeValues($productId, $_POST['filter_attributes']);
+        }
+
         activity_log('Create Product', 'Products', $productId, "Created product: {$name} (SKU: {$sku})");
+
+        // Auto-index visual feature embedding vector
+        try {
+            (new \App\Services\VisualSearchService())->indexProduct($productId);
+        } catch (\Throwable $e) {}
 
         // Flush Cache
         try {
@@ -372,6 +382,10 @@ class ProductController extends Controller
         $specModel = new \App\Models\ProductSpecification();
         $specifications = $specModel->getByProduct($id);
 
+        $filterService = new \App\Services\FilterAttributeService();
+        $filterAttributes = $filterService->getAttributesForCategory((int)($product['category_id'] ?? 0));
+        $productFilterValues = $filterService->getProductAttributeValues($id);
+
         return $this->render('admin/products/edit', [
             'product' => $product,
             'categories' => $categoryModel->all('name ASC'),
@@ -385,7 +399,9 @@ class ProductController extends Controller
             'galleryImages' => $galleryImages,
             'frequentlyBought' => $frequentlyBought,
             'variants' => $variants,
-            'specifications' => $specifications
+            'specifications' => $specifications,
+            'filterAttributes' => $filterAttributes,
+            'productFilterValues' => $productFilterValues
         ]);
     }
 
@@ -533,6 +549,11 @@ class ProductController extends Controller
         $this->productModel->syncProductCategories($id, $categoryIds);
         $this->productModel->syncProductBrands($id, $brandIds);
 
+        // Save Product Filter Attributes
+        if (isset($_POST['filter_attributes']) && is_array($_POST['filter_attributes'])) {
+            (new \App\Services\FilterAttributeService())->saveProductAttributeValues($id, $_POST['filter_attributes']);
+        }
+
         // Save Wholesale Tiered Prices
         $this->saveTieredPrices($id, $_POST['tier_min_qty'] ?? [], $_POST['tier_max_qty'] ?? [], $_POST['tier_unit_price'] ?? []);
 
@@ -580,6 +601,11 @@ class ProductController extends Controller
         $this->productModel->saveRelatedProducts($id, (array) $frequentlyBoughtIds, 'frequently_bought');
 
         activity_log('Update Product', 'Products', $id, "Updated product: {$name}");
+
+        // Auto-index visual feature embedding vector
+        try {
+            (new \App\Services\VisualSearchService())->indexProduct($id);
+        } catch (\Throwable $e) {}
 
         // Flush Cache
         try {

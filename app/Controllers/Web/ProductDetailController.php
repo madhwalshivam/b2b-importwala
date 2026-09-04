@@ -84,7 +84,10 @@ class ProductDetailController extends BaseController
         $minWholesale = min(array_filter($wholesalePrices, fn($p) => $p > 0) ?: [0]);
         $minOnePiece  = min(array_filter($onePiecePrices, fn($p) => $p > 0) ?: [0]);
 
-        // 5. Related Products
+        // 5. Visually Similar & Related Products (AI Feature Vector Match)
+        $visualService = new \App\Services\VisualSearchService();
+        $visuallySimilar = $visualService->searchByProductId($productId, 8);
+
         $categories = $this->categoryRepo->getTree();
         $relatedProducts = $this->productRepo->getByCategory($product['category_id'] ?? 0, 8);
 
@@ -122,6 +125,8 @@ class ProductDetailController extends BaseController
             'minOnePiecePrice'      => $minOnePiece,
             'categories'            => $categories,
             'relatedProducts'       => $relatedProducts,
+            'visuallySimilar'       => $visuallySimilar['items'] ?? [],
+            'similarHeadline'       => $visuallySimilar['headline'] ?? 'Visually Similar Products',
             'whatsappNumber'        => $whatsappNumber,
             'productTiers'          => $productTiers,
             'variantTiersMap'       => $variantTiersMap,

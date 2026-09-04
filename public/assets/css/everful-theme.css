@@ -798,7 +798,7 @@ a {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 20px;
-  margin-bottom: 40px;
+  margin-bottom: 16px;
 }
 
 .product-card {
@@ -950,19 +950,20 @@ a {
 }
 
 /* --- Footer Redesign (Premium B2B Wholesale Level) --- */
+/* --- Footer Redesign (Light Brand Theme Level) --- */
 .footer-container {
-  background: #0F172A;
-  color: #9CA3AF;
+  background: #FAF9F6;
+  color: #475569;
   padding: 0;
-  margin-top: 64px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 16px;
+  border-top: 1px solid #E2E8F0;
   font-family: var(--font-sans, 'Inter', system-ui, sans-serif);
 }
 
 /* Footer Top B2B Trust & Newsletter Strip */
 .footer-trust-strip {
-  background: #1E293B;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: #FFF7ED;
+  border-bottom: 1px solid #FFEDD5;
   padding: 20px 24px;
 }
 
@@ -985,34 +986,36 @@ a {
   width: 40px;
   height: 40px;
   border-radius: 10px;
-  background: rgba(240, 90, 41, 0.12);
+  background: #FFFFFF;
   color: #f05a29;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid rgba(240, 90, 41, 0.2);
+  border: 1px solid #FED7AA;
+  box-shadow: 0 1px 3px rgba(240, 90, 41, 0.12);
 }
 
 .footer-trust-title {
   font-size: 13px;
-  font-weight: 700;
-  color: #FFFFFF;
+  font-weight: 600;
+  color: #1E293B;
   line-height: 1.25;
   letter-spacing: 0.01em;
 }
 
 .footer-trust-desc {
   font-size: 11.5px;
-  color: #9CA3AF;
+  color: #64748B;
   margin-top: 2px;
 }
 
 .footer-newsletter-box {
-  background: rgba(15, 23, 42, 0.7);
+  background: #FFFFFF;
   padding: 6px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid #FED7AA;
+  box-shadow: 0 1px 4px rgba(240, 90, 41, 0.08);
   display: flex;
   align-items: center;
   width: 100%;
@@ -1026,9 +1029,9 @@ a {
 }
 
 .footer-newsletter-input {
-  background: #0F172A;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #FFFFFF;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  color: #1E293B;
   padding: 8px 12px;
   border-radius: 6px;
   font-size: 12px;
@@ -1038,9 +1041,13 @@ a {
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.footer-newsletter-input::placeholder {
+  color: #94A3B8;
+}
+
 .footer-newsletter-input:focus {
   border-color: #f05a29;
-  box-shadow: 0 0 0 2px rgba(240, 90, 41, 0.2);
+  box-shadow: 0 0 0 2px rgba(240, 90, 41, 0.15);
 }
 
 .footer-newsletter-btn {
@@ -1050,7 +1057,7 @@ a {
   padding: 8px 14px;
   border-radius: 6px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.2s, transform 0.15s;
@@ -1058,7 +1065,7 @@ a {
 }
 
 .footer-newsletter-btn:hover {
-  background: #d8481b;
+  background: #e04f20;
   transform: translateY(-1px);
 }
 
@@ -1095,8 +1102,8 @@ a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid #E2E8F0;
 }
 
 .footer-logo-img {
@@ -1108,14 +1115,14 @@ a {
 
 .footer-badge {
   font-size: 9.5px;
-  font-weight: 800;
-  background: rgba(240, 90, 41, 0.18);
+  font-weight: 700;
+  background: #FFF7ED;
   color: #f05a29;
   padding: 3px 8px;
   border-radius: 4px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  border: 1px solid rgba(240, 90, 41, 0.3);
+  border: 1px solid #FED7AA;
   display: inline-flex;
   align-items: center;
 }
@@ -1123,7 +1130,7 @@ a {
 .footer-desc {
   font-size: 13.5px;
   line-height: 1.65;
-  color: #9CA3AF;
+  color: #64748B;
   margin-bottom: 20px;
   font-weight: 400;
 }
@@ -1140,7 +1147,7 @@ a {
   align-items: center;
   gap: 10px;
   font-size: 13.5px;
-  color: #CBD5E1;
+  color: #334155;
   text-decoration: none;
   transition: color 0.2s, transform 0.2s;
   font-weight: 500;
@@ -1158,7 +1165,7 @@ a {
 }
 
 .footer-contact-item:hover {
-  color: #FFFFFF;
+  color: #f05a29;
   transform: translateX(3px);
 }
 
@@ -1173,13 +1180,14 @@ a {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: rgba(255, 255, 255, 0.04);
-  color: #CBD5E1;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #64748B;
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -1194,14 +1202,14 @@ a {
   border-color: #f05a29;
   color: #FFFFFF;
   transform: translateY(-3px);
-  box-shadow: 0 6px 16px rgba(240, 90, 41, 0.35);
+  box-shadow: 0 6px 16px rgba(240, 90, 41, 0.25);
 }
 
 /* Column Headings & Links */
 .footer-col h4 {
   font-size: 15px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #1E293B;
   margin-bottom: 20px;
   position: relative;
   padding-bottom: 10px;
@@ -1231,7 +1239,7 @@ a {
 .footer-col ul li a {
   font-size: 13.5px;
   font-weight: 400;
-  color: #9CA3AF;
+  color: #475569;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
@@ -1249,7 +1257,7 @@ a {
 }
 
 .footer-col ul li a:hover {
-  color: #FFFFFF;
+  color: #f05a29;
   transform: translateX(4px);
 }
 
@@ -1261,7 +1269,7 @@ a {
 /* Divider & Bottom Copyright Bar */
 .footer-divider {
   height: 1px;
-  background: rgba(255, 255, 255, 0.08);
+  background: #E2E8F0;
   margin-bottom: 24px;
 }
 
@@ -1274,11 +1282,11 @@ a {
   flex-wrap: wrap;
   gap: 16px;
   font-size: 12.5px;
-  color: #9CA3AF;
+  color: #64748B;
 }
 
 .footer-bottom-copy {
-  color: #9CA3AF;
+  color: #64748B;
 }
 
 .footer-payment-badges {
@@ -1292,28 +1300,30 @@ a {
   height: 28px;
   padding: 4px 10px;
   border-radius: 6px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 11px;
   font-weight: 600;
-  color: #CBD5E1;
+  color: #475569;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 
 .payment-badge:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: #FFFFFF;
+  background: #FFF7ED;
+  border-color: #FED7AA;
+  color: #f05a29;
   transform: translateY(-1px);
 }
 
 .payment-badge svg {
-  height: 14px;
+  height: 15px;
   width: auto;
-  fill: currentColor;
+  max-width: 48px;
+  flex-shrink: 0;
 }
 
 /* Responsive Breakpoints */

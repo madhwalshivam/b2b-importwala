@@ -185,6 +185,13 @@ $isActive = function(string $path) use ($currentUri): bool {
                         <span class="truncate">Categories</span>
                     </a>
 
+                    <a href="<?= url('admin/filters') ?>"
+                        class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/filters') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
+                        title="Storefront Filter Attributes">
+                        <i data-lucide="sliders" class="w-4 h-4 shrink-0 text-orange-400"></i>
+                        <span class="truncate">Filters</span>
+                    </a>
+
                     <a href="<?= url('admin/subcategories') ?>"
                         class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/subcategories') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
                         title="Sub-categories">

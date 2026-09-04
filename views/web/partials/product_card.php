@@ -82,6 +82,14 @@ $isInInquiry = in_array((int)($product['id'] ?? 0), $userInquiryProductIds);
            onerror="this.onerror=null; this.src='<?= asset('assets/images/placeholder.jpg') ?>';">
     </a>
 
+    <?php if (!empty($product['match_badge']) && !empty($showMatchBadge)): ?>
+      <div style="position: absolute; top: 8px; left: 8px; z-index: 12; pointer-events: none;">
+        <span style="background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); color: #ffffff; font-size: 9.5px; font-weight: 700; padding: 2.5px 7.5px; border-radius: 9999px; box-shadow: 0 1px 3px rgba(0,0,0,0.25); display: inline-block;">
+          <?= htmlspecialchars($product['match_badge']) ?>
+        </span>
+      </div>
+    <?php endif; ?>
+
     <!-- Top-Right: Wishlist Heart Icon -->
     <button type="button" 
             class="ef-icon-btn ef-wishlist-btn <?= $isInWishlist ? 'active' : '' ?>" 
@@ -155,7 +163,7 @@ $isInInquiry = in_array((int)($product['id'] ?? 0), $userInquiryProductIds);
       <?php if ($discountPct > 0): ?>
         <span class="ef-discount-tag">-<?= $discountPct ?>%</span>
       <?php endif; ?>
-      <span class="ef-price-amount">$<?= number_format($effectivePrice, 2) ?></span>
+      <span class="ef-price-amount"><?= format_price($effectivePrice) ?></span>
     </div>
 
     <!-- MOQ & Sales Line -->

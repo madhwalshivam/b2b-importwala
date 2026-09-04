@@ -70,7 +70,7 @@ $activeCategory = $filters['category_id'] ?? null;
           <option value="<?= url('catalog') ?>">All Categories</option>
           <?php if (!empty($categories)): ?>
             <?php foreach ($categories as $cat): ?>
-              <option value="<?= url('catalog?category_id=' . $cat['id']) ?>" <?= ($activeCategory == $cat['id']) ? 'selected' : '' ?>>
+              <option value="<?= category_url($cat) ?>" <?= ($activeCategory == $cat['id']) ? 'selected' : '' ?>>
                 <?= htmlspecialchars($cat['name']) ?>
               </option>
             <?php endforeach; ?>

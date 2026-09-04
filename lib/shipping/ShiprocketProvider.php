@@ -72,7 +72,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
 
         $response = curl_exec($ch);
         $httpCode = defined('CURLINFO_HTTPCODE') ? (int)curl_getinfo($ch, CURLINFO_HTTPCODE) : 200;
-        curl_close($ch);
 
         $data = json_decode($response, true);
         if ($httpCode === 200 && isset($data['token'])) {
@@ -197,7 +196,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
 
         $response = curl_exec($ch);
         $httpCode = defined('CURLINFO_HTTPCODE') ? (int)curl_getinfo($ch, CURLINFO_HTTPCODE) : 200;
-        curl_close($ch);
 
         $data = json_decode($response, true);
         if ($httpCode >= 400 || empty($data['order_id'])) {
@@ -219,7 +217,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
                     ]);
                     $resRetry = curl_exec($chRetry);
                     $httpCodeRetry = defined('CURLINFO_HTTPCODE') ? (int)curl_getinfo($chRetry, CURLINFO_HTTPCODE) : 200;
-                    curl_close($chRetry);
                     $dataRetry = json_decode($resRetry, true);
                     if ($httpCodeRetry < 400 && !empty($dataRetry['order_id'])) {
                         $data = $dataRetry;
@@ -282,7 +279,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
             CURLOPT_TIMEOUT => 12
         ]);
         $response = curl_exec($ch);
-        curl_close($ch);
         $data = json_decode($response, true);
         if (!empty($data['response']['data']['awb_code'])) {
             return [
@@ -319,7 +315,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
         ]);
 
         $response = curl_exec($ch);
-        curl_close($ch);
 
         $data = json_decode($response, true);
         $trackData = $data['tracking_data'] ?? [];
@@ -353,7 +348,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
 
         $response = curl_exec($ch);
         $httpCode = defined('CURLINFO_HTTPCODE') ? (int)curl_getinfo($ch, CURLINFO_HTTPCODE) : 200;
-        curl_close($ch);
 
         $data = json_decode($response, true);
         return [
@@ -392,7 +386,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
             CURLOPT_TIMEOUT => 15
         ]);
         $res = curl_exec($ch);
-        curl_close($ch);
         $data = json_decode($res, true);
         return !empty($data['success']) || !empty($data['pickup_id']);
     }
@@ -418,7 +411,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
         ]);
 
         $response = curl_exec($ch);
-        curl_close($ch);
 
         $data = json_decode($response, true);
         $locations = $data['data']['shipping_address'] ?? [];
@@ -446,7 +438,6 @@ class ShiprocketProvider implements ShippingProviderInterface {
         ]);
 
         $response = curl_exec($ch);
-        curl_close($ch);
 
         $data = json_decode($response, true);
         $channels = $data['data'] ?? [];

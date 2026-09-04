@@ -480,7 +480,7 @@ function renderSubcategoriesForCategory(catId) {
     const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='4' fill='%23f1f5f9'/><path d='M8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3z'/><path d='M21 15l-5-5L5 21'/></svg>";
 
     // Card #1: View All [Category Name] (Amazon Style)
-    const viewAllUrl = '<?= url("catalog") ?>?q=' + encodeURIComponent(category.name.toLowerCase());
+    const viewAllUrl = '<?= url("category") ?>/' + (category.slug || encodeURIComponent(category.name.toLowerCase()));
     const catRawImg = category.main_category_image || category.image || (category.subcategories && category.subcategories.length > 0 ? category.subcategories[0].image : null);
     const catImgUrl = catRawImg ? getFullAssetUrl(catRawImg) : fallbackSvg;
 
@@ -624,7 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
         $collageProducts = array_slice($products, 0, 4);
         $rawLink = trim($card['link_url'] ?? '');
         if (empty($rawLink) || $rawLink === '/catalog' || $rawLink === 'catalog') {
-            $cardLink = url('catalog?collection_id=' . $card['id']);
+            $cardLink = url('collection/' . $card['id']);
         } elseif (str_starts_with($rawLink, 'http://') || str_starts_with($rawLink, 'https://')) {
             $cardLink = $rawLink;
         } else {

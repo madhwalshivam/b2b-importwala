@@ -49,13 +49,27 @@ class SearchService extends BaseService
         $params = [];
 
         if (!empty($query)) {
-            $where[] = "(p.`title` LIKE :q OR p.`name` LIKE :q OR p.`sku` LIKE :q OR p.`description` LIKE :q OR p.`tags` LIKE :q)";
-            $params['q'] = '%' . trim($query) . '%';
+            $where[] = "(p.`name` LIKE :q1 OR p.`sku` LIKE :q2 OR p.`description` LIKE :q3 OR p.`tags` LIKE :q4)";
+            $searchTerm = '%' . trim($query) . '%';
+            $params['q1'] = $searchTerm;
+            $params['q2'] = $searchTerm;
+            $params['q3'] = $searchTerm;
+            $params['q4'] = $searchTerm;
         }
 
         if (!empty($filters['category_id'])) {
             $where[] = "p.`category_id` = :cat_id";
             $params['cat_id'] = (int)$filters['category_id'];
+        }
+
+        if (!empty($filters['subcategory_id'])) {
+            $where[] = "p.`subcategory_id` = :subcat_id";
+            $params['subcat_id'] = (int)$filters['subcategory_id'];
+        }
+
+        if (!empty($filters['brand_id'])) {
+            $where[] = "p.`brand_id` = :brand_id";
+            $params['brand_id'] = (int)$filters['brand_id'];
         }
 
         if (!empty($filters['collection_id'])) {
@@ -78,14 +92,49 @@ class SearchService extends BaseService
             }
         }
 
-        if (!empty($filters['min_price'])) {
-            $where[] = "p.`base_price` >= :min_price";
+        if (isset($filters['min_price']) && $filters['min_price'] !== '' && $filters['min_price'] !== null) {
+            $where[] = "COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) >= :min_price";
             $params['min_price'] = (float)$filters['min_price'];
         }
 
-        if (!empty($filters['max_price'])) {
-            $where[] = "p.`base_price` <= :max_price";
+        if (isset($filters['max_price']) && $filters['max_price'] !== '' && $filters['max_price'] !== null) {
+            $where[] = "COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) <= :max_price";
             $params['max_price'] = (float)$filters['max_price'];
+        }
+
+        if (isset($filters['min_moq']) && $filters['min_moq'] !== '' && $filters['min_moq'] !== null) {
+            $where[] = "p.`moq` >= :min_moq";
+            $params['min_moq'] = (int)$filters['min_moq'];
+        }
+
+        if (isset($filters['max_moq']) && $filters['max_moq'] !== '' && $filters['max_moq'] !== null) {
+            $where[] = "p.`moq` <= :max_moq";
+            $params['max_moq'] = (int)$filters['max_moq'];
+        }
+
+        // Dynamic Filter Attributes (AND logic across attributes, OR logic within options)
+        if (!empty($filters['attr']) && is_array($filters['attr'])) {
+            $attrParamIdx = 1;
+            foreach ($filters['attr'] as $attrIdOrSlug => $selectedOpts) {
+                if (empty($selectedOpts)) continue;
+
+                if (!is_array($selectedOpts)) {
+                    $selectedOpts = array_filter(array_map('trim', explode(',', (string)$selectedOpts)));
+                }
+
+                $numericOptIds = array_filter(array_map('intval', $selectedOpts));
+
+                if (!empty($numericOptIds)) {
+                    $inPlaceholders = [];
+                    foreach ($numericOptIds as $optVal) {
+                        $pKey = "attr_opt_" . $attrParamIdx++;
+                        $inPlaceholders[] = ":" . $pKey;
+                        $params[$pKey] = $optVal;
+                    }
+                    $inSql = implode(',', $inPlaceholders);
+                    $where[] = "p.`id` IN (SELECT `product_id` FROM `product_filter_attribute_values` WHERE `option_id` IN ({$inSql}))";
+                }
+            }
         }
 
         $sortClause = match ($filters['sort'] ?? 'relevance') {
@@ -125,8 +174,37 @@ class SearchService extends BaseService
         $stmt->execute($params);
         $categories = $stmt->fetchAll();
 
+        // Calculate price and MOQ bounds
+        $statsStmt = $db->prepare("SELECT MIN(COALESCE(NULLIF(p.sale_price, 0), p.base_price, p.price)) as min_price, MAX(COALESCE(NULLIF(p.sale_price, 0), p.base_price, p.price)) as max_price, MIN(p.moq) as min_moq, MAX(p.moq) as max_moq FROM `products` p WHERE p.status = 'active'");
+        $statsStmt->execute();
+        $stats = $statsStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        // Calculate live matching counts per filter attribute option
+        $optCounts = [];
+        try {
+            $optCountStmt = $db->prepare("
+                SELECT pfav.option_id, COUNT(DISTINCT p.id) as total_count 
+                FROM `products` p 
+                JOIN `product_filter_attribute_values` pfav ON p.id = pfav.product_id 
+                WHERE {$whereSql} AND pfav.option_id IS NOT NULL 
+                GROUP BY pfav.option_id
+            ");
+            $optCountStmt->execute($params);
+            $rows = $optCountStmt->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($rows as $r) {
+                $optCounts[(int)$r['option_id']] = (int)$r['total_count'];
+            }
+        } catch (\Throwable $e) {}
+
         return [
             'categories' => $categories,
+            'option_counts' => $optCounts,
+            'stats' => [
+                'min_price' => (float)($stats['min_price'] ?? 0),
+                'max_price' => (float)($stats['max_price'] ?? 5000),
+                'min_moq'   => (int)($stats['min_moq'] ?? 1),
+                'max_moq'   => (int)($stats['max_moq'] ?? 100),
+            ],
         ];
     }
 

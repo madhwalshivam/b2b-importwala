@@ -3,7 +3,7 @@ namespace App\Models;
 
 use App\Core\Model;
 
-class BlogPost extends Model {
+class BlogPost extends Model{
     protected string $table = 'blog_posts';
     protected string $primaryKey = 'id';
 

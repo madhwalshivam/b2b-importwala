@@ -2,7 +2,7 @@
 include __DIR__ . '/layouts/header.php';
 ?>
 
-<div class="bg-theme-bg py-10 min-h-screen border-b border-gray-900 font-sans">
+<div class="bg-theme-bg py-6 font-sans">
     <div class="container mx-auto px-4 space-y-8">
 
         <!-- Breadcrumb & Header -->

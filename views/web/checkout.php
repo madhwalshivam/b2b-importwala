@@ -212,23 +212,35 @@ ob_start();
                         </svg>
                         <span>Safe &amp; Secure Payments</span>
                     </div>
-                    <span class="text-[10px] text-gray-400 font-semibold">⚙️ Includes GST</span>
+                    <span class="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
+                        <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.02M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                        </svg>
+                        <span>Includes GST</span>
+                    </span>
                 </div>
 
                 <!-- Payment Badges -->
-                <div class="flex items-center gap-1 flex-wrap pt-0.5">
-                    <span class="text-[9px] px-1.5 py-0.5 bg-blue-50 text-blue-700 font-extrabold rounded">VISA</span>
-                    <span
-                        class="text-[9px] px-1.5 py-0.5 bg-red-50 text-red-700 font-extrabold rounded">Mastercard</span>
-                    <span
-                        class="text-[9px] px-1.5 py-0.5 bg-amber-50 text-amber-700 font-extrabold rounded">RuPay</span>
-                    <span
-                        class="text-[9px] px-1.5 py-0.5 bg-emerald-50 text-emerald-700 font-extrabold rounded">UPI</span>
-                    <span class="text-[9px] px-1.5 py-0.5 bg-sky-50 text-sky-700 font-extrabold rounded">Amex</span>
+                <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs" title="Mastercard">
+                        <svg width="16" height="11" viewBox="0 0 24 16" fill="none"><circle cx="7" cy="8" r="7" fill="#EB001B"/><circle cx="17" cy="8" r="7" fill="#F79E1B"/><path d="M12 2.7A6.97 6.97 0 009.6 8c0 2.2.9 4.2 2.4 5.3A6.97 6.97 0 0014.4 8c0-2.2-.9-4.2-2.4-5.3z" fill="#FF5F00"/></svg>
+                        <span class="text-[9px] font-bold text-gray-700">Mastercard</span>
+                    </span>
+                    <span class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs" title="UPI Instant">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17.4 3.6L12.9 12h3.4l-4.5 8.4 9-9.6h-3.4l4.5-7.2z" fill="#059669"/><path d="M6.6 3.6L2.1 12h3.4l-4.5 8.4 9-9.6H5.5l4.5-7.2z" fill="#0284C7"/></svg>
+                        <span class="text-[9px] font-bold text-emerald-700">UPI</span>
+                    </span>
+                    <span class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs" title="Razorpay Gateway">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22.43 4.47L10.3 22H5.06l7.85-11.41L7.54 4.47h14.89z" fill="#0C2340"/><path d="M15.42 4.47l-7.88 11.43L4 12.35l6.54-7.88h4.88z" fill="#0284C7"/></svg>
+                        <span class="text-[9px] font-bold text-blue-900">Razorpay</span>
+                    </span>
                 </div>
 
-                <div class="text-[10px] text-gray-400 leading-tight">
-                    🔒 Your payment information is encrypted and secure.
+                <div class="text-[10px] text-gray-400 leading-tight flex items-center gap-1">
+                    <svg class="w-3 h-3 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                    </svg>
+                    <span>Your payment information is encrypted and secure.</span>
                 </div>
             </div>
 

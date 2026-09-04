@@ -121,7 +121,6 @@
             <div class="flex items-center justify-center flex-wrap gap-1.5">
                 <span class="bg-white/10 text-white font-semibold text-[9px] px-2 py-0.5 rounded">UPI</span>
                 <span class="bg-white/10 text-white font-semibold text-[9px] px-2 py-0.5 rounded">Razorpay</span>
-                <span class="bg-white/10 text-white font-semibold text-[9px] px-2 py-0.5 rounded">Visa</span>
                 <span class="bg-white/10 text-white font-semibold text-[9px] px-2 py-0.5 rounded">Mastercard</span>
                 <span class="bg-white/10 text-white font-semibold text-[9px] px-2 py-0.5 rounded">COD</span>
             </div>

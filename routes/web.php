@@ -11,6 +11,15 @@ use App\Middleware\CsrfMiddleware;
 // ----------------------------------------------------
 $router->get('/', 'Web\HomeController@index');
 $router->get('/catalog', 'Web\CatalogController@index');
+$router->get('/shop', 'Web\CatalogController@index');
+$router->get('/products', 'Web\CatalogController@index');
+$router->get('/category/{slug}', 'Web\CatalogController@category');
+$router->get('/category/{cat_slug}/{sub_slug}', 'Web\CatalogController@subcategory');
+$router->get('/search/{query}', 'Web\CatalogController@search');
+$router->get('/search', 'Web\CatalogController@searchQueryString');
+$router->get('/collection/{slug}', 'Web\CatalogController@collection');
+$router->get('/brand/{slug}', 'Web\CatalogController@brand');
+$router->get('/categories', 'Web\CatalogController@categoriesDirectory');
 $router->get('/product/{slug}/{variant}', 'Web\ProductDetailController@show');
 $router->get('/product/{slug}', 'Web\ProductDetailController@show');
 $router->get('/cart', 'Web\CartViewController@index');
@@ -88,7 +97,7 @@ $router->get('/cancellation-policy', 'Web\SupportController@cancellation');
 $router->get('/terms-and-conditions', 'Web\SupportController@terms');
 $router->get('/privacy-policy', 'Web\SupportController@privacy');
 $router->get('/payment-policy', 'Web\SupportController@payment');
-$router->get('/about-us', fn() => (new App\Controllers\PageController())->show('about-us'));
+$router->get('/about-us', 'Web\SupportController@about');
 $router->get('/page/{slug}', 'PageController@show');
 $router->post('/wholesale/inquire', 'WholesaleController@submit');
 
@@ -103,6 +112,11 @@ $router->post('/api/visual-search', 'Api\VisualSearchController@search');
 $router->post('/visual_search.php', 'Api\VisualSearchController@search');
 $router->get('/visual_search.php', 'Api\VisualSearchController@search');
 $router->get('/api/visual-search/reindex', 'Api\VisualSearchController@reindex');
+
+// Visual Search Hidden Admin Debug View
+$router->get('/admin/visual-search/debug', 'Admin\VisualSearchDebugController@index', [AdminMiddleware::class]);
+$router->post('/admin/visual-search/debug', 'Admin\VisualSearchDebugController@index', [AdminMiddleware::class]);
+$router->get('/admin/visual-search/reindex', 'Admin\VisualSearchDebugController@reindex', [AdminMiddleware::class]);
 
 // Storefront Customer Product Review Submission
 $router->post('/product/review/add', 'ReviewController@submitStorefront', [CsrfMiddleware::class]);
@@ -134,6 +148,17 @@ $router->get('/admin/dashboard', 'Admin\DashboardController@index', [AdminMiddle
 
 // Admin B2B Inquiry Manager
 $router->get('/admin/inquiries', 'Admin\InquiryController@index', [AdminMiddleware::class]);
+
+// Admin Manage Filters / Attributes
+$router->get('/admin/filters', 'Admin\FilterAttributeController@index', [AdminMiddleware::class]);
+$router->get('/admin/filters/create', 'Admin\FilterAttributeController@create', [AdminMiddleware::class]);
+$router->post('/admin/filters/store', 'Admin\FilterAttributeController@store', [AdminMiddleware::class]);
+$router->get('/admin/filters/edit/{id}', 'Admin\FilterAttributeController@edit', [AdminMiddleware::class]);
+$router->post('/admin/filters/update/{id}', 'Admin\FilterAttributeController@update', [AdminMiddleware::class]);
+$router->post('/admin/filters/delete/{id}', 'Admin\FilterAttributeController@delete', [AdminMiddleware::class]);
+$router->post('/admin/filters/toggle-status', 'Admin\FilterAttributeController@toggleStatus', [AdminMiddleware::class]);
+$router->post('/admin/filters/add-option', 'Admin\FilterAttributeController@addOption', [AdminMiddleware::class]);
+$router->post('/admin/filters/delete-option', 'Admin\FilterAttributeController@deleteOption', [AdminMiddleware::class]);
 $router->get('/admin/inquiries/{id}', 'Admin\InquiryController@show', [AdminMiddleware::class]);
 $router->post('/admin/inquiries/update-status/{id}', 'Admin\InquiryController@updateStatus', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/inquiries/update-notes/{id}', 'Admin\InquiryController@updateNotes', [AdminMiddleware::class, CsrfMiddleware::class]);

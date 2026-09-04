@@ -671,6 +671,29 @@ ob_start();
         </div><!-- end right sidebar -->
 
     </div><!-- end 3-column flex -->
+
+    <!-- ============================================================ -->
+    <!-- VISUALLY SIMILAR PRODUCTS SECTION (Everful / 1688 Wholesale Style) -->
+    <!-- ============================================================ -->
+    <?php if (!empty($visuallySimilar)): ?>
+    <div class="mt-12 border-t border-gray-200/80 pt-8">
+        <div class="mb-6">
+            <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight font-sans">
+                Similar Products
+            </h2>
+        </div>
+
+        <!-- Product Grid (4 Cols Desktop, 2 Cols Mobile) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-5">
+            <?php foreach ($visuallySimilar as $simItem): ?>
+                <?php 
+                $product = $simItem;
+                require __DIR__ . '/partials/product_card.php';
+                ?>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <?php endif; ?>
 </div><!-- end main container -->
 
 <!-- ============================================================ -->

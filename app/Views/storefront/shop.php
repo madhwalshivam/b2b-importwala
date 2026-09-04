@@ -2,11 +2,11 @@
 include __DIR__ . '/layouts/header.php';
 ?>
 
-<div class="bg-theme-bg py-8 min-h-screen border-b border-gray-900 font-sans" x-data="{ mobileFilterOpen: false }">
+<div class="bg-theme-bg py-6 font-sans" x-data="{ mobileFilterOpen: false }">
     <div class="container mx-auto px-4">
 
         <!-- Breadcrumbs -->
-        <nav class="text-xs text-gray-500 mb-6 flex items-center space-x-2">
+        <nav class="text-xs text-gray-500 mb-4 flex items-center space-x-2">
             <a href="<?= url('/') ?>" class="hover:text-red-600">Home</a>
             <span>/</span>
             <span class="font-semibold text-gray-900">Shop Accessories</span>
@@ -27,7 +27,7 @@ include __DIR__ . '/layouts/header.php';
             $activeCount++;
         ?>
         <div
-            class="lg:hidden flex items-center justify-between bg-white p-3.5 rounded-2xl border border-gray-900 shadow-xs mb-4">
+            class="lg:hidden flex items-center justify-between bg-white p-3 rounded-2xl border border-gray-900 shadow-xs mb-4">
             <div class="flex items-center space-x-2">
                 <i data-lucide="sliders-horizontal" class="w-4 h-4 text-red-600"></i>
                 <span class="text-xs font-semibold text-gray-900">Filter Accessories</span>
@@ -45,21 +45,21 @@ include __DIR__ . '/layouts/header.php';
             </button>
         </div>
 
-        <div class="flex flex-col lg:flex-row gap-8">
+        <div class="flex flex-col lg:flex-row gap-6 items-start">
 
             <!-- Sidebar Filters -->
             <aside :class="mobileFilterOpen ? 'block' : 'hidden lg:block'"
-                class="w-full lg:w-72 bg-white p-6 rounded-2xl border border-gray-900 shrink-0 h-fit space-y-6 shadow-xs">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-                    <h3 class="font-semibold text-gray-900 text-sm flex items-center space-x-2">
-                        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-red-600"></i>
+                class="w-full lg:w-72 bg-white p-4.5 rounded-2xl border border-gray-900 shrink-0 h-fit space-y-4 shadow-xs">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                    <h3 class="font-semibold text-gray-900 text-xs flex items-center space-x-2">
+                        <i data-lucide="sliders-horizontal" class="w-3.5 h-3.5 text-red-600"></i>
                         <span>Filter Accessories</span>
                     </h3>
-                    <a href="<?= url('shop') ?>" class="text-xs text-red-600 font-semibold hover:underline">Clear
+                    <a href="<?= url('shop') ?>" class="text-[11px] text-red-600 font-semibold hover:underline">Clear
                         All</a>
                 </div>
 
-                <form action="<?= url('shop') ?>" method="GET" class="space-y-6">
+                <form action="<?= url('shop') ?>" method="GET" class="space-y-3.5">
 
                     <!-- Search Input -->
                     <?php if (!empty($filters['search'])): ?>
@@ -67,43 +67,43 @@ include __DIR__ . '/layouts/header.php';
                     <?php endif; ?>
 
                     <!-- Price Range Filter (Dynamic Min & Max Inputs + Quick Presets) -->
-                    <div class="space-y-3 bg-gray-50 p-4 rounded-xl border border-gray-900">
-                        <label class="block text-xs font-semibold text-gray-900 uppercase tracking-wider">Price Range
+                    <div class="space-y-2 bg-gray-50 p-3 rounded-xl border border-gray-900">
+                        <label class="block text-[11px] font-semibold text-gray-900 uppercase tracking-wider">Price Range
                             (₹)</label>
 
                         <div class="flex items-center space-x-2">
                             <input type="number" name="min_price" placeholder="Min ₹"
                                 value="<?= htmlspecialchars($filters['min_price'] ?? '') ?>"
-                                class="w-1/2 h-10 px-3 bg-white border border-gray-900 rounded-lg text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                                class="w-1/2 h-9 px-2.5 bg-white border border-gray-900 rounded-lg text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                             <span class="text-gray-400 font-semibold">-</span>
                             <input type="number" name="max_price" placeholder="Max ₹"
                                 value="<?= htmlspecialchars($filters['max_price'] ?? '') ?>"
-                                class="w-1/2 h-10 px-3 bg-white border border-gray-900 rounded-lg text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
+                                class="w-1/2 h-9 px-2.5 bg-white border border-gray-900 rounded-lg text-xs font-semibold text-gray-900 focus:outline-none focus:border-red-600">
                         </div>
 
                         <!-- Price Quick Presets -->
-                        <div class="flex flex-wrap gap-1.5 pt-1">
+                        <div class="flex flex-wrap gap-1 pt-0.5">
                             <a href="<?= url('shop?min_price=0&max_price=499') ?>"
-                                class="text-[10px] font-semibold bg-white hover:bg-red-600 hover:text-white px-2.5 py-1 rounded-md border border-gray-900 text-gray-700 transition">Under
+                                class="text-[10px] font-semibold bg-white hover:bg-red-600 hover:text-white px-2 py-0.5 rounded border border-gray-900 text-gray-700 transition">Under
                                 ₹500</a>
                             <a href="<?= url('shop?min_price=500&max_price=1499') ?>"
-                                class="text-[10px] font-semibold bg-white hover:bg-red-600 hover:text-white px-2.5 py-1 rounded-md border border-gray-900 text-gray-700 transition">₹500
-                                - ₹1,500</a>
+                                class="text-[10px] font-semibold bg-white hover:bg-red-600 hover:text-white px-2 py-0.5 rounded border border-gray-900 text-gray-700 transition">₹500
+                                - ₹1.5k</a>
                             <a href="<?= url('shop?min_price=1500&max_price=2999') ?>"
-                                class="text-[10px] font-semibold bg-white hover:bg-red-600 hover:text-white px-2.5 py-1 rounded-md border border-gray-900 text-gray-700 transition">₹1,500
-                                - ₹3,000</a>
+                                class="text-[10px] font-semibold bg-white hover:bg-red-600 hover:text-white px-2 py-0.5 rounded border border-gray-900 text-gray-700 transition">₹1.5k
+                                - ₹3k</a>
                             <a href="<?= url('shop?min_price=3000') ?>"
-                                class="text-[10px] font-semibold bg-white hover:bg-red-600 hover:text-white px-2.5 py-1 rounded-md border border-gray-900 text-gray-700 transition">Above
-                                ₹3,000</a>
+                                class="text-[10px] font-semibold bg-white hover:bg-red-600 hover:text-white px-2 py-0.5 rounded border border-gray-900 text-gray-700 transition">Above
+                                ₹3k</a>
                         </div>
                     </div>
 
                     <!-- Category Filter -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-gray-700 uppercase">Category</label>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-semibold text-gray-700 uppercase">Category</label>
                         <select name="category"
                             @change="if ($el.value) { window.location.href = '<?= url('category/') ?>' + $el.value; } else { window.location.href = '<?= url('shop') ?>'; }"
-                            class="w-full h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
+                            class="w-full h-9.5 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
                             <option value="">All Categories</option>
                             <?php foreach ($categories as $cat): ?>
                                 <option value="<?= $cat['slug'] ?>" <?= ($filters['category_slug'] ?? '') === $cat['slug'] ? 'selected' : '' ?>><?= htmlspecialchars($cat['name']) ?></option>
@@ -112,11 +112,11 @@ include __DIR__ . '/layouts/header.php';
                     </div>
 
                     <!-- Scooter Brand Filter -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-gray-700 uppercase">Scooter Brand</label>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-semibold text-gray-700 uppercase">Scooter Brand</label>
                         <select name="brand"
                             @change="if ($el.value) { window.location.href = '<?= url('brand/') ?>' + $el.value; } else { window.location.href = '<?= url('shop') ?>'; }"
-                            class="w-full h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
+                            class="w-full h-9.5 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
                             <option value="">All Scooter Brands</option>
                             <?php foreach ($brands as $b): ?>
                                 <option value="<?= $b['slug'] ?>" <?= ($filters['brand_slug'] ?? '') === $b['slug'] ? 'selected' : '' ?>><?= htmlspecialchars($b['name']) ?></option>
@@ -125,10 +125,10 @@ include __DIR__ . '/layouts/header.php';
                     </div>
 
                     <!-- Scooter Model Filter -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-gray-700 uppercase">Scooter Model</label>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-semibold text-gray-700 uppercase">Scooter Model</label>
                         <select name="model" @change="$el.form.submit()"
-                            class="w-full h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
+                            class="w-full h-9.5 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
                             <option value="">All Scooter Models</option>
                             <?php foreach ($allModels as $m): ?>
                                 <option value="<?= $m['slug'] ?>" <?= ($filters['model_slug'] ?? '') === $m['slug'] ? 'selected' : '' ?>><?= htmlspecialchars($m['brand_name'] . ' - ' . $m['name']) ?>
@@ -138,10 +138,10 @@ include __DIR__ . '/layouts/header.php';
                     </div>
 
                     <!-- Sorting Filter -->
-                    <div class="space-y-2">
-                        <label class="block text-xs font-semibold text-gray-700 uppercase">Sort By</label>
+                    <div class="space-y-1">
+                        <label class="block text-[11px] font-semibold text-gray-700 uppercase">Sort By</label>
                         <select name="sort" @change="$el.form.submit()"
-                            class="w-full h-11 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
+                            class="w-full h-9.5 px-3 bg-gray-50 border border-gray-900 rounded-xl text-xs font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
                             <option value="newest" <?= ($filters['sort'] ?? '') === 'newest' ? 'selected' : '' ?>>Newest
                                 Arrivals</option>
                             <option value="price_low" <?= ($filters['sort'] ?? '') === 'price_low' ? 'selected' : '' ?>>
@@ -154,7 +154,7 @@ include __DIR__ . '/layouts/header.php';
                     </div>
 
                     <button type="submit"
-                        class="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl transition shadow-xs">Apply
+                        class="w-full h-9.5 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl transition shadow-xs">Apply
                         Filters</button>
 
                 </form>
@@ -165,7 +165,7 @@ include __DIR__ . '/layouts/header.php';
 
                 <!-- Filter Title Banner -->
                 <div
-                    class="bg-white p-6 rounded-2xl border border-gray-900 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
+                    class="bg-white p-4.5 rounded-2xl border border-gray-900 mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xs">
                     <div>
                         <h1 class="text-xl font-semibold text-gray-900">
                             <?php
@@ -264,9 +264,11 @@ include __DIR__ . '/layouts/header.php';
                     </div>
 
                     <!-- Server-Side Pagination Links -->
-                    <div class="mt-8">
-                        <?= $paginator->render() ?>
-                    </div>
+                    <?php if ($paginator->hasPages()): ?>
+                        <div class="mt-8">
+                            <?= $paginator->render() ?>
+                        </div>
+                    <?php endif; ?>
 
                 <?php endif; ?>
 

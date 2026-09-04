@@ -62,7 +62,6 @@ class RazorpayGateway implements PaymentGatewayInterface {
         $response = curl_exec($ch);
         $httpCode = defined('CURLINFO_HTTPCODE') ? (int)curl_getinfo($ch, CURLINFO_HTTPCODE) : 200;
         $error = curl_error($ch);
-        curl_close($ch);
 
         $data = json_decode($response, true);
         if ($error || $httpCode >= 400 || empty($data['id'])) {
@@ -127,7 +126,6 @@ class RazorpayGateway implements PaymentGatewayInterface {
 
         $response = curl_exec($ch);
         $httpCode = defined('CURLINFO_HTTPCODE') ? (int)curl_getinfo($ch, CURLINFO_HTTPCODE) : 200;
-        curl_close($ch);
 
         $data = json_decode($response, true);
         return [
@@ -161,7 +159,6 @@ class RazorpayGateway implements PaymentGatewayInterface {
         $response = curl_exec($ch);
         $httpCode = defined('CURLINFO_HTTPCODE') ? (int)curl_getinfo($ch, CURLINFO_HTTPCODE) : 200;
         $error = curl_error($ch);
-        curl_close($ch);
 
         if ($httpCode === 200) {
             return ['success' => true, 'message' => 'Connection successful! Razorpay API credentials are valid.'];
