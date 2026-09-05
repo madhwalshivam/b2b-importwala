@@ -288,7 +288,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       <!-- Right Grouping Container: RFQ Quote Button + Action Icons -->
       <div class="header-right-group">
         <!-- RFQ Get a Custom Quote Button -->
-        <button type="button" id="rfqOpenBtn" onclick="openRfqModal()"
+        <button type="button" id="rfqOpenBtn" onclick="openRfqModal(null, true)"
           style="display:inline-flex; align-items:center; gap:7px; background:var(--primary-color,#f05a29); color:#fff; font-family:var(--font-sans); font-size:13px; font-weight:700; padding:9px 18px; border:none; border-radius:8px; cursor:pointer; white-space:nowrap; transition:background .2s,transform .15s;"
           onmouseover="this.style.background='#d8481b'; this.style.transform='translateY(-1px)'"
           onmouseout="this.style.background='#f05a29'; this.style.transform='translateY(0)'">
@@ -302,57 +302,57 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         <div class="header-actions">
           <!-- Ship to / Language / Currency Popover Wrapper -->
           <?php /*
-     <div class="ship-to-popover-wrapper">
-       <button type="button" class="ship-to-trigger-btn" onclick="toggleShipToPopover(event)" id="shipToTriggerBtn">
-         <span id="triggerLangText">EN</span> - <span id="triggerCurrText">USD</span>
-         <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
-           style="margin-left:3px; display:inline-block; vertical-align:middle;">
-           <path d="M6 9l6 6 6-6" />
-         </svg>
-       </button>
+<div class="ship-to-popover-wrapper">
+<button type="button" class="ship-to-trigger-btn" onclick="toggleShipToPopover(event)" id="shipToTriggerBtn">
+<span id="triggerLangText">EN</span> - <span id="triggerCurrText">USD</span>
+<svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+ stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+ style="margin-left:3px; display:inline-block; vertical-align:middle;">
+ <path d="M6 9l6 6 6-6" />
+</svg>
+</button>
 
-       <!-- Popover Dropdown Menu -->
-       <div class="ship-to-popover-menu" id="shipToPopoverMenu">
-         <div class="popover-field-group">
-           <label class="popover-label">Ship to:</label>
-           <select id="popoverCountrySelect" class="popover-select" onchange="onShipToCountryChange(this.value)">
-             <option value="US">🇺🇸 United States</option>
-             <option value="IN">🇮🇳 India</option>
-             <option value="GB">🇬🇧 United Kingdom</option>
-             <option value="EU">🇪🇺 European Union</option>
-             <option value="CA">🇨🇦 Canada</option>
-             <option value="AU">🇦🇺 Australia</option>
-           </select>
-         </div>
+<!-- Popover Dropdown Menu -->
+<div class="ship-to-popover-menu" id="shipToPopoverMenu">
+<div class="popover-field-group">
+ <label class="popover-label">Ship to:</label>
+ <select id="popoverCountrySelect" class="popover-select" onchange="onShipToCountryChange(this.value)">
+   <option value="US">🇺🇸 United States</option>
+   <option value="IN">🇮🇳 India</option>
+   <option value="GB">🇬🇧 United Kingdom</option>
+   <option value="EU">🇪🇺 European Union</option>
+   <option value="CA">🇨🇦 Canada</option>
+   <option value="AU">🇦🇺 Australia</option>
+ </select>
+</div>
 
-         <div class="popover-field-group">
-           <label class="popover-label">Language:</label>
-           <select id="popoverLanguageSelect" class="popover-select" onchange="onLanguageChange(this.value)">
-             <option value="EN">English</option>
-             <option value="HI">Hindi</option>
-             <option value="ES">Spanish</option>
-             <option value="FR">French</option>
-             <option value="DE">German</option>
-           </select>
-         </div>
+<div class="popover-field-group">
+ <label class="popover-label">Language:</label>
+ <select id="popoverLanguageSelect" class="popover-select" onchange="onLanguageChange(this.value)">
+   <option value="EN">English</option>
+   <option value="HI">Hindi</option>
+   <option value="ES">Spanish</option>
+   <option value="FR">French</option>
+   <option value="DE">German</option>
+ </select>
+</div>
 
-         <div class="popover-field-group">
-           <label class="popover-label">Currency:</label>
-           <select id="popoverCurrencySelect" class="popover-select">
-             <option value="USD">USD ($)</option>
-             <option value="INR">INR (₹)</option>
-             <option value="GBP">GBP (£)</option>
-             <option value="EUR">EUR (€)</option>
-             <option value="CAD">CAD ($)</option>
-             <option value="AUD">AUD ($)</option>
-           </select>
-         </div>
+<div class="popover-field-group">
+ <label class="popover-label">Currency:</label>
+ <select id="popoverCurrencySelect" class="popover-select">
+   <option value="USD">USD ($)</option>
+   <option value="INR">INR (₹)</option>
+   <option value="GBP">GBP (£)</option>
+   <option value="EUR">EUR (€)</option>
+   <option value="CAD">CAD ($)</option>
+   <option value="AUD">AUD ($)</option>
+ </select>
+</div>
 
-         <button type="button" class="btn-save-popover" onclick="saveShipToPreference()">Save</button>
-       </div>
-     </div>
-     */ ?>
+<button type="button" class="btn-save-popover" onclick="saveShipToPreference()">Save</button>
+</div>
+</div>
+*/ ?>
 
           <a href="<?= url('account') ?>" class="header-icon-item" title="Account">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -379,14 +379,14 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
               style="display:<?= $initialCartCount > 0 ? 'flex' : 'none' ?>;"><?= $initialCartCount ?></div>
           </button>
           <?php /*
-     <a href="<?= url('inquiry') ?>" class="header-icon-item" title="My Inquiry">
-       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-       </svg>
-       <div class="cart-pill-count" id="headerInquiryCount" style="background:#f05a29; display:none;">0</div>
-     </a>
-     */ ?>
+<a href="<?= url('inquiry') ?>" class="header-icon-item" title="My Inquiry">
+<svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+</svg>
+<div class="cart-pill-count" id="headerInquiryCount" style="background:#f05a29; display:none;">0</div>
+</a>
+*/ ?>
         </div>
       </div>
     </div>
@@ -1422,17 +1422,17 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       display: block;
       font-size: 12px;
       font-weight: 700;
-      color: #475569;
-      margin-bottom: 5px;
+      color: #334155;
+      margin-bottom: 6px;
       letter-spacing: .2px;
     }
 
     .rfq-req {
-      color: #f05a29;
+      color: #ef4444;
     }
 
     .rfq-opt {
-      color: #94a3b8;
+      color: #64748b;
       font-weight: 500;
       font-size: 11px;
     }
@@ -1441,16 +1441,23 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     .rfq-select,
     .rfq-textarea {
       width: 100%;
-      padding: 10px 13px;
-      border: 1.5px solid #e2e8f0;
+      padding: 10px 14px;
+      border: 1.5px solid #94a3b8;
       border-radius: 10px;
       font-size: 13px;
       font-family: inherit;
-      color: #1e293b;
-      background: #f8fafc;
+      color: #0f172a;
+      background: #ffffff;
       outline: none;
-      transition: border-color .2s, background .2s;
+      transition: border-color .2s, box-shadow .2s;
       box-sizing: border-box;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .rfq-input:hover,
+    .rfq-select:hover,
+    .rfq-textarea:hover {
+      border-color: #64748b;
     }
 
     .rfq-input:focus,
@@ -1458,7 +1465,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     .rfq-textarea:focus {
       border-color: #f05a29;
       background: #fff;
-      box-shadow: 0 0 0 3px rgba(240, 90, 41, .08);
+      box-shadow: 0 0 0 3.5px rgba(240, 90, 41, .15);
     }
 
     .rfq-input.rfq-err,
@@ -1503,17 +1510,22 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     /* Phone + Price prefix inputs */
     .rfq-prefix-wrap {
       display: flex;
-      border: 1.5px solid #e2e8f0;
+      border: 1.5px solid #94a3b8;
       border-radius: 10px;
       overflow: hidden;
-      background: #f8fafc;
-      transition: border-color .2s;
+      background: #ffffff;
+      transition: border-color .2s, box-shadow .2s;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .rfq-prefix-wrap:hover {
+      border-color: #64748b;
     }
 
     .rfq-prefix-wrap:focus-within {
       border-color: #f05a29;
       background: #fff;
-      box-shadow: 0 0 0 3px rgba(240, 90, 41, .08);
+      box-shadow: 0 0 0 3.5px rgba(240, 90, 41, .15);
     }
 
     .rfq-prefix-wrap.rfq-err {
@@ -1521,12 +1533,12 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     }
 
     .rfq-prefix-tag {
-      padding: 10px 12px;
+      padding: 10px 14px;
       background: #f1f5f9;
       font-size: 13px;
       font-weight: 700;
-      color: #475569;
-      border-right: 1.5px solid #e2e8f0;
+      color: #334155;
+      border-right: 1.5px solid #cbd5e1;
       white-space: nowrap;
       flex-shrink: 0;
     }
@@ -1537,10 +1549,10 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       outline: none !important;
       box-shadow: none !important;
       background: transparent !important;
-      padding: 10px 12px;
+      padding: 10px 14px;
       font-size: 13px;
       font-family: inherit;
-      color: #1e293b;
+      color: #0f172a;
     }
 
     /* Dropzone */
@@ -1778,7 +1790,11 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           <div class="rfq-hd-title">Custom Sourcing Request</div>
           <div class="rfq-hd-sub">Fill 3 quick steps — our team will get back within 24hrs</div>
         </div>
-        <button class="rfq-hd-close" onclick="closeRfqModal()" aria-label="Close">&#x2715;</button>
+        <button class="rfq-hd-close" onclick="closeRfqModal()" aria-label="Close">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
 
       <!-- Progress bar stepper -->
@@ -1808,8 +1824,86 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           <div id="rfqStep1">
             <div class="mb-3">
               <div class="text-sm font-semibold text-gray-900">Step 1 of 3: Product Information</div>
-              <div class="text-xs text-gray-500 font-medium mt-0.5">Product details fetched from page. Select variants
-                &amp; add quantity.</div>
+              <div class="text-xs text-gray-500 font-medium mt-0.5" id="rfqStep1SubText">Select variants &amp; add
+                quantity or describe the custom product to source.</div>
+            </div>
+
+            <!-- Custom Product Information Container (Shown when opened from Navbar / General Custom Quote) -->
+            <div id="rfqCustomProductCard"
+              class="bg-gradient-to-br from-orange-50/70 via-white to-gray-50 border border-orange-200/90 rounded-2xl p-4 mb-4 shadow-sm">
+              <div class="flex items-center justify-between mb-3.5 pb-2.5 border-b border-orange-100">
+                <div class="flex items-center gap-2.5">
+                  <div
+                    class="w-8 h-8 rounded-xl bg-[#f05a29] text-white flex items-center justify-center shadow-xs shrink-0">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="text-xs sm:text-sm font-bold text-gray-900 leading-snug">Custom Product Sourcing</h3>
+                    <p class="text-[11px] text-gray-500 font-medium">Specify the product details &amp; quantity you wish
+                      to source</p>
+                  </div>
+                </div>
+                <button type="button" onclick="rfqSwitchToCatalogMode()"
+                  class="text-xs font-semibold text-[#f05a29] hover:text-[#d94e20] flex items-center gap-1 border-0 bg-transparent cursor-pointer transition">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  Search Catalog
+                </button>
+              </div>
+
+              <div class="space-y-3.5">
+                <!-- Custom Product Name Input -->
+                <div class="rfq-field" style="margin-bottom:0;">
+                  <label class="rfq-label">
+                    Product Name / Item Description <span class="rfq-req">*</span>
+                  </label>
+                  <input type="text" id="rfq_custom_name_input" class="rfq-input"
+                    placeholder="e.g. Wireless Bluetooth Earbuds, Stainless Steel Bottle 1L...">
+                  <div class="rfq-errmsg" id="err_custom_name_input"></div>
+                </div>
+
+                <!-- Custom Quantity & Unit Row -->
+                <div class="rfq-g2" style="margin-bottom:0;">
+                  <div class="rfq-field" style="margin-bottom:0;">
+                    <label class="rfq-label">
+                      Required Quantity <span class="rfq-req">*</span>
+                    </label>
+                    <input type="number" id="rfq_custom_qty_input" min="1" value="100" placeholder="e.g. 100"
+                      class="rfq-input font-semibold">
+                    <div class="rfq-errmsg" id="err_custom_qty_input"></div>
+                  </div>
+                  <div class="rfq-field" style="margin-bottom:0;">
+                    <label class="rfq-label">
+                      Unit <span class="rfq-req">*</span>
+                    </label>
+                    <select id="rfq_custom_unit_select" class="rfq-select font-medium cursor-pointer">
+                      <option value="Pcs">Pcs (Pieces)</option>
+                      <option value="Sets">Sets</option>
+                      <option value="Boxes">Boxes</option>
+                      <option value="Cartons">Cartons</option>
+                      <option value="Kg">Kg (Kilograms)</option>
+                      <option value="Dozen">Dozen</option>
+                      <option value="Metres">Metres</option>
+                      <option value="Pairs">Pairs</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Custom Reference Link / URL Input -->
+                <div class="rfq-field" style="margin-bottom:0;">
+                  <label class="rfq-label">
+                    Product Reference Link / Supplier URL <span class="rfq-opt">(Optional)</span>
+                  </label>
+                  <input type="url" id="rfq_custom_link_input" class="rfq-input"
+                    placeholder="e.g. https://alibaba.com/product/... or Amazon / supplier link">
+                </div>
+              </div>
             </div>
 
             <!-- Loading Spinner State (for AJAX switching) -->
@@ -1884,14 +1978,20 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
                     Selected Total Quantity: <strong id="rfqTotalSelectedQty"
                       class="text-gray-900 font-semibold">0</strong>
                   </div>
-                  <button type="button" onclick="rfqToggleChangeProductSearch()"
-                    class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 shadow-2xs transition cursor-pointer">
-                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Change Product
-                  </button>
+                  <div class="flex items-center gap-2">
+                    <button type="button" onclick="rfqRenderCustomStep1()"
+                      class="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 shadow-2xs transition cursor-pointer">
+                      Custom Sourcing
+                    </button>
+                    <button type="button" onclick="rfqToggleChangeProductSearch()"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 shadow-2xs transition cursor-pointer">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Change Product
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -2095,12 +2195,19 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <div class="rfq-success-h">Request Submitted! 🎉</div>
+            <div class="rfq-success-h">Request Submitted Successfully!</div>
             <div class="rfq-success-p">
               Our sourcing team will review your request and reach out on<br>
               <strong>WhatsApp / Email within 24 hours</strong> with a custom quote.
             </div>
-            <div class="rfq-success-tag">📦 Importwala — Sourcing Made Easy</div>
+            <div class="rfq-success-tag">
+              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                style="display:inline-block; vertical-align:-2px; margin-right:4px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+              ImportWale — Sourcing Made Easy
+            </div>
             <br>
             <button type="button" class="rfq-btn rfq-btn-primary" style="margin-top:10px;"
               onclick="closeRfqModal()">Close Window</button>
@@ -2111,10 +2218,18 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         <!-- Footer -->
         <div class="rfq-ft" id="rfqFt">
           <button type="button" class="rfq-btn rfq-btn-ghost" id="rfqBackBtn" style="display:none;" onclick="rfqBack()">
-            &#8592; Back
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              style="display:inline-block; vertical-align:-2px; margin-right:4px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
           </button>
           <button type="button" class="rfq-btn rfq-btn-primary" id="rfqNextBtn" onclick="rfqNext()">
-            Continue &nbsp;&#8594;
+            Continue
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              style="display:inline-block; vertical-align:-2px; margin-left:4px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
           <button type="submit" class="rfq-btn rfq-btn-primary" id="rfqSubmitBtn" style="display:none;">
             <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2131,18 +2246,31 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
   <script>
     window.activeRfqProduct = null;
+    window.isGeneralRfqMode = false;
     var searchDebounceTimer = null;
 
-    window.openRfqModal = function (productData) {
+    window.openRfqModal = function (productData, forceGeneral) {
       var overlay = document.getElementById('rfqModalOverlay');
       if (!overlay) return;
 
-      if (productData) {
+      if (forceGeneral) {
+        window.activeRfqProduct = null;
+        window.isGeneralRfqMode = true;
+      } else if (productData) {
         window.activeRfqProduct = JSON.parse(JSON.stringify(productData));
+        window.isGeneralRfqMode = false;
       } else if (typeof window.rfqGetProductContextFromPage === 'function') {
-        window.activeRfqProduct = window.rfqGetProductContextFromPage();
+        var pCtx = window.rfqGetProductContextFromPage();
+        if (pCtx) {
+          window.activeRfqProduct = pCtx;
+          window.isGeneralRfqMode = false;
+        } else {
+          window.activeRfqProduct = null;
+          window.isGeneralRfqMode = true;
+        }
       } else {
         window.activeRfqProduct = null;
+        window.isGeneralRfqMode = true;
       }
 
       overlay.classList.add('rfq-open');
@@ -2150,10 +2278,10 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
       if (typeof window.rfqResetModal === 'function') window.rfqResetModal();
 
-      if (window.activeRfqProduct) {
-        rfqRenderStep1Product(window.activeRfqProduct);
+      if (window.isGeneralRfqMode || !window.activeRfqProduct) {
+        rfqRenderCustomStep1();
       } else {
-        rfqRenderEmptyStep1();
+        rfqRenderStep1Product(window.activeRfqProduct);
       }
     };
 
@@ -2208,7 +2336,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           var num = document.getElementById('rfqNum' + i);
           if (lbl) {
             lbl.className = 'rfq-progress-label';
-            if (i < step) { lbl.classList.add('done'); if (num) num.innerHTML = '&#10003;'; }
+            if (i < step) { lbl.classList.add('done'); if (num) num.innerHTML = '<svg class="w-3 h-3 text-white inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>'; }
             else if (i === step) { lbl.classList.add('active'); if (num) num.innerHTML = i; }
             else { if (num) num.innerHTML = i; }
           }
@@ -2222,6 +2350,39 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       }
 
       /* ---- Step 1 Render & Variant Logic ---- */
+      window.rfqRenderCustomStep1 = function () {
+        window.isGeneralRfqMode = true;
+        var sub = document.getElementById('rfqStep1SubText');
+        if (sub) sub.textContent = 'Tell us what product you want to source — enter product name, link, images & quantity.';
+
+        var catCard = document.getElementById('rfqProductCard');
+        if (catCard) catCard.style.display = 'none';
+
+        var customCard = document.getElementById('rfqCustomProductCard');
+        if (customCard) customCard.style.display = 'block';
+
+        var nameInp = document.getElementById('rfq_custom_name_input');
+        if (nameInp) setTimeout(function () { nameInp.focus(); }, 100);
+      };
+
+      window.rfqSwitchToCatalogMode = function () {
+        window.isGeneralRfqMode = false;
+        var sub = document.getElementById('rfqStep1SubText');
+        if (sub) sub.textContent = 'Product details fetched from page or catalog. Select variants & add quantity.';
+
+        var customCard = document.getElementById('rfqCustomProductCard');
+        if (customCard) customCard.style.display = 'none';
+
+        var catCard = document.getElementById('rfqProductCard');
+        if (catCard) catCard.style.display = 'block';
+
+        if (!window.activeRfqProduct) {
+          rfqRenderEmptyStep1();
+        } else {
+          rfqRenderStep1Product(window.activeRfqProduct);
+        }
+      };
+
       window.rfqRenderEmptyStep1 = function () {
         var nameInp = document.getElementById('rfq_product_name'); if (nameInp) nameInp.value = '';
         var linkInp = document.getElementById('rfq_ref_link'); if (linkInp) linkInp.value = '';
@@ -2244,6 +2405,16 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
       window.rfqRenderStep1Product = function (pData) {
         if (!pData) return;
+        window.isGeneralRfqMode = false;
+
+        var sub = document.getElementById('rfqStep1SubText');
+        if (sub) sub.textContent = 'Product details fetched from page. Select variants & add quantity.';
+
+        var customCard = document.getElementById('rfqCustomProductCard');
+        if (customCard) customCard.style.display = 'none';
+
+        var catCard = document.getElementById('rfqProductCard');
+        if (catCard) catCard.style.display = 'block';
 
         var nameInp = document.getElementById('rfq_product_name');
         if (nameInp) nameInp.value = pData.name || '';
@@ -2551,13 +2722,29 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         var ok = true;
 
         if (s === 1) {
-          var pn = g('rfq_product_name');
-          if (!pn || !pn.value.trim()) { err('product_name', 'Product name is required.'); ok = false; }
-          var qEl = g('rfq_quantity');
-          var q = qEl ? parseInt(qEl.value) : 0;
-          if (!q || q < 1) { err('quantity', 'Enter a valid quantity.'); ok = false; }
-          var uEl = g('rfq_unit');
-          if (!uEl || !uEl.value) { err('unit', 'Please select a unit.'); ok = false; }
+          if (window.isGeneralRfqMode) {
+            var cName = g('rfq_custom_name_input') ? g('rfq_custom_name_input').value.trim() : '';
+            var cQtyVal = g('rfq_custom_qty_input') ? g('rfq_custom_qty_input').value.trim() : '';
+            var cQty = parseInt(cQtyVal) || 0;
+            var cUnit = g('rfq_custom_unit_select') ? g('rfq_custom_unit_select').value : 'Pcs';
+            var cLink = g('rfq_custom_link_input') ? g('rfq_custom_link_input').value.trim() : '';
+
+            if (!cName) { err('custom_name_input', 'Product name is required.'); ok = false; }
+            if (!cQtyVal || cQty < 1) { err('custom_qty_input', 'Enter a valid quantity.'); ok = false; }
+
+            if (g('rfq_product_name')) g('rfq_product_name').value = cName;
+            if (g('rfq_quantity')) g('rfq_quantity').value = cQty;
+            if (g('rfq_unit')) g('rfq_unit').value = cUnit;
+            if (g('rfq_ref_link')) g('rfq_ref_link').value = cLink;
+            if (g('rfq_product_id')) g('rfq_product_id').value = '';
+          } else {
+            var pn = g('rfq_product_name');
+            if (!pn || !pn.value.trim()) { err('product_name', 'Product name is required.'); ok = false; }
+            var qEl = g('rfq_quantity');
+            var q = qEl ? parseInt(qEl.value) : 0;
+            if (!q || q < 1) { err('quantity', 'Enter a valid quantity.'); ok = false; }
+          }
+
           var tpEl = g('rfq_target_price');
           var tp = tpEl ? tpEl.value : '';
           if (tp === '' || isNaN(parseFloat(tp))) { err('target_price', 'Enter target price.'); ww('rfqPriceW'); ok = false; }
@@ -2731,22 +2918,10 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
       <div class="grid grid-cols-2 gap-2">
         <a href="<?= url('cart') ?>"
-          class="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold text-xs rounded-xl text-center transition">View
-          Cart</a>
+          class="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold text-xs rounded-xl text-center transition flex items-center justify-center">View Cart</a>
         <a href="<?= url('checkout') ?>"
-          class="py-2.5 px-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl text-center transition shadow-xs">Checkout
-          &rarr;</a>
+          class="py-2.5 px-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl text-center transition shadow-xs flex items-center justify-center">Checkout &rarr;</a>
       </div>
-
-      <!-- Request Bulk Quote / RFQ Button in Side Cart -->
-      <button type="button" onclick="openRfqModal()"
-        class="w-full py-2.5 px-3 bg-[#0F172A] hover:bg-black text-white font-semibold text-xs rounded-xl text-center transition flex items-center justify-center gap-2 cursor-pointer border-0 shadow-xs">
-        <svg class="w-4 h-4 text-[#f05a29]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        <span>Request Bulk Quote / Send Inquiry</span>
-      </button>
     </div>
   </div>
 

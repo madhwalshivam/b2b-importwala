@@ -102,8 +102,6 @@ ob_start();
                                     class="relative bg-white border border-gray-200 rounded-xl p-3.5 shadow-2xs flex items-center justify-between gap-3">
                                     <!-- Left: Variant Info & Price -->
                                     <div class="flex items-center gap-3 min-w-0">
-                                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="Variant"
-                                            class="w-10 h-10 object-cover rounded border border-gray-200 shrink-0 bg-white">
                                         <div class="min-w-0 space-y-0.5">
                                             <?php if ($item['variant_title']): ?>
                                                 <div
@@ -160,28 +158,28 @@ ob_start();
                                             class="font-semibold text-gray-900 capitalize"><?= htmlspecialchars($item['pricing_mode']) ?></span>
                                     </div>
 
-                                    <!-- Variants & Qty Summary Box -->
-                                    <div class="border border-gray-200 rounded-xl p-3 bg-gray-50/50 space-y-1.5 my-3 text-xs">
-                                        <div class="flex justify-between text-gray-600">
-                                            <span>Variants :</span>
+                                    <div class="mt-4 pt-3 border-t border-dashed border-gray-200 space-y-2">
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-gray-500">Variants :</span>
                                             <span class="font-semibold text-gray-900">1</span>
                                         </div>
-                                        <div class="flex justify-between text-gray-600">
-                                            <span>Total Qty :</span>
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-gray-500">Total Qty :</span>
                                             <span class="font-semibold text-gray-900"
                                                 id="itemQtyText_<?= $item['id'] ?>"><?= $item['quantity'] ?> units</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Total Line -->
-                                <div class="pt-2 border-t border-gray-100 flex items-baseline justify-between">
-                                    <span class="text-xs font-semibold text-gray-900">Total :</span>
-                                    <div class="text-right">
-                                        <div class="text-lg font-semibold text-[#f05a29]" id="itemTotalVal_<?= $item['id'] ?>">
-                                            ₹<?= number_format($item['item_total'], 2) ?></div>
-                                        <div class="text-[10px] text-gray-400">
-                                            ₹<?= number_format($item['unit_price'], 2) ?>/piece</div>
+                                <div class="pt-3 border-t border-gray-100">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-semibold text-gray-900">Total :</span>
+                                        <div class="text-right">
+                                            <span class="text-sm font-bold text-[#f05a29]"
+                                                id="itemTotalVal_<?= $item['id'] ?>">₹<?= number_format($item['item_total'], 2) ?></span>
+                                            <div class="text-[10px] text-gray-400 line-through">
+                                                ₹<?= number_format($item['item_total'], 2) ?>/piece</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -191,91 +189,85 @@ ob_start();
                 <?php endforeach; ?>
             </div>
 
-            <!-- Right Column: Order Summary Sidebar -->
-            <div
-                class="w-full lg:w-[360px] shrink-0 bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 lg:sticky lg:top-24">
-                <div class="flex items-center gap-2">
+            <!-- Right Column: Order Summary (1/3 Width) -->
+            <div class="space-y-4 bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs h-fit sticky top-24">
+                <div class="flex items-center gap-2.5 pb-4 border-b border-gray-100">
                     <div
-                        class="w-8 h-8 rounded-lg bg-orange-50 text-[#f05a29] flex items-center justify-center font-semibold shrink-0">
+                        class="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200/80 flex items-center justify-center text-[#f05a29]">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007z" />
+                                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                         </svg>
                     </div>
                     <div>
-                        <h3 class="text-base font-semibold text-gray-900">Order Summary</h3>
+                        <h3 class="text-sm font-bold text-gray-900">Order Summary</h3>
                         <p class="text-[11px] text-gray-400">Price details of all items in your cart</p>
                     </div>
                 </div>
 
-                <div class="space-y-3 text-xs text-gray-600 border-t border-b border-gray-100 py-3.5">
-                    <div class="flex justify-between items-center">
-                        <span class="flex items-center gap-1.5 text-gray-600">
+                <div class="space-y-3 text-xs">
+                    <div class="flex items-center justify-between text-gray-600">
+                        <span class="flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
+                                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                             </svg>
-                            <span>Item(s) Total</span>
+                            Item(s) Total
                         </span>
                         <span class="font-semibold text-gray-900"
                             id="summarySubtotal">₹<?= number_format($subtotal, 2) ?></span>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="flex items-center gap-1.5 text-gray-600">
+
+                    <div class="flex items-center justify-between text-gray-600">
+                        <span class="flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                                    d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124l-1.47-23.706" />
                             </svg>
-                            <span>Procurement Charges</span>
+                            Procurement Charges
                         </span>
                         <span class="font-semibold text-gray-900">₹0</span>
                     </div>
-                    <div class="flex justify-between items-center">
-                        <span class="flex items-center gap-1.5 text-gray-600">
+
+                    <div class="flex items-center justify-between text-gray-600">
+                        <span class="flex items-center gap-1.5">
                             <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 7.5h6m-6 3.75h6m-6 3.75h6M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
+                                    d="M9 14.25l6-6m4.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 6a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
                             </svg>
-                            <span>GST (18%)</span>
+                            GST (18%)
                         </span>
                         <span class="font-semibold text-gray-900" id="summaryTaxTotal">₹<?= number_format($tax, 2) ?></span>
                     </div>
                 </div>
 
-                <!-- Grand Total Highlight Box -->
-                <div
-                    class="bg-orange-50/60 border border-orange-100 p-3.5 rounded-xl flex items-center justify-between shadow-2xs">
-                    <span class="text-xs font-semibold text-gray-900 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-[#f05a29]" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M2.25 8.25h19.5M2.25 9h19.5pt1.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" />
-                        </svg>
-                        <span>Grand Total</span>
-                    </span>
-                    <span class="text-xl font-semibold text-[#f05a29]"
-                        id="summaryTotal">₹<?= number_format($total, 2) ?></span>
-                </div>
-
-                <!-- Safe & Secure Payments Notice -->
-                <div class="space-y-2 text-[11px] text-gray-500 pt-1">
+                <div class="pt-4 border-t border-gray-100 space-y-3">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-1 text-emerald-600 font-semibold">
-                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="2.5">
+                        <span class="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-[#f05a29]"></span>
+                            Grand Total
+                        </span>
+                        <span class="text-lg font-extrabold text-[#f05a29]"
+                            id="summaryTotal">₹<?= number_format($total, 2) ?></span>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[11px] text-gray-400 pt-1">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span>Safe &amp; Secure Payments</span>
-                        </div>
-                        <span class="text-[10px] text-gray-400 font-semibold flex items-center gap-1">
+                            Safe & Secure Payments
+                        </span>
+                        <span class="flex items-center gap-1">
                             <svg class="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.02M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+                                    d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
                             </svg>
                             <span>Includes GST</span>
                         </span>
@@ -283,21 +275,39 @@ ob_start();
 
                     <!-- Payment Badges Row -->
                     <div class="flex items-center gap-1.5 flex-wrap pt-0.5">
-                        <span class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs" title="Mastercard">
-                            <svg width="16" height="11" viewBox="0 0 24 16" fill="none"><circle cx="7" cy="8" r="7" fill="#EB001B"/><circle cx="17" cy="8" r="7" fill="#F79E1B"/><path d="M12 2.7A6.97 6.97 0 009.6 8c0 2.2.9 4.2 2.4 5.3A6.97 6.97 0 0014.4 8c0-2.2-.9-4.2-2.4-5.3z" fill="#FF5F00"/></svg>
+                        <span
+                            class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs"
+                            title="Mastercard">
+                            <svg width="16" height="11" viewBox="0 0 24 16" fill="none">
+                                <circle cx="7" cy="8" r="7" fill="#EB001B" />
+                                <circle cx="17" cy="8" r="7" fill="#F79E1B" />
+                                <path
+                                    d="M12 2.7A6.97 6.97 0 009.6 8c0 2.2.9 4.2 2.4 5.3A6.97 6.97 0 0014.4 8c0-2.2-.9-4.2-2.4-5.3z"
+                                    fill="#FF5F00" />
+                            </svg>
                             <span class="text-[9px] font-bold text-gray-700">Mastercard</span>
                         </span>
-                        <span class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs" title="UPI Instant">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M17.4 3.6L12.9 12h3.4l-4.5 8.4 9-9.6h-3.4l4.5-7.2z" fill="#059669"/><path d="M6.6 3.6L2.1 12h3.4l-4.5 8.4 9-9.6H5.5l4.5-7.2z" fill="#0284C7"/></svg>
+                        <span
+                            class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs"
+                            title="UPI Instant">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M17.4 3.6L12.9 12h3.4l-4.5 8.4 9-9.6h-3.4l4.5-7.2z" fill="#059669" />
+                                <path d="M6.6 3.6L2.1 12h3.4l-4.5 8.4 9-9.6H5.5l4.5-7.2z" fill="#0284C7" />
+                            </svg>
                             <span class="text-[9px] font-bold text-emerald-700">UPI</span>
                         </span>
-                        <span class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs" title="Razorpay Gateway">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22.43 4.47L10.3 22H5.06l7.85-11.41L7.54 4.47h14.89z" fill="#0C2340"/><path d="M15.42 4.47l-7.88 11.43L4 12.35l6.54-7.88h4.88z" fill="#0284C7"/></svg>
+                        <span
+                            class="px-2 py-0.5 bg-white border border-gray-200 rounded inline-flex items-center gap-1 shadow-2xs"
+                            title="Razorpay Gateway">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                                <path d="M22.43 4.47L10.3 22H5.06l7.85-11.41L7.54 4.47h14.89z" fill="#0C2340" />
+                                <path d="M15.42 4.47l-7.88 11.43L4 12.35l6.54-7.88h4.88z" fill="#0284C7" />
+                            </svg>
                             <span class="text-[9px] font-bold text-blue-900">Razorpay</span>
                         </span>
                     </div>
 
-                    <div class="text-[10px] text-gray-400 leading-tight flex items-center gap-1">
+                    <div class="text-[10px] text-gray-400 leading-tight flex items-center gap-1 pb-1">
                         <svg class="w-3 h-3 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -306,10 +316,19 @@ ob_start();
                     </div>
                 </div>
 
-                <a href="<?= url('checkout') ?>"
-                    class="block w-full py-3.5 bg-[#f05a29] hover:bg-[#d94e20] text-white text-xs font-semibold text-center rounded-xl shadow-xs transition cursor-pointer">
-                    Place Order
-                </a>
+                <!-- Action Buttons: Single Row (Place Order & Send Inquiry side-by-side) -->
+                <div class="grid grid-cols-2 gap-2.5 pt-1">
+                    <a href="<?= url('checkout') ?>"
+                        class="block w-full py-3 bg-[#f05a29] hover:bg-[#d94e20] text-white text-xs font-semibold text-center rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center">
+                        Place Order
+                    </a>
+
+                    <button type="button" onclick="openCartInquiryModal()"
+                        class="block w-full py-3 bg-[#0F172A] hover:bg-black text-white text-xs font-semibold text-center rounded-xl shadow-xs transition cursor-pointer border-0 flex items-center justify-center gap-1.5">
+
+                        <span>Send Inquiry</span>
+                    </button>
+                </div>
             </div>
 
         </div>
@@ -317,7 +336,226 @@ ob_start();
 
 </div>
 
+<?php
+// Pre-fill customer account details if logged in
+$prefillName = '';
+$prefillPhone = '';
+$prefillEmail = '';
+$currentUserId = get_current_user_id();
+if ($currentUserId) {
+    $db = \App\Core\Database::getInstance();
+    $uStmt = $db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
+    $uStmt->execute([$currentUserId]);
+    $uRow = $uStmt->fetch(\PDO::FETCH_ASSOC);
+    if ($uRow) {
+        $prefillName = $uRow['name'] ?? '';
+        $prefillPhone = $uRow['phone'] ?? '';
+        $prefillEmail = $uRow['email'] ?? '';
+    }
+}
+?>
+
+<!-- ============================================================ -->
+<!-- CART BULK QUOTE / INQUIRY MODAL POPUP -->
+<!-- ============================================================ -->
+<div id="cartInquiryModal"
+    class="fixed inset-0 z-[999999] hidden items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs transition-opacity duration-300">
+    <div class="bg-white border border-gray-200 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl transition-all transform scale-95"
+        id="cartInquiryModalContainer" onclick="event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="px-6 py-4 bg-[#0F172A] text-white flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-[#f05a29] flex items-center justify-center text-white shrink-0">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold tracking-wide text-white">Send Inquiry</h3>
+                    <p class="text-[11px] text-gray-300 mt-0.5">Submit your contact details to receive a custom
+                        wholesale quote</p>
+                </div>
+            </div>
+            <button type="button" onclick="closeCartInquiryModal()"
+                class="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs transition cursor-pointer border-0">✕</button>
+        </div>
+
+        <!-- Form Body -->
+        <form id="cartInquiryForm" onsubmit="submitCartInquiryForm(event)" class="p-6 space-y-4 font-sans text-xs">
+
+            <!-- Alert Banner -->
+            <div id="cartInquiryAlert" class="hidden p-3 rounded-xl text-xs font-semibold"></div>
+
+            <!-- Cart Preview Callout Box -->
+            <div
+                class="bg-orange-50/60 border border-orange-200/80 rounded-2xl p-3.5 flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                    <span
+                        class="w-7 h-7 rounded-lg bg-[#f05a29] text-white font-bold flex items-center justify-center text-xs shrink-0"><?= count($cartItems ?? []) ?></span>
+                    <div>
+                        <div class="font-semibold text-gray-900">Items Attached From Cart</div>
+                        <div class="text-[11px] text-gray-500">All products in your cart will be sent with this inquiry
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-semibold text-[#f05a29] text-sm">₹<?= number_format($total ?? 0, 2) ?></div>
+                    <div class="text-[10px] text-gray-400 font-medium">Est. Value</div>
+                </div>
+            </div>
+
+            <!-- Input: Name (Required) -->
+            <div>
+                <label class="block font-semibold text-gray-800 mb-1.5">Full Name <span
+                        class="text-red-500">*</span></label>
+                <input type="text" name="customer_name" required value="<?= htmlspecialchars($prefillName) ?>"
+                    placeholder="Enter your full name"
+                    class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs text-gray-900 font-semibold focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
+            </div>
+
+            <!-- Input: Phone Number (Required) -->
+            <div>
+                <label class="block font-semibold text-gray-800 mb-1.5">Phone / WhatsApp Number <span
+                        class="text-red-500">*</span></label>
+                <input type="tel" name="phone" required value="<?= htmlspecialchars($prefillPhone) ?>"
+                    placeholder="e.g. 9876543210"
+                    class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs text-gray-900 font-semibold focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
+            </div>
+
+            <!-- Input: Additional Message / Notes (Optional) -->
+            <div>
+                <label class="block font-semibold text-gray-800 mb-1.5">Additional Notes / Custom Message <span
+                        class="text-gray-400 font-normal">(Optional)</span></label>
+                <textarea name="customer_message" rows="3"
+                    placeholder="Add target pricing, delivery location, or specific product customization notes..."
+                    class="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs text-gray-900 font-medium focus:outline-none focus:border-[#f05a29] focus:bg-white transition"></textarea>
+            </div>
+
+            <!-- Submit & Cancel Buttons -->
+            <div class="pt-2 flex items-center gap-3">
+                <button type="button" onclick="closeCartInquiryModal()"
+                    class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs rounded-xl transition cursor-pointer border-0">
+                    Cancel
+                </button>
+                <button type="submit" id="btnSubmitCartInquiry"
+                    class="flex-1 py-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer border-0">
+                    <svg id="cartInquirySpinner" class="w-4 h-4 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <span id="cartInquiryBtnText">Submit Inquiry &rarr;</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function openCartInquiryModal() {
+        const modal = document.getElementById('cartInquiryModal');
+        const container = document.getElementById('cartInquiryModalContainer');
+        const alert = document.getElementById('cartInquiryAlert');
+        if (alert) alert.classList.add('hidden');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        if (container) {
+            setTimeout(() => {
+                container.classList.remove('scale-95');
+                container.classList.add('scale-100');
+            }, 10);
+        }
+    }
+
+    function closeCartInquiryModal() {
+        const modal = document.getElementById('cartInquiryModal');
+        const container = document.getElementById('cartInquiryModalContainer');
+        if (container) {
+            container.classList.remove('scale-100');
+            container.classList.add('scale-95');
+        }
+        setTimeout(() => {
+            if (modal) {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }
+        }, 150);
+    }
+
+    async function submitCartInquiryForm(e) {
+        e.preventDefault();
+        const form = e.target;
+        const btn = document.getElementById('btnSubmitCartInquiry');
+        const btnText = document.getElementById('cartInquiryBtnText');
+        const spinner = document.getElementById('cartInquirySpinner');
+        const alert = document.getElementById('cartInquiryAlert');
+
+        const formData = new FormData(form);
+        const payload = {
+            customer_name: formData.get('customer_name'),
+            phone: formData.get('phone'),
+            customer_message: formData.get('customer_message'),
+        };
+
+        if (!payload.customer_name || !payload.phone) {
+            if (alert) {
+                alert.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 block';
+                alert.textContent = 'Please fill in both Name and Phone Number.';
+            }
+            return;
+        }
+
+        if (btn) btn.disabled = true;
+        if (spinner) spinner.classList.remove('hidden');
+        if (btnText) btnText.textContent = 'Submitting...';
+
+        try {
+            const res = await fetch('<?= url('api/cart/inquiry-submit') ?>', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                if (alert) {
+                    alert.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200 block';
+                    alert.innerHTML = `<strong>Success!</strong> ${data.message} <br/><span class="text-[11px] font-normal text-emerald-700">Inquiry Number: ${data.inquiry_number}</span>`;
+                }
+                if (btnText) btnText.textContent = 'Submitted!';
+                setTimeout(() => {
+                    closeCartInquiryModal();
+                    if (btn) btn.disabled = false;
+                    if (spinner) spinner.classList.add('hidden');
+                    if (btnText) btnText.textContent = 'Submit Inquiry \u2192';
+                    form.reset();
+                }, 2500);
+            } else {
+                if (alert) {
+                    alert.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 block';
+                    alert.textContent = data.message || 'Failed to submit inquiry.';
+                }
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.classList.add('hidden');
+                if (btnText) btnText.textContent = 'Submit Inquiry \u2192';
+            }
+        } catch (err) {
+            if (alert) {
+                alert.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200 block';
+                alert.textContent = 'Server error. Please try again.';
+            }
+            if (btn) btn.disabled = false;
+            if (spinner) spinner.classList.add('hidden');
+            if (btnText) btnText.textContent = 'Submit Inquiry \u2192';
+        }
+    }
+
     async function updatePageCartQty(cartItemId, delta) {
         const span = document.getElementById('itemQtyVal_' + cartItemId);
         if (!span) return;

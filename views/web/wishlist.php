@@ -1,5 +1,7 @@
 <?php
 $title = 'My Wishlist | ImportWale Wholesale';
+$items = !empty($products) ? $products : (!empty($wishlistItems) ? $wishlistItems : []);
+$wishlistCount = count($items);
 ob_start();
 ?>
 
@@ -20,7 +22,7 @@ ob_start();
         </a>
     </div>
 
-    <?php if (empty($wishlistItems)): ?>
+    <?php if (empty($items)): ?>
         <div
             class="bg-white border border-gray-200 rounded-2xl p-12 text-center max-w-md mx-auto my-8 shadow-2xs space-y-4">
             <div class="w-16 h-16 bg-rose-50 text-red-500 rounded-full flex items-center justify-center mx-auto shadow-2xs">
@@ -37,42 +39,14 @@ ob_start();
                 Wholesale Catalog</a>
         </div>
     <?php else: ?>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <?php foreach ($wishlistItems as $item): ?>
-                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs hover:shadow-md transition flex flex-col group"
-                    id="wishlistCard_<?= $item['product_id'] ?>">
-                    <div class="relative bg-gray-50 aspect-square overflow-hidden">
-                        <img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>"
-                            class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                        <button type="button" onclick="removeFromWishlistPage(<?= $item['product_id'] ?>)"
-                            class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 shadow-md flex items-center justify-center text-red-500 hover:bg-white hover:scale-110 transition cursor-pointer border-0"
-                            title="Remove from wishlist">
-                            ✕
-                        </button>
-                    </div>
-
-                    <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
-                        <div>
-                            <a href="<?= url('product/' . $item['slug']) ?>"
-                                class="text-xs font-semibold text-gray-900 hover:text-[#f05a29] transition line-clamp-2">
-                                <?= htmlspecialchars($item['name']) ?>
-                            </a>
-                            <div class="text-[11px] text-gray-400 font-mono mt-1">SKU: <?= htmlspecialchars($item['sku']) ?>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-1.5 pt-2 border-t border-gray-100">
-                            <a href="<?= url('product/' . $item['slug']) ?>"
-                                class="flex-1 py-2 bg-[#f05a29] hover:bg-[#d94e20] text-white text-xs font-semibold rounded-xl text-center transition shadow-2xs">
-                                View Details
-                            </a>
-                            <button type="button" onclick="openRfqModal()"
-                                class="py-2 px-2.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition cursor-pointer border-0"
-                                title="Request Bulk Quote / Send Inquiry">
-                                Send RFQ
-                            </button>
-                        </div>
-                    </div>
+        <!-- Unified Product Grid (Exact Site-wide 5-Col Grid Style) -->
+        <div class="product-grid" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px 12px; width: 100%;">
+            <?php foreach ($items as $product): ?>
+                <?php 
+                $pId = $product['id'] ?? $product['product_id'] ?? 0;
+                ?>
+                <div id="wishlistCard_<?= $pId ?>" class="wishlist-card-wrapper transition-all duration-300">
+                    <?php require __DIR__ . '/partials/product_card.php'; ?>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -81,22 +55,20 @@ ob_start();
 </div>
 
 <script>
-    async function removeFromWishlistPage(productId) {
-        const payload = new URLSearchParams();
-        payload.append('product_id', productId);
-
-        const res = await fetch('<?= url('wishlist/toggle') ?>', { method: 'POST', body: payload });
-        const data = await res.json();
-        if (data.success) {
+    // Smoothly remove item card from wishlist page when heart is clicked
+    const origToggleCardWishlist = window.toggleCardWishlist;
+    window.toggleCardWishlist = async function(productId, btn) {
+        if (typeof origToggleCardWishlist === 'function') {
+            const result = await origToggleCardWishlist(productId, btn);
             const card = document.getElementById('wishlistCard_' + productId);
-            if (card) card.remove();
-            if (typeof updateHeaderWishlistBadge === 'function') {
-                updateHeaderWishlistBadge(data.count);
-            } else {
-                location.reload();
+            if (card) {
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                setTimeout(() => card.remove(), 250);
             }
+            return result;
         }
-    }
+    };
 </script>
 
 <?php

@@ -25,31 +25,18 @@ class WishlistController extends BaseController
         $sessionId = $this->getSessionId();
 
         if ($userId) {
-            $stmt = $db->prepare("SELECT w.*, p.name as product_name, p.slug as product_slug, p.main_image, p.price, p.base_price, p.sale_price, p.sku FROM wishlist w JOIN products p ON w.product_id = p.id WHERE w.user_id = ? ORDER BY w.id DESC");
+            $stmt = $db->prepare("SELECT p.*, w.id as wishlist_row_id, w.created_at as added_at FROM wishlist w JOIN products p ON w.product_id = p.id WHERE w.user_id = ? ORDER BY w.id DESC");
             $stmt->execute([$userId]);
         } else {
-            $stmt = $db->prepare("SELECT w.*, p.name as product_name, p.slug as product_slug, p.main_image, p.price, p.base_price, p.sale_price, p.sku FROM wishlist w JOIN products p ON w.product_id = p.id WHERE w.session_id = ? ORDER BY w.id DESC");
+            $stmt = $db->prepare("SELECT p.*, w.id as wishlist_row_id, w.created_at as added_at FROM wishlist w JOIN products p ON w.product_id = p.id WHERE w.session_id = ? ORDER BY w.id DESC");
             $stmt->execute([$sessionId]);
         }
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-
-        $items = [];
-        foreach ($rows as $r) {
-            $img = !empty($r['main_image']) ? asset($r['main_image']) : asset('assets/images/placeholder.jpg');
-            $items[] = [
-                'id'         => (int)$r['id'],
-                'product_id' => (int)$r['product_id'],
-                'name'       => $r['product_name'],
-                'slug'       => $r['product_slug'],
-                'sku'        => $r['sku'],
-                'image'      => $img,
-                'price'      => (float)($r['base_price'] ?: ($r['sale_price'] ?: $r['price'])),
-            ];
-        }
+        $products = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
         $this->renderView('web/wishlist', [
-            'wishlistItems' => $items,
-            'wishlistCount' => count($items)
+            'wishlistItems' => $products,
+            'products'      => $products,
+            'wishlistCount' => count($products)
         ]);
     }
 

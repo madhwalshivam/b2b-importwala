@@ -69,6 +69,8 @@ $router->get('/cart/data', 'Web\CartController@data');
 $router->post('/cart/add', 'Web\CartController@add');
 $router->post('/cart/update', 'Web\CartController@update');
 $router->post('/cart/remove', 'Web\CartController@remove');
+$router->post('/api/cart/inquiry-submit', 'Web\CartController@submitInquiry');
+$router->post('/cart/inquiry-submit', 'Web\CartController@submitInquiry');
 
 $router->get('/checkout', 'Web\CheckoutController@index');
 $router->post('/checkout/create-order', 'Web\CheckoutController@createOrder');

@@ -353,4 +353,81 @@ class CartController extends BaseController
             'items'       => $items,
         ];
     }
+
+    public function submitInquiry(): void
+    {
+        header('Content-Type: application/json');
+
+        $userId    = $this->getUserId();
+        $sessionId = $this->getSessionId();
+
+        $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
+
+        $name    = trim($input['customer_name'] ?? $input['name'] ?? '');
+        $phone   = trim($input['phone'] ?? '');
+        $message = trim($input['customer_message'] ?? $input['message'] ?? '');
+        $email   = trim($input['email'] ?? '');
+
+        if (empty($name) || empty($phone)) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Please provide your Full Name and Mobile/Phone Number.'
+            ]);
+            return;
+        }
+
+        $this->recalculateCartTierPrices($userId, $sessionId);
+        $cartInfo = $this->getCartSummary($userId, $sessionId);
+
+        if (empty($cartInfo['items'])) {
+            http_response_code(400);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Your shopping cart is empty. Please add products before submitting an inquiry.'
+            ]);
+            return;
+        }
+
+        // Build snapshot items array for Inquiry model
+        $snapshotItems = [];
+        foreach ($cartInfo['items'] as $item) {
+            $snapshotItems[] = [
+                'product_id'             => (int)$item['product_id'],
+                'product_name_snapshot' => $item['name'],
+                'sku_snapshot'           => $item['sku'] ?? ('SKU-' . $item['product_id']),
+                'product_image_snapshot' => $item['image'] ?? '',
+                'variation_id'           => !empty($item['variant_id']) ? (int)$item['variant_id'] : null,
+                'variation_name'         => !empty($item['variant_title']) ? $item['variant_title'] : '',
+                'quantity'               => max(1, (int)$item['quantity']),
+                'price_snapshot'         => (float)($item['unit_price'] ?? 0),
+            ];
+        }
+
+        try {
+            $inquiryModel = new \App\Models\Inquiry();
+            $result = $inquiryModel->createInquiry([
+                'customer_name'    => $name,
+                'phone'            => $phone,
+                'email'            => $email,
+                'customer_message' => $message,
+                'business_type'    => 'Cart Quote Request',
+            ], $snapshotItems);
+
+            // Note: Cart remains intact (NOT cleared) so user can still complete a normal paid order
+            echo json_encode([
+                'success'        => true,
+                'message'        => "Your inquiry has been sent, we'll contact you shortly",
+                'inquiry_number' => $result['inquiry_number'],
+                'total_products' => $result['total_products'],
+                'total_quantity' => $result['total_quantity'],
+            ]);
+        } catch (\Throwable $e) {
+            http_response_code(500);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Failed to submit inquiry: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

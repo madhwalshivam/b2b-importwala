@@ -142,7 +142,7 @@ ob_start();
                         id="thumbStrip">
                         <?php foreach ($gallery as $idx => $imgUrl): ?>
                             <button onclick="switchImage(<?= $idx ?>, '<?= htmlspecialchars($imgUrl) ?>')"
-                                class="thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all focus:outline-none cursor-pointer <?= $idx === 0 ? 'border-2 border-[#f05a29]' : 'border-2 border-gray-200 hover:border-gray-400' ?>"
+                                class="thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all focus:outline-none cursor-pointer <?= $idx === 0 ? 'border-2 border-[#f05a29] ring-2 ring-orange-100/60 shadow-2xs' : 'border border-gray-200 hover:border-gray-400' ?>"
                                 data-idx="<?= $idx ?>">
                                 <img src="<?= htmlspecialchars($imgUrl) ?>" alt="Thumb <?= $idx + 1 ?>"
                                     class="w-full h-full object-cover" loading="lazy">
@@ -292,11 +292,16 @@ ob_start();
                 }
             </style>
 
-            <!-- Variant List (Expandable Color/Size Container - Max Height 3 Rows Scrollable) -->
+            <!-- Variant List (Expandable Color/Size Multi-Product Card Items) -->
             <?php if (!empty($variants)): ?>
-                <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
-                    <!-- Scrollable Container: Capped to 3 rows max-height (~235px), slide/scroll for 4+ variants -->
-                    <div class="divide-y divide-gray-100 max-h-[235px] overflow-y-auto scroll-smooth" id="variantsList">
+                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+                        <h3 class="text-xs font-semibold text-gray-900 uppercase tracking-wider">Select Product Variants</h3>
+                        <span class="text-[11px] text-gray-500 font-medium"><?= count($variants) ?> Options Available</span>
+                    </div>
+
+                    <!-- Scrollable Container with Individual Card Borders for Multi-Products -->
+                    <div class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 scroll-smooth" id="variantsList">
                         <?php foreach ($variants as $vi => $v):
                             $vWholesale = (float) $v['wholesale_price'];
                             $vOnePiece = (float) $v['one_piece_price'];
@@ -306,14 +311,14 @@ ob_start();
                             $vDim = htmlspecialchars($v['dimensions'] ?? '');
                             $vImg = !empty($v['image_url']) ? asset($v['image_url']) : $mainImage;
                             $vWeight = htmlspecialchars($v['weight'] ?? '');
+                            $isActive = ($vi === 0);
                             ?>
-                            <div class="variant-row flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50/80 transition border-b border-gray-100 last:border-0"
+                            <div class="variant-row flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 <?= $isActive ? 'border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs' : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs' ?>"
                                 data-variant-idx="<?= $vi ?>" data-wholesale="<?= $vWholesale ?>"
                                 data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
                                 data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)">
 
-                                <div
-                                    class="w-12 h-12 rounded-lg border border-gray-200 overflow-hidden shrink-0 bg-white shadow-2xs">
+                                <div class="variant-img-box w-12 h-12 rounded-lg border <?= $isActive ? 'border-[#f05a29]' : 'border-gray-200' ?> overflow-hidden shrink-0 bg-white shadow-2xs transition-all">
                                     <img src="<?= htmlspecialchars($vImg) ?>" alt="<?= $vName ?>"
                                         class="w-full h-full object-cover">
                                 </div>
@@ -870,7 +875,7 @@ ob_start();
         if (mainImg) mainImg.src = src;
         document.querySelectorAll('.thumb-btn').forEach(btn => {
             const isActive = parseInt(btn.dataset.idx) === idx;
-            btn.className = `thumb-btn shrink-0 w-16 h-16 rounded-xl border-2 overflow-hidden transition-all border-0 focus:outline-none cursor-pointer ${isActive ? 'border-2 border-[#f05a29]' : 'border-2 border-gray-200 hover:border-gray-400'}`;
+            btn.className = `thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all focus:outline-none cursor-pointer ${isActive ? 'border-2 border-[#f05a29] ring-2 ring-orange-100/60 shadow-2xs' : 'border border-gray-200 hover:border-gray-400'}`;
         });
         const activeThumb = document.querySelector(`.thumb-btn[data-idx="${idx}"]`);
         if (activeThumb) {
@@ -985,7 +990,20 @@ ob_start();
         selectedVariantIndex = idx;
         const v = VARIANTS_LIST[idx];
 
-        // 1. Update Swatch Styles
+        // 1. Update Variant Row Active Styles & Borders
+        document.querySelectorAll('.variant-row').forEach((row, i) => {
+            const isOos = VARIANTS_LIST[i].stock <= 0;
+            const imgBox = row.querySelector('.variant-img-box');
+            if (i === idx) {
+                row.className = `variant-row flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs ${isOos ? 'opacity-50 grayscale' : ''}`;
+                if (imgBox) imgBox.className = 'variant-img-box w-12 h-12 rounded-lg border border-[#f05a29] overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
+            } else {
+                row.className = `variant-row flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs ${isOos ? 'opacity-50 grayscale' : ''}`;
+                if (imgBox) imgBox.className = 'variant-img-box w-12 h-12 rounded-lg border border-gray-200 overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
+            }
+        });
+
+        // Update Amazon Swatch buttons if present
         document.querySelectorAll('.amazon-swatch-btn').forEach((btn, i) => {
             const isOos = VARIANTS_LIST[i].stock <= 0;
             if (i === idx) {
