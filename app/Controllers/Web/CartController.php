@@ -10,22 +10,12 @@ class CartController extends BaseController
 {
     private function getSessionId(): string
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if (empty($_SESSION['cart_session_id'])) {
-            $_SESSION['cart_session_id'] = 'cs_' . bin2hex(random_bytes(12));
-        }
-        return $_SESSION['cart_session_id'];
+        return get_current_session_id();
     }
 
     private function getUserId(): ?int
     {
-        if (class_exists('\App\Core\Auth') && Auth::check()) {
-            $u = Auth::user();
-            return (int)($u['id'] ?? 0);
-        }
-        return null;
+        return get_current_user_id();
     }
 
     public function add(): void
@@ -190,6 +180,7 @@ class CartController extends BaseController
         header('Content-Type: application/json');
         $db = Database::getInstance();
         $cartItemId = (int)($_POST['cart_item_id'] ?? 0);
+        $productId  = (int)($_POST['product_id'] ?? 0);
 
         $userId    = $this->getUserId();
         $sessionId = $this->getSessionId();
@@ -199,10 +190,17 @@ class CartController extends BaseController
             $stmt = $db->prepare("SELECT * FROM cart_items WHERE id = ?");
             $stmt->execute([$cartItemId]);
             $item = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $delStmt = $db->prepare("DELETE FROM cart_items WHERE id = ?");
+            $delStmt->execute([$cartItemId]);
+        } elseif ($productId) {
+            if ($userId) {
+                $delStmt = $db->prepare("DELETE FROM cart_items WHERE user_id = ? AND product_id = ?");
+                $delStmt->execute([$userId, $productId]);
+            } else {
+                $delStmt = $db->prepare("DELETE FROM cart_items WHERE session_id = ? AND product_id = ?");
+                $delStmt->execute([$sessionId, $productId]);
+            }
         }
-
-        $delStmt = $db->prepare("DELETE FROM cart_items WHERE id = ?");
-        $delStmt->execute([$cartItemId]);
 
         $this->recalculateCartTierPrices($userId, $sessionId);
         $cartInfo = $this->getCartSummary($userId, $sessionId);
@@ -210,7 +208,7 @@ class CartController extends BaseController
         echo json_encode([
             'success'      => true,
             'message'      => 'Item removed from cart',
-            'product_id'   => $item ? (int)$item['product_id'] : 0,
+            'product_id'   => $productId ?: ($item ? (int)$item['product_id'] : 0),
             'variant_id'   => ($item && !empty($item['variant_id'])) ? (int)$item['variant_id'] : null,
             'pricing_mode' => $item['pricing_mode'] ?? 'wholesale',
             'cart_qty'     => 0,

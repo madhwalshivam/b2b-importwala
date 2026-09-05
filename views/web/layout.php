@@ -6,9 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="<?= csrf_token() ?>">
   <?php
-    $pageTitle = $title ?? $seoOptions['title'] ?? 'ImportWale | World-Scale B2B Wholesale Platform';
-    $pageDesc = $seoDescription ?? $seoOptions['description'] ?? 'ImportWale - India\'s premier wholesale supply platform for factory-direct products.';
-    $pageCanonical = $canonicalUrl ?? $seoOptions['canonical'] ?? null;
+  $pageTitle = $title ?? $seoOptions['title'] ?? 'ImportWale | World-Scale B2B Wholesale Platform';
+  $pageDesc = $seoDescription ?? $seoOptions['description'] ?? 'ImportWale - India\'s premier wholesale supply platform for factory-direct products.';
+  $pageCanonical = $canonicalUrl ?? $seoOptions['canonical'] ?? null;
   ?>
   <title><?= htmlspecialchars($pageTitle) ?></title>
   <meta name="description" content="<?= htmlspecialchars($pageDesc) ?>">
@@ -147,19 +147,30 @@
 
 <?php
 $db = \App\Core\Database::getInstance();
-if (session_status() === PHP_SESSION_NONE) {
-  @session_start();
-}
-$userId = !empty($_SESSION['user_id']) ? (int) $_SESSION['user_id'] : null;
-$sessionId = $_SESSION['guest_wishlist_session_id'] ?? session_id();
+$userId = get_current_user_id();
+$sessionId = get_current_session_id();
+
 if ($userId) {
-  $wStmt = $db->prepare("SELECT COUNT(*) FROM wishlist WHERE user_id = ?");
+  $wStmt = $db->prepare("SELECT DISTINCT product_id FROM wishlist WHERE user_id = ?");
   $wStmt->execute([$userId]);
+  $cStmt = $db->prepare("SELECT DISTINCT product_id FROM cart_items WHERE user_id = ?");
+  $cStmt->execute([$userId]);
+  $cQtyStmt = $db->prepare("SELECT SUM(quantity) FROM cart_items WHERE user_id = ?");
+  $cQtyStmt->execute([$userId]);
 } else {
-  $wStmt = $db->prepare("SELECT COUNT(*) FROM wishlist WHERE session_id = ?");
+  $wStmt = $db->prepare("SELECT DISTINCT product_id FROM wishlist WHERE session_id = ?");
   $wStmt->execute([$sessionId]);
+  $cStmt = $db->prepare("SELECT DISTINCT product_id FROM cart_items WHERE session_id = ?");
+  $cStmt->execute([$sessionId]);
+  $cQtyStmt = $db->prepare("SELECT SUM(quantity) FROM cart_items WHERE session_id = ?");
+  $cQtyStmt->execute([$sessionId]);
 }
-$initialWishlistCount = (int) $wStmt->fetchColumn();
+
+$initialWishlistProductIds = array_map('intval', $wStmt->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+$initialWishlistCount = count($initialWishlistProductIds);
+
+$initialCartProductIds = array_map('intval', $cStmt->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+$initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 ?>
 
 <body>
@@ -274,102 +285,109 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
         </button>
       </form>
 
-      <!-- RFQ Get a Custom Quote Button -->
-      <button type="button" id="rfqOpenBtn" onclick="openRfqModal()"
-        style="display:inline-flex; align-items:center; gap:7px; background:var(--primary-color,#f05a29); color:#fff; font-family:var(--font-sans); font-size:13px; font-weight:700; padding:9px 18px; border:none; border-radius:8px; cursor:pointer; white-space:nowrap; transition:background .2s,transform .15s;"
-        onmouseover="this.style.background='#d8481b'; this.style.transform='translateY(-1px)'"
-        onmouseout="this.style.background='#f05a29'; this.style.transform='translateY(0)'">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-        Get a Custom Quote
-      </button>
-
-      <div class="header-actions">
-        <!-- Ship to / Language / Currency Popover Wrapper -->
-        <div class="ship-to-popover-wrapper">
-          <button type="button" class="ship-to-trigger-btn" onclick="toggleShipToPopover(event)" id="shipToTriggerBtn">
-            <span id="triggerLangText">EN</span> - <span id="triggerCurrText">USD</span>
-            <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
-              style="margin-left:3px; display:inline-block; vertical-align:middle;">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </button>
-
-          <!-- Popover Dropdown Menu -->
-          <div class="ship-to-popover-menu" id="shipToPopoverMenu">
-            <div class="popover-field-group">
-              <label class="popover-label">Ship to:</label>
-              <select id="popoverCountrySelect" class="popover-select" onchange="onShipToCountryChange(this.value)">
-                <option value="US">🇺🇸 United States</option>
-                <option value="IN">🇮🇳 India</option>
-                <option value="GB">🇬🇧 United Kingdom</option>
-                <option value="EU">🇪🇺 European Union</option>
-                <option value="CA">🇨🇦 Canada</option>
-                <option value="AU">🇦🇺 Australia</option>
-              </select>
-            </div>
-
-            <div class="popover-field-group">
-              <label class="popover-label">Language:</label>
-              <select id="popoverLanguageSelect" class="popover-select" onchange="onLanguageChange(this.value)">
-                <option value="EN">English</option>
-                <option value="HI">Hindi</option>
-                <option value="ES">Spanish</option>
-                <option value="FR">French</option>
-                <option value="DE">German</option>
-              </select>
-            </div>
-
-            <div class="popover-field-group">
-              <label class="popover-label">Currency:</label>
-              <select id="popoverCurrencySelect" class="popover-select">
-                <option value="USD">USD ($)</option>
-                <option value="INR">INR (₹)</option>
-                <option value="GBP">GBP (£)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="CAD">CAD ($)</option>
-                <option value="AUD">AUD ($)</option>
-              </select>
-            </div>
-
-            <button type="button" class="btn-save-popover" onclick="saveShipToPreference()">Save</button>
-          </div>
-        </div>
-
-        <a href="<?= url('account') ?>" class="header-icon-item" title="Account">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </a>
-        <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-          <div class="cart-pill-count" id="headerWishlistCount"
-            style="background:#f05a29; display:<?= $initialWishlistCount > 0 ? 'flex' : 'none' ?>;">
-            <?= $initialWishlistCount ?>
-          </div>
-        </a>
-        <button type="button" onclick="openCartDrawer()" class="header-icon-item cursor-pointer" title="Cart"
-          style="background:transparent; border:none; outline:none;">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-          </svg>
-          <div class="cart-pill-count" id="headerCartCount" style="background:#f05a29; display:none;">0</div>
-        </button>
-        <a href="<?= url('inquiry') ?>" class="header-icon-item" title="My Inquiry">
-          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+      <!-- Right Grouping Container: RFQ Quote Button + Action Icons -->
+      <div class="header-right-group">
+        <!-- RFQ Get a Custom Quote Button -->
+        <button type="button" id="rfqOpenBtn" onclick="openRfqModal()"
+          style="display:inline-flex; align-items:center; gap:7px; background:var(--primary-color,#f05a29); color:#fff; font-family:var(--font-sans); font-size:13px; font-weight:700; padding:9px 18px; border:none; border-radius:8px; cursor:pointer; white-space:nowrap; transition:background .2s,transform .15s;"
+          onmouseover="this.style.background='#d8481b'; this.style.transform='translateY(-1px)'"
+          onmouseout="this.style.background='#f05a29'; this.style.transform='translateY(0)'">
+          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <div class="cart-pill-count" id="headerInquiryCount" style="background:#f05a29; display:none;">0</div>
-        </a>
+          Get a Custom Quote
+        </button>
+
+        <div class="header-actions">
+          <!-- Ship to / Language / Currency Popover Wrapper -->
+          <?php /*
+     <div class="ship-to-popover-wrapper">
+       <button type="button" class="ship-to-trigger-btn" onclick="toggleShipToPopover(event)" id="shipToTriggerBtn">
+         <span id="triggerLangText">EN</span> - <span id="triggerCurrText">USD</span>
+         <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+           style="margin-left:3px; display:inline-block; vertical-align:middle;">
+           <path d="M6 9l6 6 6-6" />
+         </svg>
+       </button>
+
+       <!-- Popover Dropdown Menu -->
+       <div class="ship-to-popover-menu" id="shipToPopoverMenu">
+         <div class="popover-field-group">
+           <label class="popover-label">Ship to:</label>
+           <select id="popoverCountrySelect" class="popover-select" onchange="onShipToCountryChange(this.value)">
+             <option value="US">🇺🇸 United States</option>
+             <option value="IN">🇮🇳 India</option>
+             <option value="GB">🇬🇧 United Kingdom</option>
+             <option value="EU">🇪🇺 European Union</option>
+             <option value="CA">🇨🇦 Canada</option>
+             <option value="AU">🇦🇺 Australia</option>
+           </select>
+         </div>
+
+         <div class="popover-field-group">
+           <label class="popover-label">Language:</label>
+           <select id="popoverLanguageSelect" class="popover-select" onchange="onLanguageChange(this.value)">
+             <option value="EN">English</option>
+             <option value="HI">Hindi</option>
+             <option value="ES">Spanish</option>
+             <option value="FR">French</option>
+             <option value="DE">German</option>
+           </select>
+         </div>
+
+         <div class="popover-field-group">
+           <label class="popover-label">Currency:</label>
+           <select id="popoverCurrencySelect" class="popover-select">
+             <option value="USD">USD ($)</option>
+             <option value="INR">INR (₹)</option>
+             <option value="GBP">GBP (£)</option>
+             <option value="EUR">EUR (€)</option>
+             <option value="CAD">CAD ($)</option>
+             <option value="AUD">AUD ($)</option>
+           </select>
+         </div>
+
+         <button type="button" class="btn-save-popover" onclick="saveShipToPreference()">Save</button>
+       </div>
+     </div>
+     */ ?>
+
+          <a href="<?= url('account') ?>" class="header-icon-item" title="Account">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </a>
+          <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <div class="cart-pill-count" id="headerWishlistCount"
+              style="display:<?= $initialWishlistCount > 0 ? 'flex' : 'none' ?>;">
+              <?= $initialWishlistCount ?>
+            </div>
+          </a>
+          <button type="button" onclick="openCartDrawer()" class="header-icon-item cursor-pointer" title="Cart">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            </svg>
+            <div class="cart-pill-count" id="headerCartCount"
+              style="display:<?= $initialCartCount > 0 ? 'flex' : 'none' ?>;"><?= $initialCartCount ?></div>
+          </button>
+          <?php /*
+     <a href="<?= url('inquiry') ?>" class="header-icon-item" title="My Inquiry">
+       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg>
+       <div class="cart-pill-count" id="headerInquiryCount" style="background:#f05a29; display:none;">0</div>
+     </a>
+     */ ?>
+        </div>
       </div>
     </div>
 
@@ -386,7 +404,7 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
           $cleanPath = ltrim($navItem['url'], '/');
           $targetUrl = url($cleanPath);
           $hasChildren = !empty($navItem['children']) || $navItem['type'] === 'dropdown';
-          $targetAttr = !empty($navItem['open_in_new_tab']) ? 'target="_blank" rel="noopener"' : '';
+          $targetAttr = (!empty($navItem['open_in_new_tab']) && (str_starts_with($navItem['url'], 'http://') || str_starts_with($navItem['url'], 'https://'))) ? 'target="_blank" rel="noopener"' : '';
 
           // Determine active tab class
           $isActiveClass = '';
@@ -415,7 +433,7 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
                   <?php
                   $childCleanPath = ltrim($childItem['url'], '/');
                   $childUrl = url($childCleanPath);
-                  $childTargetAttr = !empty($childItem['open_in_new_tab']) ? 'target="_blank" rel="noopener"' : '';
+                  $childTargetAttr = (!empty($childItem['open_in_new_tab']) && (str_starts_with($childItem['url'], 'http://') || str_starts_with($childItem['url'], 'https://'))) ? 'target="_blank" rel="noopener"' : '';
                   ?>
                   <a href="<?= $childUrl ?>" class="nav-sub-dropdown-item" <?= $childTargetAttr ?>>
                     <?= htmlspecialchars($childItem['label']) ?>
@@ -609,36 +627,40 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
         <div class="footer-payment-badges">
           <div class="payment-badge" title="Verified B2B Trade Protection">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="#FFF2ED" stroke="#f05a29" stroke-width="2" stroke-linejoin="round"/>
-              <path d="M9 11.5l2 2 4-4" stroke="#f05a29" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="#FFF2ED"
+                stroke="#f05a29" stroke-width="2" stroke-linejoin="round" />
+              <path d="M9 11.5l2 2 4-4" stroke="#f05a29" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
             </svg>
             <span>Trade Protection</span>
           </div>
           <div class="payment-badge" title="Razorpay Secure Payment Gateway">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M22.43 4.47L10.3 22H5.06l7.85-11.41L7.54 4.47h14.89z" fill="#0C2340"/>
-              <path d="M15.42 4.47l-7.88 11.43L4 12.35l6.54-7.88h4.88z" fill="#0284C7"/>
+              <path d="M22.43 4.47L10.3 22H5.06l7.85-11.41L7.54 4.47h14.89z" fill="#0C2340" />
+              <path d="M15.42 4.47l-7.88 11.43L4 12.35l6.54-7.88h4.88z" fill="#0284C7" />
             </svg>
             <span>Razorpay Gateway</span>
           </div>
           <div class="payment-badge" title="UPI Instant Direct Payments">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M17.4 3.6L12.9 12h3.4l-4.5 8.4 9-9.6h-3.4l4.5-7.2z" fill="#059669"/>
-              <path d="M6.6 3.6L2.1 12h3.4l-4.5 8.4 9-9.6H5.5l4.5-7.2z" fill="#0284C7"/>
+              <path d="M17.4 3.6L12.9 12h3.4l-4.5 8.4 9-9.6h-3.4l4.5-7.2z" fill="#059669" />
+              <path d="M6.6 3.6L2.1 12h3.4l-4.5 8.4 9-9.6H5.5l4.5-7.2z" fill="#0284C7" />
             </svg>
             <span>UPI Instant</span>
           </div>
           <div class="payment-badge" title="Mastercard Accepted">
             <svg width="18" height="12" viewBox="0 0 24 16" fill="none">
-              <circle cx="7" cy="8" r="7" fill="#EB001B"/>
-              <circle cx="17" cy="8" r="7" fill="#F79E1B"/>
-              <path d="M12 2.7A6.97 6.97 0 009.6 8c0 2.2.9 4.2 2.4 5.3A6.97 6.97 0 0014.4 8c0-2.2-.9-4.2-2.4-5.3z" fill="#FF5F00"/>
+              <circle cx="7" cy="8" r="7" fill="#EB001B" />
+              <circle cx="17" cy="8" r="7" fill="#F79E1B" />
+              <path d="M12 2.7A6.97 6.97 0 009.6 8c0 2.2.9 4.2 2.4 5.3A6.97 6.97 0 0014.4 8c0-2.2-.9-4.2-2.4-5.3z"
+                fill="#FF5F00" />
             </svg>
             <span>Mastercard</span>
           </div>
           <div class="payment-badge" title="Direct Bank Wire Transfer">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
             </svg>
             <span>Bank Wire</span>
           </div>
@@ -959,6 +981,120 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
       }
     };
 
+    window.USER_WISHLIST_PRODUCT_IDS = <?= json_encode($initialWishlistProductIds) ?>;
+    window.USER_CART_PRODUCT_IDS = <?= json_encode($initialCartProductIds) ?>;
+    window.INITIAL_WISHLIST_COUNT = <?= $initialWishlistCount ?>;
+    window.INITIAL_CART_COUNT = <?= $initialCartCount ?>;
+
+    window.applyUserProductStates = function (wishlistIds, cartIds) {
+      if (Array.isArray(wishlistIds)) {
+        window.USER_WISHLIST_PRODUCT_IDS = wishlistIds;
+      } else {
+        wishlistIds = window.USER_WISHLIST_PRODUCT_IDS || [];
+      }
+
+      if (Array.isArray(cartIds)) {
+        window.USER_CART_PRODUCT_IDS = cartIds;
+      } else {
+        cartIds = window.USER_CART_PRODUCT_IDS || [];
+      }
+
+      const wishlistSet = new Set(wishlistIds.map(Number));
+      const cartSet = new Set(cartIds.map(Number));
+
+      // 1. Wishlist Buttons
+      document.querySelectorAll('.ef-wishlist-btn, .robu-wishlist-btn, #floatingWishlistBtn').forEach(btn => {
+        let pId = parseInt(btn.dataset.productId || btn.dataset.wishlistId);
+        if (!pId) {
+          const card = btn.closest('[data-product-id]');
+          if (card) pId = parseInt(card.dataset.productId);
+        }
+        if (!pId && typeof PRODUCT_ID !== 'undefined') {
+          pId = parseInt(PRODUCT_ID);
+        }
+
+        if (pId && wishlistSet.has(pId)) {
+          btn.classList.add('active');
+          btn.title = 'Remove from Wishlist';
+          const icon = btn.querySelector('.ef-heart-icon, svg');
+          if (icon) {
+            icon.style.fill = '#f05a29';
+            icon.style.stroke = '#f05a29';
+          }
+        } else if (pId) {
+          btn.classList.remove('active');
+          btn.title = 'Save to Wishlist';
+          const icon = btn.querySelector('.ef-heart-icon, svg');
+          if (icon) {
+            icon.style.fill = 'none';
+            icon.style.stroke = 'currentColor';
+          }
+        }
+      });
+
+      // 2. Cart Buttons on Product Cards
+      document.querySelectorAll('.ef-cart-btn, .btn-add-cart').forEach(btn => {
+        let pId = parseInt(btn.dataset.productId);
+        if (!pId) {
+          const card = btn.closest('[data-product-id]');
+          if (card) pId = parseInt(card.dataset.productId);
+        }
+
+        if (pId && cartSet.has(pId)) {
+          btn.classList.add('added', 'in-cart');
+          btn.title = 'In Cart (Click to open Cart)';
+          btn.style.background = '#10b981';
+          btn.style.color = '#ffffff';
+          const icon = btn.querySelector('.ef-cart-icon, svg');
+          if (icon) {
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
+          }
+        } else if (pId) {
+          btn.classList.remove('added', 'in-cart');
+          btn.title = 'Add to Cart';
+          btn.style.background = '';
+          btn.style.color = '';
+          const icon = btn.querySelector('.ef-cart-icon, svg');
+          if (icon) {
+            icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>';
+          }
+        }
+      });
+
+      // 3. Detail Page Main Add to Cart Button (#mainAddToCartBtn)
+      const detailBtn = document.getElementById('mainAddToCartBtn');
+      if (detailBtn && typeof PRODUCT_ID !== 'undefined') {
+        const detailPId = parseInt(PRODUCT_ID);
+        if (cartSet.has(detailPId)) {
+          detailBtn.classList.add('added', 'bg-emerald-600');
+          detailBtn.classList.remove('bg-black');
+          const span = detailBtn.querySelector('span');
+          if (span) span.textContent = 'Added ✓ (Go to Cart)';
+        } else {
+          detailBtn.classList.remove('added', 'bg-emerald-600');
+          detailBtn.classList.add('bg-black');
+          const span = detailBtn.querySelector('span');
+          if (span) span.textContent = 'Add to Cart';
+        }
+      }
+    };
+
+    window.fetchAndSyncUserStates = async function () {
+      try {
+        const res = await fetch('<?= url("api/user-state") ?>');
+        const data = await res.json();
+        if (data.success) {
+          if (typeof updateHeaderWishlistCount === 'function') {
+            updateHeaderWishlistCount(data.wishlist.count);
+          }
+          if (typeof updateHeaderCartCount === 'function') {
+            updateHeaderCartCount(data.cart.count);
+          }
+          window.applyUserProductStates(data.wishlist.product_ids, data.cart.product_ids);
+        }
+      } catch (e) { }
+    };
+
     window.toggleCardWishlist = async function (productId, btn) {
       if (!productId) return;
       const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -981,28 +1117,37 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
           return;
         }
 
-        if (data.status === 'added') {
-          btn.classList.add('active');
-          btn.style.transform = 'scale(1.25)';
-          setTimeout(() => btn.style.transform = '', 200);
-        } else if (data.status === 'removed') {
-          btn.classList.remove('active');
+        const isAdded = (data.status === 'added' || data.saved === true);
+        if (isAdded) {
+          if (!window.USER_WISHLIST_PRODUCT_IDS.includes(parseInt(productId))) {
+            window.USER_WISHLIST_PRODUCT_IDS.push(parseInt(productId));
+          }
+        } else {
+          window.USER_WISHLIST_PRODUCT_IDS = window.USER_WISHLIST_PRODUCT_IDS.filter(id => id !== parseInt(productId));
         }
+
+        window.applyUserProductStates();
 
         if (typeof updateHeaderWishlistCount === 'function') {
           updateHeaderWishlistCount(data.count);
         }
       } catch (e) {
-        btn.classList.toggle('active');
+        if (btn) btn.classList.toggle('active');
       }
     };
 
     window.updateHeaderWishlistCount = function (count) {
       const badge = document.getElementById('headerWishlistCount');
       if (!badge) return;
-      badge.innerText = count || 0;
-      badge.style.display = (count && count > 0) ? 'flex' : 'none';
+      const numCount = parseInt(count) || 0;
+      badge.innerText = numCount;
+      badge.style.display = numCount > 0 ? 'flex' : 'none';
     };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      window.applyUserProductStates();
+      window.fetchAndSyncUserStates();
+    });
   </script>
   <!-- Global Gallery Lightbox Modal -->
   <?php require __DIR__ . '/partials/gallery_modal.php'; ?>
@@ -2616,37 +2761,69 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
     let quickAddCardInFlight = {};
     async function quickAddToCartCard(productId, moq, btn) {
       if (!productId) return;
+      const numId = parseInt(productId);
+      const isAlreadyInCart = (btn && (btn.classList.contains('added') || btn.classList.contains('in-cart'))) || window.USER_CART_PRODUCT_IDS.includes(numId);
+
       if (quickAddCardInFlight[productId]) return;
       quickAddCardInFlight[productId] = true;
 
-      const payload = new URLSearchParams();
-      payload.append('product_id', productId);
-      payload.append('quantity', 1);
-      payload.append('pricing_mode', 'wholesale');
-
       try {
-        const res = await fetch('<?= url('cart/add') ?>', { method: 'POST', body: payload });
-        const data = await res.json();
-        if (data.success) {
-          if (typeof updateHeaderCartBadge === 'function') {
-            updateHeaderCartBadge(data.cart_count);
+        if (isAlreadyInCart) {
+          // Toggle Off / Remove from Cart
+          const payload = new URLSearchParams();
+          payload.append('product_id', productId);
+          const res = await fetch('<?= url('cart/remove') ?>', { method: 'POST', body: payload });
+          const data = await res.json();
+          if (data.success) {
+            window.USER_CART_PRODUCT_IDS = window.USER_CART_PRODUCT_IDS.filter(id => id !== numId);
+            if (typeof window.applyUserProductStates === 'function') {
+              window.applyUserProductStates();
+            }
+            const cCount = data.cart_count || data.count || 0;
+            if (typeof updateHeaderCartBadge === 'function') updateHeaderCartBadge(cCount);
+            if (typeof updateHeaderCartCount === 'function') updateHeaderCartCount(cCount);
+            if (typeof renderCartDrawerUI === 'function') renderCartDrawerUI(data.items, data.subtotal, cCount);
+            if (typeof showCartToast === 'function') showCartToast('Item removed from cart');
           }
-          if (typeof renderCartDrawerUI === 'function') {
-            renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
-          }
-          if (typeof showCartToast === 'function') {
-            showCartToast('Item added to cart');
+        } else {
+          // Add to Cart
+          const payload = new URLSearchParams();
+          payload.append('product_id', productId);
+          payload.append('quantity', 1);
+          payload.append('pricing_mode', 'wholesale');
+
+          const res = await fetch('<?= url('cart/add') ?>', { method: 'POST', body: payload });
+          const data = await res.json();
+          if (data.success) {
+            if (!window.USER_CART_PRODUCT_IDS.includes(numId)) {
+              window.USER_CART_PRODUCT_IDS.push(numId);
+            }
+            if (typeof window.applyUserProductStates === 'function') {
+              window.applyUserProductStates();
+            }
+            const cCount = data.cart_count || data.count || 0;
+            if (typeof updateHeaderCartBadge === 'function') updateHeaderCartBadge(cCount);
+            if (typeof updateHeaderCartCount === 'function') updateHeaderCartCount(cCount);
+            if (typeof renderCartDrawerUI === 'function') renderCartDrawerUI(data.items, data.subtotal, cCount);
+            if (typeof showCartToast === 'function') showCartToast('Item added to cart');
           }
         }
       } catch (e) { } finally {
         quickAddCardInFlight[productId] = false;
       }
     }
+
     async function fetchCartData() {
       try {
         const res = await fetch('<?= url('cart/data') ?>');
         const data = await res.json();
         if (data.success) {
+          if (data.items && Array.isArray(data.items)) {
+            window.USER_CART_PRODUCT_IDS = data.items.map(i => parseInt(i.product_id)).filter(Boolean);
+            if (typeof window.applyUserProductStates === 'function') {
+              window.applyUserProductStates();
+            }
+          }
           updateHeaderCartBadge(data.count);
           renderCartDrawerUI(data.items, data.subtotal, data.count);
           if (typeof updateOrderSummarySidebar === 'function') {
@@ -2744,6 +2921,12 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
         const res = await fetch('<?= url('cart/remove') ?>', { method: 'POST', body: payload });
         const data = await res.json();
         if (data.success) {
+          if (data.items && Array.isArray(data.items)) {
+            window.USER_CART_PRODUCT_IDS = data.items.map(i => parseInt(i.product_id)).filter(Boolean);
+            if (typeof window.applyUserProductStates === 'function') {
+              window.applyUserProductStates();
+            }
+          }
           updateHeaderCartBadge(data.cart_count);
           renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
           if (typeof updateOrderSummarySidebar === 'function') {
@@ -2767,11 +2950,11 @@ $initialWishlistCount = (int) $wStmt->fetchColumn();
       }
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       fetchCartData();
       const searchForm = document.querySelector('form.search-bar-wrapper');
       if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
+        searchForm.addEventListener('submit', function (e) {
           const qInput = searchForm.querySelector('#headerSearchInput') || searchForm.querySelector('input[name="q"]');
           if (qInput && qInput.value.trim() !== '') {
             e.preventDefault();

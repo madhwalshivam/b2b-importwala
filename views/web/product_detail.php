@@ -699,11 +699,11 @@ ob_start();
 <!-- ============================================================ -->
 <!-- LIGHTBOX MODAL -->
 <!-- ============================================================ -->
-<div id="lightboxModal" class="fixed inset-0 bg-black/90 z-[100] hidden items-center justify-center p-4"
+<div id="lightboxModal" style="position:fixed; top:0; left:0; right:0; bottom:0; z-index:99999; background:rgba(0,0,0,0.88); display:none; align-items:center; justify-content:center; padding:16px;"
     onclick="closeLightbox()">
-    <button onclick="closeLightbox()"
-        class="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xl transition z-10">✕</button>
-    <img id="lightboxImg" src="" alt="" class="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+    <button onclick="closeLightbox()" type="button" aria-label="Close"
+        style="position:absolute; top:20px; right:20px; width:40px; height:40px; background:rgba(255,255,255,0.15); border:none; border-radius:50%; color:#fff; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10;">✕</button>
+    <img id="lightboxImg" src="" alt="" style="max-width:90vw; max-height:85vh; object-fit:contain; border-radius:12px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);"
         onclick="event.stopPropagation()">
 </div>
 
@@ -898,18 +898,41 @@ ob_start();
     }
 
     function openLightbox(src) {
+        const imgs = (typeof GALLERY_IMAGES !== 'undefined' && GALLERY_IMAGES.length) ? GALLERY_IMAGES : [src || ''];
+        if (typeof openGlobalGalleryModal === 'function') {
+            openGlobalGalleryModal(imgs, currentImgIdx, PRODUCT_NAME);
+            return;
+        }
         const modal = document.getElementById('lightboxModal');
         const img = document.getElementById('lightboxImg');
-        img.src = src;
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        if (img) img.src = src;
+        if (modal) {
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.right = '0';
+            modal.style.bottom = '0';
+            modal.style.zIndex = '99999';
+            modal.style.background = 'rgba(0,0,0,0.88)';
+            modal.style.display = 'flex';
+            modal.style.alignItems = 'center';
+            modal.style.justifyContent = 'center';
+        }
     }
 
     function closeLightbox() {
+        if (typeof closeGlobalGalleryModal === 'function') {
+            closeGlobalGalleryModal();
+        }
         const modal = document.getElementById('lightboxModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        if (modal) modal.style.display = 'none';
     }
+
+    window.onGlobalGalleryIndexChange = function(idx, src) {
+        if (typeof switchImage === 'function' && src) {
+            switchImage(idx, src);
+        }
+    };
 
     window.rfqGetProductContextFromPage = function () {
         const activeMode = typeof currentMode !== 'undefined' ? currentMode : 'wholesale';
@@ -1222,6 +1245,13 @@ ob_start();
 
     let detailAddToCartInFlight = false;
     async function addToCartFromDetail() {
+        const pId = <?= (int) $product['id'] ?>;
+        const mainBtn = document.getElementById('mainAddToCartBtn');
+        if (mainBtn && mainBtn.classList.contains('added')) {
+            if (typeof openCartDrawer === 'function') openCartDrawer();
+            return;
+        }
+
         if (detailAddToCartInFlight) return;
         detailAddToCartInFlight = true;
 
@@ -1230,7 +1260,7 @@ ob_start();
         if (isNaN(qty) || qty < 1) qty = 1;
 
         const payload = new URLSearchParams();
-        payload.append('product_id', <?= (int) $product['id'] ?>);
+        payload.append('product_id', pId);
         payload.append('quantity', qty);
         payload.append('pricing_mode', currentMode);
 
@@ -1238,17 +1268,27 @@ ob_start();
             const res = await fetch('<?= url('cart/add') ?>', { method: 'POST', body: payload });
             const data = await res.json();
             if (data.success) {
+                if (!window.USER_CART_PRODUCT_IDS.includes(pId)) {
+                    window.USER_CART_PRODUCT_IDS.push(pId);
+                }
+                if (typeof window.applyUserProductStates === 'function') {
+                    window.applyUserProductStates();
+                }
+                const cCount = data.cart_count || data.count;
                 if (typeof showCartToast === 'function') {
                     showCartToast('Item added to cart!');
-                } else {
-                    alert('Added to cart!');
                 }
                 if (typeof updateHeaderCartBadge === 'function') {
-                    updateHeaderCartBadge(data.cart_count);
+                    updateHeaderCartBadge(cCount);
                 }
-                updateOrderSummarySidebar(data.cart_count, data.subtotal);
+                if (typeof updateHeaderCartCount === 'function') {
+                    updateHeaderCartCount(cCount);
+                }
+                if (typeof updateOrderSummarySidebar === 'function') {
+                    updateOrderSummarySidebar(cCount, data.subtotal);
+                }
                 if (typeof renderCartDrawerUI === 'function') {
-                    renderCartDrawerUI(data.items, data.subtotal, data.cart_count);
+                    renderCartDrawerUI(data.items, data.subtotal, cCount);
                 }
             } else {
                 alert(data.message || 'Could not add to cart');
@@ -1272,34 +1312,32 @@ ob_start();
             if (data.success && data.saved) {
                 setDetailWishlistActive(true);
             }
-            if (data.count !== undefined && document.getElementById('headerWishlistCount')) {
-                const wBadge = document.getElementById('headerWishlistCount');
-                if (data.count > 0) {
-                    wBadge.textContent = data.count;
-                    wBadge.style.display = 'flex';
-                } else {
-                    wBadge.style.display = 'none';
-                }
+            if (data.count !== undefined && typeof updateHeaderWishlistCount === 'function') {
+                updateHeaderWishlistCount(data.count);
             }
         } catch (e) { }
     }
 
     async function toggleDetailWishlist() {
+        const pId = <?= (int) $product['id'] ?>;
         const payload = new URLSearchParams();
-        payload.append('product_id', <?= (int) $product['id'] ?>);
+        payload.append('product_id', pId);
         try {
             const res = await fetch('<?= url('wishlist/toggle') ?>', { method: 'POST', body: payload });
             const data = await res.json();
             if (data.success) {
-                setDetailWishlistActive(data.saved);
-                if (data.count !== undefined && document.getElementById('headerWishlistCount')) {
-                    const wBadge = document.getElementById('headerWishlistCount');
-                    if (data.count > 0) {
-                        wBadge.textContent = data.count;
-                        wBadge.style.display = 'flex';
-                    } else {
-                        wBadge.style.display = 'none';
-                    }
+                const isSaved = (data.saved === true || data.status === 'added');
+                setDetailWishlistActive(isSaved);
+                if (isSaved) {
+                    if (!window.USER_WISHLIST_PRODUCT_IDS.includes(pId)) window.USER_WISHLIST_PRODUCT_IDS.push(pId);
+                } else {
+                    window.USER_WISHLIST_PRODUCT_IDS = window.USER_WISHLIST_PRODUCT_IDS.filter(id => id !== pId);
+                }
+                if (typeof window.applyUserProductStates === 'function') {
+                    window.applyUserProductStates();
+                }
+                if (data.count !== undefined && typeof updateHeaderWishlistCount === 'function') {
+                    updateHeaderWishlistCount(data.count);
                 }
                 if (typeof showCartToast === 'function') {
                     showCartToast(data.message);

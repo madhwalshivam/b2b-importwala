@@ -34,23 +34,47 @@ $isBestSeller   = !empty($product['is_best_seller']);
 $isNew          = !empty($product['is_new']) || !empty($product['is_new_arrival']);
 $totalSold      = (int)($product['total_sold'] ?? $product['sales_count'] ?? 0);
 
-// Check if product is currently in wishlist
+// Check if product is currently in wishlist & cart
 static $userWishlistProductIds = null;
+static $userCartProductIds = null;
+
 if ($userWishlistProductIds === null) {
-    $db = \App\Core\Database::getInstance();
-    if (session_status() === PHP_SESSION_NONE) @session_start();
-    $uId = !empty($_SESSION['user_id']) ? (int)$_SESSION['user_id'] : null;
-    $sId = $_SESSION['guest_wishlist_session_id'] ?? session_id();
-    if ($uId) {
-        $st = $db->prepare("SELECT product_id FROM wishlist WHERE user_id = ?");
-        $st->execute([$uId]);
+    if (isset($GLOBALS['initialWishlistProductIds'])) {
+        $userWishlistProductIds = $GLOBALS['initialWishlistProductIds'];
     } else {
-        $st = $db->prepare("SELECT product_id FROM wishlist WHERE session_id = ?");
-        $st->execute([$sId]);
+        $db = \App\Core\Database::getInstance();
+        $uId = get_current_user_id();
+        $sId = get_current_session_id();
+        if ($uId) {
+            $st = $db->prepare("SELECT DISTINCT product_id FROM wishlist WHERE user_id = ?");
+            $st->execute([$uId]);
+        } else {
+            $st = $db->prepare("SELECT DISTINCT product_id FROM wishlist WHERE session_id = ?");
+            $st->execute([$sId]);
+        }
+        $userWishlistProductIds = array_map('intval', $st->fetchAll(\PDO::FETCH_COLUMN) ?: []);
     }
-    $userWishlistProductIds = $st->fetchAll(\PDO::FETCH_COLUMN) ?: [];
 }
 $isInWishlist = in_array((int)($product['id'] ?? 0), $userWishlistProductIds);
+
+if ($userCartProductIds === null) {
+    if (isset($GLOBALS['initialCartProductIds'])) {
+        $userCartProductIds = $GLOBALS['initialCartProductIds'];
+    } else {
+        $db = \App\Core\Database::getInstance();
+        $uId = get_current_user_id();
+        $sId = get_current_session_id();
+        if ($uId) {
+            $st = $db->prepare("SELECT DISTINCT product_id FROM cart_items WHERE user_id = ?");
+            $st->execute([$uId]);
+        } else {
+            $st = $db->prepare("SELECT DISTINCT product_id FROM cart_items WHERE session_id = ?");
+            $st->execute([$sId]);
+        }
+        $userCartProductIds = array_map('intval', $st->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+    }
+}
+$isInCart = in_array((int)($product['id'] ?? 0), $userCartProductIds);
 
 // Check if product is currently in session inquiry list
 static $userInquiryProductIds = null;
@@ -94,8 +118,8 @@ $isInInquiry = in_array((int)($product['id'] ?? 0), $userInquiryProductIds);
     <button type="button" 
             class="ef-icon-btn ef-wishlist-btn <?= $isInWishlist ? 'active' : '' ?>" 
             onclick="toggleCardWishlist(<?= $product['id'] ?? 0 ?>, this)" 
-            title="Add to Wishlist">
-      <svg class="ef-heart-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            title="<?= $isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' ?>">
+      <svg class="ef-heart-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="<?= $isInWishlist ? 'fill:#f05a29; stroke:#f05a29;' : '' ?>">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
       </svg>
     </button>
@@ -113,11 +137,16 @@ $isInInquiry = in_array((int)($product['id'] ?? 0), $userInquiryProductIds);
 
     <!-- Bottom-Right: Quick Add to Cart Button -->
     <button type="button" 
-            class="ef-icon-btn ef-cart-btn" 
+            class="ef-icon-btn ef-cart-btn <?= $isInCart ? 'added in-cart' : '' ?>" 
             onclick="quickAddToCartCard(<?= $product['id'] ?? 0 ?>, 1, this)" 
-            title="Add to Cart">
+            title="<?= $isInCart ? 'In Cart (Click to open Cart)' : 'Add to Cart' ?>"
+            style="<?= $isInCart ? 'background:#10b981; color:#ffffff;' : '' ?>">
       <svg class="ef-cart-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+        <?php if ($isInCart): ?>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        <?php else: ?>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>
+        <?php endif; ?>
       </svg>
     </button>
 

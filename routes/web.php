@@ -42,6 +42,7 @@ $router->post('/api/cart/update', 'Api\CartApiController@updateItem');
 $router->post('/api/checkout/process', 'Api\CheckoutApiController@process');
 $router->post('/api/currency/set', 'Api\CurrencyApiController@setPreference');
 $router->get('/api/currency/map', 'Api\CurrencyApiController@getMap');
+$router->get('/api/user-state', 'Api\UserStateApiController@getState');
 
 
 

@@ -337,5 +337,37 @@ if (!function_exists('get_product_images')) {
     }
 }
 
+if (!function_exists('get_current_user_id')) {
+    function get_current_user_id(): ?int
+    {
+        if (class_exists('\App\Core\Auth') && \App\Core\Auth::check()) {
+            $u = \App\Core\Auth::user();
+            if (!empty($u['id'])) return (int)$u['id'];
+        }
+        if (!empty($_SESSION['user_id'])) return (int)$_SESSION['user_id'];
+        if (!empty($_SESSION['user']['id'])) return (int)$_SESSION['user']['id'];
+        return null;
+    }
+}
+
+if (!function_exists('get_current_session_id')) {
+    function get_current_session_id(): string
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            @session_start();
+        }
+        if (!empty($_SESSION['cart_session_id'])) {
+            return $_SESSION['cart_session_id'];
+        }
+        if (!empty($_SESSION['guest_wishlist_session_id'])) {
+            $_SESSION['cart_session_id'] = $_SESSION['guest_wishlist_session_id'];
+            return $_SESSION['cart_session_id'];
+        }
+        $_SESSION['cart_session_id'] = 'cs_' . bin2hex(random_bytes(12));
+        return $_SESSION['cart_session_id'];
+    }
+}
+
+
 
 

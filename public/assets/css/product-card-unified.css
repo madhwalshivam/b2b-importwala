@@ -136,11 +136,24 @@
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
-.ef-cart-btn:hover,
-.ef-inquiry-btn:hover {
+.ef-cart-btn:hover {
   background: #0f172a !important;
   color: #ffffff !important;
   transform: scale(1.1) !important;
+}
+
+.ef-cart-btn.added,
+.ef-cart-btn.in-cart {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35) !important;
+}
+
+.ef-cart-btn.added:hover,
+.ef-cart-btn.in-cart:hover {
+  background: #059669 !important;
+  color: #ffffff !important;
+  transform: scale(1.15) !important;
 }
 
 .ef-inquiry-btn.active {

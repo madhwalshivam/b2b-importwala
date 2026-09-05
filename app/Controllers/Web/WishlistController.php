@@ -10,22 +10,12 @@ class WishlistController extends BaseController
 {
     private function getSessionId(): string
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        if (empty($_SESSION['cart_session_id'])) {
-            $_SESSION['cart_session_id'] = 'cs_' . bin2hex(random_bytes(12));
-        }
-        return $_SESSION['cart_session_id'];
+        return get_current_session_id();
     }
 
     private function getUserId(): ?int
     {
-        if (class_exists('\App\Core\Auth') && Auth::check()) {
-            $u = Auth::user();
-            return (int)($u['id'] ?? 0);
-        }
-        return null;
+        return get_current_user_id();
     }
 
     public function index(): void

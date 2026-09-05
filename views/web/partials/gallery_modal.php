@@ -292,6 +292,10 @@
         }
       }
     }
+
+    if (typeof window.onGlobalGalleryIndexChange === 'function') {
+      try { window.onGlobalGalleryIndexChange(ggmCurrentIndex, ggmImages[ggmCurrentIndex]); } catch (e) {}
+    }
   }
 
   function renderGalleryThumbnails() {

@@ -320,10 +320,17 @@ a {
   background: var(--primary-color);
 }
 
+.header-right-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
 }
 
 /* Ship-To / Currency Popover Menu */
@@ -436,35 +443,60 @@ a {
   to { opacity: 1; transform: translateY(0); }
 }
 
-.header-icon-item {
-  color: #222;
-  position: relative;
+.header-actions {
   display: flex;
   align-items: center;
+  gap: 4px;
+}
+
+.header-icon-item {
+  color: #1e293b;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  padding: 4px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.header-icon-item:hover {
+  background: #f1f5f9;
+  color: var(--primary-color, #f05a29);
+  transform: translateY(-1px);
 }
 
 .header-icon-item svg {
-  width: 22px;
-  height: 22px;
-  stroke: #222;
+  width: 26px !important;
+  height: 26px !important;
+  stroke: currentColor;
+  display: block;
 }
 
 .cart-pill-count {
   position: absolute;
-  top: -4px;
-  right: -6px;
-  background: var(--primary-color);
-  color: var(--white);
+  top: -2px;
+  right: -2px;
+  background: var(--primary-color, #f05a29);
+  color: #ffffff;
   font-size: 11px;
   font-weight: 700;
-  width: 18px;
-  height: 18px;
-  border-radius: var(--radius-full);
+  min-width: 19px;
+  height: 19px;
+  padding: 0 4px;
+  border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.18);
+  pointer-events: none;
 }
 
 /* --- Category Navigation Menu --- */
