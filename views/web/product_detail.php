@@ -251,6 +251,30 @@ ob_start();
                         <span>Get it between <strong class="font-semibold text-emerald-700"><?= $delivStart ?> -
                                 <?= $delivEnd ?></strong></span>
                     </div>
+
+                    <!-- OEM/ODM & Sample Available Badges -->
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg font-medium text-[11px] border border-indigo-100/80">
+                            <svg class="w-3.5 h-3.5 text-indigo-600 shrink-0" fill="none" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h3.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.796 3.111a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.798 3.111a1.125 1.125 0 01-1.37.49l-1.216-.456c-.356-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-3.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.797-3.111a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.797-3.111a1.125 1.125 0 011.37-.49l1.217.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span>OEM / ODM Customization Available</span>
+                        </span>
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-lg font-medium text-[11px] border border-purple-100/80">
+                            <svg class="w-3.5 h-3.5 text-purple-600 shrink-0" fill="none" viewBox="0 0 24 24"
+                                stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                            </svg>
+                            <span>Sample Available (1-Piece Price)</span>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -296,7 +320,8 @@ ob_start();
             <?php if (!empty($variants)): ?>
                 <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-3">
                     <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                        <h3 class="text-xs font-semibold text-gray-900 uppercase tracking-wider">Select Product Variants</h3>
+                        <h3 class="text-xs font-semibold text-gray-900 uppercase tracking-wider">Select Product Variants
+                        </h3>
                         <span class="text-[11px] text-gray-500 font-medium"><?= count($variants) ?> Options Available</span>
                     </div>
 
@@ -318,7 +343,8 @@ ob_start();
                                 data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
                                 data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)">
 
-                                <div class="variant-img-box w-12 h-12 rounded-lg border <?= $isActive ? 'border-[#f05a29]' : 'border-gray-200' ?> overflow-hidden shrink-0 bg-white shadow-2xs transition-all">
+                                <div
+                                    class="variant-img-box w-12 h-12 rounded-lg border <?= $isActive ? 'border-[#f05a29]' : 'border-gray-200' ?> overflow-hidden shrink-0 bg-white shadow-2xs transition-all">
                                     <img src="<?= htmlspecialchars($vImg) ?>" alt="<?= $vName ?>"
                                         class="w-full h-full object-cover">
                                 </div>
@@ -636,6 +662,39 @@ ob_start();
 
                     <div class="border-t border-gray-100"></div>
 
+                    <!-- OEM / ODM Customization -->
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                            stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9.594 3.94c.09-.542.56-.94 1.11-.94h3.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.796 3.111a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.798 3.111a1.125 1.125 0 01-1.37.49l-1.216-.456c-.356-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-3.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.797-3.111a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.797-3.111a1.125 1.125 0 011.37-.49l1.217.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.281z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <div>
+                            <div class="font-semibold text-gray-900">OEM/ODM Customization Available*</div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Custom logo, branding & packaging available for
+                                bulk orders.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100"></div>
+
+                    <!-- Sample Available -->
+                    <div class="flex items-start gap-2.5">
+                        <svg class="w-4 h-4 text-purple-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                            stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                        </svg>
+                        <div>
+                            <div class="font-semibold text-gray-900">Sample Available*</div>
+                            <p class="text-[11px] text-gray-400 mt-0.5">Sample available as per one piece price to check
+                                quality before bulk buying.</p>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100"></div>
+
                     <!-- Easy Return -->
                     <div class="flex items-start gap-2.5">
                         <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
@@ -681,34 +740,36 @@ ob_start();
     <!-- VISUALLY SIMILAR PRODUCTS SECTION (Everful / 1688 Wholesale Style) -->
     <!-- ============================================================ -->
     <?php if (!empty($visuallySimilar)): ?>
-    <div class="mt-12 border-t border-gray-200/80 pt-8">
-        <div class="mb-6">
-            <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight font-sans">
-                Similar Products
-            </h2>
-        </div>
+        <div class="mt-12 border-t border-gray-200/80 pt-8">
+            <div class="mb-6">
+                <h2 class="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight font-sans">
+                    Similar Products
+                </h2>
+            </div>
 
-        <!-- Product Grid (4 Cols Desktop, 2 Cols Mobile) -->
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-5">
-            <?php foreach ($visuallySimilar as $simItem): ?>
-                <?php 
-                $product = $simItem;
-                require __DIR__ . '/partials/product_card.php';
-                ?>
-            <?php endforeach; ?>
+            <!-- Product Grid (4 Cols Desktop, 2 Cols Mobile) -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-5">
+                <?php foreach ($visuallySimilar as $simItem): ?>
+                    <?php
+                    $product = $simItem;
+                    require __DIR__ . '/partials/product_card.php';
+                    ?>
+                <?php endforeach; ?>
+            </div>
         </div>
-    </div>
     <?php endif; ?>
 </div><!-- end main container -->
 
 <!-- ============================================================ -->
 <!-- LIGHTBOX MODAL -->
 <!-- ============================================================ -->
-<div id="lightboxModal" style="position:fixed; top:0; left:0; right:0; bottom:0; z-index:99999; background:rgba(0,0,0,0.88); display:none; align-items:center; justify-content:center; padding:16px;"
+<div id="lightboxModal"
+    style="position:fixed; top:0; left:0; right:0; bottom:0; z-index:99999; background:rgba(0,0,0,0.88); display:none; align-items:center; justify-content:center; padding:16px;"
     onclick="closeLightbox()">
     <button onclick="closeLightbox()" type="button" aria-label="Close"
         style="position:absolute; top:20px; right:20px; width:40px; height:40px; background:rgba(255,255,255,0.15); border:none; border-radius:50%; color:#fff; font-size:20px; cursor:pointer; display:flex; align-items:center; justify-content:center; z-index:10;">✕</button>
-    <img id="lightboxImg" src="" alt="" style="max-width:90vw; max-height:85vh; object-fit:contain; border-radius:12px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);"
+    <img id="lightboxImg" src="" alt=""
+        style="max-width:90vw; max-height:85vh; object-fit:contain; border-radius:12px; box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);"
         onclick="event.stopPropagation()">
 </div>
 
@@ -933,7 +994,7 @@ ob_start();
         if (modal) modal.style.display = 'none';
     }
 
-    window.onGlobalGalleryIndexChange = function(idx, src) {
+    window.onGlobalGalleryIndexChange = function (idx, src) {
         if (typeof switchImage === 'function' && src) {
             switchImage(idx, src);
         }

@@ -1,0 +1,168 @@
+<?php
+
+$headers = [
+    'Product Name',
+    'Product SKU',
+    'Category',
+    'Subcategory',
+    'Description',
+    'Jewellery Type',
+    'Gender',
+    'Brand Name',
+    'Material/Metal Type',
+    'Metal Color',
+    'Main Stone Type',
+    'Size',
+    'Material',
+    'Country of Origin',
+    'One Piece Price',
+    'Wholesale Tier 1 Qty Range',
+    'Wholesale Tier 1 Price',
+    'Wholesale Tier 2 Qty Range',
+    'Wholesale Tier 2 Price',
+    'Wholesale Tier 3 Qty Range',
+    'Wholesale Tier 3 Price',
+    'Main Product Image',
+    'Additional Image 1',
+    'Additional Image 2',
+    'Additional Image 3',
+    'Additional Image 4',
+    'Product Video URL',
+    'Variation Type',
+    'Variation Value',
+    'Variation SKU',
+    'Variation Price',
+    'Variation Stock',
+    'Variation Image',
+    'Processing Technology / Processing Technique / Treatment Process',
+    'Style',
+    'Suitable For Gift Giving Occasion',
+    'Item Number',
+    'Main Downstream Platform',
+    'Color',
+    'Popular Elements',
+    'Style Classification',
+    'Kind/Product Type/Jewellery Type',
+    'Chain Style',
+    'Pendant Material',
+    'Trendy Element',
+    'Closure Type'
+];
+
+$sampleRow1 = [
+    'Cross-Border Tiger Eye Leather Bracelet',
+    'JWL-BRC-001',
+    'Fashion Jewellery',
+    'Bracelets & Bangles',
+    'Hand-woven genuine leather bracelet with natural Tiger Eye stone and stainless steel clasp.',
+    'Bracelet',
+    'Men',
+    'ImportWale OEM',
+    '316L Stainless Steel & Leather',
+    'Silver / Black PVD',
+    'Natural Tiger Eye Stone',
+    '21 cm',
+    'Stainless Steel, Leather, Tiger Eye',
+    'China',
+    '299.00',
+    '2-35',
+    '145.00',
+    '36-149',
+    '125.00',
+    '150+',
+    '99.00',
+    'https://images.importwale.com/products/jwl-brc-001-main.jpg',
+    'https://images.importwale.com/products/jwl-brc-001-1.jpg',
+    'https://images.importwale.com/products/jwl-brc-001-2.jpg',
+    'https://images.importwale.com/products/jwl-brc-001-3.jpg',
+    'https://images.importwale.com/products/jwl-brc-001-4.jpg',
+    'https://media.importwale.com/videos/jwl-brc-001.mp4',
+    'Color',
+    'Brown Leather - Gold Clasp',
+    'JWL-BRC-001-BRN-GLD',
+    '145.00',
+    '500',
+    'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg',
+    'Vacuum Electroplating & Hand Weaving',
+    'Vintage / Punk',
+    "Birthday, Father's Day",
+    'JWL-2026-BRC01',
+    'Amazon, Flipkart, Meesho',
+    'Brown / Tiger Eye',
+    'Geometry, Leather Weave',
+    'Fashion Commuter',
+    "Men's Leather Bracelet",
+    'Braided Rope Chain',
+    '',
+    'Retro Braided Leather',
+    'Magnetic Clasp'
+];
+
+$sampleRow2 = [
+    '18K Gold Plated CZ Solitaire Pendant Necklace',
+    'JWL-NCK-002',
+    'Fine Jewellery',
+    'Necklaces & Pendants',
+    '18K real gold PVD plated brass chain with AAA grade Cubic Zirconia solitaire pendant.',
+    'Necklace',
+    'Women',
+    'ImportWale OEM',
+    'Brass / 18K Gold Plated',
+    'Yellow Gold',
+    'AAA Cubic Zirconia',
+    '45 cm + 5 cm',
+    'Brass & Cubic Zirconia',
+    'India',
+    '399.00',
+    '2-49',
+    '195.00',
+    '50-199',
+    '165.00',
+    '200+',
+    '135.00',
+    'https://images.importwale.com/products/jwl-nck-002-main.jpg',
+    'https://images.importwale.com/products/jwl-nck-002-1.jpg',
+    'https://images.importwale.com/products/jwl-nck-002-2.jpg',
+    'https://images.importwale.com/products/jwl-nck-002-3.jpg',
+    'https://images.importwale.com/products/jwl-nck-002-4.jpg',
+    'https://media.importwale.com/videos/jwl-nck-002.mp4',
+    'Metal Finish',
+    'Rose Gold Plated',
+    'JWL-NCK-002-RG',
+    '195.00',
+    '750',
+    'https://images.importwale.com/products/jwl-nck-002-rg.jpg',
+    'PVD Micro-Inlaid Electroplating',
+    'Elegance / Minimalist',
+    "Valentine's Day, Anniversary",
+    'JWL-2026-NCK02',
+    'Amazon, Myntra, Nykaa',
+    'Gold / Clear Crystal',
+    'Solitaire Crystal',
+    'Light Luxury',
+    'Pendant Necklace',
+    'O-Chain',
+    'AAA Cubic Zirconia & Brass',
+    'Crystal Solitaire',
+    'Lobster Claw Clasp'
+];
+
+$dir = __DIR__ . '/../public/downloads';
+if (!is_dir($dir)) {
+    mkdir($dir, 0777, true);
+}
+
+$targetFile = $dir . '/bulk_jewellery_import_template.csv';
+$fp = fopen($targetFile, 'w');
+
+// BOM for Excel UTF-8 compatibility
+fputs($fp, "\xEF\xBB\xBF");
+
+fputcsv($fp, $headers);
+fputcsv($fp, $sampleRow1);
+fputcsv($fp, $sampleRow2);
+
+fclose($fp);
+
+echo "Successfully created template at: " . realpath($targetFile) . "\n";
+echo "Total Columns: " . count($headers) . "\n";

@@ -26,61 +26,52 @@ class BulkImportService
     private ?array $brandCache = null;
 
     public const HEADERS = [
-        'Product Name',                          // 0
-        'Product SKU',                           // 1
-        'Category',                              // 2
-        'Subcategory',                           // 3
-        'Description',                          // 4
-        'Jewellery Type',                        // 5
-        'Gender',                                // 6
-        'Brand Name',                            // 7
-        'Material/Metal Type',                   // 8
-        'Metal Purity',                          // 9
-        'Metal Color',                           // 10
-        'Plating Type',                          // 11
-        'Main Stone Type',                       // 12
-        'Stone Name',                            // 13
-        'Stone Color',                           // 14
-        'Stone Shape',                           // 15
-        'Stone Weight/Carat',                    // 16
-        'Number of Stones',                      // 17
-        'Gross Weight',                          // 18
-        'Net Weight',                            // 19
-        'Length',                                // 20
-        'Width',                                 // 21
-        'Height/Thickness',                      // 22
-        'Ring Size',                             // 23
-        'Certification Available (Y/N)',         // 24
-        'Certificate Type',                      // 25
-        'Currency',                              // 26
-        'One Piece Price',                       // 27
-        'Wholesale Tier 1 Qty Range',            // 28
-        'Wholesale Tier 1 Price',                // 29
-        'Wholesale Tier 2 Qty Range',            // 30
-        'Wholesale Tier 2 Price',                // 31
-        'Wholesale Tier 3 Qty Range',            // 32
-        'Wholesale Tier 3 Price',                // 33
-        'MOQ',                                   // 34
-        'Available Quantity',                    // 35
-        'Price Negotiable (Y/N)',                // 36
-        'OEM Available (Y/N)',                   // 37
-        'ODM Available (Y/N)',                   // 38
-        'Customization Available (Y/N)',         // 39
-        'Sample Available (Y/N)',                // 40
-        'Sample Price',                          // 41
-        'Production Lead Time',                  // 42
-        'Production Capacity',                   // 43
-        'Packaging Details',                     // 44
-        'Country of Origin',                     // 45
-        'Main Product Image',                    // 46
-        'Additional Image 1-4',                  // 47
-        'Product Video URL',                     // 48
-        'Variation Type',                        // 49
-        'Variation Value',                       // 50
-        'Variation SKU',                         // 51
-        'Variation Price',                       // 52
-        'Variation Stock',                       // 53
-        'Variation Image',                       // 54
+        'Product Name',                                                        // 0
+        'Product SKU',                                                         // 1
+        'Category',                                                            // 2
+        'Subcategory',                                                         // 3
+        'Description',                                                         // 4
+        'Jewellery Type',                                                      // 5
+        'Gender',                                                              // 6
+        'Brand Name',                                                          // 7
+        'Material/Metal Type',                                                 // 8
+        'Metal Color',                                                         // 9
+        'Main Stone Type',                                                     // 10
+        'Size',                                                                // 11
+        'Material',                                                            // 12
+        'Country of Origin',                                                   // 13
+        'One Piece Price',                                                     // 14
+        'Wholesale Tier 1 Qty Range',                                          // 15
+        'Wholesale Tier 1 Price',                                              // 16
+        'Wholesale Tier 2 Qty Range',                                          // 17
+        'Wholesale Tier 2 Price',                                              // 18
+        'Wholesale Tier 3 Qty Range',                                          // 19
+        'Wholesale Tier 3 Price',                                              // 20
+        'Main Product Image',                                                  // 21
+        'Additional Image 1',                                                  // 22
+        'Additional Image 2',                                                  // 23
+        'Additional Image 3',                                                  // 24
+        'Additional Image 4',                                                  // 25
+        'Product Video URL',                                                   // 26
+        'Variation Type',                                                      // 27
+        'Variation Value',                                                     // 28
+        'Variation SKU',                                                       // 29
+        'Variation Price',                                                     // 30
+        'Variation Stock',                                                     // 31
+        'Variation Image',                                                     // 32
+        'Processing Technology / Processing Technique / Treatment Process',     // 33
+        'Style',                                                               // 34
+        'Suitable For Gift Giving Occasion',                                   // 35
+        'Item Number',                                                         // 36
+        'Main Downstream Platform',                                            // 37
+        'Color',                                                               // 38
+        'Popular Elements',                                                    // 39
+        'Style Classification',                                                // 40
+        'Kind/Product Type/Jewellery Type',                                     // 41
+        'Chain Style',                                                         // 42
+        'Pendant Material',                                                    // 43
+        'Trendy Element',                                                      // 44
+        'Closure Type',                                                        // 45
     ];
 
     public function __construct()
@@ -110,73 +101,66 @@ class BulkImportService
             $sheet->getStyle($colLetter . '1')->getFont()->getColor()->setARGB('FFFFFFFF');
         }
 
-        // Sample Data Rows (1 Product with 2 Variants)
+        // Sample Data Row 1 (Product with 1st Variant)
         $sampleRow1 = [
-            'Royal Crystal Drop Earrings',       // Product Name
-            'MUD-ER-801',                        // Product SKU
-            'Jewellery',                         // Category
-            'Earrings',                          // Subcategory
-            'Handcrafted 18K gold plated crystal drop earrings with sparkling zircon stones.', // Description
-            'Earrings',                          // Jewellery Type
-            'Women',                             // Gender
-            'Mudsor Enterprise',                // Brand Name
-            'Brass Alloy',                       // Material/Metal Type
-            '18K Gold Plated',                   // Metal Purity
-            'Yellow Gold',                       // Metal Color
-            'Micro Plating',                     // Plating Type
-            'Cubic Zirconia',                    // Main Stone Type
-            'Royal Zircon',                      // Stone Name
-            'Emerald Green',                     // Stone Color
-            'Teardrop',                          // Stone Shape
-            '2.5 Carat',                         // Stone Weight/Carat
-            '12',                                // Number of Stones
-            '15.5 g',                            // Gross Weight
-            '12.0 g',                            // Net Weight
-            '45 mm',                             // Length
-            '15 mm',                             // Width
-            '5 mm',                              // Height/Thickness
-            '',                                  // Ring Size (N/A for earrings)
-            'Y',                                 // Certification Available (Y/N)
-            'Hallmark ISO 9001',                 // Certificate Type
-            'INR',                               // Currency
-            '999.00',                            // One Piece Price
-            '2-9',                               // Tier 1 Range
-            '899.00',                            // Tier 1 Price
-            '10-49',                             // Tier 2 Range
-            '799.00',                            // Tier 2 Price
-            '>=50',                              // Tier 3 Range
-            '699.00',                            // Tier 3 Price
-            '2',                                 // MOQ
-            '500',                               // Available Quantity
-            'Y',                                 // Price Negotiable
-            'Y',                                 // OEM Available
-            'Y',                                 // ODM Available
-            'Y',                                 // Customization Available
-            'Y',                                 // Sample Available
-            '499.00',                            // Sample Price
-            '7-10 Days',                         // Production Lead Time
-            '10,000 pcs / month',                // Production Capacity
-            'Velvet Box Packaging',              // Packaging Details
-            'India',                             // Country of Origin
-            'earrings_green_main.jpg',           // Main Product Image
-            'earrings_side1.jpg, earrings_back.jpg', // Additional Image 1-4
-            'https://youtube.com/watch?v=sample',// Product Video URL
-            'Color',                             // Variation Type
-            'Emerald Green',                     // Variation Value
-            'MUD-ER-801-GRN',                    // Variation SKU
-            '899.00',                            // Variation Price
-            '250',                               // Variation Stock
-            'earrings_green_main.jpg',           // Variation Image
+            'Cross-Border Tiger Eye Leather Bracelet',                        // 0: Product Name
+            'JWL-BRC-001',                                                    // 1: Product SKU
+            'Fashion Jewellery',                                             // 2: Category
+            'Bracelets & Bangles',                                           // 3: Subcategory
+            'Hand-woven genuine leather bracelet with natural Tiger Eye stone and stainless steel magnetic clasp.', // 4: Description
+            'Bracelet',                                                      // 5: Jewellery Type
+            'Men',                                                           // 6: Gender
+            'ImportWale OEM',                                                // 7: Brand Name
+            '316L Stainless Steel & Leather',                                // 8: Material/Metal Type
+            'Silver / Black PVD',                                            // 9: Metal Color
+            'Natural Tiger Eye Stone',                                       // 10: Main Stone Type
+            '21 cm',                                                         // 11: Size
+            'Stainless Steel, Leather, Tiger Eye',                           // 12: Material
+            'China',                                                         // 13: Country of Origin
+            '299.00',                                                        // 14: One Piece Price
+            '2-35',                                                          // 15: Wholesale Tier 1 Qty Range
+            '145.00',                                                        // 16: Wholesale Tier 1 Price
+            '36-149',                                                        // 17: Wholesale Tier 2 Qty Range
+            '125.00',                                                        // 18: Wholesale Tier 2 Price
+            '150+',                                                          // 19: Wholesale Tier 3 Qty Range
+            '99.00',                                                         // 20: Wholesale Tier 3 Price
+            'https://images.importwale.com/products/jwl-brc-001-main.jpg',     // 21: Main Product Image
+            'https://images.importwale.com/products/jwl-brc-001-1.jpg',        // 22: Additional Image 1
+            'https://images.importwale.com/products/jwl-brc-001-2.jpg',        // 23: Additional Image 2
+            'https://images.importwale.com/products/jwl-brc-001-3.jpg',        // 24: Additional Image 3
+            'https://images.importwale.com/products/jwl-brc-001-4.jpg',        // 25: Additional Image 4
+            'https://media.importwale.com/videos/jwl-brc-001.mp4',             // 26: Product Video URL
+            'Color',                                                         // 27: Variation Type
+            'Brown Leather - Gold Clasp',                                    // 28: Variation Value
+            'JWL-BRC-001-BRN-GLD',                                           // 29: Variation SKU
+            '145.00',                                                        // 30: Variation Price
+            '500',                                                           // 31: Variation Stock
+            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 32: Variation Image
+            'Vacuum Electroplating & Hand Weaving',                          // 33: Processing Tech
+            'Vintage / Punk',                                                // 34: Style
+            "Birthday, Father's Day",                                        // 35: Gift Occasion
+            'JWL-2026-BRC01',                                                // 36: Item Number
+            'Amazon, Flipkart, Meesho',                                      // 37: Downstream Platform
+            'Brown / Tiger Eye',                                             // 38: Color
+            'Geometry, Leather Weave',                                       // 39: Popular Elements
+            'Fashion Commuter',                                              // 40: Style Classification
+            "Men's Leather Bracelet",                                        // 41: Kind/Product Type
+            'Braided Rope Chain',                                            // 42: Chain Style
+            'N/A',                                                           // 43: Pendant Material
+            'Retro Braided Leather',                                         // 44: Trendy Element
+            'Magnetic Clasp',                                                // 45: Closure Type
         ];
 
+        // Sample Data Row 2 (2nd Variant for same product)
         $sampleRow2 = [
-            '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-            'Color',                             // Variation Type
-            'Ruby Red',                          // Variation Value
-            'MUD-ER-801-RED',                    // Variation SKU
-            '949.00',                            // Variation Price
-            '250',                               // Variation Stock
-            'earrings_red_main.jpg',             // Variation Image
+            '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
+            'Color',                                                         // 27: Variation Type
+            'Black Leather - Silver Clasp',                                  // 28: Variation Value
+            'JWL-BRC-001-BLK-SLV',                                           // 29: Variation SKU
+            '145.00',                                                        // 30: Variation Price
+            '350',                                                           // 31: Variation Stock
+            'https://images.importwale.com/products/jwl-brc-001-blk-slv.jpg', // 32: Variation Image
+            '', '', '', '', '', '', '', '', '', '', '', '', ''
         ];
 
         foreach ($sampleRow1 as $cIdx => $val) {
@@ -257,7 +241,7 @@ class BulkImportService
                 continue;
             }
 
-            // Extract fields
+            // Extract fields based on 46-column schema
             $productName   = trim((string)($row[0] ?? ''));
             $productSku    = strtoupper(trim((string)($row[1] ?? '')));
 
@@ -281,82 +265,80 @@ class BulkImportService
                 continue;
             }
 
+            // Group additional images from columns 22..25
+            $addImgs = array_filter([
+                trim((string)($row[22] ?? '')),
+                trim((string)($row[23] ?? '')),
+                trim((string)($row[24] ?? '')),
+                trim((string)($row[25] ?? '')),
+            ]);
+
             if (!isset($groupedProducts[$productSku])) {
                 $groupedProducts[$productSku] = [
-                    'product_sku'          => $productSku,
-                    'name'                 => $productName,
-                    'category'             => trim((string)($row[2] ?? '')),
-                    'subcategory'          => trim((string)($row[3] ?? '')),
-                    'description'          => trim((string)($row[4] ?? '')),
-                    'jewellery_type'       => trim((string)($row[5] ?? '')),
-                    'gender'               => trim((string)($row[6] ?? '')),
-                    'brand'                => trim((string)($row[7] ?? '')),
-                    'material_type'        => trim((string)($row[8] ?? '')),
-                    'metal_purity'         => trim((string)($row[9] ?? '')),
-                    'metal_color'          => trim((string)($row[10] ?? '')),
-                    'plating_type'         => trim((string)($row[11] ?? '')),
-                    'stone_type'           => trim((string)($row[12] ?? '')),
-                    'stone_name'           => trim((string)($row[13] ?? '')),
-                    'stone_color'          => trim((string)($row[14] ?? '')),
-                    'stone_shape'          => trim((string)($row[15] ?? '')),
-                    'stone_carat'          => trim((string)($row[16] ?? '')),
-                    'stone_count'          => trim((string)($row[17] ?? '')),
-                    'gross_weight'         => trim((string)($row[18] ?? '')),
-                    'net_weight'           => trim((string)($row[19] ?? '')),
-                    'length'               => trim((string)($row[20] ?? '')),
-                    'width'                => trim((string)($row[21] ?? '')),
-                    'height'               => trim((string)($row[22] ?? '')),
-                    'ring_size'            => trim((string)($row[23] ?? '')),
-                    'certification_available' => $this->parseBool($row[24] ?? 'N'),
-                    'certificate_type'     => trim((string)($row[25] ?? '')),
-                    'currency'             => trim((string)($row[26] ?? 'INR')),
-                    'one_piece_price'      => (float)($row[27] ?? 0),
-                    'tier1_qty'            => trim((string)($row[28] ?? '')),
-                    'tier1_price'          => (float)($row[29] ?? 0),
-                    'tier2_qty'            => trim((string)($row[30] ?? '')),
-                    'tier2_price'          => (float)($row[31] ?? 0),
-                    'tier3_qty'            => trim((string)($row[32] ?? '')),
-                    'tier3_price'          => (float)($row[33] ?? 0),
-                    'moq'                  => max(1, (int)($row[34] ?? 1)),
-                    'available_qty'        => (int)($row[35] ?? 100),
-                    'price_negotiable'     => $this->parseBool($row[36] ?? 'N'),
-                    'oem_available'        => $this->parseBool($row[37] ?? 'N'),
-                    'odm_available'        => $this->parseBool($row[38] ?? 'N'),
-                    'customization_available' => $this->parseBool($row[39] ?? 'N'),
-                    'sample_available'     => $this->parseBool($row[40] ?? 'N'),
-                    'sample_price'         => (float)($row[41] ?? 0),
-                    'production_lead_time' => trim((string)($row[42] ?? '')),
-                    'production_capacity'  => trim((string)($row[43] ?? '')),
-                    'packaging_details'    => trim((string)($row[44] ?? '')),
-                    'country_of_origin'    => trim((string)($row[45] ?? '')),
-                    'main_image'           => trim((string)($row[46] ?? '')),
-                    'additional_images'    => trim((string)($row[47] ?? '')),
-                    'video_url'            => trim((string)($row[48] ?? '')),
-                    'variants'             => [],
-                    'rows'                 => [],
-                    'errors'               => [],
-                    'warnings'             => [],
+                    'product_sku'             => $productSku,
+                    'name'                    => $productName,
+                    'category'                => trim((string)($row[2] ?? '')),
+                    'subcategory'             => trim((string)($row[3] ?? '')),
+                    'description'             => trim((string)($row[4] ?? '')),
+                    'jewellery_type'          => trim((string)($row[5] ?? '')),
+                    'gender'                  => trim((string)($row[6] ?? '')),
+                    'brand'                   => trim((string)($row[7] ?? '')),
+                    'material_type'           => trim((string)($row[8] ?? '')),
+                    'metal_color'             => trim((string)($row[9] ?? '')),
+                    'stone_type'              => trim((string)($row[10] ?? '')),
+                    'size'                    => trim((string)($row[11] ?? '')),
+                    'material'                => trim((string)($row[12] ?? '')),
+                    'country_of_origin'       => trim((string)($row[13] ?? '')),
+                    'one_piece_price'         => (float)($row[14] ?? 0),
+                    'tier1_qty'               => trim((string)($row[15] ?? '')),
+                    'tier1_price'             => (float)($row[16] ?? 0),
+                    'tier2_qty'               => trim((string)($row[17] ?? '')),
+                    'tier2_price'             => (float)($row[18] ?? 0),
+                    'tier3_qty'               => trim((string)($row[19] ?? '')),
+                    'tier3_price'             => (float)($row[20] ?? 0),
+                    'main_image'              => trim((string)($row[21] ?? '')),
+                    'additional_images'       => implode(',', $addImgs),
+                    'video_url'               => trim((string)($row[26] ?? '')),
+                    'processing_tech'         => trim((string)($row[33] ?? '')),
+                    'style'                   => trim((string)($row[34] ?? '')),
+                    'gift_occasion'           => trim((string)($row[35] ?? '')),
+                    'item_number'             => trim((string)($row[36] ?? '')),
+                    'downstream_platform'    => trim((string)($row[37] ?? '')),
+                    'color'                   => trim((string)($row[38] ?? '')),
+                    'popular_elements'        => trim((string)($row[39] ?? '')),
+                    'style_classification'    => trim((string)($row[40] ?? '')),
+                    'kind_product_type'       => trim((string)($row[41] ?? '')),
+                    'chain_style'             => trim((string)($row[42] ?? '')),
+                    'pendant_material'        => trim((string)($row[43] ?? '')),
+                    'trendy_element'          => trim((string)($row[44] ?? '')),
+                    'closure_type'            => trim((string)($row[45] ?? '')),
+                    'moq'                     => 1,
+                    'available_qty'           => 100,
+                    'variants'                => [],
+                    'rows'                    => [],
+                    'errors'                  => [],
+                    'warnings'                => [],
                 ];
             } else {
                 // Forward fill product level attributes if subsequent row has non-empty fields
                 if (empty($groupedProducts[$productSku]['name']) && !empty($productName)) {
                     $groupedProducts[$productSku]['name'] = $productName;
                 }
-                if (empty($groupedProducts[$productSku]['main_image']) && !empty($row[46])) {
-                    $groupedProducts[$productSku]['main_image'] = trim((string)$row[46]);
+                if (empty($groupedProducts[$productSku]['main_image']) && !empty($row[21])) {
+                    $groupedProducts[$productSku]['main_image'] = trim((string)$row[21]);
                 }
             }
 
             $pGroup = &$groupedProducts[$productSku];
             $pGroup['rows'][] = $rowIndex;
 
-            // Variant Level Data
-            $varType  = trim((string)($row[49] ?? ''));
-            $varVal   = trim((string)($row[50] ?? ''));
-            $varSku   = strtoupper(trim((string)($row[51] ?? '')));
-            $varPrice = (float)($row[52] ?? 0);
-            $varStock = (int)($row[53] ?? $pGroup['available_qty']);
-            $varImg   = trim((string)($row[54] ?? ''));
+            // Variant Level Data (Columns 27..32)
+            $varType  = trim((string)($row[27] ?? ''));
+            $varVal   = trim((string)($row[28] ?? ''));
+            $varSku   = strtoupper(trim((string)($row[29] ?? '')));
+            $varPrice = (float)($row[30] ?? 0);
+            $varStock = (int)($row[31] ?? $pGroup['available_qty']);
+            $varImg   = trim((string)($row[32] ?? ''));
 
             // Default variant SKU to product SKU if empty
             if (empty($varSku)) {
@@ -551,7 +533,7 @@ class BulkImportService
                         ':moq'            => $prod['moq'],
                         ':stock'          => $prod['available_qty'],
                         ':main_image'     => $mainImagePath ?: 'assets/images/placeholder.jpg',
-                        ':video_url'      => $prod['video_url'],
+                        ':video_url'      => $prod['video_url'] ?? null,
                     ]);
                     $productId = (int)$this->db->lastInsertId();
                     $createdProducts++;
@@ -560,19 +542,16 @@ class BulkImportService
                 // Sync Wholesale Tiers into `tiered_prices`
                 $this->syncWholesaleTiers($productId, $prod);
 
-                // Sync All Metadata Specifications into `product_specifications`
+                // Sync Specifications into `product_specifications`
                 $this->syncProductSpecifications($productId, $prod);
 
-                // Sync Filter Attributes into `product_filter_attribute_values`
-                $this->syncProductFilterAttributes($productId, $prod);
-
-                // Process Cover Main Image into product_images
-                if (!empty($mainImgPath)) {
+                // Process Main Cover Image in product_images table
+                if (!empty($mainImagePath)) {
                     $chkM = $this->db->prepare("SELECT id FROM product_images WHERE product_id = ? AND (image_url = ? OR image_path = ?)");
-                    $chkM->execute([$productId, $mainImgPath, $mainImgPath]);
+                    $chkM->execute([$productId, $mainImagePath, $mainImagePath]);
                     if (!$chkM->fetch()) {
                         $stmtM = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, 0, 1)");
-                        $stmtM->execute([$productId, $mainImgPath]);
+                        $stmtM->execute([$productId, $mainImagePath]);
                     }
                 }
 
@@ -580,8 +559,9 @@ class BulkImportService
                 if (!empty($prod['additional_images'])) {
                     $imgList = array_map('trim', explode(',', $prod['additional_images']));
                     foreach ($imgList as $gIdx => $gImgName) {
+                        if (empty($gImgName)) continue;
                         $gImgPath = $this->processImageSource($gImgName, $extractedZipDir);
-                        if ($gImgPath && $gImgPath !== $mainImgPath) {
+                        if ($gImgPath && $gImgPath !== $mainImagePath) {
                             $stmtG = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, ?, 0)");
                             $stmtG->execute([$productId, $gImgPath, $gIdx + 1]);
                         }
@@ -669,42 +649,33 @@ class BulkImportService
     }
 
     /**
-     * Save all metadata specs to product_specifications table.
+     * Save specifications from the 46-column bulk sheet.
      */
     private function syncProductSpecifications(int $productId, array $prod): void
     {
         $specMap = [
-            'Jewellery Type'             => $prod['jewellery_type'] ?? '',
-            'Gender'                     => $prod['gender'] ?? '',
-            'Brand'                      => $prod['brand'] ?? '',
-            'Material/Metal Type'        => $prod['material_type'] ?? '',
-            'Metal Purity'               => $prod['metal_purity'] ?? '',
-            'Metal Color'                => $prod['metal_color'] ?? '',
-            'Plating Type'               => $prod['plating_type'] ?? '',
-            'Main Stone Type'            => $prod['stone_type'] ?? '',
-            'Stone Name'                 => $prod['stone_name'] ?? '',
-            'Stone Color'                => $prod['stone_color'] ?? '',
-            'Stone Shape'                => $prod['stone_shape'] ?? '',
-            'Stone Weight/Carat'         => $prod['stone_carat'] ?? '',
-            'Number of Stones'           => $prod['stone_count'] ?? '',
-            'Gross Weight'               => $prod['gross_weight'] ?? '',
-            'Net Weight'                 => $prod['net_weight'] ?? '',
-            'Length'                     => $prod['length'] ?? '',
-            'Width'                      => $prod['width'] ?? '',
-            'Height/Thickness'           => $prod['height'] ?? '',
-            'Ring Size'                  => $prod['ring_size'] ?? '',
-            'Certification Available'    => !empty($prod['certification_available']) ? 'Yes' : 'No',
-            'Certificate Type'           => $prod['certificate_type'] ?? '',
-            'Currency'                   => $prod['currency'] ?? 'INR',
-            'Price Negotiable'           => !empty($prod['price_negotiable']) ? 'Yes' : 'No',
-            'OEM Available'              => !empty($prod['oem_available']) ? 'Yes' : 'No',
-            'ODM Available'              => !empty($prod['odm_available']) ? 'Yes' : 'No',
-            'Customization Available'    => !empty($prod['customization_available']) ? 'Yes' : 'No',
-            'Sample Available'           => !empty($prod['sample_available']) ? 'Yes' : 'No',
-            'Production Lead Time'       => $prod['production_lead_time'] ?? '',
-            'Production Capacity'        => $prod['production_capacity'] ?? '',
-            'Packaging Details'          => $prod['packaging_details'] ?? '',
-            'Country of Origin'          => $prod['country_of_origin'] ?? '',
+            'Jewellery Type'                    => $prod['jewellery_type'] ?? '',
+            'Gender'                            => $prod['gender'] ?? '',
+            'Brand Name'                        => $prod['brand'] ?? '',
+            'Material/Metal Type'               => $prod['material_type'] ?? '',
+            'Metal Color'                       => $prod['metal_color'] ?? '',
+            'Main Stone Type'                   => $prod['stone_type'] ?? '',
+            'Size'                              => $prod['size'] ?? '',
+            'Material'                          => $prod['material'] ?? '',
+            'Country of Origin'                 => $prod['country_of_origin'] ?? '',
+            'Processing Technology / Technique' => $prod['processing_tech'] ?? '',
+            'Style'                             => $prod['style'] ?? '',
+            'Suitable For Gift Giving Occasion' => $prod['gift_occasion'] ?? '',
+            'Item Number'                       => $prod['item_number'] ?? '',
+            'Main Downstream Platform'          => $prod['downstream_platform'] ?? '',
+            'Color'                             => $prod['color'] ?? '',
+            'Popular Elements'                  => $prod['popular_elements'] ?? '',
+            'Style Classification'              => $prod['style_classification'] ?? '',
+            'Kind / Product Type'               => $prod['kind_product_type'] ?? '',
+            'Chain Style'                       => $prod['chain_style'] ?? '',
+            'Pendant Material'                  => $prod['pendant_material'] ?? '',
+            'Trendy Element'                    => $prod['trendy_element'] ?? '',
+            'Closure Type'                      => $prod['closure_type'] ?? '',
         ];
 
         $specsToSave = [];
@@ -730,7 +701,7 @@ class BulkImportService
 
         $tiers = [];
         if (!empty($prod['tier1_qty']) && $prod['tier1_price'] > 0) {
-            $parsedRange = $this->parseQtyRange($prod['tier1_qty'], 2, 9);
+            $parsedRange = $this->parseQtyRange($prod['tier1_qty'], 2, 35);
             $tiers[] = [
                 'min_qty'    => $parsedRange['min_qty'],
                 'max_qty'    => $parsedRange['max_qty'],
@@ -739,7 +710,7 @@ class BulkImportService
         }
 
         if (!empty($prod['tier2_qty']) && $prod['tier2_price'] > 0) {
-            $parsedRange = $this->parseQtyRange($prod['tier2_qty'], 10, 49);
+            $parsedRange = $this->parseQtyRange($prod['tier2_qty'], 36, 149);
             $tiers[] = [
                 'min_qty'    => $parsedRange['min_qty'],
                 'max_qty'    => $parsedRange['max_qty'],
@@ -748,7 +719,7 @@ class BulkImportService
         }
 
         if (!empty($prod['tier3_qty']) && $prod['tier3_price'] > 0) {
-            $parsedRange = $this->parseQtyRange($prod['tier3_qty'], 50, null);
+            $parsedRange = $this->parseQtyRange($prod['tier3_qty'], 150, null);
             $tiers[] = [
                 'min_qty'    => $parsedRange['min_qty'],
                 'max_qty'    => $parsedRange['max_qty'],
@@ -823,31 +794,6 @@ class BulkImportService
     }
 
     /**
-     * Download remote image URL.
-     */
-    private function downloadRemoteImage(string $url): ?string
-    {
-        try {
-            $ctx = stream_context_create([
-                'http' => ['timeout' => 5, 'user_agent' => 'ImportWala Importer/1.0']
-            ]);
-            $contents = @file_get_contents($url, false, $ctx);
-            if ($contents) {
-                $targetDir = ROOT_PATH . '/public/uploads/products/';
-                if (!is_dir($targetDir)) {
-                    mkdir($targetDir, 0755, true);
-                }
-                $ext = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
-                $newFilename = 'url_' . time() . '_' . md5($url) . '.' . $ext;
-                file_put_contents($targetDir . $newFilename, $contents);
-                return 'uploads/products/' . $newFilename;
-            }
-        } catch (\Throwable $e) {}
-
-        return $url; // Return raw URL fallback
-    }
-
-    /**
      * Search extracted ZIP directory for image filename.
      */
     private function resolveZipImage(string $filename, string $extractedDir): ?string
@@ -898,10 +844,11 @@ class BulkImportService
             return $this->subcategoryCache;
         }
         $stmt = $this->db->query("SELECT id, category_id, name FROM subcategories");
-        $subs = $stmt->fetchAll();
+        $subcats = $stmt->fetchAll();
         $this->subcategoryCache = [];
-        foreach ($subs as $s) {
-            $this->subcategoryCache[$s['category_id'] . '_' . strtolower(trim($s['name']))] = (int)$s['id'];
+        foreach ($subcats as $sc) {
+            $key = (int)$sc['category_id'] . '_' . strtolower(trim($sc['name']));
+            $this->subcategoryCache[$key] = (int)$sc['id'];
         }
         return $this->subcategoryCache;
     }
@@ -920,55 +867,117 @@ class BulkImportService
         return $this->brandCache;
     }
 
-    private function resolveOrCreateCategory(string $name): int
+    private function resolveOrCreateCategory(string $catName): int
     {
-        $name = trim($name);
+        $catLower = strtolower(trim($catName));
         $cache = $this->getCategoryCache();
-        $key = strtolower($name);
-        if (isset($cache[$key])) return $cache[$key];
+        if (isset($cache[$catLower])) {
+            return $cache[$catLower];
+        }
 
-        $slug = $this->slugify($name);
-        $stmt = $this->db->prepare("INSERT INTO categories (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
-        $stmt->execute([$name, $slug]);
-        $newId = (int)$this->db->lastInsertId();
-        $this->categoryCache[$key] = $newId;
+        $slug = $this->slugify($catName);
+
+        // Check if category with matching slug or lowercase name already exists
+        $stmtCheck = $this->db->prepare("SELECT id, name FROM categories WHERE slug = ? OR LOWER(name) = ?");
+        $stmtCheck->execute([$slug, $catLower]);
+        $existing = $stmtCheck->fetch();
+        if ($existing) {
+            $existingId = (int)$existing['id'];
+            $this->categoryCache[$catLower] = $existingId;
+            $this->categoryCache[strtolower(trim($existing['name']))] = $existingId;
+            return $existingId;
+        }
+
+        try {
+            $stmt = $this->db->prepare("INSERT INTO categories (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
+            $stmt->execute([$catName, $slug]);
+            $newId = (int)$this->db->lastInsertId();
+        } catch (\Throwable $e) {
+            $slugUnique = $slug . '-' . substr(md5(uniqid()), 0, 4);
+            $stmt = $this->db->prepare("INSERT INTO categories (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
+            $stmt->execute([$catName, $slugUnique]);
+            $newId = (int)$this->db->lastInsertId();
+        }
+
+        $this->categoryCache[$catLower] = $newId;
         return $newId;
     }
 
-    private function resolveOrCreateSubcategory(int $categoryId, string $name): int
+    private function resolveOrCreateSubcategory(int $categoryId, string $subcatName): int
     {
-        $name = trim($name);
+        $subcatLower = strtolower(trim($subcatName));
         $cache = $this->getSubcategoryCache();
-        $key = $categoryId . '_' . strtolower($name);
-        if (isset($cache[$key])) return $cache[$key];
+        $key = $categoryId . '_' . $subcatLower;
+        if (isset($cache[$key])) {
+            return $cache[$key];
+        }
 
-        $slug = $this->slugify($name);
-        $stmt = $this->db->prepare("INSERT INTO subcategories (category_id, name, slug, status, created_at, updated_at) VALUES (?, ?, ?, 'active', NOW(), NOW())");
-        $stmt->execute([$categoryId, $name, $slug]);
-        $newId = (int)$this->db->lastInsertId();
+        $slug = $this->slugify($subcatName);
+
+        // Check if subcategory with matching slug or lowercase name already exists for this category
+        $stmtCheck = $this->db->prepare("SELECT id, name FROM subcategories WHERE category_id = ? AND (slug = ? OR LOWER(name) = ?)");
+        $stmtCheck->execute([$categoryId, $slug, $subcatLower]);
+        $existing = $stmtCheck->fetch();
+        if ($existing) {
+            $existingId = (int)$existing['id'];
+            $this->subcategoryCache[$key] = $existingId;
+            return $existingId;
+        }
+
+        try {
+            $stmt = $this->db->prepare("INSERT INTO subcategories (category_id, name, slug, status, created_at, updated_at) VALUES (?, ?, ?, 'active', NOW(), NOW())");
+            $stmt->execute([$categoryId, $subcatName, $slug]);
+            $newId = (int)$this->db->lastInsertId();
+        } catch (\Throwable $e) {
+            $slugUnique = $slug . '-' . substr(md5(uniqid()), 0, 4);
+            $stmt = $this->db->prepare("INSERT INTO subcategories (category_id, name, slug, status, created_at, updated_at) VALUES (?, ?, ?, 'active', NOW(), NOW())");
+            $stmt->execute([$categoryId, $subcatName, $slugUnique]);
+            $newId = (int)$this->db->lastInsertId();
+        }
+
         $this->subcategoryCache[$key] = $newId;
         return $newId;
     }
 
-    private function resolveOrCreateBrand(string $name): int
+    private function resolveOrCreateBrand(string $brandName): int
     {
-        $name = trim($name);
+        $bLower = strtolower(trim($brandName));
         $cache = $this->getBrandCache();
-        $key = strtolower($name);
-        if (isset($cache[$key])) return $cache[$key];
+        if (isset($cache[$bLower])) {
+            return $cache[$bLower];
+        }
 
-        $slug = $this->slugify($name);
-        $stmt = $this->db->prepare("INSERT INTO brands (name, slug, created_at, updated_at) VALUES (?, ?, NOW(), NOW())");
-        $stmt->execute([$name, $slug]);
-        $newId = (int)$this->db->lastInsertId();
-        $this->brandCache[$key] = $newId;
+        $slug = $this->slugify($brandName);
+
+        // Check if brand with matching slug or lowercase name already exists
+        $stmtCheck = $this->db->prepare("SELECT id, name FROM brands WHERE slug = ? OR LOWER(name) = ?");
+        $stmtCheck->execute([$slug, $bLower]);
+        $existing = $stmtCheck->fetch();
+        if ($existing) {
+            $existingId = (int)$existing['id'];
+            $this->brandCache[$bLower] = $existingId;
+            return $existingId;
+        }
+
+        try {
+            $stmt = $this->db->prepare("INSERT INTO brands (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
+            $stmt->execute([$brandName, $slug]);
+            $newId = (int)$this->db->lastInsertId();
+        } catch (\Throwable $e) {
+            $slugUnique = $slug . '-' . substr(md5(uniqid()), 0, 4);
+            $stmt = $this->db->prepare("INSERT INTO brands (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
+            $stmt->execute([$brandName, $slugUnique]);
+            $newId = (int)$this->db->lastInsertId();
+        }
+
+        $this->brandCache[$bLower] = $newId;
         return $newId;
     }
 
-    private function parseBool(mixed $val): int
+    private function parseBool($val): int
     {
-        $s = strtolower(trim((string)$val));
-        return in_array($s, ['y', 'yes', 'true', '1']) ? 1 : 0;
+        $v = strtolower(trim((string)$val));
+        return in_array($v, ['1', 'true', 'yes', 'y'], true) ? 1 : 0;
     }
 
     private function slugify(string $text): string
@@ -979,42 +988,5 @@ class BulkImportService
         $text = trim($text, '-');
         $text = preg_replace('~-+~', '-', $text);
         return strtolower($text ?: 'n-a');
-    }
-
-    private function syncProductFilterAttributes(int $productId, array $prodData): void
-    {
-        try {
-            $filterService = new FilterAttributeService();
-            $attributes = $filterService->getAttributesForCategory($prodData['category_id'] ?? null);
-            $attrDataToSave = [];
-
-            foreach ($attributes as $attr) {
-                $attrName = $attr['name'];
-                $attrSlug = strtolower(str_replace([' ', '/', '-', '(', ')'], '_', $attrName));
-                
-                $val = $prodData[$attrSlug] ?? null;
-                if ($val === null) {
-                    // Try matching product data keys
-                    foreach ($prodData as $k => $v) {
-                        if (strcasecmp($k, $attrName) === 0 || strcasecmp(str_replace('_', ' ', $k), $attrName) === 0) {
-                            $val = $v;
-                            break;
-                        }
-                    }
-                }
-
-                if (!empty($val)) {
-                    $valStr = trim((string)$val);
-                    $optId = $filterService->getOrCreateOption($attr['id'], $valStr, true);
-                    if ($optId) {
-                        $attrDataToSave[$attr['id']] = [$optId];
-                    }
-                }
-            }
-
-            if (!empty($attrDataToSave)) {
-                $filterService->saveProductAttributeValues($productId, $attrDataToSave);
-            }
-        } catch (\Throwable $e) {}
     }
 }

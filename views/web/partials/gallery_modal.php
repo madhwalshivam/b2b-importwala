@@ -1,6 +1,6 @@
 <?php
 /**
- * Global Image Lightbox Gallery Modal Component
+ * Global Image Lightbox Gallery Modal Component (Light Theme)
  * Included in main layout.php
  */
 ?>
@@ -11,19 +11,23 @@
     
     <!-- Modal Header -->
     <div class="ggm-header">
-      <div>
+      <div class="ggm-header-info">
         <h4 id="ggmTitle" class="ggm-title">Product Image Gallery</h4>
-        <span id="ggmCounter" class="ggm-counter">Image 1 of 1</span>
+        <span id="ggmCounter" class="ggm-counter">1 of 1</span>
       </div>
       <button type="button" class="ggm-close-btn" onclick="closeGlobalGalleryModal()" aria-label="Close modal">
-        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
       </button>
     </div>
 
     <!-- Modal Body / Main Image Stage -->
     <div class="ggm-stage">
       <button type="button" class="ggm-nav-btn ggm-prev" onclick="moveGallerySlide(-1)" aria-label="Previous Image">
-        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+        </svg>
       </button>
 
       <div class="ggm-img-wrapper">
@@ -31,7 +35,9 @@
       </div>
 
       <button type="button" class="ggm-nav-btn ggm-next" onclick="moveGallerySlide(1)" aria-label="Next Image">
-        <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+        </svg>
       </button>
     </div>
 
@@ -46,20 +52,21 @@
 </div>
 
 <style>
-/* Global Gallery Modal Styling */
+/* Global Gallery Modal Styling - Premium Light Theme */
 .ggm-backdrop {
   position: fixed;
   inset: 0;
   z-index: 99999;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(15, 23, 42, 0.65);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 16px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ggm-backdrop.active {
@@ -69,20 +76,21 @@
 
 .ggm-dialog {
   background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 24px;
   width: 100%;
-  max-width: 860px;
+  max-width: 920px;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
-  animation: ggmPop 0.25s ease-out;
+  max-height: 92vh;
+  transform: scale(0.96);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes ggmPop {
-  from { transform: scale(0.95); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
+.ggm-backdrop.active .ggm-dialog {
+  transform: scale(1);
 }
 
 .ggm-header {
@@ -90,21 +98,40 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 24px;
+  background: #ffffff;
   border-bottom: 1px solid #f1f5f9;
 }
 
+.ggm-header-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding-right: 12px;
+}
+
 .ggm-title {
-  font-family: 'Inter', system-ui, sans-serif;
-  font-size: 16px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 15px;
   font-weight: 700;
   color: #0f172a;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 620px;
 }
 
 .ggm-counter {
-  font-size: 12px;
-  color: #64748b;
-  font-weight: 500;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f05a29;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .ggm-close-btn {
@@ -119,22 +146,25 @@
   justify-content: center;
   color: #64748b;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .ggm-close-btn:hover {
-  background: #0f172a;
+  background: #f05a29;
   color: #ffffff;
-  border-color: #0f172a;
+  border-color: #f05a29;
+  transform: rotate(90deg);
 }
 
 .ggm-stage {
   position: relative;
-  height: 420px;
+  height: 480px;
   background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .ggm-img-wrapper {
@@ -143,7 +173,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px;
 }
 
 .ggm-img-wrapper img {
@@ -151,7 +181,7 @@
   max-height: 100%;
   object-fit: contain;
   border-radius: 12px;
-  transition: transform 0.2s ease;
+  transition: opacity 0.2s ease, transform 0.25s ease;
 }
 
 .ggm-nav-btn {
@@ -159,40 +189,42 @@
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.95);
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #0f172a;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .ggm-nav-btn:hover {
   background: #f05a29;
   color: #ffffff;
   border-color: #f05a29;
+  transform: translateY(-50%) scale(1.08);
+  box-shadow: 0 6px 18px rgba(240, 90, 41, 0.3);
 }
 
-.ggm-prev { left: 16px; }
-.ggm-next { right: 16px; }
+.ggm-prev { left: 18px; }
+.ggm-next { right: 18px; }
 
 .ggm-thumbs-wrapper {
   padding: 16px 24px;
   background: #ffffff;
-  border-top: 1px solid #f1f5f9;
 }
 
 .ggm-thumb-strip {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   overflow-x: auto;
   scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #ffffff;
   padding-bottom: 4px;
 }
 
@@ -200,16 +232,26 @@
   height: 4px;
 }
 
+.ggm-thumb-strip::-webkit-scrollbar-track {
+  background: #ffffff;
+}
+
+.ggm-thumb-strip::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
 .ggm-thumb-btn {
-  width: 56px;
-  height: 56px;
-  border-radius: 10px;
+  width: 58px;
+  height: 58px;
+  border-radius: 12px;
   border: 2px solid #e2e8f0;
   overflow: hidden;
   cursor: pointer;
   flex-shrink: 0;
   padding: 0;
   background: #f8fafc;
+  opacity: 0.7;
   transition: all 0.2s ease;
 }
 
@@ -219,14 +261,24 @@
   object-fit: cover;
 }
 
+.ggm-thumb-btn:hover {
+  opacity: 1;
+  border-color: #cbd5e1;
+}
+
 .ggm-thumb-btn.active {
+  opacity: 1;
   border-color: #f05a29;
-  box-shadow: 0 0 0 2px rgba(240, 90, 41, 0.2);
+  box-shadow: 0 0 0 3px rgba(240, 90, 41, 0.18);
+  transform: scale(1.05);
 }
 
 @media (max-width: 640px) {
-  .ggm-stage { height: 300px; }
-  .ggm-dialog { max-height: 95vh; border-radius: 16px; }
+  .ggm-stage { height: 320px; }
+  .ggm-dialog { max-height: 95vh; border-radius: 18px; }
+  .ggm-title { max-width: 200px; font-size: 13px; }
+  .ggm-prev { left: 8px; width: 40px; height: 40px; }
+  .ggm-next { right: 8px; width: 40px; height: 40px; }
 }
 </style>
 
@@ -234,6 +286,13 @@
 (function() {
   let ggmImages = [];
   let ggmCurrentIndex = 0;
+
+  function decodeEntities(str) {
+    if (!str) return '';
+    const txt = document.createElement('textarea');
+    txt.innerHTML = str;
+    return txt.value;
+  }
 
   window.openGlobalGalleryModal = function(images, startIndex, title) {
     if (!images || !images.length) return;
@@ -243,7 +302,9 @@
     const modal = document.getElementById('globalGalleryModal');
     const titleEl = document.getElementById('ggmTitle');
     
-    if (titleEl && title) titleEl.textContent = title;
+    if (titleEl && title) {
+      titleEl.textContent = decodeEntities(title);
+    }
     
     updateGalleryStage();
     renderGalleryThumbnails();
@@ -277,7 +338,7 @@
     const counter = document.getElementById('ggmCounter');
 
     if (mainImg) mainImg.src = ggmImages[ggmCurrentIndex] || '';
-    if (counter) counter.textContent = `Image ${ggmCurrentIndex + 1} of ${ggmImages.length}`;
+    if (counter) counter.textContent = `${ggmCurrentIndex + 1} of ${ggmImages.length}`;
 
     // Highlight thumbnail
     const strip = document.getElementById('ggmThumbStrip');

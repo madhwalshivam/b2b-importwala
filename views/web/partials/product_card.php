@@ -23,8 +23,8 @@ $totalImages    = count($images);
 $mainImage      = $images[0] ?? asset('assets/images/placeholder.jpg');
 $cardId         = 'pcard_' . ($product['id'] ?? rand(1000, 9999)) . '_' . rand(100, 999);
 
-// Thumbnails setup: show up to 5 images (or 4 + remaining badge if > 5)
-$maxThumbsToShow = ($totalImages == 5) ? 5 : 4;
+// Thumbnails setup: show up to 6 images (or 5 + remaining badge if > 6)
+$maxThumbsToShow = ($totalImages <= 6) ? 6 : 5;
 $displayThumbs  = array_slice($images, 0, $maxThumbsToShow);
 $remainingCount = max(0, $totalImages - $maxThumbsToShow);
 $categoryName   = htmlspecialchars($product['category_name'] ?? 'Wholesale');
@@ -154,9 +154,13 @@ $isInInquiry = in_array((int)($product['id'] ?? 0), $userInquiryProductIds);
         </button>
       <?php endforeach; ?>
       <?php if ($remainingCount > 0): ?>
+        <?php
+        $jsImages = htmlspecialchars(json_encode($images), ENT_QUOTES, 'UTF-8');
+        $jsName   = htmlspecialchars(json_encode($name), ENT_QUOTES, 'UTF-8');
+        ?>
         <button type="button" 
                 class="ef-thumb-box ef-thumb-more"
-                onclick="openGlobalGalleryModal(<?= htmlspecialchars(json_encode($images, JSON_HEX_QUOT | JSON_HEX_TAG)) ?>, 4, '<?= $name ?>')"
+                onclick="openGlobalGalleryModal(<?= $jsImages ?>, <?= $maxThumbsToShow ?>, <?= $jsName ?>)"
                 title="View all <?= $totalImages ?> images">
           +<?= $remainingCount ?>
         </button>
