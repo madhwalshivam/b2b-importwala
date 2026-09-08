@@ -43,6 +43,8 @@ class ApiController extends Controller
         $stmtP->execute($paramsP);
         $products = $stmtP->fetchAll();
 
+        $term = '%' . $q . '%';
+
         // Brands
         $stmtB = $db->prepare("SELECT id, name, slug, logo FROM brands WHERE name LIKE ? AND status = 'active' LIMIT 3");
         $stmtB->execute([$term]);

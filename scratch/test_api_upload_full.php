@@ -10,7 +10,6 @@ curl_setopt($ch, CURLOPT_POSTFIELDS, ['photo' => $cfile]);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
 $res = curl_exec($ch);
-curl_close($ch);
 
 echo "API Upload Visual Search Response:\n";
 echo $res . "\n";
