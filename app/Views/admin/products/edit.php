@@ -14,10 +14,12 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
     .no-scrollbar::-webkit-scrollbar {
         display: none !important;
     }
+
     .no-scrollbar {
         -ms-overflow-style: none !important;
         scrollbar-width: none !important;
     }
+
     .sticky-header-solid {
         background-color: #ffffff !important;
         background: #ffffff !important;
@@ -33,7 +35,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         if (nav) {
             try {
                 nav.scrollBy({ left: offset, behavior: 'smooth' });
-            } catch(e) {}
+            } catch (e) { }
             nav.scrollLeft += offset;
         }
     }
@@ -51,7 +53,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
         <!-- UNIFIED ZERO-GAP STICKY TOP HEADER (NAVBAR + TABS + SAVE BUTTON) -->
         <div class="sticky top-0 z-40 !mt-0 -mx-6 px-6 py-2.5 sticky-header-solid border-b border-slate-200/90 shadow-2xs mb-4"
-             style="background-color: #ffffff !important; opacity: 1 !important; margin-top: 0 !important;">
+            style="background-color: #ffffff !important; opacity: 1 !important; margin-top: 0 !important;">
             <?= csrf_field() ?>
             <div class="max-w-6xl mx-auto space-y-2">
                 <!-- Top Row: Back Link + Inquiry Pill + Save Button -->
@@ -71,9 +73,12 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             class="flex items-center space-x-2 bg-slate-50 hover:bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg transition text-xs shrink-0"
                             title="View Customer Inquiries">
                             <i data-lucide="message-square" class="w-3.5 h-3.5 text-orange-600"></i>
-                            <span class="text-[11px] font-bold text-slate-700">Inquiries: <span class="text-slate-900"><?= number_format((int)$inqStats['total_inquiries']) ?></span></span>
+                            <span class="text-[11px] font-bold text-slate-700">Inquiries: <span
+                                    class="text-slate-900"><?= number_format((int) $inqStats['total_inquiries']) ?></span></span>
                             <span class="text-slate-300">•</span>
-                            <span class="text-[11px] font-bold text-orange-700"><?= number_format((int)$inqStats['total_requested_units']) ?> Pcs</span>
+                            <span
+                                class="text-[11px] font-bold text-orange-700"><?= number_format((int) $inqStats['total_requested_units']) ?>
+                                Pcs</span>
                         </a>
 
                         <button type="submit"
@@ -94,7 +99,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     </button>
 
                     <!-- Tab Buttons Strip -->
-                    <nav class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 w-full" id="productTabsNav">
+                    <nav class="flex items-center space-x-1.5 overflow-x-auto no-scrollbar scroll-smooth py-0.5 w-full"
+                        id="productTabsNav">
                         <button type="button" @click="activeTab = 'basic'" id="tab-btn-basic"
                             :class="activeTab === 'basic' ? 'bg-slate-900 text-white font-bold' : 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200/80 font-semibold'"
                             class="px-3 py-1.5 rounded-lg transition flex items-center space-x-1 text-xs shrink-0 cursor-pointer select-none">
@@ -108,7 +114,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             <i data-lucide="tag" class="w-3.5 h-3.5"></i>
                             <span>2. B2B Pricing</span>
                             <?php if (!empty($tieredPrices)): ?>
-                                <span :class="activeTab === 'b2b' ? 'bg-orange-500 text-white' : 'bg-orange-100 text-orange-700'"
+                                <span
+                                    :class="activeTab === 'b2b' ? 'bg-orange-500 text-white' : 'bg-orange-100 text-orange-700'"
                                     class="px-1.5 py-0.5 text-[9px] rounded-md font-bold transition"><?= count($tieredPrices) ?></span>
                             <?php endif; ?>
                         </button>
@@ -132,7 +139,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             class="px-3 py-1.5 rounded-lg transition flex items-center space-x-1 text-xs shrink-0 cursor-pointer select-none">
                             <i data-lucide="images" class="w-3.5 h-3.5"></i>
                             <span>5. Images &amp; Media</span>
-                            <span id="tabMediaBadge" :class="activeTab === 'media' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'"
+                            <span id="tabMediaBadge"
+                                :class="activeTab === 'media' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'"
                                 class="px-1.5 py-0.5 text-[9px] rounded-md font-bold transition"><?= count($galleryImages) ?></span>
                         </button>
 
@@ -149,7 +157,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             <i data-lucide="layers" class="w-3.5 h-3.5"></i>
                             <span>7. Specs &amp; Variants</span>
                             <?php if (!empty($variants)): ?>
-                                <span id="tabVariantsBadge" :class="activeTab === 'specs' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'"
+                                <span id="tabVariantsBadge"
+                                    :class="activeTab === 'specs' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'"
                                     class="px-1.5 py-0.5 text-[9px] rounded-md font-bold transition"><?= count($variants) ?></span>
                             <?php endif; ?>
                         </button>
@@ -177,29 +186,36 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                     <div class="sm:col-span-2">
-                        <label class="block font-bold text-slate-700 uppercase mb-1">Product Name <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Product Name <span
+                                class="text-rose-500">*</span></label>
                         <input type="text" name="name" required value="<?= htmlspecialchars($productNameClean) ?>"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 focus:bg-white font-semibold text-slate-900 transition">
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">SKU Code <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">SKU Code <span
+                                class="text-rose-500">*</span></label>
                         <input type="text" name="sku" required value="<?= htmlspecialchars($product['sku']) ?>"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl uppercase font-mono font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">Status <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Status <span
+                                class="text-rose-500">*</span></label>
                         <select name="status"
                             class="w-full h-11 px-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
-                            <option value="active" <?= ($product['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>Active</option>
-                            <option value="inactive" <?= ($product['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>Inactive</option>
+                            <option value="active" <?= ($product['status'] ?? 'active') === 'active' ? 'selected' : '' ?>>
+                                Active</option>
+                            <option value="inactive" <?= ($product['status'] ?? '') === 'inactive' ? 'selected' : '' ?>>
+                                Inactive</option>
                         </select>
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">Primary Category <span class="text-rose-500">*</span></label>
-                        <select id="mainCategorySelect" name="category_id" required onchange="loadSubcategories(this.value)"
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Primary Category <span
+                                class="text-rose-500">*</span></label>
+                        <select id="mainCategorySelect" name="category_id" required
+                            onchange="loadSubcategories(this.value)"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:bg-white text-xs focus:outline-none focus:border-slate-900 transition">
                             <option value="">-- Select Primary Category --</option>
                             <?php foreach ($categories as $cat): ?>
@@ -239,19 +255,40 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">Inventory Stock Units <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-indigo-700 uppercase mb-1 flex items-center gap-1.5">
+                            <i data-lucide="factory" class="w-4 h-4 text-indigo-600"></i>
+                            <span>Factory / Manufacturer</span>
+                        </label>
+                        <select name="factory_id"
+                            class="w-full h-11 px-4 bg-slate-50 border border-indigo-200 rounded-xl font-semibold text-slate-900 focus:bg-white text-xs focus:outline-none focus:border-indigo-600 transition">
+                            <option value="">-- Unassigned (No Factory Link) --</option>
+                            <?php if (!empty($factories)): ?>
+                                <?php foreach ($factories as $f): ?>
+                                    <option value="<?= $f['id'] ?>" <?= ($product['factory_id'] ?? '') == $f['id'] ? 'selected' : '' ?>>
+                                        [<?= htmlspecialchars($f['factory_code']) ?>] <?= htmlspecialchars($f['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Inventory Stock Units <span
+                                class="text-rose-500">*</span></label>
                         <input type="number" name="stock" required value="<?= $product['stock'] ?>" min="0"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">Retail Single-Piece Price (₹) <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Retail Single-Piece Price (₹) <span
+                                class="text-rose-500">*</span></label>
                         <input type="number" step="0.01" name="price" required value="<?= $product['price'] ?>"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">Retail Discounted Sale Price (₹)</label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Retail Discounted Sale Price
+                            (₹)</label>
                         <input type="number" step="0.01" name="sale_price" value="<?= $product['sale_price'] ?>"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
@@ -265,7 +302,22 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">GST Rate (%) <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Per-Piece Weight</label>
+                        <input type="text" name="weight" value="<?= htmlspecialchars($product['weight'] ?? '') ?>"
+                            placeholder="e.g. 250g or 1.2 kg"
+                            class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Product Variety</label>
+                        <input type="text" name="variety" value="<?= htmlspecialchars($product['variety'] ?? '') ?>"
+                            placeholder="e.g. Vintage Braided / Premium Matte"
+                            class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">GST Rate (%) <span
+                                class="text-rose-500">*</span></label>
                         <select name="tax_percent" required
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:bg-white text-xs focus:outline-none focus:border-slate-900 transition">
                             <?php $currentGst = (float) ($product['tax_percent'] ?? 18); ?>
@@ -279,7 +331,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 </div>
 
                 <div class="pt-2">
-                    <label class="block font-bold text-slate-700 uppercase mb-1 text-xs">Product Detailed Description</label>
+                    <label class="block font-bold text-slate-700 uppercase mb-1 text-xs">Product Detailed
+                        Description</label>
                     <textarea name="description" rows="5" placeholder="Enter detailed product description..."
                         class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 focus:bg-white text-xs font-medium text-slate-900 transition"><?= htmlspecialchars(htmlspecialchars_decode($product['description'] ?? '')) ?></textarea>
                 </div>
@@ -305,25 +358,30 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">Wholesale Base Price (₹) <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Wholesale Base Price (₹) <span
+                                class="text-rose-500">*</span></label>
                         <input type="number" step="0.01" name="base_price"
-                            value="<?= (float) ($product['base_price'] ?? $product['price']) ?>" placeholder="e.g. 350.00"
+                            value="<?= (float) ($product['base_price'] ?? $product['price']) ?>"
+                            placeholder="e.g. 350.00"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">Minimum Order Quantity (MOQ) <span class="text-rose-500">*</span></label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">Minimum Order Quantity (MOQ) <span
+                                class="text-rose-500">*</span></label>
                         <input type="number" name="moq" value="<?= (int) ($product['moq'] ?? 1) ?>" min="1"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-bold text-slate-700 uppercase mb-2 text-xs">Volume Discount Tiers (Min Qty &rarr; Unit Price)</label>
+                    <label class="block font-bold text-slate-700 uppercase mb-2 text-xs">Volume Discount Tiers (Min Qty
+                        &rarr; Unit Price)</label>
                     <div class="overflow-x-auto border border-slate-200 rounded-xl">
                         <table class="w-full text-xs text-left border-collapse">
                             <thead>
-                                <tr class="bg-slate-50 text-slate-700 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
+                                <tr
+                                    class="bg-slate-50 text-slate-700 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200">
                                     <th class="py-2.5 px-3">Min Qty</th>
                                     <th class="py-2.5 px-3">Max Qty (Blank for &infin;)</th>
                                     <th class="py-2.5 px-3">Wholesale Unit Price (₹)</th>
@@ -352,8 +410,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                             </td>
                                             <td class="py-2 px-3 text-right">
                                                 <button type="button" onclick="this.closest('tr').remove()"
-                                                    class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition"><i data-lucide="trash-2"
-                                                        class="w-4 h-4"></i></button>
+                                                    class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition"><i
+                                                        data-lucide="trash-2" class="w-4 h-4"></i></button>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -373,14 +431,17 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div class="flex items-center space-x-2 border-b border-slate-100 pb-3">
                     <i data-lucide="git-compare" class="w-4 h-4 text-slate-700"></i>
                     <h3 class="font-bold text-sm text-slate-900">Warranty &amp; OEM Comparison Data</h3>
-                    <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold ml-auto">Compare Page Enabled</span>
+                    <span class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded font-bold ml-auto">Compare
+                        Page Enabled</span>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                     <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">ImportWale Warranty (Months)</label>
+                        <label class="block font-bold text-slate-700 uppercase mb-1">ImportWale Warranty
+                            (Months)</label>
                         <input type="number" name="warranty_months" id="edit_warranty_months"
-                            value="<?= (int) ($product['warranty_months'] ?? 12) ?>" min="0" max="120" placeholder="e.g. 12"
+                            value="<?= (int) ($product['warranty_months'] ?? 12) ?>" min="0" max="120"
+                            placeholder="e.g. 12"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                         <p class="text-[10px] text-slate-500 mt-1">ImportWale product warranty in months.</p>
                     </div>
@@ -388,7 +449,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     <div>
                         <label class="block font-bold text-slate-700 uppercase mb-1">OEM / Company Price (₹)</label>
                         <input type="number" step="0.01" name="oem_price" id="edit_oem_price"
-                            value="<?= (float) ($product['oem_price'] ?? 0) ?: '' ?>" placeholder="Auto-estimated if blank"
+                            value="<?= (float) ($product['oem_price'] ?? 0) ?: '' ?>"
+                            placeholder="Auto-estimated if blank"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                         <p class="text-[10px] text-slate-500 mt-1">Vehicle manufacturer price (defaults to 1.4x).</p>
                     </div>
@@ -396,7 +458,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     <div>
                         <label class="block font-bold text-slate-700 uppercase mb-1">OEM Warranty (Months)</label>
                         <input type="number" name="oem_warranty_months" id="edit_oem_warranty"
-                            value="<?= (int) ($product['oem_warranty_months'] ?? 6) ?>" min="0" max="60" placeholder="e.g. 6"
+                            value="<?= (int) ($product['oem_warranty_months'] ?? 6) ?>" min="0" max="60"
+                            placeholder="e.g. 6"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
 
@@ -409,15 +472,21 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     </div>
 
                     <div class="sm:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-4">
-                        <p class="text-[11px] font-bold text-slate-900 uppercase tracking-wider mb-2">🏆 Compare Card Preview (Live)</p>
+                        <p class="text-[11px] font-bold text-slate-900 uppercase tracking-wider mb-2">🏆 Compare Card
+                            Preview (Live)</p>
                         <div class="grid grid-cols-3 text-[11px] font-bold gap-2">
-                            <div class="text-slate-500">ImportWale Price: <span class="text-slate-900" id="prev_mudsor_price">₹<?= number_format((float) ($product['sale_price'] ?: $product['price']), 0) ?></span></div>
-                            <div class="text-slate-500">OEM Price: <span class="text-slate-900" id="prev_oem_price">auto</span></div>
+                            <div class="text-slate-500">ImportWale Price: <span class="text-slate-900"
+                                    id="prev_mudsor_price">₹<?= number_format((float) ($product['sale_price'] ?: $product['price']), 0) ?></span>
+                            </div>
+                            <div class="text-slate-500">OEM Price: <span class="text-slate-900"
+                                    id="prev_oem_price">auto</span></div>
                             <div class="text-emerald-700" id="prev_saving">Calculating...</div>
                         </div>
                         <div class="grid grid-cols-2 text-[11px] font-bold gap-2 mt-1.5">
-                            <div class="text-slate-500">ImportWale Warranty: <span class="text-slate-900" id="prev_m_warranty">—</span></div>
-                            <div class="text-slate-500">OEM Warranty: <span class="text-slate-900" id="prev_o_warranty">—</span></div>
+                            <div class="text-slate-500">ImportWale Warranty: <span class="text-slate-900"
+                                    id="prev_m_warranty">—</span></div>
+                            <div class="text-slate-500">OEM Warranty: <span class="text-slate-900"
+                                    id="prev_o_warranty">—</span></div>
                         </div>
                     </div>
                 </div>
@@ -437,17 +506,24 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                         <div class="flex items-center justify-between">
-                            <label class="font-bold text-slate-900 text-xs uppercase tracking-wider">Product Categories</label>
-                            <span class="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-bold">MULTI-SELECT</span>
+                            <label class="font-bold text-slate-900 text-xs uppercase tracking-wider">Product
+                                Categories</label>
+                            <span
+                                class="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-bold">MULTI-SELECT</span>
                         </div>
-                        <input type="text" onkeyup="filterCheckboxList(this, 'category-list')" placeholder="Search categories..."
+                        <input type="text" onkeyup="filterCheckboxList(this, 'category-list')"
+                            placeholder="Search categories..."
                             class="w-full h-8 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-slate-900">
-                        <div id="category-list" class="grid grid-cols-1 gap-1 max-h-56 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
+                        <div id="category-list"
+                            class="grid grid-cols-1 gap-1 max-h-56 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
                             <?php foreach ($categories as $cat): ?>
-                                <label class="checkbox-item flex items-center space-x-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer font-bold text-slate-800 text-xs">
-                                    <input type="checkbox" name="categories[]" value="<?= $cat['id'] ?>" <?= in_array($cat['id'], $selectedCategoryIds) ? 'checked' : '' ?>
+                                <label
+                                    class="checkbox-item flex items-center space-x-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer font-bold text-slate-800 text-xs">
+                                    <input type="checkbox" name="categories[]" value="<?= $cat['id'] ?>"
+                                        <?= in_array($cat['id'], $selectedCategoryIds) ? 'checked' : '' ?>
                                         class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
-                                    <span class="truncate"><?= htmlspecialchars(htmlspecialchars_decode($cat['name'])) ?></span>
+                                    <span
+                                        class="truncate"><?= htmlspecialchars(htmlspecialchars_decode($cat['name'])) ?></span>
                                 </label>
                             <?php endforeach; ?>
                         </div>
@@ -455,20 +531,24 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
                         <div class="flex items-center justify-between">
-                            <label class="font-bold text-slate-900 text-xs uppercase tracking-wider">Scooter Brands</label>
-                            <span class="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-bold">MULTI-SELECT</span>
+                            <label class="font-bold text-slate-900 text-xs uppercase tracking-wider">Scooter
+                                Brands</label>
+                            <span
+                                class="text-[10px] bg-slate-900 text-white px-2 py-0.5 rounded font-bold">MULTI-SELECT</span>
                         </div>
-                        <input type="text" onkeyup="filterCheckboxList(this, 'brand-list')" placeholder="Search brands..."
+                        <input type="text" onkeyup="filterCheckboxList(this, 'brand-list')"
+                            placeholder="Search brands..."
                             class="w-full h-8 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-slate-900">
-                            <?php foreach ($brands as $b): ?>
-                                <label class="checkbox-item flex items-center space-x-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer font-bold text-slate-800 text-xs">
-                                    <input type="checkbox" name="brands[]" value="<?= $b['id'] ?>" <?= in_array($b['id'], $selectedBrandIds) ? 'checked' : '' ?>
-                                        class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
-                                    <span class="truncate"><?= htmlspecialchars(htmlspecialchars_decode($b['name'])) ?></span>
-                                </label>
-                            <?php endforeach; ?>
-                        </div>
+                        <?php foreach ($brands as $b): ?>
+                            <label
+                                class="checkbox-item flex items-center space-x-2 p-1.5 hover:bg-slate-50 rounded cursor-pointer font-bold text-slate-800 text-xs">
+                                <input type="checkbox" name="brands[]" value="<?= $b['id'] ?>" <?= in_array($b['id'], $selectedBrandIds) ? 'checked' : '' ?>
+                                    class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
+                                <span class="truncate"><?= htmlspecialchars(htmlspecialchars_decode($b['name'])) ?></span>
+                            </label>
+                        <?php endforeach; ?>
                     </div>
+                </div>
 
                 <!-- Filter Attributes (Storefront Sidebar) -->
                 <?php if (!empty($filterAttributes)): ?>
@@ -485,9 +565,11 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                 $assignedValues = $productFilterValues[$attrId]['values'] ?? [];
                                 ?>
                                 <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
-                                    <label class="block font-bold text-slate-800 uppercase tracking-wider"><?= htmlspecialchars($attr['name']) ?></label>
+                                    <label
+                                        class="block font-bold text-slate-800 uppercase tracking-wider"><?= htmlspecialchars($attr['name']) ?></label>
                                     <?php if ($attr['type'] === 'single_select'): ?>
-                                        <select name="filter_attributes[<?= $attrId ?>]" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none">
+                                        <select name="filter_attributes[<?= $attrId ?>]"
+                                            class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none">
                                             <option value="">-- None Selected --</option>
                                             <?php foreach ($attr['options'] as $opt): ?>
                                                 <option value="<?= $opt['id'] ?>" <?= in_array($opt['id'], $assignedOptIds) ? 'selected' : '' ?>>
@@ -496,22 +578,146 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                             <?php endforeach; ?>
                                         </select>
                                     <?php elseif ($attr['type'] === 'multi_select'): ?>
-                                        <div class="space-y-1.5 max-h-36 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
+                                        <div
+                                            class="space-y-1.5 max-h-36 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
                                             <?php foreach ($attr['options'] as $opt): ?>
-                                                <label class="flex items-center space-x-2 font-medium text-slate-700 cursor-pointer text-xs">
-                                                    <input type="checkbox" name="filter_attributes[<?= $attrId ?>][]" value="<?= $opt['id'] ?>" <?= in_array($opt['id'], $assignedOptIds) ? 'checked' : '' ?> class="rounded border-slate-300 text-orange-600">
+                                                <label
+                                                    class="flex items-center space-x-2 font-medium text-slate-700 cursor-pointer text-xs">
+                                                    <input type="checkbox" name="filter_attributes[<?= $attrId ?>][]"
+                                                        value="<?= $opt['id'] ?>" <?= in_array($opt['id'], $assignedOptIds) ? 'checked' : '' ?> class="rounded border-slate-300 text-orange-600">
                                                     <span><?= htmlspecialchars($opt['value']) ?></span>
                                                 </label>
                                             <?php endforeach; ?>
                                         </div>
                                     <?php else: ?>
-                                        <input type="text" name="filter_attributes[<?= $attrId ?>]" value="<?= htmlspecialchars(implode(', ', $assignedValues)) ?>" placeholder="Value" class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900">
+                                        <input type="text" name="filter_attributes[<?= $attrId ?>]"
+                                            value="<?= htmlspecialchars(implode(', ', $assignedValues)) ?>" placeholder="Value"
+                                            class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900">
                                     <?php endif; ?>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                     </div>
                 <?php endif; ?>
+
+                <!-- ============================================================ -->
+                <!-- PRIVATE / MANUFACTURER ONLY SOURCING INFO (ADMIN ONLY) -->
+                <!-- ============================================================ -->
+                <!-- ============================================================ -->
+                <!-- PRIVATE / MANUFACTURER ONLY SOURCING INFO (ADMIN ONLY) -->
+                <!-- ============================================================ -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-3 col-span-full mt-2">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <div class="flex items-center gap-2">
+                            <div class="p-1 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-lg shrink-0">
+                                <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h3
+                                    class="font-bold text-xs uppercase text-slate-900 tracking-wider flex items-center gap-1.5">
+                                    <span>Manufacturer / Sourcing Info</span>
+                                    <span
+                                        class="text-[10px] text-amber-700 font-semibold lowercase normal-case">(Internal
+                                        Admin Only)</span>
+                                </h3>
+                                <p class="text-[10px] text-slate-500">Excluded from buyer storefront, public API, and
+                                    customer PDFs.</p>
+                            </div>
+                        </div>
+                        <span
+                            class="px-2 py-0.5 text-[9px] font-mono font-extrabold bg-amber-100 text-amber-800 border border-amber-200/80 rounded uppercase tracking-wider">PRIVATE</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Manufacturer ID Code</label>
+                            <input type="text" name="manufacturer_id_code"
+                                value="<?= htmlspecialchars($product['manufacturer_id_code'] ?? '') ?>"
+                                placeholder="e.g. FCT-001"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Manufacturer Name</label>
+                            <input type="text" name="manufacturer_name"
+                                value="<?= htmlspecialchars($product['manufacturer_name'] ?? '') ?>"
+                                placeholder="e.g. Yiwu Jewelry Corp"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Contact Person</label>
+                            <input type="text" name="manufacturer_contact_person"
+                                value="<?= htmlspecialchars($product['manufacturer_contact_person'] ?? '') ?>"
+                                placeholder="e.g. Mr. Chen"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Phone Number</label>
+                            <input type="text" name="manufacturer_phone"
+                                value="<?= htmlspecialchars($product['manufacturer_phone'] ?? '') ?>"
+                                placeholder="+86 138 0000 0000"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">WhatsApp Number</label>
+                            <input type="text" name="manufacturer_whatsapp"
+                                value="<?= htmlspecialchars($product['manufacturer_whatsapp'] ?? '') ?>"
+                                placeholder="+86 138 0000 0000"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Email Address</label>
+                            <input type="email" name="manufacturer_email"
+                                value="<?= htmlspecialchars($product['manufacturer_email'] ?? '') ?>"
+                                placeholder="sales@factory.com"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Manufacturer Store
+                                URL</label>
+                            <input type="url" name="manufacturer_store_url"
+                                value="<?= htmlspecialchars($product['manufacturer_store_url'] ?? '') ?>"
+                                placeholder="https://shop123.1688.com"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Source Platform</label>
+                            <input type="text" name="source_platform"
+                                value="<?= htmlspecialchars($product['source_platform'] ?? '') ?>"
+                                placeholder="1688 / Alibaba / Direct"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Source Product ID</label>
+                            <input type="text" name="source_product_id"
+                                value="<?= htmlspecialchars($product['source_product_id'] ?? '') ?>"
+                                placeholder="e.g. 685412985412"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Source Product URL</label>
+                            <input type="url" name="source_product_url"
+                                value="<?= htmlspecialchars($product['source_product_url'] ?? '') ?>"
+                                placeholder="https://detail.1688.com/offer/..."
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Import Date</label>
+                            <input type="text" name="import_date"
+                                value="<?= htmlspecialchars($product['import_date'] ?? date('Y-m-d H:i:s')) ?>"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                        </div>
+                        <div>
+                            <label class="block font-bold text-[11px] text-slate-700 mb-1">Admin Status</label>
+                            <select name="admin_status"
+                                class="w-full h-8 px-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
+                                <option value="Active" <?= ($product['admin_status'] ?? '') === 'Active' ? 'selected' : '' ?>>Active</option>
+                                <option value="Draft" <?= ($product['admin_status'] ?? '') === 'Draft' ? 'selected' : '' ?>>Draft</option>
+                                <option value="Inactive" <?= ($product['admin_status'] ?? '') === 'Inactive' ? 'selected' : '' ?>>Inactive</option>
+                                <option value="Archived" <?= ($product['admin_status'] ?? '') === 'Archived' ? 'selected' : '' ?>>Archived</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -527,7 +733,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             <i data-lucide="images" class="w-4 h-4 text-slate-700"></i>
                             <span>Product Gallery &amp; Cover Selector</span>
                         </h3>
-                        <p class="text-[11px] text-slate-500 mt-0.5">Click radio button ★ to choose main product cover photo.</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Click radio button ★ to choose main product cover
+                            photo.</p>
                     </div>
                     <span id="galleryCountBadge" class="text-xs font-bold bg-slate-900 text-white px-3 py-1 rounded-lg">
                         <?= count($galleryImages) ?> Images Total
@@ -543,20 +750,27 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                 <img src="<?= asset($imgUrl) ?>" class="w-full h-full object-contain p-1"
                                     onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'">
                                 <?php if ($img['is_primary']): ?>
-                                    <span class="absolute top-1 left-1 bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-2xs cover-badge">COVER</span>
+                                    <span
+                                        class="absolute top-1 left-1 bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-2xs cover-badge">COVER</span>
                                 <?php endif; ?>
                             </div>
                             <div class="flex items-center justify-between text-xs px-0.5 pt-0.5">
-                                <label class="flex items-center space-x-1 cursor-pointer font-bold text-[10px] text-slate-800">
-                                    <input type="radio" name="primary_image_id" value="<?= $img['id'] ?>" <?= $img['is_primary'] ? 'checked' : '' ?> onchange="setPrimaryCover(<?= $img['id'] ?>)" class="text-slate-900 focus:ring-slate-900">
+                                <label
+                                    class="flex items-center space-x-1 cursor-pointer font-bold text-[10px] text-slate-800">
+                                    <input type="radio" name="primary_image_id" value="<?= $img['id'] ?>"
+                                        <?= $img['is_primary'] ? 'checked' : '' ?>
+                                        onchange="setPrimaryCover(<?= $img['id'] ?>)"
+                                        class="text-slate-900 focus:ring-slate-900">
                                     <span>★ Cover</span>
                                 </label>
                                 <button type="button" onclick="confirmGalleryDelete(<?= $img['id'] ?>, this)"
-                                    class="text-rose-600 font-bold hover:text-rose-800 p-0.5 cursor-pointer" title="Delete Image">&times;</button>
+                                    class="text-rose-600 font-bold hover:text-rose-800 p-0.5 cursor-pointer"
+                                    title="Delete Image">&times;</button>
                             </div>
 
                             <!-- INLINE CONFIRMATION OVERLAY FOR PHOTO DELETE -->
-                            <div class="gallery-confirm-overlay hidden absolute inset-0 bg-slate-900/90 text-white p-2 flex flex-col items-center justify-center text-center space-y-2 z-20 transition-all rounded-xl">
+                            <div
+                                class="gallery-confirm-overlay hidden absolute inset-0 bg-slate-900/90 text-white p-2 flex flex-col items-center justify-center text-center space-y-2 z-20 transition-all rounded-xl">
                                 <p class="text-[11px] font-bold leading-tight">Delete photo?</p>
                                 <div class="flex items-center space-x-1.5">
                                     <button type="button" onclick="executeGalleryDelete(<?= $img['id'] ?>, this)"
@@ -577,7 +791,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                 class="w-full p-2 bg-white border border-slate-200 rounded-xl text-xs">
                         </div>
                         <div>
-                            <label class="block font-bold text-slate-700 mb-1">Or Paste Image URLs (one per line):</label>
+                            <label class="block font-bold text-slate-700 mb-1">Or Paste Image URLs (one per
+                                line):</label>
                             <textarea name="gallery_urls" rows="2" placeholder="https://example.com/photo1.jpg"
                                 class="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:border-slate-900 transition"></textarea>
                         </div>
@@ -608,14 +823,17 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     <div class="space-y-2">
                         <div x-show="videoSource === 'url'" class="space-y-1">
                             <label class="block font-bold text-slate-700 uppercase">Video URL Link</label>
-                            <input type="url" name="video_url" value="<?= htmlspecialchars($product['video_url'] ?? '') ?>"
+                            <input type="url" name="video_url"
+                                value="<?= htmlspecialchars($product['video_url'] ?? '') ?>"
                                 placeholder="https://www.youtube.com/watch?v=... or MP4 URL"
                                 class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-slate-900 transition">
-                            <p class="text-[11px] text-slate-500">Supports YouTube, Instagram, Facebook, or raw MP4 links.</p>
+                            <p class="text-[11px] text-slate-500">Supports YouTube, Instagram, Facebook, or raw MP4
+                                links.</p>
                         </div>
 
                         <div x-show="videoSource === 'upload'" class="space-y-1" x-cloak>
-                            <label class="block font-bold text-slate-700 uppercase">Select Video File (.mp4, .webm)</label>
+                            <label class="block font-bold text-slate-700 uppercase">Select Video File (.mp4,
+                                .webm)</label>
                             <input type="file" name="video_file" accept="video/mp4,video/webm"
                                 onchange="extractFrameThumbnail(this, 'edit')"
                                 class="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs">
@@ -636,10 +854,12 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         ?>
                         <div id="edit-poster-preview-box"
                             class="pt-2 flex items-center space-x-3 <?= empty($effectivePoster) ? 'hidden' : '' ?>">
-                            <div class="relative w-24 aspect-video rounded-lg overflow-hidden bg-black border border-slate-300 shrink-0">
+                            <div
+                                class="relative w-24 aspect-video rounded-lg overflow-hidden bg-black border border-slate-300 shrink-0">
                                 <img id="edit-poster-preview-img" src="<?= $effectivePoster ?>"
                                     class="w-full h-full object-cover" onerror="this.style.display='none'">
-                                <span class="absolute bottom-0.5 right-0.5 text-[8px] bg-black/80 text-white font-bold px-1 rounded">POSTER</span>
+                                <span
+                                    class="absolute bottom-0.5 right-0.5 text-[8px] bg-black/80 text-white font-bold px-1 rounded">POSTER</span>
                             </div>
                             <div class="text-[11px] text-slate-500 font-medium">
                                 <span id="edit-poster-type-label" class="font-bold text-slate-800">
@@ -664,36 +884,40 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
                 <div class="space-y-4 text-xs">
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <label class="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-bold hover:border-slate-900 transition">
+                        <label
+                            class="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-bold hover:border-slate-900 transition">
                             <input type="checkbox" name="is_new" value="1" <?= (!empty($product['is_new']) || !empty($product['is_new_arrival'])) ? 'checked' : '' ?>
                                 class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
                             <span>New Product</span>
                         </label>
-                        <label class="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-bold hover:border-slate-900 transition">
-                            <input type="checkbox" name="is_free_shipping" value="1" <?= (!isset($product['is_free_shipping']) || !empty($product['is_free_shipping'])) ? 'checked' : '' ?>
-                                class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
+                        <label
+                            class="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-bold hover:border-slate-900 transition">
+                            <input type="checkbox" name="is_free_shipping" value="1"
+                                <?= (!isset($product['is_free_shipping']) || !empty($product['is_free_shipping'])) ? 'checked' : '' ?> class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
                             <span>Free Delivery</span>
                         </label>
-                        <label class="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-bold hover:border-slate-900 transition">
-                            <input type="checkbox" name="is_featured" value="1" <?= !empty($product['is_featured']) ? 'checked' : '' ?>
-                                class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
+                        <label
+                            class="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-bold hover:border-slate-900 transition">
+                            <input type="checkbox" name="is_featured" value="1" <?= !empty($product['is_featured']) ? 'checked' : '' ?> class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
                             <span>Featured Deal</span>
                         </label>
-                        <label class="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-bold hover:border-slate-900 transition">
-                            <input type="checkbox" name="is_flash_sale" value="1" <?= !empty($product['is_flash_sale']) ? 'checked' : '' ?>
-                                class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
+                        <label
+                            class="flex items-center space-x-2 bg-slate-50 p-3 rounded-xl border border-slate-200 cursor-pointer font-bold hover:border-slate-900 transition">
+                            <input type="checkbox" name="is_flash_sale" value="1" <?= !empty($product['is_flash_sale']) ? 'checked' : '' ?> class="rounded text-slate-900 focus:ring-slate-900 w-4 h-4">
                             <span>Flash Sale</span>
                         </label>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                         <div>
-                            <label class="block font-bold text-slate-700 uppercase mb-1">Total Sold Count Display</label>
+                            <label class="block font-bold text-slate-700 uppercase mb-1">Total Sold Count
+                                Display</label>
                             <input type="number" name="total_sold" min="0"
                                 value="<?= (int) ($product['total_sold'] ?? $product['sales_count'] ?? 0) ?>"
                                 placeholder="e.g. 1250"
                                 class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-slate-900 transition">
-                            <p class="text-[11px] text-slate-500 mt-1">Displayed on storefront as "{Total Sold}+ sold".</p>
+                            <p class="text-[11px] text-slate-500 mt-1">Displayed on storefront as "{Total Sold}+ sold".
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -745,25 +969,32 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div>
                         <div class="flex items-center space-x-2">
-                            <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase bg-slate-100 text-slate-800 rounded-md border border-slate-200">
+                            <span
+                                class="px-2.5 py-0.5 text-[10px] font-bold uppercase bg-slate-100 text-slate-800 rounded-md border border-slate-200">
                                 Multi-Variant System
                             </span>
                             <span class="text-xs font-semibold text-slate-400">•</span>
-                            <span id="variantCountText" class="text-xs font-semibold text-slate-500"><?= count($variants ?? []) ?> Variants Configured</span>
+                            <span id="variantCountText"
+                                class="text-xs font-semibold text-slate-500"><?= count($variants ?? []) ?> Variants
+                                Configured</span>
                         </div>
                         <h3 class="text-base font-bold text-slate-900 mt-1">Product Variants &amp; Dual Pricing</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Manage attributes, stock, wholesale, and one-piece pricing per variant.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Manage attributes, stock, wholesale, and one-piece
+                            pricing per variant.</p>
                     </div>
-                    <button type="button" id="btnOpenVariantModal" data-action="add-variant" onclick="window.openVariantModal(); return false;"
+                    <button type="button" id="btnOpenVariantModal" data-action="add-variant"
+                        onclick="window.openVariantModal(); return false;"
                         class="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                        <i data-lucide="plus-circle" class="w-4 h-4 pointer-events-none"></i> <span class="pointer-events-none">Add Variant</span>
+                        <i data-lucide="plus-circle" class="w-4 h-4 pointer-events-none"></i> <span
+                            class="pointer-events-none">Add Variant</span>
                     </button>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <tr
+                                class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                 <th class="py-3 px-4">Code</th>
                                 <th class="py-3 px-4">Attribute &amp; Value</th>
                                 <th class="py-3 px-4 text-center">Stock</th>
@@ -783,28 +1014,40 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             <?php else: ?>
                                 <?php foreach ($variants as $v): ?>
                                     <tr class="hover:bg-slate-50 transition variant-row" data-variant-id="<?= $v['id'] ?>">
-                                        <td class="py-3 px-4 font-mono font-bold text-slate-900 v-code"><?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?></td>
+                                        <td class="py-3 px-4 font-mono font-bold text-slate-900 v-code">
+                                            <?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?></td>
                                         <td class="py-3 px-4">
-                                            <div class="font-bold text-slate-900 v-val"><?= htmlspecialchars($v['attribute_value']) ?></div>
-                                            <div class="text-[10px] text-slate-400 v-lbl"><?= htmlspecialchars($v['attribute_label']) ?> <?= !empty($v['weight']) ? '&bull; ' . htmlspecialchars($v['weight']) : '' ?></div>
+                                            <div class="font-bold text-slate-900 v-val">
+                                                <?= htmlspecialchars($v['attribute_value']) ?></div>
+                                            <div class="text-[10px] text-slate-400 v-lbl">
+                                                <?= htmlspecialchars($v['attribute_label']) ?>
+                                                <?= !empty($v['weight']) ? '&bull; ' . htmlspecialchars($v['weight']) : '' ?>
+                                            </div>
                                         </td>
-                                        <td class="py-3 px-4 text-center font-bold text-slate-900 v-stock"><?= $v['stock_quantity'] ?></td>
-                                        <td class="py-3 px-4 text-right font-bold text-slate-900 v-wprice">₹<?= number_format((float)$v['wholesale_price'], 2) ?></td>
-                                        <td class="py-3 px-4 text-right font-bold text-emerald-600 v-oprice">₹<?= number_format((float)$v['one_piece_price'], 2) ?></td>
+                                        <td class="py-3 px-4 text-center font-bold text-slate-900 v-stock">
+                                            <?= $v['stock_quantity'] ?></td>
+                                        <td class="py-3 px-4 text-right font-bold text-slate-900 v-wprice">
+                                            ₹<?= number_format((float) $v['wholesale_price'], 2) ?></td>
+                                        <td class="py-3 px-4 text-right font-bold text-emerald-600 v-oprice">
+                                            ₹<?= number_format((float) $v['one_piece_price'], 2) ?></td>
                                         <td class="py-3 px-4 text-center v-status">
-                                            <span class="px-2 py-0.5 text-[10px] font-bold rounded-full border <?= $v['is_active'] ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">
+                                            <span
+                                                class="px-2 py-0.5 text-[10px] font-bold rounded-full border <?= $v['is_active'] ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">
                                                 <?= $v['is_active'] ? 'Active' : 'Disabled' ?>
                                             </span>
                                         </td>
                                         <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
-                                            <button type="button" data-action="edit-variant" data-variant="<?= htmlspecialchars(json_encode($v, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
+                                            <button type="button" data-action="edit-variant"
+                                                data-variant="<?= htmlspecialchars(json_encode($v, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
                                                 onclick="window.openEditVariantFromBtn(this); return false;"
-                                                class="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition border border-slate-200 cursor-pointer" title="Edit Variant">
+                                                class="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition border border-slate-200 cursor-pointer"
+                                                title="Edit Variant">
                                                 <i data-lucide="edit-3" class="w-3.5 h-3.5 pointer-events-none"></i>
                                             </button>
                                             <button type="button" data-action="delete-variant" data-variant-id="<?= $v['id'] ?>"
                                                 onclick="window.confirmDeleteVariant(<?= $v['id'] ?>, this); return false;"
-                                                class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer" title="Delete Variant">
+                                                class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer"
+                                                title="Delete Variant">
                                                 <i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>
                                             </button>
                                         </td>
@@ -818,17 +1061,20 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
             <!-- TECHNICAL SPECIFICATIONS TABLE CONTAINER -->
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Technical Specifications</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Filterable key-value parameters displayed on storefront detail pages.</p>
+                        <p class="text-xs text-slate-500 mt-0.5">Filterable key-value parameters displayed on storefront
+                            detail pages.</p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <input type="text" onkeyup="filterSpecsTable(this.value)" placeholder="Search specs..."
                             class="h-9 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:border-slate-900">
                         <button type="button" data-action="add-spec" onclick="window.openAddSpecModal(); return false;"
                             class="px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0">
-                            <i data-lucide="plus-circle" class="w-4 h-4 pointer-events-none"></i> <span class="pointer-events-none">Add Spec</span>
+                            <i data-lucide="plus-circle" class="w-4 h-4 pointer-events-none"></i> <span
+                                class="pointer-events-none">Add Spec</span>
                         </button>
                     </div>
                 </div>
@@ -836,7 +1082,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            <tr
+                                class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                 <th class="py-3 px-4 w-1/3">Specification Key</th>
                                 <th class="py-3 px-4">Specification Value</th>
                                 <th class="py-3 px-4 text-right w-24">Actions</th>
@@ -852,17 +1099,21 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             <?php else: ?>
                                 <?php foreach ($specifications as $s): ?>
                                     <tr class="hover:bg-slate-50 transition spec-row" data-spec-id="<?= $s['id'] ?>">
-                                        <td class="py-3 px-4 font-bold text-slate-900 spec-key-cell"><?= htmlspecialchars($s['spec_key']) ?></td>
-                                        <td class="py-3 px-4 font-medium text-slate-700 spec-value-cell"><?= htmlspecialchars($s['spec_value']) ?></td>
+                                        <td class="py-3 px-4 font-bold text-slate-900 spec-key-cell">
+                                            <?= htmlspecialchars($s['spec_key']) ?></td>
+                                        <td class="py-3 px-4 font-medium text-slate-700 spec-value-cell">
+                                            <?= htmlspecialchars($s['spec_value']) ?></td>
                                         <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
                                             <button type="button" data-action="edit-spec" data-spec-id="<?= $s['id'] ?>"
                                                 onclick="window.openEditSpecModal(<?= $s['id'] ?>, this); return false;"
-                                                class="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition border border-slate-200 cursor-pointer" title="Edit Specification">
+                                                class="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition border border-slate-200 cursor-pointer"
+                                                title="Edit Specification">
                                                 <i data-lucide="edit-3" class="w-3.5 h-3.5 pointer-events-none"></i>
                                             </button>
                                             <button type="button" data-action="delete-spec" data-spec-id="<?= $s['id'] ?>"
                                                 onclick="window.confirmDeleteSpec(<?= $s['id'] ?>, this); return false;"
-                                                class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer" title="Delete Specification">
+                                                class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer"
+                                                title="Delete Specification">
                                                 <i data-lucide="trash-2" class="w-4 h-4 pointer-events-none"></i>
                                             </button>
                                         </td>
@@ -882,10 +1133,12 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 <!-- ========================================================================= -->
 <div id="variantModal" style="display: none; z-index: 9999;"
     class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
-    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
+    <div
+        class="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-scale-in">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
             <h3 class="text-sm font-bold text-slate-900" id="variantModalTitle">Add Product Variant</h3>
-            <button type="button" onclick="window.closeVariantModal()" class="text-slate-400 hover:text-slate-700 transition cursor-pointer">✕</button>
+            <button type="button" onclick="window.closeVariantModal()"
+                class="text-slate-400 hover:text-slate-700 transition cursor-pointer">✕</button>
         </div>
 
         <form id="variantForm" onsubmit="window.submitVariantForm(event)" class="p-6 space-y-4 text-xs">
@@ -893,12 +1146,15 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Attribute Label <span class="text-rose-500">*</span></label>
+                    <label class="block font-bold text-slate-700 mb-1">Attribute Label <span
+                            class="text-rose-500">*</span></label>
                     <input type="text" id="v_attribute_label" required placeholder="e.g. Color, Size, Style"
-                        value="Color / Style" class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold">
+                        value="Color / Style"
+                        class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700 mb-1">Attribute Value <span class="text-rose-500">*</span></label>
+                    <label class="block font-bold text-slate-700 mb-1">Attribute Value <span
+                            class="text-rose-500">*</span></label>
                     <input type="text" id="v_attribute_value" required placeholder="e.g. Onyx Black, XL"
                         class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold">
                 </div>
@@ -919,12 +1175,14 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
             <div class="grid grid-cols-2 gap-3">
                 <div>
-                    <label class="block font-bold text-slate-900 mb-1">Wholesale Price (₹) <span class="text-rose-500">*</span></label>
+                    <label class="block font-bold text-slate-900 mb-1">Wholesale Price (₹) <span
+                            class="text-rose-500">*</span></label>
                     <input type="number" step="0.01" id="v_wholesale_price" required placeholder="0.00"
                         class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold">
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-900 mb-1">One-Piece Price (₹) <span class="text-rose-500">*</span></label>
+                    <label class="block font-bold text-slate-900 mb-1">One-Piece Price (₹) <span
+                            class="text-rose-500">*</span></label>
                     <input type="number" step="0.01" id="v_one_piece_price" required placeholder="0.00"
                         class="w-full h-9 px-3 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-emerald-700">
                 </div>
@@ -946,7 +1204,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             <!-- DUAL OPTION FOR VARIANT IMAGE: LINK OR UPLOAD -->
             <div x-data="{ varImgTab: 'url' }" class="space-y-1.5 bg-slate-50 p-3 rounded-xl border border-slate-200">
                 <div class="flex items-center justify-between">
-                    <label class="block font-bold text-slate-700 text-xs uppercase tracking-wider">Variant Image (Optional)</label>
+                    <label class="block font-bold text-slate-700 text-xs uppercase tracking-wider">Variant Image
+                        (Optional)</label>
                     <div class="flex bg-slate-200/70 p-0.5 rounded-lg text-[10px] font-bold space-x-1">
                         <button type="button" @click="varImgTab = 'url'"
                             :class="varImgTab === 'url' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'"
@@ -968,7 +1227,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 <div x-show="varImgTab === 'upload'" x-cloak>
                     <input type="file" id="v_image_file" accept="image/*"
                         class="w-full p-1 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-slate-900 transition">
-                    <p class="text-[10px] text-slate-500 mt-1">Upload image file directly from computer (.jpg, .png, .webp).</p>
+                    <p class="text-[10px] text-slate-500 mt-1">Upload image file directly from computer (.jpg, .png,
+                        .webp).</p>
                 </div>
             </div>
 
@@ -980,7 +1240,9 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
                 <button type="button" onclick="window.closeVariantModal()"
                     class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition cursor-pointer">Cancel</button>
-                <button type="submit" class="px-5 py-2 bg-slate-900 text-white font-bold rounded-xl shadow-xs hover:bg-black transition cursor-pointer">Save Variant</button>
+                <button type="submit"
+                    class="px-5 py-2 bg-slate-900 text-white font-bold rounded-xl shadow-xs hover:bg-black transition cursor-pointer">Save
+                    Variant</button>
             </div>
         </form>
     </div>
@@ -991,23 +1253,27 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 <!-- ========================================================================= -->
 <div id="specModal" style="display: none; z-index: 9999;"
     class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center hidden p-4">
-    <div class="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
+    <div
+        class="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-scale-in">
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
             <h3 class="text-sm font-bold text-slate-900" id="specModalTitle">Add Product Specification</h3>
-            <button type="button" onclick="window.closeSpecModal()" class="text-slate-400 hover:text-slate-700 transition cursor-pointer">✕</button>
+            <button type="button" onclick="window.closeSpecModal()"
+                class="text-slate-400 hover:text-slate-700 transition cursor-pointer">✕</button>
         </div>
 
         <form id="specForm" onsubmit="window.submitSpecForm(event)" class="p-6 space-y-4 text-xs">
             <input type="hidden" id="s_spec_id" value="0">
 
             <div>
-                <label class="block font-bold text-slate-700 mb-1 uppercase tracking-wider">Specification Key <span class="text-rose-500">*</span></label>
+                <label class="block font-bold text-slate-700 mb-1 uppercase tracking-wider">Specification Key <span
+                        class="text-rose-500">*</span></label>
                 <input type="text" id="s_spec_key" required placeholder="e.g. Material, Jewellery Type, Gender"
                     class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
             </div>
 
             <div>
-                <label class="block font-bold text-slate-700 mb-1 uppercase tracking-wider">Specification Value <span class="text-rose-500">*</span></label>
+                <label class="block font-bold text-slate-700 mb-1 uppercase tracking-wider">Specification Value <span
+                        class="text-rose-500">*</span></label>
                 <input type="text" id="s_spec_value" required placeholder="e.g. Stainless Steel 316L, Earring, Women"
                     class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-none focus:border-slate-900 transition">
             </div>
@@ -1015,7 +1281,9 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
                 <button type="button" onclick="window.closeSpecModal()"
                     class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition cursor-pointer">Cancel</button>
-                <button type="submit" class="px-5 py-2 bg-slate-900 text-white font-bold rounded-xl shadow-xs hover:bg-black transition cursor-pointer">Save Specification</button>
+                <button type="submit"
+                    class="px-5 py-2 bg-slate-900 text-white font-bold rounded-xl shadow-xs hover:bg-black transition cursor-pointer">Save
+                    Specification</button>
             </div>
         </form>
     </div>
@@ -1504,8 +1772,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         if (valEl) valEl.value = '';
         if (codeEl) codeEl.value = '';
         if (stockEl) stockEl.value = '50';
-        if (wPriceEl) wPriceEl.value = '<?= (float)($product['price'] ?? 0) ?>';
-        if (oPriceEl) oPriceEl.value = '<?= (float)($product['sale_price'] ?: $product['price'] ?: 0) ?>';
+        if (wPriceEl) wPriceEl.value = '<?= (float) ($product['price'] ?? 0) ?>';
+        if (oPriceEl) oPriceEl.value = '<?= (float) ($product['sale_price'] ?: $product['price'] ?: 0) ?>';
         if (weightEl) weightEl.value = '';
         if (dimEl) dimEl.value = '';
         if (imgEl) imgEl.value = '';
@@ -1523,7 +1791,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         try {
             const v = JSON.parse(jsonStr);
             editVariant(v);
-        } catch(e) {
+        } catch (e) {
             console.error('Error parsing variant JSON:', e);
             showToast('Error reading variant details', 'error');
         }
@@ -1612,7 +1880,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             } else {
                 showToast(d.message || 'Error saving variant', 'error');
             }
-        } catch(err) {
+        } catch (err) {
             showToast('Network error while saving variant', 'error');
         }
     }
@@ -1642,7 +1910,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 } else {
                     showToast(data.message || 'Error deleting variant', 'error');
                 }
-            } catch(err) {
+            } catch (err) {
                 showToast('Network error while deleting variant', 'error');
             }
         };
@@ -1778,7 +2046,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             } else {
                 showToast(d.message || 'Error saving specification', 'error');
             }
-        } catch(err) {
+        } catch (err) {
             showToast('Network error while saving specification', 'error');
         }
     }
@@ -1808,7 +2076,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                 } else {
                     showToast(data.message || 'Error deleting specification', 'error');
                 }
-            } catch(err) {
+            } catch (err) {
                 showToast('Network error while deleting specification', 'error');
             }
         };

@@ -21,6 +21,9 @@ $router->get('/collection/{slug}', 'Web\CatalogController@collection');
 $router->get('/section/{slug}', 'Web\CatalogController@section');
 $router->get('/section', 'Web\CatalogController@sectionQueryString');
 $router->get('/brand/{slug}', 'Web\CatalogController@brand');
+$router->get('/factories', 'Web\CatalogController@factoriesDirectory');
+$router->get('/factory/{code}', 'Web\CatalogController@factory');
+$router->get('/factory', 'Web\CatalogController@factory');
 $router->get('/categories', 'Web\CatalogController@categoriesDirectory');
 $router->get('/product/{slug}/{variant}', 'Web\ProductDetailController@show');
 $router->get('/product/{slug}', 'Web\ProductDetailController@show');
@@ -325,6 +328,18 @@ $router->get('/admin/products/import/template', 'Admin\BulkProductImportControll
 $router->post('/admin/products/import/parse', 'Admin\BulkProductImportController@parse', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/import/commit', 'Admin\BulkProductImportController@commit', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->get('/admin/products/import/errors-csv', 'Admin\BulkProductImportController@errorsCsv', [AdminMiddleware::class]);
+
+// Factory / Manufacturer Management Routes
+$router->get('/admin/factories', 'Admin\FactoryController@index', [AdminMiddleware::class]);
+$router->get('/admin/factories/create', 'Admin\FactoryController@create', [AdminMiddleware::class]);
+$router->post('/admin/factories/store', 'Admin\FactoryController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/factories/edit/{id}', 'Admin\FactoryController@edit', [AdminMiddleware::class]);
+$router->post('/admin/factories/update/{id}', 'Admin\FactoryController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/factories/show/{id}', 'Admin\FactoryController@show', [AdminMiddleware::class]);
+$router->post('/admin/factories/assign-products/{id}', 'Admin\FactoryController@assignProducts', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/factories/remove-product/{id}', 'Admin\FactoryController@removeProduct', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/factories/delete/{id}', 'Admin\FactoryController@delete', [AdminMiddleware::class]);
+$router->post('/admin/factories/delete/{id}', 'Admin\FactoryController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
 
 
 // Brands Management

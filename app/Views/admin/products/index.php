@@ -361,12 +361,12 @@ include __DIR__ . '/../layouts/header.php';
 
                 <!-- Products Group Table -->
                 <div class="border border-slate-200 rounded-xl overflow-hidden max-h-[350px] overflow-y-auto">
-                    <table class="w-full text-xs text-left border-collapse min-w-[700px]">
-                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] font-semibold uppercase sticky top-0 z-10">
+                    <table class="w-full text-xs text-left border-collapse min-w-[700px]"                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] font-semibold uppercase sticky top-0 z-10">
                             <tr>
                                 <th class="py-2.5 px-3">Product SKU</th>
                                 <th class="py-2.5 px-3">Product Name</th>
                                 <th class="py-2.5 px-3">Category</th>
+                                <th class="py-2.5 px-3">Factory Link</th>
                                 <th class="py-2.5 px-3 text-center">Variants</th>
                                 <th class="py-2.5 px-3 text-center">Status</th>
                             </tr>
@@ -518,7 +518,7 @@ include __DIR__ . '/../layouts/header.php';
         tbody.innerHTML = '';
 
         if (!data.products || data.products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="py-6 text-center text-slate-400">No product groups found in file.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">No product groups found in file.</td></tr>';
             return;
         }
 
@@ -533,12 +533,24 @@ include __DIR__ . '/../layouts/header.php';
                 badgeLabel = 'WARNING';
             }
 
+            let fBadgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+            if (p.factory_link_status === 'existing') {
+                fBadgeClass = 'bg-indigo-100 text-indigo-800 border-indigo-300';
+            } else if (p.factory_link_status === 'new') {
+                fBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+            }
+
             let tr = document.createElement('tr');
             tr.className = 'hover:bg-slate-50 border-b border-slate-100';
             tr.innerHTML = `
                 <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${p.product_sku || 'N/A'}</td>
                 <td class="py-2.5 px-3 font-semibold text-slate-800">${p.name || 'Unnamed Product'}</td>
                 <td class="py-2.5 px-3 text-slate-600">${p.category || 'N/A'}</td>
+                <td class="py-2.5 px-3">
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-md border ${fBadgeClass}">
+                        ${p.factory_badge || 'Unassigned'}
+                    </span>
+                </td>
                 <td class="py-2.5 px-3 text-center font-bold text-slate-700">${(p.variants || []).length}</td>
                 <td class="py-2.5 px-3 text-center">
                     <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full border ${badgeClass}">${badgeLabel}</span>
@@ -552,7 +564,7 @@ include __DIR__ . '/../layouts/header.php';
                 let errTr = document.createElement('tr');
                 errTr.className = 'bg-slate-50/80';
                 errTr.innerHTML = `
-                    <td colspan="5" class="py-2 px-4 text-[11px] text-slate-600">
+                    <td colspan="6" class="py-2 px-4 text-[11px] text-slate-600">
                         <ul class="list-disc pl-4 space-y-0.5">
                             ${logs.map(l => `<li class="${p.errors && p.errors.includes(l) ? 'text-red-600 font-semibold' : 'text-amber-700'}">${l}</li>`).join('')}
                         </ul>
@@ -561,6 +573,7 @@ include __DIR__ . '/../layouts/header.php';
                 tbody.appendChild(errTr);
             }
         });
+    };
 
         // Enable / Disable commit button
         const btnCommit = document.getElementById('btnCommitImport');

@@ -355,6 +355,58 @@ class CatalogController extends BaseController
     }
 
     /**
+     * Storefront Public Directory for All Factories (/factory or /factories)
+     */
+    public function factoriesDirectory(): void
+    {
+        $db = Database::getReadConnection();
+        $stmt = $db->query("
+            SELECT f.*, COUNT(DISTINCT p.id) as product_count
+            FROM factories f
+            LEFT JOIN products p ON f.id = p.factory_id AND p.status = 'active'
+            WHERE f.status = 'active'
+            GROUP BY f.id
+            ORDER BY f.name ASC
+        ");
+        $factories = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        $this->renderView('web/factories', [
+            'factories'      => $factories,
+            'seoTitle'       => 'Verified Wholesale Factories & Manufacturers Directory | ImportWale',
+            'seoDescription' => 'Browse verified global manufacturers, factory direct suppliers, and isolated product catalogs on ImportWale.',
+            'canonicalUrl'   => url('factories'),
+        ]);
+    }
+
+    /**
+     * Storefront Public View for Factory Catalog (/factory/{code})
+     */
+    public function factory(?string $code = null): void
+    {
+        if (empty($code)) {
+            header('Location: ' . url('factories'), true, 301);
+            exit;
+        }
+
+        $db = Database::getReadConnection();
+        $stmt = $db->prepare("SELECT * FROM factories WHERE factory_code = ? OR id = ? LIMIT 1");
+        $stmt->execute([$code, (int)$code]);
+        $factory = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if (!$factory) {
+            header('Location: ' . url('factories'), true, 302);
+            exit;
+        }
+
+        $this->renderCatalogPage([
+            'factory_id'      => (int)$factory['id'],
+            'seo_title'       => htmlspecialchars($factory['name']) . ' (' . $factory['factory_code'] . ') - Wholesale Catalog | ImportWale',
+            'seo_description' => 'Browse direct wholesale products from ' . $factory['name'] . ' [' . $factory['factory_code'] . '] on ImportWale.',
+            'canonical_url'   => url('factory/' . $factory['factory_code']),
+        ]);
+    }
+
+    /**
      * Helper to render shop/catalog view with standard filtering, search, and pagination
      */
     private function renderCatalogPage(array $options): void
@@ -365,6 +417,7 @@ class CatalogController extends BaseController
         $collectionId = (int)($options['collection_id'] ?? $_GET['collection_id'] ?? $_GET['collection'] ?? 0);
         $sectionId = (int)($options['section_id'] ?? $_GET['section_id'] ?? $_GET['section'] ?? 0);
         $brandId = (int)($options['brand_id'] ?? $_GET['brand_id'] ?? 0);
+        $factoryId = (int)($options['factory_id'] ?? $_GET['factory_id'] ?? 0);
 
         $activeSection = $options['active_section'] ?? null;
         if (!$activeSection && $sectionId > 0) {
@@ -406,6 +459,7 @@ class CatalogController extends BaseController
             'collection_id'  => $collectionId,
             'section_id'     => $sectionId,
             'brand_id'       => $brandId,
+            'factory_id'     => $factoryId,
             'similar_to'     => $similarToId,
             'min_price'      => $minPrice,
             'max_price'      => $maxPrice,

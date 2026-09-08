@@ -83,6 +83,11 @@ class SearchService extends BaseService
             $params['brand_id'] = (int)$filters['brand_id'];
         }
 
+        if (!empty($filters['factory_id'])) {
+            $where[] = "p.`factory_id` = :factory_id";
+            $params['factory_id'] = (int)$filters['factory_id'];
+        }
+
         if (!empty($filters['collection_id'])) {
             $where[] = "p.`id` IN (SELECT `product_id` FROM `collection_card_products` WHERE `collection_card_id` = :collection_id)";
             $params['collection_id'] = (int)$filters['collection_id'];

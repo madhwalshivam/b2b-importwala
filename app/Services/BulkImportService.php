@@ -9,6 +9,7 @@ use App\Models\ProductSpecification;
 use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\Brand;
+use App\Models\Factory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -20,6 +21,7 @@ class BulkImportService
     private Product $productModel;
     private ProductVariant $variantModel;
     private ProductSpecification $specModel;
+    private Factory $factoryModel;
 
     private ?array $categoryCache = null;
     private ?array $subcategoryCache = null;
@@ -40,38 +42,52 @@ class BulkImportService
         'Size',                                                                // 11
         'Material',                                                            // 12
         'Country of Origin',                                                   // 13
-        'One Piece Price',                                                     // 14
-        'Wholesale Tier 1 Qty Range',                                          // 15
-        'Wholesale Tier 1 Price',                                              // 16
-        'Wholesale Tier 2 Qty Range',                                          // 17
-        'Wholesale Tier 2 Price',                                              // 18
-        'Wholesale Tier 3 Qty Range',                                          // 19
-        'Wholesale Tier 3 Price',                                              // 20
-        'Main Product Image',                                                  // 21
-        'Additional Image 1',                                                  // 22
-        'Additional Image 2',                                                  // 23
-        'Additional Image 3',                                                  // 24
-        'Additional Image 4',                                                  // 25
-        'Product Video URL',                                                   // 26
-        'Variation Type',                                                      // 27
-        'Variation Value',                                                     // 28
-        'Variation SKU',                                                       // 29
-        'Variation Price',                                                     // 30
-        'Variation Stock',                                                     // 31
-        'Variation Image',                                                     // 32
-        'Processing Technology / Processing Technique / Treatment Process',     // 33
-        'Style',                                                               // 34
-        'Suitable For Gift Giving Occasion',                                   // 35
-        'Item Number',                                                         // 36
-        'Main Downstream Platform',                                            // 37
-        'Color',                                                               // 38
-        'Popular Elements',                                                    // 39
-        'Style Classification',                                                // 40
-        'Kind/Product Type/Jewellery Type',                                     // 41
-        'Chain Style',                                                         // 42
-        'Pendant Material',                                                    // 43
-        'Trendy Element',                                                      // 44
-        'Closure Type',                                                        // 45
+        'Weight',                                                              // 14 (NEW PUBLIC)
+        'Variety',                                                             // 15 (NEW PUBLIC)
+        'One Piece Price',                                                     // 16
+        'Wholesale Tier 1 Qty Range',                                          // 17
+        'Wholesale Tier 1 Price',                                              // 18
+        'Wholesale Tier 2 Qty Range',                                          // 19
+        'Wholesale Tier 2 Price',                                              // 20
+        'Wholesale Tier 3 Qty Range',                                          // 21
+        'Wholesale Tier 3 Price',                                              // 22
+        'Main Product Image',                                                  // 23
+        'Additional Image 1',                                                  // 24
+        'Additional Image 2',                                                  // 25
+        'Additional Image 3',                                                  // 26
+        'Additional Image 4',                                                  // 27
+        'Product Video URL',                                                   // 28
+        'Variation Type',                                                      // 29
+        'Variation Value',                                                     // 30
+        'Variation SKU',                                                       // 31
+        'Variation Price',                                                     // 32
+        'Variation Stock',                                                     // 33
+        'Variation Image',                                                     // 34
+        'Processing Technology / Processing Technique / Treatment Process',     // 35
+        'Style',                                                               // 36
+        'Suitable For Gift Giving Occasion',                                   // 37
+        'Item Number',                                                         // 38
+        'Main Downstream Platform',                                            // 39
+        'Color',                                                               // 40
+        'Popular Elements',                                                    // 41
+        'Style Classification',                                                // 42
+        'Kind/Product Type/Jewellery Type',                                     // 43
+        'Chain Style',                                                         // 44
+        'Pendant Material',                                                    // 45
+        'Trendy Element',                                                      // 46
+        'Closure Type',                                                        // 47
+        'Manufacturer ID',                                                     // 48 (PRIVATE 1)
+        'Manufacturer Name',                                                   // 49 (PRIVATE 2)
+        'Manufacturer Contact Person',                                         // 50 (PRIVATE 3)
+        'Manufacturer Phone',                                                  // 51 (PRIVATE 4)
+        'Manufacturer WhatsApp',                                               // 52 (PRIVATE 5)
+        'Manufacturer Email',                                                  // 53 (PRIVATE 6)
+        'Manufacturer Store URL',                                              // 54 (PRIVATE 7)
+        'Source Platform',                                                     // 55 (PRIVATE 8)
+        'Source Product ID',                                                   // 56 (PRIVATE 9)
+        'Source Product URL',                                                  // 57 (PRIVATE 10)
+        'Import Date',                                                         // 58 (PRIVATE 11)
+        'Status',                                                              // 59 (PRIVATE 12)
     ];
 
     public function __construct()
@@ -80,6 +96,7 @@ class BulkImportService
         $this->productModel = new Product();
         $this->variantModel = new ProductVariant();
         $this->specModel = new ProductSpecification();
+        $this->factoryModel = new Factory();
     }
 
     /**
@@ -96,8 +113,15 @@ class BulkImportService
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($colIdx + 1);
             $sheet->setCellValue($colLetter . '1', $header);
             $sheet->getStyle($colLetter . '1')->getFont()->setBold(true);
-            $sheet->getStyle($colLetter . '1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()->setARGB('FFF05A29');
+
+            // Give Private fields a distinct dark slate header, Public fields orange header
+            if ($colIdx >= 48) {
+                $sheet->getStyle($colLetter . '1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FF334155'); // Dark slate for internal/private fields
+            } else {
+                $sheet->getStyle($colLetter . '1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                    ->getStartColor()->setARGB('FFF05A29'); // Orange for public fields
+            }
             $sheet->getStyle($colLetter . '1')->getFont()->getColor()->setARGB('FFFFFFFF');
         }
 
@@ -107,7 +131,7 @@ class BulkImportService
             'JWL-BRC-001',                                                    // 1: Product SKU
             'Fashion Jewellery',                                             // 2: Category
             'Bracelets & Bangles',                                           // 3: Subcategory
-            'Hand-woven genuine leather bracelet with natural Tiger Eye stone and stainless steel magnetic clasp.', // 4: Description
+            'Hand-woven genuine leather bracelet with natural Tiger Eye stone.', // 4: Description
             'Bracelet',                                                      // 5: Jewellery Type
             'Men',                                                           // 6: Gender
             'ImportWale OEM',                                                // 7: Brand Name
@@ -117,59 +141,57 @@ class BulkImportService
             '21 cm',                                                         // 11: Size
             'Stainless Steel, Leather, Tiger Eye',                           // 12: Material
             'China',                                                         // 13: Country of Origin
-            '299.00',                                                        // 14: One Piece Price
-            '2-35',                                                          // 15: Wholesale Tier 1 Qty Range
-            '145.00',                                                        // 16: Wholesale Tier 1 Price
-            '36-149',                                                        // 17: Wholesale Tier 2 Qty Range
-            '125.00',                                                        // 18: Wholesale Tier 2 Price
-            '150+',                                                          // 19: Wholesale Tier 3 Qty Range
-            '99.00',                                                         // 20: Wholesale Tier 3 Price
-            'https://images.importwale.com/products/jwl-brc-001-main.jpg',     // 21: Main Product Image
-            'https://images.importwale.com/products/jwl-brc-001-1.jpg',        // 22: Additional Image 1
-            'https://images.importwale.com/products/jwl-brc-001-2.jpg',        // 23: Additional Image 2
-            'https://images.importwale.com/products/jwl-brc-001-3.jpg',        // 24: Additional Image 3
-            'https://images.importwale.com/products/jwl-brc-001-4.jpg',        // 25: Additional Image 4
-            'https://media.importwale.com/videos/jwl-brc-001.mp4',             // 26: Product Video URL
-            'Color',                                                         // 27: Variation Type
-            'Brown Leather - Gold Clasp',                                    // 28: Variation Value
-            'JWL-BRC-001-BRN-GLD',                                           // 29: Variation SKU
-            '145.00',                                                        // 30: Variation Price
-            '500',                                                           // 31: Variation Stock
-            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 32: Variation Image
-            'Vacuum Electroplating & Hand Weaving',                          // 33: Processing Tech
-            'Vintage / Punk',                                                // 34: Style
-            "Birthday, Father's Day",                                        // 35: Gift Occasion
-            'JWL-2026-BRC01',                                                // 36: Item Number
-            'Amazon, Flipkart, Meesho',                                      // 37: Downstream Platform
-            'Brown / Tiger Eye',                                             // 38: Color
-            'Geometry, Leather Weave',                                       // 39: Popular Elements
-            'Fashion Commuter',                                              // 40: Style Classification
-            "Men's Leather Bracelet",                                        // 41: Kind/Product Type
-            'Braided Rope Chain',                                            // 42: Chain Style
-            'N/A',                                                           // 43: Pendant Material
-            'Retro Braided Leather',                                         // 44: Trendy Element
-            'Magnetic Clasp',                                                // 45: Closure Type
-        ];
-
-        // Sample Data Row 2 (2nd Variant for same product)
-        $sampleRow2 = [
-            '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '',
-            'Color',                                                         // 27: Variation Type
-            'Black Leather - Silver Clasp',                                  // 28: Variation Value
-            'JWL-BRC-001-BLK-SLV',                                           // 29: Variation SKU
-            '145.00',                                                        // 30: Variation Price
-            '350',                                                           // 31: Variation Stock
-            'https://images.importwale.com/products/jwl-brc-001-blk-slv.jpg', // 32: Variation Image
-            '', '', '', '', '', '', '', '', '', '', '', '', ''
+            '120g',                                                          // 14: Weight (NEW PUBLIC)
+            'Vintage Braided',                                               // 15: Variety (NEW PUBLIC)
+            '299.00',                                                        // 16: One Piece Price
+            '2-35',                                                          // 17: Wholesale Tier 1 Qty Range
+            '145.00',                                                        // 18: Wholesale Tier 1 Price
+            '36-149',                                                        // 19: Wholesale Tier 2 Qty Range
+            '125.00',                                                        // 20: Wholesale Tier 2 Price
+            '150+',                                                          // 21: Wholesale Tier 3 Qty Range
+            '99.00',                                                         // 22: Wholesale Tier 3 Price
+            'https://images.importwale.com/products/jwl-brc-001-main.jpg',     // 23: Main Product Image
+            'https://images.importwale.com/products/jwl-brc-001-1.jpg',        // 24: Additional Image 1
+            'https://images.importwale.com/products/jwl-brc-001-2.jpg',        // 25: Additional Image 2
+            'https://images.importwale.com/products/jwl-brc-001-3.jpg',        // 26: Additional Image 3
+            'https://images.importwale.com/products/jwl-brc-001-4.jpg',        // 27: Additional Image 4
+            'https://media.importwale.com/videos/jwl-brc-001.mp4',             // 28: Product Video URL
+            'Color',                                                         // 29: Variation Type
+            'Brown Leather - Gold Clasp',                                    // 30: Variation Value
+            'JWL-BRC-001-BRN-GLD',                                           // 31: Variation SKU
+            '145.00',                                                        // 32: Variation Price
+            '500',                                                           // 33: Variation Stock
+            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 34: Variation Image
+            'Vacuum Electroplating & Hand Weaving',                          // 35: Processing Tech
+            'Vintage / Punk',                                                // 36: Style
+            "Birthday, Father's Day",                                        // 37: Gift Occasion
+            'JWL-2026-BRC01',                                                // 38: Item Number
+            'Amazon, Flipkart, Meesho',                                      // 39: Downstream Platform
+            'Brown / Tiger Eye',                                             // 40: Color
+            'Geometry, Leather Weave',                                       // 41: Popular Elements
+            'Fashion Commuter',                                              // 42: Style Classification
+            "Men's Leather Bracelet",                                        // 43: Kind/Product Type
+            'Braided Rope Chain',                                            // 44: Chain Style
+            'N/A',                                                           // 45: Pendant Material
+            'Retro Braided Leather',                                         // 46: Trendy Element
+            'Magnetic Clasp',                                                // 47: Closure Type
+            'FCT-001',                                                       // 48: Manufacturer ID (Private)
+            'Yiwu Fashion Jewelry Manufactory',                              // 49: Manufacturer Name (Private)
+            'Mr. Chen',                                                      // 50: Manufacturer Contact Person (Private)
+            '+86 138 0000 1111',                                             // 51: Phone (Private)
+            '+86 138 0000 1111',                                             // 52: WhatsApp (Private)
+            'chen@yiwujewelry.cn',                                           // 53: Email (Private)
+            'https://shop12345.1688.com',                                    // 54: Store URL (Private)
+            '1688',                                                          // 55: Source Platform (Private)
+            '685412985412',                                                  // 56: Source Product ID (Private)
+            'https://detail.1688.com/offer/685412985412.html',                // 57: Source Product URL (Private)
+            date('Y-m-d H:i:s'),                                             // 58: Import Date (Private)
+            'Active',                                                        // 59: Status (Private)
         ];
 
         foreach ($sampleRow1 as $cIdx => $val) {
             $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($cIdx + 1);
             $sheet->setCellValue($colLetter . '2', $val);
-        }
-        foreach ($sampleRow2 as $cIdx => $val) {
-            $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($cIdx + 1);
-            $sheet->setCellValue($colLetter . '3', $val);
         }
 
         // Auto-fit column widths
@@ -190,7 +212,7 @@ class BulkImportService
     }
 
     /**
-     * Parse spreadsheet file & validate contents.
+     * Parse spreadsheet file & validate contents with Factory Auto-linking.
      */
     public function parseAndValidate(string $filePath, ?string $zipFilePath = null, bool $autoCreateCategory = true): array
     {
@@ -207,14 +229,14 @@ class BulkImportService
         } catch (\Throwable $e) {
             return [
                 'success' => false,
-                'error' => 'Unable to parse spreadsheet file: ' . $e->getMessage()
+                'error'   => 'Unable to parse spreadsheet file: ' . $e->getMessage()
             ];
         }
 
         if (count($rows) <= 1) {
             return [
                 'success' => false,
-                'error' => 'The uploaded file is empty or missing data rows.'
+                'error'   => 'The uploaded file is empty or missing data rows.'
             ];
         }
 
@@ -225,11 +247,19 @@ class BulkImportService
         $fileVariantSkus = [];
         $rowIndex = 2; // 1-indexed Excel row counter
 
-        // Cache category and brand lookups
+        // Cache category, brand, and existing factory lookups
         $categoryCache = $this->getCategoryCache();
         $subcategoryCache = $this->getSubcategoryCache();
         $brandCache = $this->getBrandCache();
 
+        // Build Factory Cache by code
+        $dbFactories = $this->factoryModel->all();
+        $factoryCache = [];
+        foreach ($dbFactories as $f) {
+            $factoryCache[strtoupper($f['factory_code'])] = $f;
+        }
+
+        $stagedNewFactories = [];
         $currentProductGroup = null;
         $groupedProducts = [];
 
@@ -241,7 +271,7 @@ class BulkImportService
                 continue;
             }
 
-            // Extract fields based on 46-column schema
+            // Extract fields based on 60-column schema
             $productName   = trim((string)($row[0] ?? ''));
             $productSku    = strtoupper(trim((string)($row[1] ?? '')));
 
@@ -265,13 +295,69 @@ class BulkImportService
                 continue;
             }
 
-            // Group additional images from columns 22..25
+            // Group additional images from columns 24..27
             $addImgs = array_filter([
-                trim((string)($row[22] ?? '')),
-                trim((string)($row[23] ?? '')),
                 trim((string)($row[24] ?? '')),
                 trim((string)($row[25] ?? '')),
+                trim((string)($row[26] ?? '')),
+                trim((string)($row[27] ?? '')),
             ]);
+
+            // Manufacturer Auto-Linking Logic (Section 2)
+            $mfgIdCode = strtoupper(trim((string)($row[48] ?? '')));
+            $mfgName   = trim((string)($row[49] ?? ''));
+
+            $factoryLinkStatus = 'unassigned'; // 'existing', 'new', 'unassigned'
+            $factoryCode       = null;
+            $factoryName       = null;
+            $factoryBadge      = 'Unassigned';
+            $factoryId         = null;
+
+            if (!empty($mfgIdCode)) {
+                // Rule a): Check if Manufacturer ID matches an existing Factory in DB
+                if (isset($factoryCache[$mfgIdCode])) {
+                    $factoryId         = (int)$factoryCache[$mfgIdCode]['id'];
+                    $factoryCode       = $factoryCache[$mfgIdCode]['factory_code'];
+                    $factoryName       = $factoryCache[$mfgIdCode]['name'];
+                    $factoryLinkStatus = 'existing';
+                    $factoryBadge      = "Existing [{$factoryCode}] {$factoryName}";
+                }
+                // Rule d): Staged new factory from earlier row in same sheet
+                elseif (isset($stagedNewFactories[$mfgIdCode])) {
+                    $factoryCode       = $stagedNewFactories[$mfgIdCode]['factory_code'];
+                    $factoryName       = $stagedNewFactories[$mfgIdCode]['name'];
+                    $factoryLinkStatus = 'new';
+                    $factoryBadge      = "New [{$factoryCode}] {$factoryName}";
+                }
+                // Rule b): Auto-create new Factory record
+                else {
+                    $targetCode = str_starts_with($mfgIdCode, 'FCT-') ? $mfgIdCode : $this->factoryModel->generateNextCode();
+                    $targetName = !empty($mfgName) ? $mfgName : ('Factory ' . $targetCode);
+
+                    $stagedNewFactoryData = [
+                        'factory_code'    => $targetCode,
+                        'name'            => $targetName,
+                        'contact_person'  => trim((string)($row[50] ?? '')) ?: null,
+                        'phone'           => trim((string)($row[51] ?? '')) ?: null,
+                        'whatsapp'        => trim((string)($row[52] ?? '')) ?: null,
+                        'email'           => trim((string)($row[53] ?? '')) ?: null,
+                        'store_url'       => trim((string)($row[54] ?? '')) ?: null,
+                        'source_platform' => trim((string)($row[55] ?? '')) ?: null,
+                        'status'          => 'active',
+                        'notes'           => 'Auto-created via Bulk Product Sheet Importer.',
+                    ];
+
+                    $stagedNewFactories[$mfgIdCode] = $stagedNewFactoryData;
+                    if ($targetCode !== $mfgIdCode) {
+                        $stagedNewFactories[$targetCode] = $stagedNewFactoryData;
+                    }
+
+                    $factoryCode       = $targetCode;
+                    $factoryName       = $targetName;
+                    $factoryLinkStatus = 'new';
+                    $factoryBadge      = "New [{$factoryCode}] {$factoryName}";
+                }
+            }
 
             if (!isset($groupedProducts[$productSku])) {
                 $groupedProducts[$productSku] = [
@@ -289,56 +375,76 @@ class BulkImportService
                     'size'                    => trim((string)($row[11] ?? '')),
                     'material'                => trim((string)($row[12] ?? '')),
                     'country_of_origin'       => trim((string)($row[13] ?? '')),
-                    'one_piece_price'         => (float)($row[14] ?? 0),
-                    'tier1_qty'               => trim((string)($row[15] ?? '')),
-                    'tier1_price'             => (float)($row[16] ?? 0),
-                    'tier2_qty'               => trim((string)($row[17] ?? '')),
-                    'tier2_price'             => (float)($row[18] ?? 0),
-                    'tier3_qty'               => trim((string)($row[19] ?? '')),
-                    'tier3_price'             => (float)($row[20] ?? 0),
-                    'main_image'              => trim((string)($row[21] ?? '')),
+                    'weight'                  => trim((string)($row[14] ?? '')), // NEW PUBLIC
+                    'variety'                 => trim((string)($row[15] ?? '')), // NEW PUBLIC
+                    'one_piece_price'         => (float)($row[16] ?? 0),
+                    'tier1_qty'               => trim((string)($row[17] ?? '')),
+                    'tier1_price'             => (float)($row[18] ?? 0),
+                    'tier2_qty'               => trim((string)($row[19] ?? '')),
+                    'tier2_price'             => (float)($row[20] ?? 0),
+                    'tier3_qty'               => trim((string)($row[21] ?? '')),
+                    'tier3_price'             => (float)($row[22] ?? 0),
+                    'main_image'              => trim((string)($row[23] ?? '')),
                     'additional_images'       => implode(',', $addImgs),
-                    'video_url'               => trim((string)($row[26] ?? '')),
-                    'processing_tech'         => trim((string)($row[33] ?? '')),
-                    'style'                   => trim((string)($row[34] ?? '')),
-                    'gift_occasion'           => trim((string)($row[35] ?? '')),
-                    'item_number'             => trim((string)($row[36] ?? '')),
-                    'downstream_platform'    => trim((string)($row[37] ?? '')),
-                    'color'                   => trim((string)($row[38] ?? '')),
-                    'popular_elements'        => trim((string)($row[39] ?? '')),
-                    'style_classification'    => trim((string)($row[40] ?? '')),
-                    'kind_product_type'       => trim((string)($row[41] ?? '')),
-                    'chain_style'             => trim((string)($row[42] ?? '')),
-                    'pendant_material'        => trim((string)($row[43] ?? '')),
-                    'trendy_element'          => trim((string)($row[44] ?? '')),
-                    'closure_type'            => trim((string)($row[45] ?? '')),
-                    'moq'                     => 1,
-                    'available_qty'           => 100,
-                    'variants'                => [],
-                    'rows'                    => [],
-                    'errors'                  => [],
-                    'warnings'                => [],
+                    'video_url'               => trim((string)($row[28] ?? '')),
+                    'processing_tech'         => trim((string)($row[35] ?? '')),
+                    'style'                   => trim((string)($row[36] ?? '')),
+                    'gift_occasion'           => trim((string)($row[37] ?? '')),
+                    'item_number'             => trim((string)($row[38] ?? '')),
+                    'downstream_platform'    => trim((string)($row[39] ?? '')),
+                    'color'                   => trim((string)($row[40] ?? '')),
+                    'popular_elements'        => trim((string)($row[41] ?? '')),
+                    'style_classification'    => trim((string)($row[42] ?? '')),
+                    'kind_product_type'       => trim((string)($row[43] ?? '')),
+                    'chain_style'             => trim((string)($row[44] ?? '')),
+                    'pendant_material'        => trim((string)($row[45] ?? '')),
+                    'trendy_element'          => trim((string)($row[46] ?? '')),
+                    'closure_type'            => trim((string)($row[47] ?? '')),
+                    // Private Manufacturer Fields (Columns 48..59)
+                    'factory_id'                  => $factoryId,
+                    'factory_code'                => $factoryCode,
+                    'factory_name'                => $factoryName,
+                    'factory_link_status'         => $factoryLinkStatus,
+                    'factory_badge'               => $factoryBadge,
+                    'manufacturer_id_code'        => $mfgIdCode,
+                    'manufacturer_name'           => $mfgName,
+                    'manufacturer_contact_person' => trim((string)($row[50] ?? '')),
+                    'manufacturer_phone'          => trim((string)($row[51] ?? '')),
+                    'manufacturer_whatsapp'       => trim((string)($row[52] ?? '')),
+                    'manufacturer_email'          => trim((string)($row[53] ?? '')),
+                    'manufacturer_store_url'      => trim((string)($row[54] ?? '')),
+                    'source_platform'             => trim((string)($row[55] ?? '')),
+                    'source_product_id'           => trim((string)($row[56] ?? '')),
+                    'source_product_url'          => trim((string)($row[57] ?? '')),
+                    'import_date'                 => !empty(trim((string)($row[58] ?? ''))) ? trim((string)$row[58]) : date('Y-m-d H:i:s'),
+                    'admin_status'                => !empty(trim((string)($row[59] ?? ''))) ? trim((string)$row[59]) : 'Active',
+                    'moq'                         => 1,
+                    'available_qty'               => 100,
+                    'variants'                    => [],
+                    'rows'                        => [],
+                    'errors'                      => [],
+                    'warnings'                    => [],
                 ];
             } else {
                 // Forward fill product level attributes if subsequent row has non-empty fields
                 if (empty($groupedProducts[$productSku]['name']) && !empty($productName)) {
                     $groupedProducts[$productSku]['name'] = $productName;
                 }
-                if (empty($groupedProducts[$productSku]['main_image']) && !empty($row[21])) {
-                    $groupedProducts[$productSku]['main_image'] = trim((string)$row[21]);
+                if (empty($groupedProducts[$productSku]['main_image']) && !empty($row[23])) {
+                    $groupedProducts[$productSku]['main_image'] = trim((string)$row[23]);
                 }
             }
 
             $pGroup = &$groupedProducts[$productSku];
             $pGroup['rows'][] = $rowIndex;
 
-            // Variant Level Data (Columns 27..32)
-            $varType  = trim((string)($row[27] ?? ''));
-            $varVal   = trim((string)($row[28] ?? ''));
-            $varSku   = strtoupper(trim((string)($row[29] ?? '')));
-            $varPrice = (float)($row[30] ?? 0);
-            $varStock = (int)($row[31] ?? $pGroup['available_qty']);
-            $varImg   = trim((string)($row[32] ?? ''));
+            // Variant Level Data (Columns 29..34)
+            $varType  = trim((string)($row[29] ?? ''));
+            $varVal   = trim((string)($row[30] ?? ''));
+            $varSku   = strtoupper(trim((string)($row[31] ?? '')));
+            $varPrice = (float)($row[32] ?? 0);
+            $varStock = (int)($row[33] ?? $pGroup['available_qty']);
+            $varImg   = trim((string)($row[34] ?? ''));
 
             // Default variant SKU to product SKU if empty
             if (empty($varSku)) {
@@ -429,14 +535,16 @@ class BulkImportService
                 'valid_products'    => $validProductsCount,
                 'warning_products'  => $warningProductsCount,
                 'error_products'    => $errorProductsCount,
+                'staged_factories'  => count($stagedNewFactories),
             ],
             'products'         => array_values($groupedProducts),
+            'staged_factories' => array_values($stagedNewFactories),
             'extracted_zip_dir'=> $extractedZipDir,
         ];
     }
 
     /**
-     * Execute Database Commit for validated products.
+     * Execute Database Commit for validated products with Factory creation & assignment.
      */
     public function commitImport(array $productsData, ?string $extractedZipDir = null): array
     {
@@ -445,17 +553,61 @@ class BulkImportService
         $createdVariants = 0;
         $updatedVariants = 0;
         $skippedProducts = 0;
+        $createdFactoriesCount = 0;
         $errorLogs = [];
 
         $this->db->beginTransaction();
 
         try {
+            // Step 1: Commit any newly staged Factories into DB first
+            $factoryMapByCode = [];
+            $dbFactories = $this->factoryModel->all();
+            foreach ($dbFactories as $f) {
+                $factoryMapByCode[strtoupper($f['factory_code'])] = (int)$f['id'];
+            }
+
+            foreach ($productsData as $prod) {
+                if (($prod['status'] ?? '') === 'error') continue;
+
+                $mfgIdCode = strtoupper(trim($prod['manufacturer_id_code'] ?? ''));
+                if (!empty($mfgIdCode) && empty($prod['factory_id'])) {
+                    if (isset($factoryMapByCode[$mfgIdCode])) {
+                        // Linked to existing
+                        $factoryId = $factoryMapByCode[$mfgIdCode];
+                    } else {
+                        // Create factory record in DB
+                        $code = !empty($prod['factory_code']) ? $prod['factory_code'] : $this->factoryModel->generateNextCode();
+                        $name = !empty($prod['factory_name']) ? $prod['factory_name'] : ($prod['manufacturer_name'] ?: ('Factory ' . $code));
+
+                        $factoryId = $this->factoryModel->insert([
+                            'factory_code'    => $code,
+                            'name'            => $name,
+                            'contact_person'  => $prod['manufacturer_contact_person'] ?: null,
+                            'phone'           => $prod['manufacturer_phone'] ?: null,
+                            'whatsapp'        => $prod['manufacturer_whatsapp'] ?: null,
+                            'email'           => $prod['manufacturer_email'] ?: null,
+                            'store_url'       => $prod['manufacturer_store_url'] ?: null,
+                            'source_platform' => $prod['source_platform'] ?: null,
+                            'status'          => 'active',
+                            'notes'           => 'Auto-created via Bulk Product Sheet Importer.',
+                            'created_at'      => date('Y-m-d H:i:s'),
+                            'updated_at'      => date('Y-m-d H:i:s'),
+                        ]);
+
+                        $factoryMapByCode[$code] = $factoryId;
+                        $factoryMapByCode[$mfgIdCode] = $factoryId;
+                        $createdFactoriesCount++;
+                    }
+                }
+            }
+
+            // Step 2: Commit Products
             foreach ($productsData as $prod) {
                 if (($prod['status'] ?? '') === 'error') {
                     $skippedProducts++;
                     $errorLogs[] = [
-                        'sku' => $prod['product_sku'],
-                        'name' => $prod['name'],
+                        'sku'    => $prod['product_sku'],
+                        'name'   => $prod['name'],
                         'reason' => implode('; ', $prod['errors'] ?? ['Validation failed.'])
                     ];
                     continue;
@@ -465,6 +617,10 @@ class BulkImportService
                 $categoryId = $this->resolveOrCreateCategory($prod['category']);
                 $subcategoryId = !empty($prod['subcategory']) ? $this->resolveOrCreateSubcategory($categoryId, $prod['subcategory']) : null;
                 $brandId = !empty($prod['brand']) ? $this->resolveOrCreateBrand($prod['brand']) : null;
+
+                // Resolve Factory ID
+                $mfgIdCode = strtoupper(trim($prod['manufacturer_id_code'] ?? ''));
+                $assignedFactoryId = !empty($prod['factory_id']) ? (int)$prod['factory_id'] : ($factoryMapByCode[$mfgIdCode] ?? null);
 
                 // Process Main Image
                 $mainImagePath = $this->processImageSource($prod['main_image'], $extractedZipDir);
@@ -485,55 +641,106 @@ class BulkImportService
                             category_id = :category_id,
                             subcategory_id = :subcategory_id,
                             brand_id = :brand_id,
+                            factory_id = :factory_id,
+                            weight = :weight,
+                            variety = :variety,
                             description = :description,
                             price = :price,
                             sale_price = :sale_price,
                             moq = :moq,
                             stock = :stock,
                             main_image = COALESCE(NULLIF(:main_image, ''), main_image),
+                            manufacturer_id_code = :manufacturer_id_code,
+                            manufacturer_name = :manufacturer_name,
+                            manufacturer_contact_person = :manufacturer_contact_person,
+                            manufacturer_phone = :manufacturer_phone,
+                            manufacturer_whatsapp = :manufacturer_whatsapp,
+                            manufacturer_email = :manufacturer_email,
+                            manufacturer_store_url = :manufacturer_store_url,
+                            source_platform = :source_platform,
+                            source_product_id = :source_product_id,
+                            source_product_url = :source_product_url,
+                            import_date = :import_date,
+                            admin_status = :admin_status,
                             status = 'active',
                             updated_at = NOW()
                         WHERE id = :id
                     ");
                     $stmtUpdate->execute([
-                        ':name'           => $prod['name'],
-                        ':slug'           => $slug,
-                        ':category_id'    => $categoryId,
-                        ':subcategory_id' => $subcategoryId,
-                        ':brand_id'       => $brandId,
-                        ':description'    => $prod['description'],
-                        ':price'          => $prod['tier1_price'] > 0 ? $prod['tier1_price'] : $prod['one_piece_price'],
-                        ':sale_price'     => $prod['one_piece_price'],
-                        ':moq'            => $prod['moq'],
-                        ':stock'          => $prod['available_qty'],
-                        ':main_image'     => $mainImagePath,
-                        ':id'             => $productId,
+                        ':name'                        => $prod['name'],
+                        ':slug'                        => $slug,
+                        ':category_id'                 => $categoryId,
+                        ':subcategory_id'              => $subcategoryId,
+                        ':brand_id'                    => $brandId,
+                        ':factory_id'                  => $assignedFactoryId,
+                        ':weight'                      => $prod['weight'] ?: null,
+                        ':variety'                     => $prod['variety'] ?: null,
+                        ':description'                 => $prod['description'],
+                        ':price'                       => $prod['tier1_price'] > 0 ? $prod['tier1_price'] : $prod['one_piece_price'],
+                        ':sale_price'                  => $prod['one_piece_price'],
+                        ':moq'                         => $prod['moq'],
+                        ':stock'                       => $prod['available_qty'],
+                        ':main_image'                  => $mainImagePath,
+                        ':manufacturer_id_code'        => $prod['manufacturer_id_code'] ?: null,
+                        ':manufacturer_name'           => $prod['manufacturer_name'] ?: null,
+                        ':manufacturer_contact_person' => $prod['manufacturer_contact_person'] ?: null,
+                        ':manufacturer_phone'          => $prod['manufacturer_phone'] ?: null,
+                        ':manufacturer_whatsapp'       => $prod['manufacturer_whatsapp'] ?: null,
+                        ':manufacturer_email'          => $prod['manufacturer_email'] ?: null,
+                        ':manufacturer_store_url'      => $prod['manufacturer_store_url'] ?: null,
+                        ':source_platform'             => $prod['source_platform'] ?: null,
+                        ':source_product_id'           => $prod['source_product_id'] ?: null,
+                        ':source_product_url'          => $prod['source_product_url'] ?: null,
+                        ':import_date'                 => $prod['import_date'] ?: date('Y-m-d H:i:s'),
+                        ':admin_status'                => $prod['admin_status'] ?: 'Active',
+                        ':id'                          => $productId,
                     ]);
                     $updatedProducts++;
                 } else {
                     $stmtInsert = $this->db->prepare("
                         INSERT INTO products (
-                            name, slug, sku, category_id, subcategory_id, brand_id, description,
-                            price, sale_price, moq, stock, main_image, video_url, status, created_at, updated_at
+                            name, slug, sku, category_id, subcategory_id, brand_id, factory_id,
+                            weight, variety, description, price, sale_price, moq, stock, main_image, video_url,
+                            manufacturer_id_code, manufacturer_name, manufacturer_contact_person, manufacturer_phone,
+                            manufacturer_whatsapp, manufacturer_email, manufacturer_store_url, source_platform,
+                            source_product_id, source_product_url, import_date, admin_status, status, created_at, updated_at
                         ) VALUES (
-                            :name, :slug, :sku, :category_id, :subcategory_id, :brand_id, :description,
-                            :price, :sale_price, :moq, :stock, :main_image, :video_url, 'active', NOW(), NOW()
+                            :name, :slug, :sku, :category_id, :subcategory_id, :brand_id, :factory_id,
+                            :weight, :variety, :description, :price, :sale_price, :moq, :stock, :main_image, :video_url,
+                            :manufacturer_id_code, :manufacturer_name, :manufacturer_contact_person, :manufacturer_phone,
+                            :manufacturer_whatsapp, :manufacturer_email, :manufacturer_store_url, :source_platform,
+                            :source_product_id, :source_product_url, :import_date, :admin_status, 'active', NOW(), NOW()
                         )
                     ");
                     $stmtInsert->execute([
-                        ':name'           => $prod['name'],
-                        ':slug'           => $slug,
-                        ':sku'            => $sku,
-                        ':category_id'    => $categoryId,
-                        ':subcategory_id' => $subcategoryId,
-                        ':brand_id'       => $brandId,
-                        ':description'    => $prod['description'],
-                        ':price'          => $prod['tier1_price'] > 0 ? $prod['tier1_price'] : $prod['one_piece_price'],
-                        ':sale_price'     => $prod['one_piece_price'],
-                        ':moq'            => $prod['moq'],
-                        ':stock'          => $prod['available_qty'],
-                        ':main_image'     => $mainImagePath ?: 'assets/images/placeholder.jpg',
-                        ':video_url'      => $prod['video_url'] ?? null,
+                        ':name'                        => $prod['name'],
+                        ':slug'                        => $slug,
+                        ':sku'                         => $sku,
+                        ':category_id'                 => $categoryId,
+                        ':subcategory_id'              => $subcategoryId,
+                        ':brand_id'                    => $brandId,
+                        ':factory_id'                  => $assignedFactoryId,
+                        ':weight'                      => $prod['weight'] ?: null,
+                        ':variety'                     => $prod['variety'] ?: null,
+                        ':description'                 => $prod['description'],
+                        ':price'                       => $prod['tier1_price'] > 0 ? $prod['tier1_price'] : $prod['one_piece_price'],
+                        ':sale_price'                  => $prod['one_piece_price'],
+                        ':moq'                         => $prod['moq'],
+                        ':stock'                       => $prod['available_qty'],
+                        ':main_image'                  => $mainImagePath ?: 'assets/images/placeholder.jpg',
+                        ':video_url'                   => $prod['video_url'] ?? null,
+                        ':manufacturer_id_code'        => $prod['manufacturer_id_code'] ?: null,
+                        ':manufacturer_name'           => $prod['manufacturer_name'] ?: null,
+                        ':manufacturer_contact_person' => $prod['manufacturer_contact_person'] ?: null,
+                        ':manufacturer_phone'          => $prod['manufacturer_phone'] ?: null,
+                        ':manufacturer_whatsapp'       => $prod['manufacturer_whatsapp'] ?: null,
+                        ':manufacturer_email'          => $prod['manufacturer_email'] ?: null,
+                        ':manufacturer_store_url'      => $prod['manufacturer_store_url'] ?: null,
+                        ':source_platform'             => $prod['source_platform'] ?: null,
+                        ':source_product_id'           => $prod['source_product_id'] ?: null,
+                        ':source_product_url'          => $prod['source_product_url'] ?: null,
+                        ':import_date'                 => $prod['import_date'] ?: date('Y-m-d H:i:s'),
+                        ':admin_status'                => $prod['admin_status'] ?: 'Active',
                     ]);
                     $productId = (int)$this->db->lastInsertId();
                     $createdProducts++;
@@ -633,23 +840,24 @@ class BulkImportService
             $this->db->rollBack();
             return [
                 'success' => false,
-                'error' => 'Database commit failed: ' . $e->getMessage()
+                'error'   => 'Database commit failed: ' . $e->getMessage()
             ];
         }
 
         return [
-            'success'          => true,
-            'created_products' => $createdProducts,
-            'updated_products' => $updatedProducts,
-            'created_variants' => $createdVariants,
-            'updated_variants' => $updatedVariants,
-            'skipped_products' => $skippedProducts,
-            'errors'           => $errorLogs,
+            'success'           => true,
+            'created_products'  => $createdProducts,
+            'updated_products'  => $updatedProducts,
+            'created_variants'  => $createdVariants,
+            'updated_variants'  => $updatedVariants,
+            'created_factories' => $createdFactoriesCount,
+            'skipped_products'  => $skippedProducts,
+            'errors'            => $errorLogs,
         ];
     }
 
     /**
-     * Save specifications from the 46-column bulk sheet.
+     * Save specifications from the 60-column bulk sheet.
      */
     private function syncProductSpecifications(int $productId, array $prod): void
     {
@@ -663,6 +871,8 @@ class BulkImportService
             'Size'                              => $prod['size'] ?? '',
             'Material'                          => $prod['material'] ?? '',
             'Country of Origin'                 => $prod['country_of_origin'] ?? '',
+            'Weight'                            => $prod['weight'] ?? '',
+            'Variety'                           => $prod['variety'] ?? '',
             'Processing Technology / Technique' => $prod['processing_tech'] ?? '',
             'Style'                             => $prod['style'] ?? '',
             'Suitable For Gift Giving Occasion' => $prod['gift_occasion'] ?? '',
@@ -748,236 +958,190 @@ class BulkImportService
         } elseif (str_contains($clean, '>') || str_contains($clean, '+')) {
             $minVal = (int)preg_replace('/[^0-9]/', '', $clean);
             return [
-                'min_qty' => $minVal > 0 ? $minVal : $defaultMin,
+                'min_qty' => max(1, $minVal ?: $defaultMin),
                 'max_qty' => null,
             ];
         }
 
         return [
             'min_qty' => $defaultMin,
-            'max_qty' => $defaultMax,
+            'max_qty' => $defaultMax
         ];
-    }
-
-    /**
-     * Helper to resolve image path from ZIP archive or URL.
-     */
-    private function processImageSource(string $imgInput, ?string $extractedZipDir): ?string
-    {
-        $imgInput = trim($imgInput);
-        if (empty($imgInput)) return null;
-
-        if (filter_var($imgInput, FILTER_VALIDATE_URL)) {
-            return $imgInput;
-        }
-
-        if ($extractedZipDir) {
-            $matchedFile = $this->resolveZipImage($imgInput, $extractedZipDir);
-            if ($matchedFile) {
-                $targetDir = ROOT_PATH . '/public/uploads/products/';
-                if (!is_dir($targetDir)) {
-                    mkdir($targetDir, 0755, true);
-                }
-                $ext = pathinfo($matchedFile, PATHINFO_EXTENSION) ?: 'jpg';
-                $newFilename = 'bulk_' . time() . '_' . md5($imgInput) . '.' . $ext;
-                copy($matchedFile, $targetDir . $newFilename);
-                return 'uploads/products/' . $newFilename;
-            }
-        }
-
-        // If file already exists relative to public/
-        if (file_exists(ROOT_PATH . '/public/' . ltrim($imgInput, '/'))) {
-            return ltrim($imgInput, '/');
-        }
-
-        return null;
-    }
-
-    /**
-     * Search extracted ZIP directory for image filename.
-     */
-    private function resolveZipImage(string $filename, string $extractedDir): ?string
-    {
-        $targetName = strtolower(basename($filename));
-        $dirIterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($extractedDir));
-        foreach ($dirIterator as $file) {
-            if ($file->isFile() && strtolower($file->getFilename()) === $targetName) {
-                return $file->getPathname();
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Extract companion ZIP file to temp directory.
-     */
-    private function extractZipImages(string $zipFilePath): ?string
-    {
-        $zip = new ZipArchive();
-        if ($zip->open($zipFilePath) === true) {
-            $extractPath = sys_get_temp_dir() . '/importwala_zip_' . time() . '_' . rand(1000, 9999);
-            mkdir($extractPath, 0755, true);
-            $zip->extractTo($extractPath);
-            $zip->close();
-            return $extractPath;
-        }
-        return null;
     }
 
     private function getCategoryCache(): array
     {
-        if ($this->categoryCache !== null) {
-            return $this->categoryCache;
-        }
-        $stmt = $this->db->query("SELECT id, name FROM categories");
-        $cats = $stmt->fetchAll();
-        $this->categoryCache = [];
-        foreach ($cats as $c) {
-            $this->categoryCache[strtolower(trim($c['name']))] = (int)$c['id'];
+        if ($this->categoryCache === null) {
+            $catModel = new Category();
+            $allCats = $catModel->all();
+            $this->categoryCache = [];
+            foreach ($allCats as $c) {
+                $this->categoryCache[strtolower($c['name'])] = (int)$c['id'];
+            }
         }
         return $this->categoryCache;
     }
 
     private function getSubcategoryCache(): array
     {
-        if ($this->subcategoryCache !== null) {
-            return $this->subcategoryCache;
-        }
-        $stmt = $this->db->query("SELECT id, category_id, name FROM subcategories");
-        $subcats = $stmt->fetchAll();
-        $this->subcategoryCache = [];
-        foreach ($subcats as $sc) {
-            $key = (int)$sc['category_id'] . '_' . strtolower(trim($sc['name']));
-            $this->subcategoryCache[$key] = (int)$sc['id'];
+        if ($this->subcategoryCache === null) {
+            $subcatModel = new Subcategory();
+            $allSubs = $subcatModel->all();
+            $this->subcategoryCache = [];
+            foreach ($allSubs as $sc) {
+                $catId = $sc['category_id'] ?? 0;
+                $key = $catId . '_' . strtolower($sc['name'] ?? '');
+                $this->subcategoryCache[$key] = (int)($sc['id'] ?? 0);
+            }
         }
         return $this->subcategoryCache;
     }
 
     private function getBrandCache(): array
     {
-        if ($this->brandCache !== null) {
-            return $this->brandCache;
-        }
-        $stmt = $this->db->query("SELECT id, name FROM brands");
-        $brands = $stmt->fetchAll();
-        $this->brandCache = [];
-        foreach ($brands as $b) {
-            $this->brandCache[strtolower(trim($b['name']))] = (int)$b['id'];
+        if ($this->brandCache === null) {
+            $brandModel = new Brand();
+            $allBrands = $brandModel->all();
+            $this->brandCache = [];
+            foreach ($allBrands as $b) {
+                $this->brandCache[strtolower($b['name'])] = (int)$b['id'];
+            }
         }
         return $this->brandCache;
     }
 
     private function resolveOrCreateCategory(string $catName): int
     {
-        $catLower = strtolower(trim($catName));
+        $clean = trim($catName);
+        $lower = strtolower($clean);
         $cache = $this->getCategoryCache();
-        if (isset($cache[$catLower])) {
-            return $cache[$catLower];
+
+        if (isset($cache[$lower])) {
+            return $cache[$lower];
         }
 
-        $slug = $this->slugify($catName);
+        $catModel = new Category();
+        $slug = $this->slugify($clean);
+        $catId = $catModel->insert([
+            'name'       => $clean,
+            'slug'       => $slug,
+            'status'     => 'active',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
 
-        // Check if category with matching slug or lowercase name already exists
-        $stmtCheck = $this->db->prepare("SELECT id, name FROM categories WHERE slug = ? OR LOWER(name) = ?");
-        $stmtCheck->execute([$slug, $catLower]);
-        $existing = $stmtCheck->fetch();
-        if ($existing) {
-            $existingId = (int)$existing['id'];
-            $this->categoryCache[$catLower] = $existingId;
-            $this->categoryCache[strtolower(trim($existing['name']))] = $existingId;
-            return $existingId;
-        }
-
-        try {
-            $stmt = $this->db->prepare("INSERT INTO categories (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
-            $stmt->execute([$catName, $slug]);
-            $newId = (int)$this->db->lastInsertId();
-        } catch (\Throwable $e) {
-            $slugUnique = $slug . '-' . substr(md5(uniqid()), 0, 4);
-            $stmt = $this->db->prepare("INSERT INTO categories (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
-            $stmt->execute([$catName, $slugUnique]);
-            $newId = (int)$this->db->lastInsertId();
-        }
-
-        $this->categoryCache[$catLower] = $newId;
-        return $newId;
+        $this->categoryCache[$lower] = $catId;
+        return $catId;
     }
 
     private function resolveOrCreateSubcategory(int $categoryId, string $subcatName): int
     {
-        $subcatLower = strtolower(trim($subcatName));
+        $clean = trim($subcatName);
+        $lower = strtolower($clean);
+        $cacheKey = $categoryId . '_' . $lower;
         $cache = $this->getSubcategoryCache();
-        $key = $categoryId . '_' . $subcatLower;
-        if (isset($cache[$key])) {
-            return $cache[$key];
+
+        if (isset($cache[$cacheKey])) {
+            return $cache[$cacheKey];
         }
 
-        $slug = $this->slugify($subcatName);
+        $subcatModel = new Subcategory();
+        $slug = $this->slugify($clean);
+        $subId = $subcatModel->insert([
+            'category_id' => $categoryId,
+            'name'        => $clean,
+            'slug'        => $slug,
+            'status'      => 'active',
+            'created_at'  => date('Y-m-d H:i:s'),
+            'updated_at'  => date('Y-m-d H:i:s'),
+        ]);
 
-        // Check if subcategory with matching slug or lowercase name already exists for this category
-        $stmtCheck = $this->db->prepare("SELECT id, name FROM subcategories WHERE category_id = ? AND (slug = ? OR LOWER(name) = ?)");
-        $stmtCheck->execute([$categoryId, $slug, $subcatLower]);
-        $existing = $stmtCheck->fetch();
-        if ($existing) {
-            $existingId = (int)$existing['id'];
-            $this->subcategoryCache[$key] = $existingId;
-            return $existingId;
-        }
-
-        try {
-            $stmt = $this->db->prepare("INSERT INTO subcategories (category_id, name, slug, status, created_at, updated_at) VALUES (?, ?, ?, 'active', NOW(), NOW())");
-            $stmt->execute([$categoryId, $subcatName, $slug]);
-            $newId = (int)$this->db->lastInsertId();
-        } catch (\Throwable $e) {
-            $slugUnique = $slug . '-' . substr(md5(uniqid()), 0, 4);
-            $stmt = $this->db->prepare("INSERT INTO subcategories (category_id, name, slug, status, created_at, updated_at) VALUES (?, ?, ?, 'active', NOW(), NOW())");
-            $stmt->execute([$categoryId, $subcatName, $slugUnique]);
-            $newId = (int)$this->db->lastInsertId();
-        }
-
-        $this->subcategoryCache[$key] = $newId;
-        return $newId;
+        $this->subcategoryCache[$cacheKey] = $subId;
+        return $subId;
     }
 
     private function resolveOrCreateBrand(string $brandName): int
     {
-        $bLower = strtolower(trim($brandName));
+        $clean = trim($brandName);
+        $lower = strtolower($clean);
         $cache = $this->getBrandCache();
-        if (isset($cache[$bLower])) {
-            return $cache[$bLower];
+
+        if (isset($cache[$lower])) {
+            return $cache[$lower];
         }
 
-        $slug = $this->slugify($brandName);
+        $brandModel = new Brand();
+        $slug = $this->slugify($clean);
+        $brandId = $brandModel->insert([
+            'name'       => $clean,
+            'slug'       => $slug,
+            'status'     => 'active',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
 
-        // Check if brand with matching slug or lowercase name already exists
-        $stmtCheck = $this->db->prepare("SELECT id, name FROM brands WHERE slug = ? OR LOWER(name) = ?");
-        $stmtCheck->execute([$slug, $bLower]);
-        $existing = $stmtCheck->fetch();
-        if ($existing) {
-            $existingId = (int)$existing['id'];
-            $this->brandCache[$bLower] = $existingId;
-            return $existingId;
-        }
-
-        try {
-            $stmt = $this->db->prepare("INSERT INTO brands (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
-            $stmt->execute([$brandName, $slug]);
-            $newId = (int)$this->db->lastInsertId();
-        } catch (\Throwable $e) {
-            $slugUnique = $slug . '-' . substr(md5(uniqid()), 0, 4);
-            $stmt = $this->db->prepare("INSERT INTO brands (name, slug, status, created_at, updated_at) VALUES (?, ?, 'active', NOW(), NOW())");
-            $stmt->execute([$brandName, $slugUnique]);
-            $newId = (int)$this->db->lastInsertId();
-        }
-
-        $this->brandCache[$bLower] = $newId;
-        return $newId;
+        $this->brandCache[$lower] = $brandId;
+        return $brandId;
     }
 
-    private function parseBool($val): int
+    private function processImageSource(string $imageInput, ?string $extractedZipDir): string
     {
-        $v = strtolower(trim((string)$val));
-        return in_array($v, ['1', 'true', 'yes', 'y'], true) ? 1 : 0;
+        $clean = trim($imageInput);
+        if (empty($clean)) {
+            return '';
+        }
+
+        if (filter_var($clean, FILTER_VALIDATE_URL)) {
+            return $clean;
+        }
+
+        if ($extractedZipDir) {
+            $resolvedPath = $this->resolveZipImage($clean, $extractedZipDir);
+            if ($resolvedPath) {
+                return $resolvedPath;
+            }
+        }
+
+        return $clean;
+    }
+
+    private function resolveZipImage(string $imageFilename, string $extractedZipDir): ?string
+    {
+        $cleanName = basename($imageFilename);
+        $possiblePaths = [
+            $extractedZipDir . '/' . $cleanName,
+            $extractedZipDir . '/images/' . $cleanName,
+            $extractedZipDir . '/img/' . $cleanName,
+        ];
+
+        foreach ($possiblePaths as $p) {
+            if (file_exists($p)) {
+                $targetDir = __DIR__ . '/../../public/uploads/products/';
+                if (!is_dir($targetDir)) {
+                    mkdir($targetDir, 0755, true);
+                }
+                $ext = pathinfo($cleanName, PATHINFO_EXTENSION) ?: 'jpg';
+                $newFilename = 'bulk_' . time() . '_' . md5($cleanName) . '.' . $ext;
+                $dest = $targetDir . $newFilename;
+                copy($p, $dest);
+                return 'uploads/products/' . $newFilename;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractZipImages(string $zipFilePath): ?string
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($zipFilePath) === true) {
+            $extractPath = sys_get_temp_dir() . '/importwala_zip_' . time();
+            @mkdir($extractPath, 0755, true);
+            $zip->extractTo($extractPath);
+            $zip->close();
+            return $extractPath;
+        }
+        return null;
     }
 
     private function slugify(string $text): string
@@ -987,6 +1151,7 @@ class BulkImportService
         $text = preg_replace('~[^-\w]+~', '', $text);
         $text = trim($text, '-');
         $text = preg_replace('~-+~', '-', $text);
-        return strtolower($text ?: 'n-a');
+        $text = strtolower($text);
+        return empty($text) ? 'product-' . time() : $text;
     }
 }

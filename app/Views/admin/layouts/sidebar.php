@@ -164,6 +164,13 @@ $isActive = function(string $path) use ($currentUri): bool {
                         <span class="truncate">Products</span>
                     </a>
 
+                    <a href="<?= url('admin/factories') ?>"
+                        class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/factories') ? 'bg-indigo-600 text-white border-indigo-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-indigo-400 border-slate-700/60' ?>"
+                        title="Factory & Manufacturer Management">
+                        <i data-lucide="factory" class="w-4 h-4 shrink-0 text-indigo-400"></i>
+                        <span class="truncate">Factories</span>
+                    </a>
+
                     <a href="<?= url('admin/reviews') ?>"
                         class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/reviews') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
                         title="Product Ratings">

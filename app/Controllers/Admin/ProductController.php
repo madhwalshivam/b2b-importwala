@@ -85,10 +85,12 @@ class ProductController extends Controller
         $categoryModel = new Category();
         $brandModel = new Brand();
         $scooterModel = new ScooterModel();
+        $factoryModel = new \App\Models\Factory();
 
         return $this->render('admin/products/create', [
             'categories' => $categoryModel->all('name ASC'),
             'brands' => $brandModel->all('name ASC'),
+            'factories' => $factoryModel->getActiveFactories(),
             'scooterModels' => $scooterModel->getAllWithBrand(),
             'selectedCategoryIds' => [],
             'selectedBrandIds' => []
@@ -234,6 +236,21 @@ class ProductController extends Controller
                 ? (float) $this->request->input('oem_price') : null,
             'oem_warranty_months' => (int) $this->request->input('oem_warranty_months', 6),
             'oem_material' => trim($this->request->input('oem_material', 'Standard Steel / Plastic')),
+            'factory_id' => !empty($_POST['factory_id']) ? (int) $_POST['factory_id'] : null,
+            'weight' => trim($this->request->input('weight', '')),
+            'variety' => trim($this->request->input('variety', '')),
+            'manufacturer_id_code' => trim($this->request->input('manufacturer_id_code', '')),
+            'manufacturer_name' => trim($this->request->input('manufacturer_name', '')),
+            'manufacturer_contact_person' => trim($this->request->input('manufacturer_contact_person', '')),
+            'manufacturer_phone' => trim($this->request->input('manufacturer_phone', '')),
+            'manufacturer_whatsapp' => trim($this->request->input('manufacturer_whatsapp', '')),
+            'manufacturer_email' => trim($this->request->input('manufacturer_email', '')),
+            'manufacturer_store_url' => trim($this->request->input('manufacturer_store_url', '')),
+            'source_platform' => trim($this->request->input('source_platform', '')),
+            'source_product_id' => trim($this->request->input('source_product_id', '')),
+            'source_product_url' => trim($this->request->input('source_product_url', '')),
+            'import_date' => !empty($_POST['import_date']) ? $_POST['import_date'] : date('Y-m-d H:i:s'),
+            'admin_status' => trim($this->request->input('admin_status', 'Active')),
         ]);
 
         // Sync Categories & Brands
@@ -386,12 +403,15 @@ class ProductController extends Controller
         $filterAttributes = $filterService->getAttributesForCategory((int)($product['category_id'] ?? 0));
         $productFilterValues = $filterService->getProductAttributeValues($id);
 
+        $factoryModel = new \App\Models\Factory();
+
         return $this->render('admin/products/edit', [
             'product' => $product,
             'categories' => $categoryModel->all('name ASC'),
             'subcategories' => $subcategories,
             'tieredPrices' => $tieredPrices,
             'brands' => $brandModel->all('name ASC'),
+            'factories' => $factoryModel->getActiveFactories(),
             'scooterModels' => $scooterModel->getAllWithBrand(),
             'selectedModelIds' => $selectedModelIds,
             'selectedCategoryIds' => $selectedCategoryIds,
@@ -532,6 +552,21 @@ class ProductController extends Controller
                 ? (float) $this->request->input('oem_price') : null,
             'oem_warranty_months' => (int) $this->request->input('oem_warranty_months', 6),
             'oem_material' => trim($this->request->input('oem_material', 'Standard Steel / Plastic')),
+            'factory_id' => !empty($_POST['factory_id']) ? (int) $_POST['factory_id'] : null,
+            'weight' => trim($this->request->input('weight', '')),
+            'variety' => trim($this->request->input('variety', '')),
+            'manufacturer_id_code' => trim($this->request->input('manufacturer_id_code', '')),
+            'manufacturer_name' => trim($this->request->input('manufacturer_name', '')),
+            'manufacturer_contact_person' => trim($this->request->input('manufacturer_contact_person', '')),
+            'manufacturer_phone' => trim($this->request->input('manufacturer_phone', '')),
+            'manufacturer_whatsapp' => trim($this->request->input('manufacturer_whatsapp', '')),
+            'manufacturer_email' => trim($this->request->input('manufacturer_email', '')),
+            'manufacturer_store_url' => trim($this->request->input('manufacturer_store_url', '')),
+            'source_platform' => trim($this->request->input('source_platform', '')),
+            'source_product_id' => trim($this->request->input('source_product_id', '')),
+            'source_product_url' => trim($this->request->input('source_product_url', '')),
+            'import_date' => !empty($_POST['import_date']) ? $_POST['import_date'] : null,
+            'admin_status' => trim($this->request->input('admin_status', 'Active')),
         ];
 
         // Handle Main Image: 1. Uploaded File or 2. Direct Image URL
