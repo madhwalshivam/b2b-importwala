@@ -227,9 +227,10 @@ class FilterAttributeService
         $aliases = [
             'brand'                  => 'brand_name',
             'kind / product type'    => 'kind',
-            'material'               => 'material_metal_type',
-            'metal'                  => 'material_metal_type',
-            'material/metal type'    => 'material_metal_type',
+            'material'               => 'material',
+            'metal type'             => 'metal_type',
+            'metal'                  => 'metal_type',
+            'material/metal type'    => 'material',
             'style'                  => 'style',
             'style classification'   => 'style_classification',
             'trendy element'         => 'trendy_element',

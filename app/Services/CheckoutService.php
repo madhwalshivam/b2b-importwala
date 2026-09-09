@@ -6,6 +6,7 @@ use App\Core\Database;
 use PDO;
 use Exception;
 use RuntimeException;
+use InvalidArgumentException;
 
 /**
  * Enterprise Idempotent & Concurrency-Safe Checkout Service
@@ -52,8 +53,8 @@ class CheckoutService extends BaseService
 
             // 3. Lock & Reserve Stock for each variation
             foreach ($cart['items'] as $item) {
-                $varId = (int)$item['variation_id'];
-                $qty = (int)$item['quantity'];
+                $varId = (int) $item['variation_id'];
+                $qty = (int) $item['quantity'];
 
                 // Atomic stock check and lock
                 $stmt = $db->prepare("SELECT `id`, `product_id`, `sku`, `stock_qty`, `reserved_qty` FROM `product_variations` WHERE `id` = :vid FOR UPDATE");
@@ -64,13 +65,13 @@ class CheckoutService extends BaseService
                     throw new RuntimeException("Product variation SKU {$item['sku']} is no longer available.");
                 }
 
-                $availableQty = (int)$varRow['stock_qty'] - (int)$varRow['reserved_qty'];
+                $availableQty = (int) $varRow['stock_qty'] - (int) $varRow['reserved_qty'];
                 if ($availableQty < $qty) {
                     throw new RuntimeException("Insufficient stock for SKU {$item['sku']}. Available: {$availableQty}, Requested: {$qty}.");
                 }
 
                 // Update stock and reserved qty atomically
-                $newStock = (int)$varRow['stock_qty'] - $qty;
+                $newStock = (int) $varRow['stock_qty'] - $qty;
                 $updateStmt = $db->prepare("UPDATE `product_variations` SET `stock_qty` = :new_stock WHERE `id` = :vid");
                 $updateStmt->execute(['new_stock' => $newStock, 'vid' => $varId]);
 
@@ -80,7 +81,7 @@ class CheckoutService extends BaseService
                 $logStmt->execute([
                     'vid' => $varId,
                     'change_qty' => -$qty,
-                    'prev_qty' => (int)$varRow['stock_qty'],
+                    'prev_qty' => (int) $varRow['stock_qty'],
                     'new_qty' => $newStock,
                     'ref_id' => $orderId,
                 ]);
@@ -108,7 +109,7 @@ class CheckoutService extends BaseService
                 (`id`, `order_number`, `user_id`, `idempotency_key`, `status`, `payment_status`, `payment_method`, `currency_code`, `currency_rate`, `subtotal`, `total_amount`, `total_weight_kg`, `shipping_address`, `billing_address`)
                 VALUES
                 (:id, :order_number, :user_id, :idempotency_key, 'pending', 'unpaid', :payment_method, 'USD', 1.000000, :subtotal, :total_amount, :weight, :shipping_addr, :billing_addr)");
-            
+
             $orderStmt->execute([
                 'id' => $orderId,
                 'order_number' => $orderNumber,
@@ -125,7 +126,7 @@ class CheckoutService extends BaseService
             // 5. Insert Order Items
             $itemStmt = $db->prepare("INSERT INTO `order_items` (`order_id`, `product_id`, `variation_id`, `sku`, `product_name`, `variation_details`, `unit_price`, `quantity`, `line_total`) 
                 VALUES (:order_id, :product_id, :variation_id, :sku, :product_name, :variation_details, :unit_price, :quantity, :line_total)");
-            
+
             foreach ($orderItemsToInsert as $oItem) {
                 $itemStmt->execute($oItem);
             }
@@ -153,7 +154,7 @@ class CheckoutService extends BaseService
             if ($db->inTransaction()) {
                 $db->rollBack();
             }
-            throw new RuntimeException("Checkout Failed: " . $e->getMessage(), (int)$e->getCode(), $e);
+            throw new RuntimeException("Checkout Failed: " . $e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 

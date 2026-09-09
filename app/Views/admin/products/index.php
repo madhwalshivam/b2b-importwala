@@ -573,7 +573,6 @@ include __DIR__ . '/../layouts/header.php';
                 tbody.appendChild(errTr);
             }
         });
-    };
 
         // Enable / Disable commit button
         const btnCommit = document.getElementById('btnCommitImport');
