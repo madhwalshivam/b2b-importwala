@@ -42,7 +42,7 @@ $actionUrl = $isEdit ? url('admin/filters/update/' . $attribute['id']) : url('ad
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pt-4 border-t border-slate-100">
             <!-- Scope / Global -->
             <div>
                 <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Scope Availability</label>
@@ -65,6 +65,15 @@ $actionUrl = $isEdit ? url('admin/filters/update/' . $attribute['id']) : url('ad
                     <option value="1" <?= ($attribute['is_active'] ?? 1) == 1 ? 'selected' : '' ?>>Active (Visible on Storefront)</option>
                     <option value="0" <?= ($attribute['is_active'] ?? 1) == 0 ? 'selected' : '' ?>>Inactive (Hidden)</option>
                 </select>
+            </div>
+
+            <!-- Admin Only Access -->
+            <div>
+                <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">Admin Only Access</label>
+                <label class="flex items-center space-x-2 text-xs font-medium text-slate-700 mt-3 cursor-pointer">
+                    <input type="checkbox" name="is_admin_only" value="1" <?= (!empty($attribute['is_admin_only'])) ? 'checked' : '' ?> class="rounded border-slate-300 text-amber-600 focus:ring-amber-500">
+                    <span>Hide from Storefront Sidebar</span>
+                </label>
             </div>
         </div>
 

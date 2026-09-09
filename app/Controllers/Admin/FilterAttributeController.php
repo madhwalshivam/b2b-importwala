@@ -75,6 +75,7 @@ class FilterAttributeController extends BaseController
         $name = trim($_POST['name'] ?? '');
         $type = $_POST['type'] ?? 'multi_select';
         $isGlobal = isset($_POST['is_global']) ? (int)$_POST['is_global'] : 1;
+        $isAdminOnly = isset($_POST['is_admin_only']) ? 1 : 0;
         $isActive = isset($_POST['is_active']) ? (int)$_POST['is_active'] : 1;
         $sortOrder = (int)($_POST['sort_order'] ?? 0);
         $categoryIds = $_POST['category_ids'] ?? [];
@@ -94,8 +95,8 @@ class FilterAttributeController extends BaseController
             $slug .= '_' . rand(100, 999);
         }
 
-        $stmt = $this->db->prepare("INSERT INTO filter_attributes (name, slug, type, is_global, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $slug, $type, $isGlobal, $isActive, $sortOrder]);
+        $stmt = $this->db->prepare("INSERT INTO filter_attributes (name, slug, type, is_global, is_admin_only, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $slug, $type, $isGlobal, $isAdminOnly, $isActive, $sortOrder]);
         $attrId = $this->db->lastInsertId();
 
         // Assign categories if not global
@@ -161,6 +162,7 @@ class FilterAttributeController extends BaseController
         $name = trim($_POST['name'] ?? '');
         $type = $_POST['type'] ?? 'multi_select';
         $isGlobal = isset($_POST['is_global']) ? (int)$_POST['is_global'] : 1;
+        $isAdminOnly = isset($_POST['is_admin_only']) ? 1 : 0;
         $isActive = isset($_POST['is_active']) ? (int)$_POST['is_active'] : 1;
         $sortOrder = (int)($_POST['sort_order'] ?? 0);
         $categoryIds = $_POST['category_ids'] ?? [];
@@ -170,8 +172,8 @@ class FilterAttributeController extends BaseController
             return;
         }
 
-        $stmt = $this->db->prepare("UPDATE filter_attributes SET name = ?, type = ?, is_global = ?, is_active = ?, sort_order = ? WHERE id = ?");
-        $stmt->execute([$name, $type, $isGlobal, $isActive, $sortOrder, $id]);
+        $stmt = $this->db->prepare("UPDATE filter_attributes SET name = ?, type = ?, is_global = ?, is_admin_only = ?, is_active = ?, sort_order = ? WHERE id = ?");
+        $stmt->execute([$name, $type, $isGlobal, $isAdminOnly, $isActive, $sortOrder, $id]);
 
         // Sync category assignments
         $this->db->prepare("DELETE FROM filter_attribute_categories WHERE attribute_id = ?")->execute([$id]);
@@ -233,6 +235,53 @@ class FilterAttributeController extends BaseController
         }
 
         echo json_encode(['success' => false, 'error' => 'Invalid ID']);
+    }
+
+    /**
+     * AJAX — Add a single option to a filter attribute on-the-fly.
+     * POST: attribute_id, value
+     * Returns JSON {success, option_id, value}
+     */
+    public function addOption(): void
+    {
+        header('Content-Type: application/json');
+        $attrId = (int)($_POST['attribute_id'] ?? 0);
+        $value  = trim($_POST['value'] ?? '');
+
+        if ($attrId <= 0 || $value === '') {
+            echo json_encode(['success' => false, 'error' => 'attribute_id and value are required']);
+            return;
+        }
+
+        // Junk-value guard
+        $junk = ['n/a', 'none', 'nil', '-', '--', 'na', 'not applicable'];
+        if (in_array(strtolower($value), $junk, true)) {
+            echo json_encode(['success' => false, 'error' => 'Value not allowed']);
+            return;
+        }
+
+        // Check attribute exists
+        $chk = $this->db->prepare("SELECT id FROM filter_attributes WHERE id = ?");
+        $chk->execute([$attrId]);
+        if (!$chk->fetch()) {
+            echo json_encode(['success' => false, 'error' => 'Attribute not found']);
+            return;
+        }
+
+        // Check if option already exists (case-insensitive)
+        $dup = $this->db->prepare("SELECT id, value FROM filter_attribute_options WHERE attribute_id = ? AND LOWER(value) = LOWER(?) LIMIT 1");
+        $dup->execute([$attrId, $value]);
+        if ($existing = $dup->fetch(PDO::FETCH_ASSOC)) {
+            echo json_encode(['success' => true, 'option_id' => (int)$existing['id'], 'value' => $existing['value'], 'existed' => true]);
+            return;
+        }
+
+        $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($value));
+        $ins  = $this->db->prepare("INSERT INTO filter_attribute_options (attribute_id, value, slug, sort_order) VALUES (?, ?, ?, 99)");
+        $ins->execute([$attrId, $value, $slug]);
+        $optId = (int)$this->db->lastInsertId();
+
+        echo json_encode(['success' => true, 'option_id' => $optId, 'value' => $value, 'existed' => false]);
     }
 
     /**

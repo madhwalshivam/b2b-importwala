@@ -40,54 +40,56 @@ class BulkImportService
         'Metal Color',                                                         // 9
         'Main Stone Type',                                                     // 10
         'Size',                                                                // 11
-        'Material',                                                            // 12
-        'Country of Origin',                                                   // 13
-        'Weight',                                                              // 14 (NEW PUBLIC)
-        'Variety',                                                             // 15 (NEW PUBLIC)
-        'One Piece Price',                                                     // 16
-        'Wholesale Tier 1 Qty Range',                                          // 17
-        'Wholesale Tier 1 Price',                                              // 18
-        'Wholesale Tier 2 Qty Range',                                          // 19
-        'Wholesale Tier 2 Price',                                              // 20
-        'Wholesale Tier 3 Qty Range',                                          // 21
-        'Wholesale Tier 3 Price',                                              // 22
-        'Main Product Image',                                                  // 23
-        'Additional Image 1',                                                  // 24
-        'Additional Image 2',                                                  // 25
-        'Additional Image 3',                                                  // 26
-        'Additional Image 4',                                                  // 27
-        'Product Video URL',                                                   // 28
-        'Variation Type',                                                      // 29
-        'Variation Value',                                                     // 30
-        'Variation SKU',                                                       // 31
-        'Variation Price',                                                     // 32
-        'Variation Stock',                                                     // 33
-        'Variation Image',                                                     // 34
-        'Processing Technology / Processing Technique / Treatment Process',     // 35
-        'Style',                                                               // 36
-        'Suitable For Gift Giving Occasion',                                   // 37
-        'Item Number',                                                         // 38
-        'Main Downstream Platform',                                            // 39
-        'Color',                                                               // 40
-        'Popular Elements',                                                    // 41
-        'Style Classification',                                                // 42
-        'Kind/Product Type/Jewellery Type',                                     // 43
-        'Chain Style',                                                         // 44
-        'Pendant Material',                                                    // 45
-        'Trendy Element',                                                      // 46
-        'Closure Type',                                                        // 47
-        'Manufacturer ID',                                                     // 48 (PRIVATE 1)
-        'Manufacturer Name',                                                   // 49 (PRIVATE 2)
-        'Manufacturer Contact Person',                                         // 50 (PRIVATE 3)
-        'Manufacturer Phone',                                                  // 51 (PRIVATE 4)
-        'Manufacturer WhatsApp',                                               // 52 (PRIVATE 5)
-        'Manufacturer Email',                                                  // 53 (PRIVATE 6)
-        'Manufacturer Store URL',                                              // 54 (PRIVATE 7)
-        'Source Platform',                                                     // 55 (PRIVATE 8)
-        'Source Product ID',                                                   // 56 (PRIVATE 9)
-        'Source Product URL',                                                  // 57 (PRIVATE 10)
-        'Import Date',                                                         // 58 (PRIVATE 11)
-        'Status',                                                              // 59 (PRIVATE 12)
+        'Country of Origin',                                                   // 12  (Material col removed; was 13)
+        'Weight',                                                              // 13 (was 14)
+        'Variety',                                                             // 14 (was 15)
+        'One Piece Price',                                                     // 15
+        'Wholesale Tier 1 Qty Range',                                          // 16
+        'Wholesale Tier 1 Price',                                              // 17
+        'Wholesale Tier 2 Qty Range',                                          // 18
+        'Wholesale Tier 2 Price',                                              // 19
+        'Wholesale Tier 3 Qty Range',                                          // 20
+        'Wholesale Tier 3 Price',                                              // 21
+        'Main Product Image',                                                  // 22
+        'Additional Image 1',                                                  // 23
+        'Additional Image 2',                                                  // 24
+        'Additional Image 3',                                                  // 25
+        'Additional Image 4',                                                  // 26
+        'Product Video URL',                                                   // 27
+        'Variation Type',                                                      // 28
+        'Variation Value',                                                     // 29
+        'Variation SKU',                                                       // 30
+        'Variation Price',                                                     // 31
+        'Variation Stock',                                                     // 32
+        'Variation Image',                                                     // 33
+        'Processing Technology',                                               // 34  (split 1/3; was combined col 35)
+        'Processing Technique',                                                // 35  (split 2/3; NEW)
+        'Treatment Process',                                                   // 36  (split 3/3; NEW)
+        'Style',                                                               // 37
+        'Suitable For Gift Giving Occasion',                                   // 38
+        'Item Number',                                                         // 39
+        'Main Downstream Platform',                                            // 40
+        'Color',                                                               // 41
+        'Popular Elements',                                                    // 42
+        'Style Classification',                                                // 43
+        'Kind',                                                                // 44  (split 1/3; was combined col 43)
+        'Product Type',                                                        // 45  (split 2/3; NEW)
+        'Chain Style',                                                         // 46  (Jewellery Type col removed; was 47)
+        'Pendant Material',                                                    // 47
+        'Trendy Element',                                                      // 48
+        'Closure Type',                                                        // 49
+        'Manufacturer ID',                                                     // 50 (PRIVATE 1)
+        'Manufacturer Name',                                                   // 51 (PRIVATE 2)
+        'Manufacturer Contact Person',                                         // 52 (PRIVATE 3)
+        'Manufacturer Phone',                                                  // 53 (PRIVATE 4)
+        'Manufacturer WhatsApp',                                               // 54 (PRIVATE 5)
+        'Manufacturer Email',                                                  // 55 (PRIVATE 6)
+        'Manufacturer Store URL',                                              // 56 (PRIVATE 7)
+        'Source Platform',                                                     // 57 (PRIVATE 8)
+        'Source Product ID',                                                   // 58 (PRIVATE 9)
+        'Source Product URL',                                                  // 59 (PRIVATE 10)
+        'Import Date',                                                         // 60 (PRIVATE 11)
+        'Status',                                                              // 61 (PRIVATE 12)
     ];
 
     public function __construct()
@@ -115,7 +117,7 @@ class BulkImportService
             $sheet->getStyle($colLetter . '1')->getFont()->setBold(true);
 
             // Give Private fields a distinct dark slate header, Public fields orange header
-            if ($colIdx >= 48) {
+            if ($colIdx >= 50) {
                 $sheet->getStyle($colLetter . '1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                     ->getStartColor()->setARGB('FF334155'); // Dark slate for internal/private fields
             } else {
@@ -125,68 +127,70 @@ class BulkImportService
             $sheet->getStyle($colLetter . '1')->getFont()->getColor()->setARGB('FFFFFFFF');
         }
 
-        // Sample Data Row 1 (Product with 1st Variant)
+        // Sample Data Row 1 (Product with 1st Variant) — 62-column layout
         $sampleRow1 = [
-            'Cross-Border Tiger Eye Leather Bracelet',                        // 0: Product Name
-            'JWL-BRC-001',                                                    // 1: Product SKU
-            'Fashion Jewellery',                                             // 2: Category
-            'Bracelets & Bangles',                                           // 3: Subcategory
+            'Cross-Border Tiger Eye Leather Bracelet',                        // 0:  Product Name
+            'JWL-BRC-001',                                                    // 1:  Product SKU
+            'Fashion Jewellery',                                              // 2:  Category
+            'Bracelets & Bangles',                                            // 3:  Subcategory
             'Hand-woven genuine leather bracelet with natural Tiger Eye stone.', // 4: Description
-            'Bracelet',                                                      // 5: Jewellery Type
-            'Men',                                                           // 6: Gender
-            'ImportWale OEM',                                                // 7: Brand Name
-            '316L Stainless Steel & Leather',                                // 8: Material/Metal Type
-            'Silver / Black PVD',                                            // 9: Metal Color
-            'Natural Tiger Eye Stone',                                       // 10: Main Stone Type
-            '21 cm',                                                         // 11: Size
-            'Stainless Steel, Leather, Tiger Eye',                           // 12: Material
-            'China',                                                         // 13: Country of Origin
-            '120g',                                                          // 14: Weight (NEW PUBLIC)
-            'Vintage Braided',                                               // 15: Variety (NEW PUBLIC)
-            '299.00',                                                        // 16: One Piece Price
-            '2-35',                                                          // 17: Wholesale Tier 1 Qty Range
-            '145.00',                                                        // 18: Wholesale Tier 1 Price
-            '36-149',                                                        // 19: Wholesale Tier 2 Qty Range
-            '125.00',                                                        // 20: Wholesale Tier 2 Price
-            '150+',                                                          // 21: Wholesale Tier 3 Qty Range
-            '99.00',                                                         // 22: Wholesale Tier 3 Price
-            'https://images.importwale.com/products/jwl-brc-001-main.jpg',     // 23: Main Product Image
-            'https://images.importwale.com/products/jwl-brc-001-1.jpg',        // 24: Additional Image 1
-            'https://images.importwale.com/products/jwl-brc-001-2.jpg',        // 25: Additional Image 2
-            'https://images.importwale.com/products/jwl-brc-001-3.jpg',        // 26: Additional Image 3
-            'https://images.importwale.com/products/jwl-brc-001-4.jpg',        // 27: Additional Image 4
-            'https://media.importwale.com/videos/jwl-brc-001.mp4',             // 28: Product Video URL
-            'Color',                                                         // 29: Variation Type
-            'Brown Leather - Gold Clasp',                                    // 30: Variation Value
-            'JWL-BRC-001-BRN-GLD',                                           // 31: Variation SKU
-            '145.00',                                                        // 32: Variation Price
-            '500',                                                           // 33: Variation Stock
-            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 34: Variation Image
-            'Vacuum Electroplating & Hand Weaving',                          // 35: Processing Tech
-            'Vintage / Punk',                                                // 36: Style
-            "Birthday, Father's Day",                                        // 37: Gift Occasion
-            'JWL-2026-BRC01',                                                // 38: Item Number
-            'Amazon, Flipkart, Meesho',                                      // 39: Downstream Platform
-            'Brown / Tiger Eye',                                             // 40: Color
-            'Geometry, Leather Weave',                                       // 41: Popular Elements
-            'Fashion Commuter',                                              // 42: Style Classification
-            "Men's Leather Bracelet",                                        // 43: Kind/Product Type
-            'Braided Rope Chain',                                            // 44: Chain Style
-            'N/A',                                                           // 45: Pendant Material
-            'Retro Braided Leather',                                         // 46: Trendy Element
-            'Magnetic Clasp',                                                // 47: Closure Type
-            'FCT-001',                                                       // 48: Manufacturer ID (Private)
-            'Yiwu Fashion Jewelry Manufactory',                              // 49: Manufacturer Name (Private)
-            'Mr. Chen',                                                      // 50: Manufacturer Contact Person (Private)
-            '+86 138 0000 1111',                                             // 51: Phone (Private)
-            '+86 138 0000 1111',                                             // 52: WhatsApp (Private)
-            'chen@yiwujewelry.cn',                                           // 53: Email (Private)
-            'https://shop12345.1688.com',                                    // 54: Store URL (Private)
-            '1688',                                                          // 55: Source Platform (Private)
-            '685412985412',                                                  // 56: Source Product ID (Private)
-            'https://detail.1688.com/offer/685412985412.html',                // 57: Source Product URL (Private)
-            date('Y-m-d H:i:s'),                                             // 58: Import Date (Private)
-            'Active',                                                        // 59: Status (Private)
+            'Bracelet',                                                       // 5:  Jewellery Type
+            'Men',                                                            // 6:  Gender
+            'ImportWale OEM',                                                 // 7:  Brand Name
+            '316L Stainless Steel & Leather',                                 // 8:  Material/Metal Type
+            'Silver / Black PVD',                                             // 9:  Metal Color
+            'Natural Tiger Eye Stone',                                        // 10: Main Stone Type
+            '21 cm',                                                          // 11: Size
+            'China',                                                          // 12: Country of Origin
+            '120g',                                                           // 13: Weight
+            'Vintage Braided',                                                // 14: Variety
+            '299.00',                                                         // 15: One Piece Price
+            '2-35',                                                           // 16: Wholesale Tier 1 Qty Range
+            '145.00',                                                         // 17: Wholesale Tier 1 Price
+            '36-149',                                                         // 18: Wholesale Tier 2 Qty Range
+            '125.00',                                                         // 19: Wholesale Tier 2 Price
+            '150+',                                                           // 20: Wholesale Tier 3 Qty Range
+            '99.00',                                                          // 21: Wholesale Tier 3 Price
+            'https://images.importwale.com/products/jwl-brc-001-main.jpg',    // 22: Main Product Image
+            'https://images.importwale.com/products/jwl-brc-001-1.jpg',       // 23: Additional Image 1
+            'https://images.importwale.com/products/jwl-brc-001-2.jpg',       // 24: Additional Image 2
+            'https://images.importwale.com/products/jwl-brc-001-3.jpg',       // 25: Additional Image 3
+            'https://images.importwale.com/products/jwl-brc-001-4.jpg',       // 26: Additional Image 4
+            'https://media.importwale.com/videos/jwl-brc-001.mp4',            // 27: Product Video URL
+            'Color',                                                          // 28: Variation Type
+            'Brown Leather - Gold Clasp',                                     // 29: Variation Value
+            'JWL-BRC-001-BRN-GLD',                                            // 30: Variation SKU
+            '145.00',                                                         // 31: Variation Price
+            '500',                                                            // 32: Variation Stock
+            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 33: Variation Image
+            'Vacuum Electroplating',                                          // 34: Processing Technology (split 1/3)
+            'Hand Weaving',                                                   // 35: Processing Technique (split 2/3)
+            '',                                                               // 36: Treatment Process (split 3/3)
+            'Vintage / Punk',                                                 // 37: Style
+            "Birthday, Father's Day",                                         // 38: Gift Occasion
+            'JWL-2026-BRC01',                                                 // 39: Item Number
+            'Amazon, Flipkart, Meesho',                                       // 40: Main Downstream Platform
+            'Brown / Tiger Eye',                                              // 41: Color
+            'Geometry, Leather Weave',                                        // 42: Popular Elements
+            'Fashion Commuter',                                               // 43: Style Classification
+            "Men's",                                                          // 44: Kind (split 1/3)
+            'Leather Bracelet',                                               // 45: Product Type (split 2/3)
+            'Braided Rope Chain',                                             // 46: Chain Style (Jewellery Type col removed)
+            'N/A',                                                            // 47: Pendant Material
+            'Retro Braided Leather',                                          // 48: Trendy Element
+            'Magnetic Clasp',                                                 // 49: Closure Type
+            'FCT-001',                                                        // 50: Manufacturer ID (Private)
+            'Yiwu Fashion Jewelry Manufactory',                               // 51: Manufacturer Name (Private)
+            'Mr. Chen',                                                       // 52: Manufacturer Contact Person (Private)
+            '+86 138 0000 1111',                                              // 53: Phone (Private)
+            '+86 138 0000 1111',                                              // 54: WhatsApp (Private)
+            'chen@yiwujewelry.cn',                                            // 55: Email (Private)
+            'https://shop12345.1688.com',                                     // 56: Store URL (Private)
+            '1688',                                                           // 57: Source Platform (Private)
+            '685412985412',                                                   // 58: Source Product ID (Private)
+            'https://detail.1688.com/offer/685412985412.html',                // 59: Source Product URL (Private)
+            date('Y-m-d H:i:s'),                                              // 60: Import Date (Private)
+            'Active',                                                         // 61: Status (Private)
         ];
 
         foreach ($sampleRow1 as $cIdx => $val) {
@@ -295,17 +299,17 @@ class BulkImportService
                 continue;
             }
 
-            // Group additional images from columns 24..27
+            // Group additional images from columns 23..26 (shifted -1 after Material col removal)
             $addImgs = array_filter([
+                trim((string)($row[23] ?? '')),
                 trim((string)($row[24] ?? '')),
                 trim((string)($row[25] ?? '')),
                 trim((string)($row[26] ?? '')),
-                trim((string)($row[27] ?? '')),
             ]);
 
-            // Manufacturer Auto-Linking Logic (Section 2)
-            $mfgIdCode = strtoupper(trim((string)($row[48] ?? '')));
-            $mfgName   = trim((string)($row[49] ?? ''));
+            // Manufacturer Auto-Linking Logic (Section 2) — private cols shifted to 51+
+            $mfgIdCode = strtoupper(trim((string)($row[51] ?? '')));
+            $mfgName   = trim((string)($row[52] ?? ''));
 
             $factoryLinkStatus = 'unassigned'; // 'existing', 'new', 'unassigned'
             $factoryCode       = null;
@@ -337,12 +341,12 @@ class BulkImportService
                     $stagedNewFactoryData = [
                         'factory_code'    => $targetCode,
                         'name'            => $targetName,
-                        'contact_person'  => trim((string)($row[50] ?? '')) ?: null,
-                        'phone'           => trim((string)($row[51] ?? '')) ?: null,
-                        'whatsapp'        => trim((string)($row[52] ?? '')) ?: null,
-                        'email'           => trim((string)($row[53] ?? '')) ?: null,
-                        'store_url'       => trim((string)($row[54] ?? '')) ?: null,
-                        'source_platform' => trim((string)($row[55] ?? '')) ?: null,
+                        'contact_person'  => trim((string)($row[53] ?? '')) ?: null,
+                        'phone'           => trim((string)($row[54] ?? '')) ?: null,
+                        'whatsapp'        => trim((string)($row[55] ?? '')) ?: null,
+                        'email'           => trim((string)($row[56] ?? '')) ?: null,
+                        'store_url'       => trim((string)($row[57] ?? '')) ?: null,
+                        'source_platform' => trim((string)($row[58] ?? '')) ?: null,
                         'status'          => 'active',
                         'notes'           => 'Auto-created via Bulk Product Sheet Importer.',
                     ];
@@ -369,38 +373,43 @@ class BulkImportService
                     'jewellery_type'          => trim((string)($row[5] ?? '')),
                     'gender'                  => trim((string)($row[6] ?? '')),
                     'brand'                   => trim((string)($row[7] ?? '')),
-                    'material_type'           => trim((string)($row[8] ?? '')),
+                    'material_type'           => trim((string)($row[8] ?? '')),  // Material/Metal Type (consolidated)
                     'metal_color'             => trim((string)($row[9] ?? '')),
                     'stone_type'              => trim((string)($row[10] ?? '')),
                     'size'                    => trim((string)($row[11] ?? '')),
-                    'material'                => trim((string)($row[12] ?? '')),
-                    'country_of_origin'       => trim((string)($row[13] ?? '')),
-                    'weight'                  => trim((string)($row[14] ?? '')), // NEW PUBLIC
-                    'variety'                 => trim((string)($row[15] ?? '')), // NEW PUBLIC
-                    'one_piece_price'         => (float)($row[16] ?? 0),
-                    'tier1_qty'               => trim((string)($row[17] ?? '')),
-                    'tier1_price'             => (float)($row[18] ?? 0),
-                    'tier2_qty'               => trim((string)($row[19] ?? '')),
-                    'tier2_price'             => (float)($row[20] ?? 0),
-                    'tier3_qty'               => trim((string)($row[21] ?? '')),
-                    'tier3_price'             => (float)($row[22] ?? 0),
-                    'main_image'              => trim((string)($row[23] ?? '')),
+                    // col 12 = Country of Origin (Material col removed)
+                    'country_of_origin'       => trim((string)($row[12] ?? '')),
+                    'weight'                  => trim((string)($row[13] ?? '')),
+                    'variety'                 => trim((string)($row[14] ?? '')),
+                    'one_piece_price'         => (float)($row[15] ?? 0),
+                    'tier1_qty'               => trim((string)($row[16] ?? '')),
+                    'tier1_price'             => (float)($row[17] ?? 0),
+                    'tier2_qty'               => trim((string)($row[18] ?? '')),
+                    'tier2_price'             => (float)($row[19] ?? 0),
+                    'tier3_qty'               => trim((string)($row[20] ?? '')),
+                    'tier3_price'             => (float)($row[21] ?? 0),
+                    'main_image'              => trim((string)($row[22] ?? '')),
                     'additional_images'       => implode(',', $addImgs),
-                    'video_url'               => trim((string)($row[28] ?? '')),
-                    'processing_tech'         => trim((string)($row[35] ?? '')),
-                    'style'                   => trim((string)($row[36] ?? '')),
-                    'gift_occasion'           => trim((string)($row[37] ?? '')),
-                    'item_number'             => trim((string)($row[38] ?? '')),
-                    'downstream_platform'    => trim((string)($row[39] ?? '')),
-                    'color'                   => trim((string)($row[40] ?? '')),
-                    'popular_elements'        => trim((string)($row[41] ?? '')),
-                    'style_classification'    => trim((string)($row[42] ?? '')),
-                    'kind_product_type'       => trim((string)($row[43] ?? '')),
-                    'chain_style'             => trim((string)($row[44] ?? '')),
-                    'pendant_material'        => trim((string)($row[45] ?? '')),
-                    'trendy_element'          => trim((string)($row[46] ?? '')),
-                    'closure_type'            => trim((string)($row[47] ?? '')),
-                    // Private Manufacturer Fields (Columns 48..59)
+                    'video_url'               => trim((string)($row[27] ?? '')),
+                    // Processing Technology split into 3 cols (34, 35, 36)
+                    'processing_technology'   => trim((string)($row[34] ?? '')),
+                    'processing_technique'    => trim((string)($row[35] ?? '')),
+                    'treatment_process'       => trim((string)($row[36] ?? '')),
+                    'style'                   => trim((string)($row[37] ?? '')),
+                    'gift_occasion'           => trim((string)($row[38] ?? '')),
+                    'item_number'             => trim((string)($row[39] ?? '')),
+                    'downstream_platform'     => trim((string)($row[40] ?? '')),
+                    'color'                   => trim((string)($row[41] ?? '')),
+                    'popular_elements'        => trim((string)($row[42] ?? '')),
+                    'style_classification'    => trim((string)($row[43] ?? '')),
+                    // Kind/Product Type split into 2 cols (44, 45) — Jewellery Type col removed
+                    'kind'                    => trim((string)($row[44] ?? '')),
+                    'product_type'            => trim((string)($row[45] ?? '')),
+                    'chain_style'             => trim((string)($row[46] ?? '')),
+                    'pendant_material'        => trim((string)($row[47] ?? '')),
+                    'trendy_element'          => trim((string)($row[48] ?? '')),
+                    'closure_type'            => trim((string)($row[49] ?? '')),
+                    // Private Manufacturer Fields (Columns 50..61)
                     'factory_id'                  => $factoryId,
                     'factory_code'                => $factoryCode,
                     'factory_name'                => $factoryName,
@@ -408,16 +417,16 @@ class BulkImportService
                     'factory_badge'               => $factoryBadge,
                     'manufacturer_id_code'        => $mfgIdCode,
                     'manufacturer_name'           => $mfgName,
-                    'manufacturer_contact_person' => trim((string)($row[50] ?? '')),
-                    'manufacturer_phone'          => trim((string)($row[51] ?? '')),
-                    'manufacturer_whatsapp'       => trim((string)($row[52] ?? '')),
-                    'manufacturer_email'          => trim((string)($row[53] ?? '')),
-                    'manufacturer_store_url'      => trim((string)($row[54] ?? '')),
-                    'source_platform'             => trim((string)($row[55] ?? '')),
-                    'source_product_id'           => trim((string)($row[56] ?? '')),
-                    'source_product_url'          => trim((string)($row[57] ?? '')),
-                    'import_date'                 => !empty(trim((string)($row[58] ?? ''))) ? trim((string)$row[58]) : date('Y-m-d H:i:s'),
-                    'admin_status'                => !empty(trim((string)($row[59] ?? ''))) ? trim((string)$row[59]) : 'Active',
+                    'manufacturer_contact_person' => trim((string)($row[52] ?? '')),
+                    'manufacturer_phone'          => trim((string)($row[53] ?? '')),
+                    'manufacturer_whatsapp'       => trim((string)($row[54] ?? '')),
+                    'manufacturer_email'          => trim((string)($row[55] ?? '')),
+                    'manufacturer_store_url'      => trim((string)($row[56] ?? '')),
+                    'source_platform'             => trim((string)($row[57] ?? '')),
+                    'source_product_id'           => trim((string)($row[58] ?? '')),
+                    'source_product_url'          => trim((string)($row[59] ?? '')),
+                    'import_date'                 => !empty(trim((string)($row[60] ?? ''))) ? trim((string)$row[60]) : date('Y-m-d H:i:s'),
+                    'admin_status'                => !empty(trim((string)($row[61] ?? ''))) ? trim((string)$row[61]) : 'Active',
                     'moq'                         => 1,
                     'available_qty'               => 100,
                     'variants'                    => [],
@@ -438,13 +447,13 @@ class BulkImportService
             $pGroup = &$groupedProducts[$productSku];
             $pGroup['rows'][] = $rowIndex;
 
-            // Variant Level Data (Columns 29..34)
-            $varType  = trim((string)($row[29] ?? ''));
-            $varVal   = trim((string)($row[30] ?? ''));
-            $varSku   = strtoupper(trim((string)($row[31] ?? '')));
-            $varPrice = (float)($row[32] ?? 0);
-            $varStock = (int)($row[33] ?? $pGroup['available_qty']);
-            $varImg   = trim((string)($row[34] ?? ''));
+            // Variant Level Data (Columns 28..33 — shifted -1 after Material col removal)
+            $varType  = trim((string)($row[28] ?? ''));
+            $varVal   = trim((string)($row[29] ?? ''));
+            $varSku   = strtoupper(trim((string)($row[30] ?? '')));
+            $varPrice = (float)($row[31] ?? 0);
+            $varStock = (int)($row[32] ?? $pGroup['available_qty']);
+            $varImg   = trim((string)($row[33] ?? ''));
 
             // Default variant SKU to product SKU if empty
             if (empty($varSku)) {
@@ -752,6 +761,10 @@ class BulkImportService
                 // Sync Specifications into `product_specifications`
                 $this->syncProductSpecifications($productId, $prod);
 
+                // Auto-populate filter option values from imported product data
+                $this->syncFilterOptions($productId, $prod);
+                (new \App\Services\FilterAttributeService())->syncProductSpecificationsToFilterAttributes($productId);
+
                 // Process Main Cover Image in product_images table
                 if (!empty($mainImagePath)) {
                     $chkM = $this->db->prepare("SELECT id FROM product_images WHERE product_id = ? AND (image_url = ? OR image_path = ?)");
@@ -865,15 +878,18 @@ class BulkImportService
             'Jewellery Type'                    => $prod['jewellery_type'] ?? '',
             'Gender'                            => $prod['gender'] ?? '',
             'Brand Name'                        => $prod['brand'] ?? '',
+            // Material/Metal Type — consolidated (Material col removed from template)
             'Material/Metal Type'               => $prod['material_type'] ?? '',
             'Metal Color'                       => $prod['metal_color'] ?? '',
             'Main Stone Type'                   => $prod['stone_type'] ?? '',
             'Size'                              => $prod['size'] ?? '',
-            'Material'                          => $prod['material'] ?? '',
             'Country of Origin'                 => $prod['country_of_origin'] ?? '',
             'Weight'                            => $prod['weight'] ?? '',
             'Variety'                           => $prod['variety'] ?? '',
-            'Processing Technology / Technique' => $prod['processing_tech'] ?? '',
+            // Processing Technology / Technique / Treatment Process — split into 3 separate specs
+            'Processing Technology'             => $prod['processing_technology'] ?? '',
+            'Processing Technique'              => $prod['processing_technique'] ?? '',
+            'Treatment Process'                 => $prod['treatment_process'] ?? '',
             'Style'                             => $prod['style'] ?? '',
             'Suitable For Gift Giving Occasion' => $prod['gift_occasion'] ?? '',
             'Item Number'                       => $prod['item_number'] ?? '',
@@ -881,7 +897,9 @@ class BulkImportService
             'Color'                             => $prod['color'] ?? '',
             'Popular Elements'                  => $prod['popular_elements'] ?? '',
             'Style Classification'              => $prod['style_classification'] ?? '',
-            'Kind / Product Type'               => $prod['kind_product_type'] ?? '',
+            // Kind / Product Type — split into 2 separate specs (Jewellery Type col removed from template)
+            'Kind'                              => $prod['kind'] ?? '',
+            'Product Type'                      => $prod['product_type'] ?? '',
             'Chain Style'                       => $prod['chain_style'] ?? '',
             'Pendant Material'                  => $prod['pendant_material'] ?? '',
             'Trendy Element'                    => $prod['trendy_element'] ?? '',
@@ -899,6 +917,80 @@ class BulkImportService
         }
 
         $this->specModel->saveSpecifications($productId, $specsToSave);
+    }
+
+    /**
+     * Auto-populate filter_attribute_options from a freshly imported product
+     * and link the product to those options via product_filter_attribute_values.
+     *
+     * Maps parsed product fields to filter attribute slugs.  Comma-separated
+     * values (e.g. "Vacuum Electroplating, Hand Weaving") are split into
+     * individual filter options.
+     */
+    private function syncFilterOptions(int $productId, array $prod): void
+    {
+        /** @var \App\Services\FilterAttributeService $fs */
+        $fs = new \App\Services\FilterAttributeService();
+
+        // field-value  →  filter attribute slug mapping
+        $fieldToSlug = [
+            'category'              => 'category',
+            'subcategory'           => 'subcategory',
+            'jewellery_type'        => 'jewellery_type',
+            'gender'                => 'gender',
+            'material_type'         => 'material_metal_type',
+            'metal_color'           => 'metal_color',
+            'stone_type'            => 'main_stone_type',
+            'country_of_origin'     => 'country_of_origin',
+            'variety'               => 'variety',
+            'processing_technology' => 'processing_technology',
+            'processing_technique'  => 'processing_technique',
+            'treatment_process'     => 'treatment_process',
+            'style'                 => 'style',
+            'style_classification'  => 'style_classification',
+            'gift_occasion'         => 'suitable_for_gift_giving_occasion',
+            'color'                 => 'color',
+            'popular_elements'      => 'popular_elements',
+            'kind'                  => 'kind',
+            'product_type'          => 'product_type',
+            'chain_style'           => 'chain_style',
+            'pendant_material'      => 'pendant_material',
+            'trendy_element'        => 'trendy_element',
+            'closure_type'          => 'closure_type',
+            'brand'                 => 'brand_name',
+            // Admin-only fields
+            'manufacturer_name'     => 'manufacturer_name',
+            'source_platform'       => 'source_platform',
+            'admin_status'          => 'status',
+        ];
+
+        // Collect attribute_id → [option_id, …] to save
+        $attrData = [];
+
+        foreach ($fieldToSlug as $field => $slug) {
+            $rawValue = trim((string)($prod[$field] ?? ''));
+            if ($rawValue === '') continue;
+
+            // Look up the attribute
+            $attr = $fs->getAttributeBySlug($slug);
+            if (!$attr) continue;
+
+            $attrId = (int)$attr['id'];
+
+            // Split comma/semicolon-separated multi-values
+            $parts = preg_split('/[,;]+/', $rawValue);
+            foreach ($parts as $part) {
+                $part = trim($part);
+                $optId = $fs->getOrCreateOption($attrId, $part);
+                if ($optId) {
+                    $attrData[$attrId][] = $optId;
+                }
+            }
+        }
+
+        if (!empty($attrData)) {
+            $fs->saveProductAttributeValues($productId, $attrData);
+        }
     }
 
     /**

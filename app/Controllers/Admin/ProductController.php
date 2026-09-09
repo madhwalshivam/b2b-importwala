@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Category;
 use App\Models\Brand;
+use App\Models\Factory;
 use App\Models\ScooterModel;
 use App\Helpers\Paginator;
 use App\Services\CloudflareR2;
@@ -84,8 +85,10 @@ class ProductController extends Controller
 
         $categoryModel = new Category();
         $brandModel = new Brand();
+        $factoryModel = new Factory();
         $scooterModel = new ScooterModel();
-        $factoryModel = new \App\Models\Factory();
+        $filterService = new \App\Services\FilterAttributeService();
+        $filterAttributes = $filterService->getAttributesForAdmin(0);
 
         return $this->render('admin/products/create', [
             'categories' => $categoryModel->all('name ASC'),
@@ -93,7 +96,9 @@ class ProductController extends Controller
             'factories' => $factoryModel->getActiveFactories(),
             'scooterModels' => $scooterModel->getAllWithBrand(),
             'selectedCategoryIds' => [],
-            'selectedBrandIds' => []
+            'selectedBrandIds' => [],
+            'filterAttributes' => $filterAttributes,
+            'productFilterValues' => []
         ]);
     }
 
@@ -317,6 +322,7 @@ class ProductController extends Controller
         if (isset($_POST['filter_attributes']) && is_array($_POST['filter_attributes'])) {
             (new \App\Services\FilterAttributeService())->saveProductAttributeValues($productId, $_POST['filter_attributes']);
         }
+        (new \App\Services\FilterAttributeService())->syncProductSpecificationsToFilterAttributes($productId);
 
         activity_log('Create Product', 'Products', $productId, "Created product: {$name} (SKU: {$sku})");
 
@@ -400,10 +406,10 @@ class ProductController extends Controller
         $specifications = $specModel->getByProduct($id);
 
         $filterService = new \App\Services\FilterAttributeService();
-        $filterAttributes = $filterService->getAttributesForCategory((int)($product['category_id'] ?? 0));
+        $filterAttributes = $filterService->getAttributesForAdmin((int)($product['category_id'] ?? 0));
         $productFilterValues = $filterService->getProductAttributeValues($id);
 
-        $factoryModel = new \App\Models\Factory();
+        $factoryModel = new Factory();
 
         return $this->render('admin/products/edit', [
             'product' => $product,
@@ -588,6 +594,7 @@ class ProductController extends Controller
         if (isset($_POST['filter_attributes']) && is_array($_POST['filter_attributes'])) {
             (new \App\Services\FilterAttributeService())->saveProductAttributeValues($id, $_POST['filter_attributes']);
         }
+        (new \App\Services\FilterAttributeService())->syncProductSpecificationsToFilterAttributes($id);
 
         // Save Wholesale Tiered Prices
         $this->saveTieredPrices($id, $_POST['tier_min_qty'] ?? [], $_POST['tier_max_qty'] ?? [], $_POST['tier_unit_price'] ?? []);

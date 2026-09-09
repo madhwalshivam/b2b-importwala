@@ -550,12 +550,15 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     </div>
                 </div>
 
-                <!-- Filter Attributes (Storefront Sidebar) -->
+                <!-- Filter Attributes (Storefront & Admin Filters) -->
                 <?php if (!empty($filterAttributes)): ?>
                     <div class="bg-white p-5 rounded-xl border border-slate-200 space-y-4 shadow-xs col-span-full">
-                        <div class="flex items-center space-x-2 border-b border-slate-100 pb-3">
-                            <i data-lucide="sliders" class="w-4 h-4 text-orange-600"></i>
-                            <h3 class="font-bold text-sm text-slate-900">Filter Attributes (Storefront Sidebar Filters)</h3>
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="sliders" class="w-4 h-4 text-orange-600"></i>
+                                <h3 class="font-bold text-sm text-slate-900">Product Filters & Specifications (28 Standard Filters)</h3>
+                            </div>
+                            <span class="text-[11px] text-slate-400 font-medium">Click "+ Add" to add new filter values on the fly</span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                             <?php foreach ($filterAttributes as $attr): ?>
@@ -565,10 +568,19 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                 $assignedValues = $productFilterValues[$attrId]['values'] ?? [];
                                 ?>
                                 <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
-                                    <label
-                                        class="block font-bold text-slate-800 uppercase tracking-wider"><?= htmlspecialchars($attr['name']) ?></label>
+                                    <div class="flex items-center justify-between">
+                                        <label class="block font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                            <span><?= htmlspecialchars($attr['name']) ?></span>
+                                            <?php if (!empty($attr['is_admin_only'])): ?>
+                                                <span class="px-1.5 py-0.5 text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 rounded uppercase">ADMIN ONLY</span>
+                                            <?php endif; ?>
+                                        </label>
+                                        <button type="button" onclick="showAddOptionPrompt(<?= $attrId ?>, '<?= htmlspecialchars(addslashes($attr['name'])) ?>')" class="text-[11px] text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 cursor-pointer">
+                                            <i data-lucide="plus" class="w-3 h-3"></i> Add
+                                        </button>
+                                    </div>
                                     <?php if ($attr['type'] === 'single_select'): ?>
-                                        <select name="filter_attributes[<?= $attrId ?>]"
+                                        <select id="filter-attr-options-<?= $attrId ?>" name="filter_attributes[<?= $attrId ?>]"
                                             class="w-full h-9 px-3 bg-white border border-slate-300 rounded-lg text-xs font-medium text-slate-900 focus:outline-none">
                                             <option value="">-- None Selected --</option>
                                             <?php foreach ($attr['options'] as $opt): ?>
@@ -578,7 +590,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                             <?php endforeach; ?>
                                         </select>
                                     <?php elseif ($attr['type'] === 'multi_select'): ?>
-                                        <div
+                                        <div id="filter-attr-options-<?= $attrId ?>"
                                             class="space-y-1.5 max-h-36 overflow-y-auto p-2 bg-white rounded-lg border border-slate-200">
                                             <?php foreach ($attr['options'] as $opt): ?>
                                                 <label
@@ -1015,17 +1027,20 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                 <?php foreach ($variants as $v): ?>
                                     <tr class="hover:bg-slate-50 transition variant-row" data-variant-id="<?= $v['id'] ?>">
                                         <td class="py-3 px-4 font-mono font-bold text-slate-900 v-code">
-                                            <?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?></td>
+                                            <?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?>
+                                        </td>
                                         <td class="py-3 px-4">
                                             <div class="font-bold text-slate-900 v-val">
-                                                <?= htmlspecialchars($v['attribute_value']) ?></div>
+                                                <?= htmlspecialchars($v['attribute_value']) ?>
+                                            </div>
                                             <div class="text-[10px] text-slate-400 v-lbl">
                                                 <?= htmlspecialchars($v['attribute_label']) ?>
                                                 <?= !empty($v['weight']) ? '&bull; ' . htmlspecialchars($v['weight']) : '' ?>
                                             </div>
                                         </td>
                                         <td class="py-3 px-4 text-center font-bold text-slate-900 v-stock">
-                                            <?= $v['stock_quantity'] ?></td>
+                                            <?= $v['stock_quantity'] ?>
+                                        </td>
                                         <td class="py-3 px-4 text-right font-bold text-slate-900 v-wprice">
                                             ₹<?= number_format((float) $v['wholesale_price'], 2) ?></td>
                                         <td class="py-3 px-4 text-right font-bold text-emerald-600 v-oprice">
@@ -1100,9 +1115,11 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                 <?php foreach ($specifications as $s): ?>
                                     <tr class="hover:bg-slate-50 transition spec-row" data-spec-id="<?= $s['id'] ?>">
                                         <td class="py-3 px-4 font-bold text-slate-900 spec-key-cell">
-                                            <?= htmlspecialchars($s['spec_key']) ?></td>
+                                            <?= htmlspecialchars($s['spec_key']) ?>
+                                        </td>
                                         <td class="py-3 px-4 font-medium text-slate-700 spec-value-cell">
-                                            <?= htmlspecialchars($s['spec_value']) ?></td>
+                                            <?= htmlspecialchars($s['spec_value']) ?>
+                                        </td>
                                         <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
                                             <button type="button" data-action="edit-spec" data-spec-id="<?= $s['id'] ?>"
                                                 onclick="window.openEditSpecModal(<?= $s['id'] ?>, this); return false;"
@@ -2146,6 +2163,45 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             return;
         }
     });
+
+    function showAddOptionPrompt(attributeId, attrName) {
+        const val = prompt('Add new option value for "' + attrName + '":');
+        if (!val || !val.trim()) return;
+
+        const formData = new FormData();
+        formData.append('attribute_id', attributeId);
+        formData.append('value', val.trim());
+
+        fetch('<?= url('admin/filters/add-option') ?>', {
+            method: 'POST',
+            body: formData
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success && res.option) {
+                const opt = res.option;
+                const container = document.getElementById('filter-attr-options-' + attributeId);
+                if (!container) return;
+
+                if (container.tagName.toLowerCase() === 'select') {
+                    const newOpt = document.createElement('option');
+                    newOpt.value = opt.id;
+                    newOpt.textContent = opt.value;
+                    newOpt.selected = true;
+                    container.appendChild(newOpt);
+                } else {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center space-x-2 font-medium text-slate-700 cursor-pointer text-xs';
+                    label.innerHTML = '<input type="checkbox" name="filter_attributes[' + attributeId + '][]" value="' + opt.id + '" checked class="rounded border-slate-300 text-orange-600"> <span>' + escapeHtml(opt.value) + '</span>';
+                    container.appendChild(label);
+                }
+            } else {
+                alert(res.error || 'Failed to add option');
+            }
+        })
+        .catch(err => alert('Error adding option: ' + err.message));
+    }
+    window.showAddOptionPrompt = showAddOptionPrompt;
 </script>
 
 <?php

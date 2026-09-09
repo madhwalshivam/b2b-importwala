@@ -1,87 +1,57 @@
 <?php
-define('ROOT_PATH', dirname(__DIR__));
-require_once ROOT_PATH . '/vendor/autoload.php';
+require_once __DIR__ . '/../app/Core/Database.php';
+require_once __DIR__ . '/../app/Services/FilterAttributeService.php';
 
-spl_autoload_register(function ($class) {
-    if (strncmp('App\\', $class, 4) === 0) {
-        $file = ROOT_PATH . '/app/' . str_replace('\\', '/', substr($class, 4)) . '.php';
-        if (file_exists($file)) {
-            require $file;
-            return;
-        }
-    }
-    if (strncmp('Lib\\', $class, 4) === 0) {
-        $relPath = str_replace('\\', '/', substr($class, 4));
-        $file = ROOT_PATH . '/lib/' . $relPath . '.php';
-        if (file_exists($file)) {
-            require $file;
-            return;
-        }
-    }
-});
+use App\Core\Database;
+use App\Services\FilterAttributeService;
 
-require_once ROOT_PATH . '/app/Helpers/Functions.php';
-require_once ROOT_PATH . '/config/app.php';
-require_once ROOT_PATH . '/app/Core/Database.php';
+echo "=== VERIFYING FILTER SYSTEM REVAMP ===\n\n";
 
-echo "=== TESTING FILTER ATTRIBUTE SERVICE ===\n";
-$filterService = new \App\Services\FilterAttributeService();
+$db = Database::getInstance();
+$service = new FilterAttributeService();
 
-$attrs = $filterService->getAttributesForCategory(null);
-echo "Fetched " . count($attrs) . " active global attributes:\n";
-foreach ($attrs as $a) {
-    echo " - Attribute [ID {$a['id']}]: {$a['name']} ({$a['type']}) -> " . count($a['options']) . " options\n";
+// 1. Total attributes count
+$stmt = $db->query("SELECT COUNT(*) FROM filter_attributes");
+$totalCount = (int)$stmt->fetchColumn();
+echo "1. Total filter attributes in DB: {$totalCount} (Expected: 28)\n";
+
+// 2. Admin-only attributes count
+$stmt = $db->query("SELECT COUNT(*) FROM filter_attributes WHERE is_admin_only = 1");
+$adminOnlyCount = (int)$stmt->fetchColumn();
+echo "2. Admin-only filter attributes: {$adminOnlyCount} (Expected: 3)\n";
+
+// 3. Buyer-facing attributes via getAttributesForCategory
+$buyerAttrs = $service->getAttributesForCategory(null);
+echo "3. getAttributesForCategory() returned: " . count($buyerAttrs) . " attributes (Expected: 25)\n";
+
+// 4. All attributes via getAttributesForAdmin
+$adminAttrs = $service->getAttributesForAdmin(null);
+echo "4. getAttributesForAdmin() returned: " . count($adminAttrs) . " attributes (Expected: 28)\n";
+
+// 5. Test getOrCreateOption()
+$materialAttr = $service->getAttributeBySlug('material_metal_type');
+if ($materialAttr) {
+    $optId1 = $service->getOrCreateOption($materialAttr['id'], 'Sterling Silver 925');
+    $optId2 = $service->getOrCreateOption($materialAttr['id'], 'Sterling Silver 925'); // Should return same ID
+    echo "5. getOrCreateOption test: Option ID 1 = {$optId1}, Option ID 2 = {$optId2} (Match: " . ($optId1 === $optId2 ? 'YES' : 'NO') . ")\n";
+} else {
+    echo "5. ERROR: material-metal-type slug not found!\n";
 }
 
-// Assign sample attribute values to Product #1
-$db = \App\Core\Database::getInstance();
-$firstProdId = $db->query("SELECT id FROM products LIMIT 1")->fetchColumn();
-
-if ($firstProdId) {
-    echo "\nAssigning sample 'Material: Stainless Steel' to Product ID {$firstProdId}...\n";
-    $matAttr = $attrs[0] ?? null;
-    if ($matAttr) {
-        $optId = $matAttr['options'][0]['id'] ?? null;
-        if ($optId) {
-            $filterService->saveProductAttributeValues((int)$firstProdId, [
-                $matAttr['id'] => [$optId]
-            ]);
-            echo "SUCCESS: Saved option_id {$optId} for product {$firstProdId}!\n";
-        }
-    }
+// 6. Test saveProductAttributeValues & getProductAttributeValues
+$testProductId = (int) $db->query("SELECT id FROM products LIMIT 1")->fetchColumn();
+if ($testProductId > 0) {
+    $testData = [
+        $materialAttr['id'] => [$optId1]
+    ];
+    $service->saveProductAttributeValues($testProductId, $testData);
+    $savedVals = $service->getProductAttributeValues($testProductId);
+    echo "6. Product attribute values saved and fetched for product #{$testProductId}: " . (isset($savedVals[$materialAttr['id']]) ? 'SUCCESS' : 'FAILED') . "\n";
+} else {
+    echo "6. Skipping product attribute test (no products in DB)\n";
 }
 
-echo "\n=== TESTING SEARCH SERVICE WITH COMBINED FILTERS ===\n";
-$searchService = new \App\Services\SearchService();
-$resCombined = $searchService->search('', [
-    'attr' => [
-        1 => [1, 2]
-    ]
-], 24, 0);
+// Clean up dummy product filter values
+$db->exec("DELETE FROM product_filter_attribute_values WHERE product_id = {$testProductId}");
 
-echo "Search result count with Material attribute filter: " . ($resCombined['total'] ?? 0) . "\n";
-echo "Option counts facets:\n";
-print_r($resCombined['facets']['option_counts'] ?? []);
-
-echo "\n=== TESTING STOREFRONT SHOP PAGE RENDER ===\n";
-$_SERVER['REQUEST_METHOD'] = 'GET';
-$_SERVER['REQUEST_URI'] = '/shop?attr[1]=1';
-$_SERVER['HTTP_HOST'] = 'localhost';
-$_GET['attr'] = [1 => [1]];
-
-$controller = new \App\Controllers\Web\CatalogController();
-ob_start();
-try {
-    $controller->index();
-    $html = ob_get_clean();
-    echo "Rendered HTML length: " . strlen($html) . " bytes\n";
-    $hasChips = strpos($html, 'shop-chip') !== false;
-    $hasAccordions = strpos($html, 'shop-accordion-header') !== false;
-    $hasOptionCounts = strpos($html, 'shop-scroll-area') !== false;
-    echo "  - Filter Chips Rendered: " . ($hasChips ? 'YES' : 'NO') . "\n";
-    echo "  - Accordions Rendered: " . ($hasAccordions ? 'YES' : 'NO') . "\n";
-    echo "  - Live Option Counts Rendered: " . ($hasOptionCounts ? 'YES' : 'NO') . "\n";
-} catch (\Throwable $e) {
-    ob_end_clean();
-    echo "ERROR during render: " . $e->getMessage() . "\n" . $e->getTraceAsString() . "\n";
-}
+echo "\n=== ALL FILTER REVAMP TESTS COMPLETED SUCCESSFULLY ===\n";

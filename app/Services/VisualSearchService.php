@@ -17,6 +17,7 @@ class VisualSearchService
     public const RELATED_MATCH_THRESHOLD = 0.70;
 
     private static array $categoryHierarchyCache = [];
+    private static ?bool $microserviceAvailable = null;
 
     private PDO $db;
     private string $publicDir;
@@ -26,6 +27,35 @@ class VisualSearchService
     {
         $this->db = Database::getInstance();
         $this->publicDir = rtrim(realpath(__DIR__ . '/../../public'), '/\\');
+    }
+
+    /**
+     * Fast non-blocking health check (150ms timeout) to verify if visual embedding microservice is running.
+     * Caches result for the duration of the PHP request process.
+     */
+    public function isMicroserviceAvailable(): bool
+    {
+        if (self::$microserviceAvailable !== null) {
+            return self::$microserviceAvailable;
+        }
+
+        try {
+            $ch = curl_init($this->microserviceUrl . '/health');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 150);
+            curl_setopt($ch, CURLOPT_TIMEOUT_MS, 300);
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+            if ($httpCode === 200) {
+                self::$microserviceAvailable = true;
+                return true;
+            }
+        } catch (\Throwable $e) {
+        }
+
+        self::$microserviceAvailable = false;
+        return false;
     }
 
     /**
@@ -42,8 +72,8 @@ class VisualSearchService
             return false;
         }
 
-        $c1 = (int)$catId1;
-        $c2 = (int)$catId2;
+        $c1 = (int) $catId1;
+        $c2 = (int) $catId2;
 
         if ($c1 === $c2) {
             return true;
@@ -75,7 +105,8 @@ class VisualSearchService
      */
     private function getRootCategoryId(int $catId): int
     {
-        if ($catId <= 0) return 0;
+        if ($catId <= 0)
+            return 0;
 
         $this->loadCategoryHierarchy();
 
@@ -86,7 +117,7 @@ class VisualSearchService
             $visited[$curr] = true;
             $parent = self::$categoryHierarchyCache[$curr]['parent_id'] ?? 0;
             if ($parent > 0) {
-                $curr = (int)$parent;
+                $curr = (int) $parent;
             } else {
                 break;
             }
@@ -105,9 +136,9 @@ class VisualSearchService
             $stmt = $this->db->query("SELECT id, name, parent_id FROM categories");
             $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
             foreach ($rows as $row) {
-                self::$categoryHierarchyCache[(int)$row['id']] = [
-                    'name'      => $row['name'],
-                    'parent_id' => $row['parent_id'] ? (int)$row['parent_id'] : 0,
+                self::$categoryHierarchyCache[(int) $row['id']] = [
+                    'name' => $row['name'],
+                    'parent_id' => $row['parent_id'] ? (int) $row['parent_id'] : 0,
                 ];
             }
         } catch (\Throwable $e) {
@@ -118,7 +149,7 @@ class VisualSearchService
     /**
      * Generate visual embedding vector (128-dim normalized float array) using Python microservice or CLI fallback.
      */
-    public function generateEmbedding(string $imagePath): ?array
+    public function generateEmbedding(string $imagePath, bool $allowCliFallback = false): ?array
     {
         $resolvedPath = $this->resolveImagePath($imagePath);
         if (!$resolvedPath) {
@@ -129,14 +160,20 @@ class VisualSearchService
             return null;
         }
 
-        // 1. Try HTTP Microservice first (http://127.0.0.1:5005/embed)
-        $httpRes = $this->callMicroserviceEmbed($resolvedPath);
-        if (!empty($httpRes) && is_array($httpRes)) {
-            return $httpRes;
+        // 1. Try HTTP Microservice first if available
+        if ($this->isMicroserviceAvailable()) {
+            $httpRes = $this->callMicroserviceEmbed($resolvedPath);
+            if (!empty($httpRes) && is_array($httpRes)) {
+                return $httpRes;
+            }
         }
 
-        // 2. CLI Fallback execution if HTTP microservice is unreachable
-        return $this->callCliEmbed($resolvedPath);
+        // 2. CLI Fallback execution if HTTP microservice is unreachable AND explicitly allowed
+        if ($allowCliFallback) {
+            return $this->callCliEmbed($resolvedPath);
+        }
+
+        return null;
     }
 
     /**
@@ -160,7 +197,7 @@ class VisualSearchService
             $imagesToIndex[$path] = [
                 'image_path' => $path,
                 'image_type' => 'main',
-                'image_id'   => null,
+                'image_id' => null,
                 'variant_id' => null,
             ];
         }
@@ -172,21 +209,22 @@ class VisualSearchService
 
         foreach ($gallery as $g) {
             $path = trim($g['image_url'] ?: $g['image_path'] ?? '');
-            if (empty($path)) continue;
+            if (empty($path))
+                continue;
 
             if (!isset($imagesToIndex[$path])) {
                 $imagesToIndex[$path] = [
                     'image_path' => $path,
                     'image_type' => 'gallery',
-                    'image_id'   => (int)$g['id'],
-                    'variant_id' => !empty($g['variation_value_id']) ? (int)$g['variation_value_id'] : null,
+                    'image_id' => (int) $g['id'],
+                    'variant_id' => !empty($g['variation_value_id']) ? (int) $g['variation_value_id'] : null,
                 ];
             } else {
                 if (empty($imagesToIndex[$path]['image_id'])) {
-                    $imagesToIndex[$path]['image_id'] = (int)$g['id'];
+                    $imagesToIndex[$path]['image_id'] = (int) $g['id'];
                 }
                 if (empty($imagesToIndex[$path]['variant_id']) && !empty($g['variation_value_id'])) {
-                    $imagesToIndex[$path]['variant_id'] = (int)$g['variation_value_id'];
+                    $imagesToIndex[$path]['variant_id'] = (int) $g['variation_value_id'];
                 }
             }
         }
@@ -198,18 +236,19 @@ class VisualSearchService
 
         foreach ($variants as $v) {
             $path = trim($v['image_url'] ?? '');
-            if (empty($path)) continue;
+            if (empty($path))
+                continue;
 
             if (!isset($imagesToIndex[$path])) {
                 $imagesToIndex[$path] = [
                     'image_path' => $path,
                     'image_type' => 'variant',
-                    'image_id'   => null,
-                    'variant_id' => (int)$v['id'],
+                    'image_id' => null,
+                    'variant_id' => (int) $v['id'],
                 ];
             } else {
                 if (empty($imagesToIndex[$path]['variant_id'])) {
-                    $imagesToIndex[$path]['variant_id'] = (int)$v['id'];
+                    $imagesToIndex[$path]['variant_id'] = (int) $v['id'];
                 }
             }
         }
@@ -244,13 +283,13 @@ class VisualSearchService
             $dhash = substr(md5($jsonEmbedding), 0, 16);
 
             $ok = $stmtSave->execute([
-                'pid'      => $productId,
-                'img_id'   => $imgData['image_id'],
-                'var_id'   => $imgData['variant_id'],
+                'pid' => $productId,
+                'img_id' => $imgData['image_id'],
+                'var_id' => $imgData['variant_id'],
                 'img_type' => $imgData['image_type'],
                 'img_path' => $imgPath,
-                'vec'      => $jsonEmbedding,
-                'dhash'    => $dhash,
+                'vec' => $jsonEmbedding,
+                'dhash' => $dhash,
             ]);
 
             if ($ok) {
@@ -282,19 +321,19 @@ class VisualSearchService
         $failCount = 0;
 
         foreach ($products as $p) {
-            if ($this->indexProduct((int)$p['id'])) {
+            if ($this->indexProduct((int) $p['id'])) {
                 $successCount++;
             } else {
                 $failCount++;
             }
         }
 
-        $totalImagesIndexed = (int)$this->db->query("SELECT COUNT(*) FROM product_image_embeddings")->fetchColumn();
+        $totalImagesIndexed = (int) $this->db->query("SELECT COUNT(*) FROM product_image_embeddings")->fetchColumn();
 
         return [
-            'total'                => count($products),
-            'indexed'              => $successCount,
-            'failed'               => $failCount,
+            'total' => count($products),
+            'indexed' => $successCount,
+            'failed' => $failCount,
             'total_images_indexed' => $totalImagesIndexed,
         ];
     }
@@ -306,8 +345,8 @@ class VisualSearchService
     {
         $this->ensureCatalogIndexed();
 
-        // 1. Generate embedding for query image
-        $queryVector = $this->generateEmbedding($uploadedTmpPath);
+        // 1. Generate embedding for query image (allow CLI fallback for manual uploads)
+        $queryVector = $this->generateEmbedding($uploadedTmpPath, true);
 
         // Delete temporary upload file after generating vector
         if (file_exists($uploadedTmpPath) && strpos($uploadedTmpPath, 'temp_visual_search') !== false) {
@@ -336,18 +375,18 @@ class VisualSearchService
             }
 
             $score = $this->calculateCosineSimilarity($queryVector, $targetVector);
-            $pid = (int)$row['product_id'];
+            $pid = (int) $row['product_id'];
 
             if (!isset($bestPerProduct[$pid]) || $score > $bestPerProduct[$pid]['raw_score']) {
                 $bestPerProduct[$pid] = [
-                    'row'       => $row,
+                    'row' => $row,
                     'raw_score' => $score,
                 ];
             }
         }
 
         $matchingProducts = [];
-        $similarProducts  = [];
+        $similarProducts = [];
 
         foreach ($bestPerProduct as $pid => $best) {
             $row = $best['row'];
@@ -357,34 +396,34 @@ class VisualSearchService
             $displayImage = !empty($row['image_path']) ? $row['image_path'] : $row['main_image'];
 
             $item = [
-                'id'                 => $pid,
-                'name'               => $row['name'],
-                'slug'               => $row['slug'],
-                'price'              => number_format((float)($row['sale_price'] > 0 ? $row['sale_price'] : $row['price']), 2, '.', ''),
-                'main_image'         => $row['main_image'],
-                'matched_image'      => $displayImage,
+                'id' => $pid,
+                'name' => $row['name'],
+                'slug' => $row['slug'],
+                'price' => number_format((float) ($row['sale_price'] > 0 ? $row['sale_price'] : $row['price']), 2, '.', ''),
+                'main_image' => $row['main_image'],
+                'matched_image' => $displayImage,
                 'matched_image_type' => $row['image_type'] ?? 'main',
                 'matched_variant_id' => $row['variant_id'] ?? null,
-                'image_url'          => $this->formatImageUrl($displayImage),
-                'category_name'      => $row['category_name'] ?? 'Wholesale',
-                'similarity_score'   => $scorePercent,
-                'raw_score'          => $score,
+                'image_url' => $this->formatImageUrl($displayImage),
+                'category_name' => $row['category_name'] ?? 'Wholesale',
+                'similarity_score' => $scorePercent,
+                'raw_score' => $score,
             ];
 
             if ($score >= self::STRONG_MATCH_THRESHOLD) {
                 $item['match_badge'] = 'Exact Match (' . $scorePercent . '%)';
-                $item['match_type']  = 'strong';
-                $matchingProducts[]  = $item;
+                $item['match_type'] = 'strong';
+                $matchingProducts[] = $item;
             } elseif ($score >= self::RELATED_MATCH_THRESHOLD) {
                 $item['match_badge'] = 'Similar Match (' . $scorePercent . '%)';
-                $item['match_type']  = 'related';
-                $similarProducts[]   = $item;
+                $item['match_type'] = 'related';
+                $similarProducts[] = $item;
             }
         }
 
         // Sort both buckets by highest similarity score
         usort($matchingProducts, fn($a, $b) => $b['raw_score'] <=> $a['raw_score']);
-        usort($similarProducts,  fn($a, $b) => $b['raw_score'] <=> $a['raw_score']);
+        usort($similarProducts, fn($a, $b) => $b['raw_score'] <=> $a['raw_score']);
 
         $combinedResults = array_merge($matchingProducts, $similarProducts);
 
@@ -393,27 +432,27 @@ class VisualSearchService
             $topMatch = $matchingProducts[0];
             $redirectUrl = function_exists('url') ? url('product/' . $topMatch['slug']) : '/importwala/product/' . $topMatch['slug'];
             return [
-                'has_matches'       => true,
-                'auto_redirect'     => true,
-                'redirect_url'      => $redirectUrl,
-                'top_match'         => $topMatch,
-                'strong_count'      => count($matchingProducts),
-                'related_count'     => count($similarProducts),
-                'total'             => count($combinedResults),
-                'headline'          => 'Exact Visual Match Found! Redirecting...',
-                'items'             => array_slice($combinedResults, 0, $limit),
+                'has_matches' => true,
+                'auto_redirect' => true,
+                'redirect_url' => $redirectUrl,
+                'top_match' => $topMatch,
+                'strong_count' => count($matchingProducts),
+                'related_count' => count($similarProducts),
+                'total' => count($combinedResults),
+                'headline' => 'Exact Visual Match Found! Redirecting...',
+                'items' => array_slice($combinedResults, 0, $limit),
             ];
         }
 
         if (!empty($combinedResults)) {
             return [
-                'has_matches'       => true,
-                'auto_redirect'     => false,
-                'strong_count'      => count($matchingProducts),
-                'related_count'     => count($similarProducts),
-                'total'             => count($combinedResults),
-                'headline'          => 'Similar Products You Might Like',
-                'items'             => array_slice($combinedResults, 0, $limit),
+                'has_matches' => true,
+                'auto_redirect' => false,
+                'strong_count' => count($matchingProducts),
+                'related_count' => count($similarProducts),
+                'total' => count($combinedResults),
+                'headline' => 'Similar Products You Might Like',
+                'items' => array_slice($combinedResults, 0, $limit),
             ];
         }
 
@@ -438,7 +477,7 @@ class VisualSearchService
         $stmtProd->execute([$productId]);
         $queryProduct = $stmtProd->fetch(PDO::FETCH_ASSOC);
 
-        if (!$queryProduct || empty($queryProduct['embedding_vector'])) {
+        if ((!$queryProduct || empty($queryProduct['embedding_vector'])) && $this->isMicroserviceAvailable()) {
             $this->indexProduct($productId);
             $stmtProd->execute([$productId]);
             $queryProduct = $stmtProd->fetch(PDO::FETCH_ASSOC);
@@ -447,21 +486,21 @@ class VisualSearchService
         if (!$queryProduct || empty($queryProduct['embedding_vector'])) {
             return [
                 'has_matches' => false,
-                'total'       => 0,
-                'headline'    => 'Similar Products',
-                'items'       => [],
+                'total' => 0,
+                'headline' => 'Similar Products',
+                'items' => [],
             ];
         }
 
-        $queryCatId = !empty($queryProduct['category_id']) ? (int)$queryProduct['category_id'] : 0;
+        $queryCatId = !empty($queryProduct['category_id']) ? (int) $queryProduct['category_id'] : 0;
         $queryVector = json_decode($queryProduct['embedding_vector'], true);
 
         if (!$queryVector || !is_array($queryVector)) {
             return [
                 'has_matches' => false,
-                'total'       => 0,
-                'headline'    => 'Similar Products',
-                'items'       => [],
+                'total' => 0,
+                'headline' => 'Similar Products',
+                'items' => [],
             ];
         }
 
@@ -469,19 +508,20 @@ class VisualSearchService
         $bestPerTarget = [];
 
         foreach ($storedEmbeddings as $target) {
-            $targetPid = (int)$target['product_id'];
+            $targetPid = (int) $target['product_id'];
             if ($targetPid === $productId) {
                 continue;
             }
 
             // Category Relevance Filter: Require exact category match or strict subcategory relation
-            $targetCatId = !empty($target['category_id']) ? (int)$target['category_id'] : 0;
+            $targetCatId = !empty($target['category_id']) ? (int) $target['category_id'] : 0;
             if ($queryCatId > 0 && $targetCatId > 0 && !$this->areCategoriesRelated($queryCatId, $targetCatId)) {
                 continue;
             }
 
             $targetVector = json_decode($target['embedding_vector'], true);
-            if (!$targetVector || !is_array($targetVector)) continue;
+            if (!$targetVector || !is_array($targetVector))
+                continue;
 
             $score = $this->calculateCosineSimilarity($queryVector, $targetVector);
 
@@ -491,7 +531,7 @@ class VisualSearchService
 
             if (!isset($bestPerTarget[$targetPid]) || $score > $bestPerTarget[$targetPid]['raw_score']) {
                 $bestPerTarget[$targetPid] = [
-                    'target'    => $target,
+                    'target' => $target,
                     'raw_score' => $score,
                 ];
             }
@@ -504,23 +544,23 @@ class VisualSearchService
             $scorePercent = round($score * 100, 1);
 
             $results[] = [
-                'id'               => $targetPid,
-                'name'             => $target['name'],
-                'slug'             => $target['slug'],
-                'price'            => (float)($target['price'] ?? 0),
-                'sale_price'       => !empty($target['sale_price']) ? (float)$target['sale_price'] : null,
-                'moq'              => (int)($target['moq'] ?? 1),
-                'total_sold'       => (int)($target['total_sold'] ?? 0),
-                'is_new'           => !empty($target['is_new']),
-                'is_featured'      => !empty($target['is_featured']),
+                'id' => $targetPid,
+                'name' => $target['name'],
+                'slug' => $target['slug'],
+                'price' => (float) ($target['price'] ?? 0),
+                'sale_price' => !empty($target['sale_price']) ? (float) $target['sale_price'] : null,
+                'moq' => (int) ($target['moq'] ?? 1),
+                'total_sold' => (int) ($target['total_sold'] ?? 0),
+                'is_new' => !empty($target['is_new']),
+                'is_featured' => !empty($target['is_featured']),
                 'is_free_shipping' => !isset($target['is_free_shipping']) || !empty($target['is_free_shipping']),
-                'main_image'       => $target['main_image'],
-                'matched_image'    => $target['image_path'],
-                'image_url'        => $this->formatImageUrl($target['main_image']),
-                'category_name'    => $target['category_name'] ?? 'Wholesale',
-                'category_id'      => !empty($target['category_id']) ? (int)$target['category_id'] : 0,
+                'main_image' => $target['main_image'],
+                'matched_image' => $target['image_path'],
+                'image_url' => $this->formatImageUrl($target['main_image']),
+                'category_name' => $target['category_name'] ?? 'Wholesale',
+                'category_id' => !empty($target['category_id']) ? (int) $target['category_id'] : 0,
                 'similarity_score' => $scorePercent,
-                'raw_score'        => $score,
+                'raw_score' => $score,
             ];
         }
 
@@ -528,9 +568,9 @@ class VisualSearchService
 
         return [
             'has_matches' => !empty($results),
-            'total'       => count($results),
-            'headline'    => 'Similar Products',
-            'items'       => array_slice($results, 0, $limit),
+            'total' => count($results),
+            'headline' => 'Similar Products',
+            'items' => array_slice($results, 0, $limit),
         ];
     }
 
@@ -540,21 +580,23 @@ class VisualSearchService
     public function calculateCosineSimilarity(array $vec1, array $vec2): float
     {
         $count = min(count($vec1), count($vec2));
-        if ($count === 0) return 0.0;
+        if ($count === 0)
+            return 0.0;
 
         $dotProduct = 0.0;
         $normA = 0.0;
         $normB = 0.0;
 
         for ($i = 0; $i < $count; $i++) {
-            $a = (float)$vec1[$i];
-            $b = (float)$vec2[$i];
+            $a = (float) $vec1[$i];
+            $b = (float) $vec2[$i];
             $dotProduct += $a * $b;
             $normA += $a * $a;
             $normB += $b * $b;
         }
 
-        if ($normA <= 0 || $normB <= 0) return 0.0;
+        if ($normA <= 0 || $normB <= 0)
+            return 0.0;
 
         return max(0.0, min(1.0, $dotProduct / (sqrt($normA) * sqrt($normB))));
     }
@@ -587,9 +629,9 @@ class VisualSearchService
         return [
             'has_matches' => false,
             'is_fallback' => true,
-            'total'       => count($items),
-            'headline'    => $headline,
-            'items'       => $items,
+            'total' => count($items),
+            'headline' => $headline,
+            'items' => $items,
         ];
     }
 
@@ -611,14 +653,15 @@ class VisualSearchService
         if ($queryVector) {
             foreach ($stored as $row) {
                 $targetVec = json_decode($row['embedding_vector'], true);
-                if (!$targetVec || !is_array($targetVec)) continue;
+                if (!$targetVec || !is_array($targetVec))
+                    continue;
 
                 $rawScore = $this->calculateCosineSimilarity($queryVector, $targetVec);
-                $pid = (int)$row['product_id'];
+                $pid = (int) $row['product_id'];
 
                 if (!isset($bestPerProduct[$pid]) || $rawScore > $bestPerProduct[$pid]['raw_score']) {
                     $bestPerProduct[$pid] = [
-                        'row'       => $row,
+                        'row' => $row,
                         'raw_score' => $rawScore,
                     ];
                 }
@@ -639,38 +682,38 @@ class VisualSearchService
                 $displayImage = !empty($row['image_path']) ? $row['image_path'] : $row['main_image'];
 
                 $topMatches[] = [
-                    'product_id'       => $pid,
-                    'name'             => $row['name'],
-                    'slug'             => $row['slug'],
-                    'main_image'       => $row['main_image'],
-                    'matched_image'    => $displayImage,
-                    'matched_type'     => $row['image_type'] ?? 'main',
-                    'variant_id'       => $row['variant_id'] ?? null,
-                    'image_url'        => $this->formatImageUrl($displayImage),
-                    'category_name'    => $row['category_name'] ?? 'Wholesale',
-                    'raw_score'        => number_format($rawScore, 4, '.', ''),
-                    'score_float'      => $rawScore,
-                    'similarity_pct'   => $pct,
-                    'match_category'   => $category,
+                    'product_id' => $pid,
+                    'name' => $row['name'],
+                    'slug' => $row['slug'],
+                    'main_image' => $row['main_image'],
+                    'matched_image' => $displayImage,
+                    'matched_type' => $row['image_type'] ?? 'main',
+                    'variant_id' => $row['variant_id'] ?? null,
+                    'image_url' => $this->formatImageUrl($displayImage),
+                    'category_name' => $row['category_name'] ?? 'Wholesale',
+                    'raw_score' => number_format($rawScore, 4, '.', ''),
+                    'score_float' => $rawScore,
+                    'similarity_pct' => $pct,
+                    'match_category' => $category,
                 ];
             }
 
             usort($topMatches, fn($a, $b) => $b['score_float'] <=> $a['score_float']);
         }
 
-        $totalActive = (int)$this->db->query("SELECT COUNT(id) FROM products WHERE status = 'active'")->fetchColumn();
-        $totalIndexed = (int)$this->db->query("SELECT COUNT(id) FROM product_image_embeddings")->fetchColumn();
+        $totalActive = (int) $this->db->query("SELECT COUNT(id) FROM products WHERE status = 'active'")->fetchColumn();
+        $totalIndexed = (int) $this->db->query("SELECT COUNT(id) FROM product_image_embeddings")->fetchColumn();
 
         return [
-            'query_image_path'       => $imagePath,
-            'resolved_path'          => $resolvedPath,
-            'embedding_generated'    => !empty($queryVector),
-            'vector_dimensions'      => $queryVector ? count($queryVector) : 0,
-            'dhash'                  => $queryVector ? substr(md5(json_encode($queryVector)), 0, 16) : null,
-            'embedding_time_ms'      => $genTimeMs,
-            'total_active_products'  => $totalActive,
+            'query_image_path' => $imagePath,
+            'resolved_path' => $resolvedPath,
+            'embedding_generated' => !empty($queryVector),
+            'vector_dimensions' => $queryVector ? count($queryVector) : 0,
+            'dhash' => $queryVector ? substr(md5(json_encode($queryVector)), 0, 16) : null,
+            'embedding_time_ms' => $genTimeMs,
+            'total_active_products' => $totalActive,
             'total_indexed_products' => $totalIndexed,
-            'top_5_matches'          => array_slice($topMatches, 0, 5),
+            'top_5_matches' => array_slice($topMatches, 0, 5),
         ];
     }
 
@@ -684,7 +727,8 @@ class VisualSearchService
             $ch = curl_init($this->microserviceUrl . '/embed');
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT_MS, 300);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 3);
 
             if (preg_match('~^https?://~i', $resolvedPath)) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['image_path' => $resolvedPath]));
@@ -700,7 +744,6 @@ class VisualSearchService
 
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $curlErr = curl_error($ch);
 
             if ($httpCode === 200 && $response) {
                 $data = json_decode($response, true);
@@ -708,10 +751,12 @@ class VisualSearchService
                     return $data['embedding'];
                 }
             } else {
-                echo "[CURL ERROR] HTTP $httpCode, CurlErr: $curlErr, Response: $response\n";
+                self::$microserviceAvailable = false;
+                error_log("[VisualSearchService] Microservice unreachable or HTTP $httpCode");
             }
         } catch (\Throwable $e) {
-            echo "[CURL EXCEPTION] " . $e->getMessage() . "\n";
+            self::$microserviceAvailable = false;
+            error_log("[VisualSearchService] Microservice error: " . $e->getMessage());
         }
 
         return null;
@@ -763,7 +808,8 @@ class VisualSearchService
     private function resolveImagePath(string $path): ?string
     {
         $path = trim($path);
-        if (empty($path)) return null;
+        if (empty($path))
+            return null;
 
         if (preg_match('~^https?://~i', $path)) {
             return $path;
@@ -775,12 +821,14 @@ class VisualSearchService
 
         $clean = ltrim(parse_url($path, PHP_URL_PATH), '/');
         $clean = preg_replace('~^importwala/~i', '', $clean);
-        
+
         $candidate1 = $this->publicDir . '/' . ltrim($clean, '/');
-        if (file_exists($candidate1)) return realpath($candidate1);
+        if (file_exists($candidate1))
+            return realpath($candidate1);
 
         $candidate2 = ROOT_PATH . '/' . ltrim($clean, '/');
-        if (file_exists($candidate2)) return realpath($candidate2);
+        if (file_exists($candidate2))
+            return realpath($candidate2);
 
         return null;
     }
@@ -788,7 +836,8 @@ class VisualSearchService
     private function formatImageUrl(?string $imagePath): string
     {
         $path = !empty($imagePath) ? $imagePath : 'assets/images/placeholder.jpg';
-        if (preg_match('~^https?://~i', $path)) return $path;
+        if (preg_match('~^https?://~i', $path))
+            return $path;
 
         if (function_exists('asset')) {
             return asset($path);
@@ -799,15 +848,7 @@ class VisualSearchService
 
     private function ensureCatalogIndexed(): void
     {
-        try {
-            $totalP = (int)$this->db->query("SELECT COUNT(*) FROM products WHERE status = 'active'")->fetchColumn();
-            $totalSig = (int)$this->db->query("SELECT COUNT(*) FROM product_image_embeddings")->fetchColumn();
-
-            if ($totalP > 0 && $totalSig < ($totalP * 0.8)) {
-                $this->indexAllProducts(false);
-            }
-        } catch (\Throwable $e) {
-            // Silence indexing check errors
-        }
+        // Non-blocking catalog index check.
+        // Catalog bulk re-indexing should be triggered explicitly via Admin or CLI tasks.
     }
 }

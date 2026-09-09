@@ -46,7 +46,12 @@ include __DIR__ . '/../layouts/header.php';
                             <tr class="hover:bg-slate-50/80 transition">
                                 <td class="px-6 py-4 text-slate-400 font-mono">#<?= $attr['sort_order'] ?></td>
                                 <td class="px-6 py-4">
-                                    <div class="font-semibold text-slate-900 text-sm"><?= htmlspecialchars($attr['name']) ?></div>
+                                    <div class="font-semibold text-slate-900 text-sm flex items-center gap-2">
+                                        <span><?= htmlspecialchars($attr['name']) ?></span>
+                                        <?php if (!empty($attr['is_admin_only'])): ?>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[9.5px] font-bold bg-amber-100 text-amber-800 border border-amber-300">ADMIN ONLY</span>
+                                        <?php endif; ?>
+                                    </div>
                                     <div class="text-[11px] text-slate-400 font-mono">slug: <?= htmlspecialchars($attr['slug']) ?></div>
                                 </td>
                                 <td class="px-6 py-4">
