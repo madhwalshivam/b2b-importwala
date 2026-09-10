@@ -104,6 +104,7 @@ class HomeSection extends Model {
         $slug = $this->generateUniqueSlug($slug);
 
         $subtitle = trim($data['subtitle'] ?? '');
+        $customUrl = trim($data['custom_url'] ?? '');
         $maxProducts = max(1, (int)($data['max_products'] ?? 8));
         $displayCount = max(1, (int)($data['homepage_display_count'] ?? 5));
         $sortOrder = (int)($data['sort_order'] ?? 0);
@@ -111,10 +112,10 @@ class HomeSection extends Model {
         $sectionKey = str_replace('-', '_', $slug);
 
         $stmt = $this->db->prepare("
-            INSERT INTO {$this->table} (section_key, slug, title, subtitle, max_products, homepage_display_count, sort_order, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO {$this->table} (section_key, slug, title, subtitle, custom_url, max_products, homepage_display_count, sort_order, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$sectionKey, $slug, $title, $subtitle, $maxProducts, $displayCount, $sortOrder, $status]);
+        $stmt->execute([$sectionKey, $slug, $title, $subtitle, $customUrl, $maxProducts, $displayCount, $sortOrder, $status]);
 
         return (int)$this->db->lastInsertId();
     }
@@ -140,6 +141,10 @@ class HomeSection extends Model {
         if (isset($data['subtitle'])) {
             $updateFields[] = "subtitle = ?";
             $params[] = trim($data['subtitle']);
+        }
+        if (isset($data['custom_url'])) {
+            $updateFields[] = "custom_url = ?";
+            $params[] = trim($data['custom_url']);
         }
         if (isset($data['max_products'])) {
             $updateFields[] = "max_products = ?";

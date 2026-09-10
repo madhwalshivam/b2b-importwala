@@ -12,7 +12,7 @@ $title = $seoTitle;
 $activeCatId = (int)($filters['category_id'] ?? 0);
 $activeSubId = (int)($filters['subcategory_id'] ?? 0);
 $currentSort = $filters['sort'] ?? 'relevance';
-$currentPerPage = (int)($filters['per_page'] ?? 24);
+$currentPerPage = (int)($filters['per_page'] ?? 25);
 $currentMinPrice = $filters['min_price'] ?? '';
 $currentMaxPrice = $filters['max_price'] ?? '';
 $currentMinMoq = $filters['min_moq'] ?? '';
@@ -92,7 +92,7 @@ if (!empty($dynamicFilterAttributes) && !empty($selectedAttrs)) {
 }
 
 $activeFilterCount = count($activeChips);
-$sidebarOpenByDefault = ($activeFilterCount > 0);
+$sidebarOpenByDefault = false;
 
 ob_start();
 ?>

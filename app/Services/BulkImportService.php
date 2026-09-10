@@ -1075,6 +1075,25 @@ class BulkImportService
         return $this->categoryCache;
     }
 
+    private function normalizeSubcategoryKey(string $name): string
+    {
+        $clean = strtolower(trim($name));
+        $clean = preg_replace('/[^a-z0-9]+/', '', $clean);
+        if (str_ends_with($clean, 'ies') && strlen($clean) > 4) {
+            $clean = substr($clean, 0, -3) . 'y';
+        } elseif (str_ends_with($clean, 'es') && strlen($clean) > 4) {
+            $base = substr($clean, 0, -2);
+            if (preg_match('/(ch|sh|x|z|s)$/', $base)) {
+                $clean = $base;
+            } else {
+                $clean = substr($clean, 0, -1);
+            }
+        } elseif (str_ends_with($clean, 's') && !str_ends_with($clean, 'ss') && strlen($clean) > 3) {
+            $clean = substr($clean, 0, -1);
+        }
+        return $clean;
+    }
+
     private function getSubcategoryCache(): array
     {
         if ($this->subcategoryCache === null) {
@@ -1083,8 +1102,13 @@ class BulkImportService
             $this->subcategoryCache = [];
             foreach ($allSubs as $sc) {
                 $catId = $sc['category_id'] ?? 0;
-                $key = $catId . '_' . strtolower($sc['name'] ?? '');
-                $this->subcategoryCache[$key] = (int)($sc['id'] ?? 0);
+                $exactKey = $catId . '_' . strtolower(trim($sc['name'] ?? ''));
+                $normKey  = $catId . '_' . $this->normalizeSubcategoryKey($sc['name'] ?? '');
+                $subId = (int)($sc['id'] ?? 0);
+                $this->subcategoryCache[$exactKey] = $subId;
+                if (!isset($this->subcategoryCache[$normKey])) {
+                    $this->subcategoryCache[$normKey] = $subId;
+                }
             }
         }
         return $this->subcategoryCache;
@@ -1114,7 +1138,13 @@ class BulkImportService
         }
 
         $catModel = new Category();
-        $slug = $this->slugify($clean);
+        $baseSlug = $this->slugify($clean);
+        $slug = $baseSlug;
+        $counter = 1;
+        while ($catModel->slugExists($slug)) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
+
         $catId = $catModel->insert([
             'name'       => $clean,
             'slug'       => $slug,
@@ -1131,15 +1161,25 @@ class BulkImportService
     {
         $clean = trim($subcatName);
         $lower = strtolower($clean);
-        $cacheKey = $categoryId . '_' . $lower;
+        $exactKey = $categoryId . '_' . $lower;
+        $normKey  = $categoryId . '_' . $this->normalizeSubcategoryKey($clean);
         $cache = $this->getSubcategoryCache();
 
-        if (isset($cache[$cacheKey])) {
-            return $cache[$cacheKey];
+        if (isset($cache[$exactKey])) {
+            return $cache[$exactKey];
+        }
+        if (isset($cache[$normKey])) {
+            return $cache[$normKey];
         }
 
         $subcatModel = new Subcategory();
-        $slug = $this->slugify($clean);
+        $baseSlug = $this->slugify($clean);
+        $slug = $baseSlug;
+        $counter = 1;
+        while ($subcatModel->slugExists($slug)) {
+            $slug = $baseSlug . '-' . $counter++;
+        }
+
         $subId = $subcatModel->insert([
             'category_id' => $categoryId,
             'name'        => $clean,
@@ -1149,7 +1189,8 @@ class BulkImportService
             'updated_at'  => date('Y-m-d H:i:s'),
         ]);
 
-        $this->subcategoryCache[$cacheKey] = $subId;
+        $this->subcategoryCache[$exactKey] = $subId;
+        $this->subcategoryCache[$normKey]  = $subId;
         return $subId;
     }
 

@@ -327,7 +327,14 @@ include __DIR__ . '/layouts/header.php';
         $secSlug = !empty($sec['slug']) ? $sec['slug'] : slugify($sec['title'] ?? $secKey);
         $secTitle = $sec['title'] ?? ucwords(str_replace(['_', '-'], ' ', $secKey));
         $secSubtitle = $sec['subtitle'] ?? '';
-        $viewAllUrl = url('section/' . $secSlug);
+        $customLink = trim($sec['custom_url'] ?? $sec['custom_link'] ?? '');
+        if (!empty($customLink)) {
+            $viewAllUrl = (str_starts_with($customLink, 'http://') || str_starts_with($customLink, 'https://'))
+                ? $customLink
+                : url(ltrim($customLink, '/'));
+        } else {
+            $viewAllUrl = url('section/' . $secSlug);
+        }
         $sliderId = 'swiper-sec-' . preg_replace('/[^a-z0-9]/', '', $secSlug);
         $prevId = 'sec-prev-' . preg_replace('/[^a-z0-9]/', '', $secSlug);
         $nextId = 'sec-next-' . preg_replace('/[^a-z0-9]/', '', $secSlug);

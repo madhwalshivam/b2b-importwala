@@ -80,6 +80,15 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
                         class="w-full h-10 px-3 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-red-600">
                 </div>
 
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                        Custom View All Link <span class="text-slate-400 font-normal lowercase">(optional - overrides /section/{slug})</span>
+                    </label>
+                    <input type="text" name="custom_url"
+                        placeholder="e.g. /category/jewellery/bracelets or /shop?min_price=100"
+                        class="w-full h-10 px-3 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:border-red-600">
+                </div>
+
                 <div class="grid grid-cols-2 gap-3">
                     <div class="space-y-1.5">
                         <label class="block text-[11px] font-semibold text-slate-700 uppercase">Homepage Limit</label>
@@ -236,6 +245,8 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
             $secId = (int)$sec['id'];
             $secKey = $sec['section_key'] ?: ('sec_' . $secId);
             $secSlug = $sec['slug'] ?: slugify($sec['title'] ?? $secKey);
+            $customUrl = trim($sec['custom_url'] ?? '');
+            $targetLinkUrl = !empty($customUrl) ? ((str_starts_with($customUrl, 'http://') || str_starts_with($customUrl, 'https://')) ? $customUrl : url(ltrim($customUrl, '/'))) : url('section/' . $secSlug);
             $isEnabled = ($sec['status'] === 'active' || $sec['status'] === 'enabled');
             $selectedProducts = $sec['products'] ?? [];
             ?>
@@ -255,6 +266,11 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
                                 <span class="px-2 py-0.5 text-[10px] font-mono font-semibold bg-slate-200/70 dark:bg-slate-700/80 text-slate-600 dark:text-slate-300 rounded-md shrink-0">
                                     /section/<?= htmlspecialchars($secSlug) ?>
                                 </span>
+                                <?php if (!empty($customUrl)): ?>
+                                    <span class="px-2 py-0.5 text-[10px] font-mono font-semibold bg-orange-100 text-orange-700 border border-orange-200 rounded-md shrink-0" title="Custom View All Link">
+                                        Link: <?= htmlspecialchars($customUrl) ?>
+                                    </span>
+                                <?php endif; ?>
                                 <span class="px-2 py-0.5 text-[10px] font-semibold bg-red-50 text-red-600 border border-red-100 rounded-md shrink-0">
                                     Order: <?= (int)($sec['sort_order'] ?? 0) ?>
                                 </span>
@@ -269,7 +285,7 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
 
                     <div class="flex items-center space-x-3 shrink-0">
                         <!-- View Dedicated Page Link -->
-                        <a href="<?= url('section/' . $secSlug) ?>" target="_blank" title="View dedicated View All page"
+                        <a href="<?= $targetLinkUrl ?>" target="_blank" title="View View All link target"
                             class="p-2 text-slate-500 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition">
                             <i data-lucide="external-link" class="w-4 h-4"></i>
                         </a>
@@ -310,18 +326,28 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
 
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                         <!-- Title -->
-                        <div class="md:col-span-4 space-y-1.5">
+                        <div class="md:col-span-3 space-y-1.5">
                             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Section Title</label>
                             <input type="text" name="title" value="<?= htmlspecialchars($sec['title']) ?>" required
                                 class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
                         </div>
 
                         <!-- Subtitle -->
-                        <div class="md:col-span-4 space-y-1.5">
+                        <div class="md:col-span-3 space-y-1.5">
                             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Subtitle</label>
                             <input type="text" name="subtitle" value="<?= htmlspecialchars($sec['subtitle'] ?? '') ?>"
                                 placeholder="Subtitle text..."
                                 class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:outline-none focus:border-red-600 transition">
+                        </div>
+
+                        <!-- Custom View All Link -->
+                        <div class="md:col-span-3 space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                                Custom Link <span class="text-slate-400 font-normal lowercase">(optional)</span>
+                            </label>
+                            <input type="text" name="custom_url" value="<?= htmlspecialchars($sec['custom_url'] ?? '') ?>"
+                                placeholder="e.g. /category/jewellery/bracelets"
+                                class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
                         </div>
 
                         <!-- Slug -->
@@ -332,10 +358,10 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
                         </div>
 
                         <!-- Homepage Preview Count -->
-                        <div class="md:col-span-2 space-y-1.5">
+                        <div class="md:col-span-1 space-y-1.5">
                             <label class="block text-[11px] font-semibold text-slate-700 uppercase">Preview</label>
                             <select name="homepage_display_count"
-                                class="w-full h-10 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
+                                class="w-full h-10 px-1 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
                                 <option value="0" <?= (int)($sec['homepage_display_count'] ?? 0) === 0 ? 'selected' : '' ?>>Show All</option>
                                 <?php foreach ([3, 4, 5, 6, 8, 10, 12, 20, 50] as $opt): ?>
                                     <option value="<?= $opt ?>" <?= (int)($sec['homepage_display_count'] ?? 5) === $opt ? 'selected' : '' ?>>

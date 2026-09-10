@@ -59,7 +59,7 @@ class BrandFrontendController extends Controller {
         }
 
         $page = max(1, (int)$this->request->input('page', 1));
-        $perPage = 12;
+        $perPage = 25;
 
         $categoryModel = new Category();
         $scooterModel = new ScooterModel();

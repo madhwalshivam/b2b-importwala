@@ -15,7 +15,7 @@ class Product extends Model {
         return $items;
     }
 
-    public function getFilteredProducts(array $filters = [], int $page = 1, int $perPage = 12): array {
+    public function getFilteredProducts(array $filters = [], int $page = 1, int $perPage = 25): array {
         $whereConditions = ["p.status = 'active'"];
         $params = [];
 

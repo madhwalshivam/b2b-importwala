@@ -68,6 +68,7 @@ class HomepageSectionsController extends Controller {
         $title        = trim($this->request->input('title', ''));
         $slug         = trim($this->request->input('slug', ''));
         $subtitle     = trim($this->request->input('subtitle', ''));
+        $customUrl    = trim($this->request->input('custom_url', ''));
         $maxProducts  = (int)$this->request->input('max_products', 0);
         $displayCount = (int)$this->request->input('homepage_display_count', 5);
         $sortOrder    = (int)$this->request->input('sort_order', 0);
@@ -83,6 +84,7 @@ class HomepageSectionsController extends Controller {
             'title'                  => $title,
             'slug'                   => $slug,
             'subtitle'               => $subtitle,
+            'custom_url'             => $customUrl,
             'max_products'           => $maxProducts,
             'homepage_display_count' => $displayCount,
             'sort_order'             => $sortOrder,
@@ -121,6 +123,7 @@ class HomepageSectionsController extends Controller {
         $title        = $this->request->input('title', $section['title']);
         $slug         = $this->request->input('slug', $section['slug']);
         $subtitle     = $this->request->input('subtitle', $section['subtitle']);
+        $customUrl    = $this->request->input('custom_url', $section['custom_url'] ?? '');
         $enabled      = $this->request->input('enabled', null);
         $status       = $this->request->input('status', null);
         $maxProducts  = (int)$this->request->input('max_products', $section['max_products']);
@@ -143,6 +146,7 @@ class HomepageSectionsController extends Controller {
             'title'                  => $title,
             'slug'                   => $slug,
             'subtitle'               => $subtitle,
+            'custom_url'             => $customUrl,
             'status'                 => $statusVal,
             'max_products'           => $maxProducts,
             'homepage_display_count' => $displayCount,

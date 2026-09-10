@@ -250,7 +250,7 @@ class CatalogController extends BaseController
         }
 
         $page = max(1, (int)($_GET['page'] ?? 1));
-        $perPage = 16;
+        $perPage = 25;
         $paginatedData = $sectionModel->getSectionProductsPaginated((int)$section['id'], $page, $perPage);
 
         $heading = $section['title'];
@@ -338,7 +338,34 @@ class CatalogController extends BaseController
                 ORDER BY s.sort_order ASC, s.name ASC
             ");
             $subStmt->execute([$cat['id']]);
-            $subcategories = $subStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+            $rawSubcategories = $subStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+            // Deduplicate subcategories (e.g. Bracelet vs Bracelets, Earring vs Earrings)
+            $dedupSubs = [];
+            foreach ($rawSubcategories as $s) {
+                $normKey = $this->normalizeSubcategoryKey($s['name']);
+                if (isset($dedupSubs[$normKey])) {
+                    $existing = $dedupSubs[$normKey];
+                    $existingCount = (int)($existing['product_count'] ?? 0);
+                    $currentCount  = (int)($s['product_count'] ?? 0);
+                    
+                    $dedupSubs[$normKey]['product_count'] = $existingCount + $currentCount;
+                    
+                    $isCurrentPlural = str_ends_with(strtolower(trim($s['name'])), 's');
+                    $isExistingPlural = str_ends_with(strtolower(trim($existing['name'])), 's');
+                    
+                    if (($isCurrentPlural && !$isExistingPlural) || ($isCurrentPlural === $isExistingPlural && $currentCount > $existingCount)) {
+                        $dedupSubs[$normKey]['name'] = $s['name'];
+                        $dedupSubs[$normKey]['id']   = $s['id'];
+                        $dedupSubs[$normKey]['slug'] = $s['slug'];
+                    }
+                } else {
+                    $s['product_count'] = (int)($s['product_count'] ?? 0);
+                    $dedupSubs[$normKey] = $s;
+                }
+            }
+
+            $subcategories = array_values($dedupSubs);
             $cat['subcategories'] = $subcategories;
             $totalSubcategories += count($subcategories);
         }
@@ -431,11 +458,11 @@ class CatalogController extends BaseController
         $maxMoq   = (isset($_GET['max_moq']) && $_GET['max_moq'] !== '') ? (int)$_GET['max_moq'] : null;
         $sort     = $_GET['sort'] ?? 'relevance';
 
-        // Selectable per-page size (default: 24)
-        $allowedLimits = [12, 24, 48];
-        $perPage = (int)($_GET['per_page'] ?? 24);
+        // Selectable per-page size (default: 25)
+        $allowedLimits = [12, 24, 25, 48, 50, 100];
+        $perPage = (int)($_GET['per_page'] ?? 25);
         if (!in_array($perPage, $allowedLimits)) {
-            $perPage = 24;
+            $perPage = 25;
         }
 
         $page = max(1, (int)($_GET['page'] ?? 1));
@@ -610,6 +637,28 @@ class CatalogController extends BaseController
         }
 
         return $unique;
+    }
+
+    /**
+     * Helper to normalize subcategory names for deduplication (e.g. Bracelet <-> Bracelets)
+     */
+    private function normalizeSubcategoryKey(string $name): string
+    {
+        $clean = strtolower(trim($name));
+        $clean = preg_replace('/[^a-z0-9]+/', '', $clean);
+        if (str_ends_with($clean, 'ies') && strlen($clean) > 4) {
+            $clean = substr($clean, 0, -3) . 'y';
+        } elseif (str_ends_with($clean, 'es') && strlen($clean) > 4) {
+            $base = substr($clean, 0, -2);
+            if (preg_match('/(ch|sh|x|z|s)$/', $base)) {
+                $clean = $base;
+            } else {
+                $clean = substr($clean, 0, -1);
+            }
+        } elseif (str_ends_with($clean, 's') && !str_ends_with($clean, 'ss') && strlen($clean) > 3) {
+            $clean = substr($clean, 0, -1);
+        }
+        return $clean;
     }
 
     /**

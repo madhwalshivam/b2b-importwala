@@ -4,7 +4,7 @@ namespace App\Models;
 use App\Core\Model;
 
 class Subcategory extends Model {
-    protected string $table = 'categories';
+    protected string $table = 'subcategories';
 
     /**
      * Get all active subcategories
@@ -13,9 +13,9 @@ class Subcategory extends Model {
         if ($categoryId !== null && $categoryId > 0) {
             $stmt = $this->db->prepare("
                 SELECT s.*, c.name as category_name 
-                FROM categories s
-                JOIN categories c ON s.parent_id = c.id
-                WHERE s.parent_id = ? AND s.status = 'active'
+                FROM subcategories s
+                JOIN categories c ON s.category_id = c.id
+                WHERE s.category_id = ? AND s.status = 'active'
                 ORDER BY s.sort_order ASC, s.name ASC
             ");
             $stmt->execute([$categoryId]);
@@ -24,9 +24,9 @@ class Subcategory extends Model {
 
         $stmt = $this->db->query("
             SELECT s.*, c.name as category_name 
-            FROM categories s
-            JOIN categories c ON s.parent_id = c.id
-            WHERE s.parent_id IS NOT NULL AND s.status = 'active'
+            FROM subcategories s
+            JOIN categories c ON s.category_id = c.id
+            WHERE s.status = 'active'
             ORDER BY s.sort_order ASC, s.name ASC
         ");
         return $stmt->fetchAll() ?: [];
@@ -37,10 +37,9 @@ class Subcategory extends Model {
      */
     public function getAllWithCategory(): array {
         $sql = "SELECT s.*, c.name as category_name,
-                       (SELECT COUNT(*) FROM products p WHERE p.category_id = s.id) as product_count
-                FROM categories s
-                LEFT JOIN categories c ON s.parent_id = c.id
-                WHERE s.parent_id IS NOT NULL
+                       (SELECT COUNT(*) FROM products p WHERE p.subcategory_id = s.id) as product_count
+                FROM subcategories s
+                LEFT JOIN categories c ON s.category_id = c.id
                 ORDER BY c.name ASC, s.sort_order ASC, s.name ASC";
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll() ?: [];
@@ -52,10 +51,10 @@ class Subcategory extends Model {
     public function getByCategoryId(int $categoryId): array {
         $stmt = $this->db->prepare("
             SELECT s.*, c.name as category_name,
-                   (SELECT COUNT(*) FROM products p WHERE p.category_id = s.id) as product_count
-            FROM categories s
-            LEFT JOIN categories c ON s.parent_id = c.id
-            WHERE s.parent_id = ?
+                   (SELECT COUNT(*) FROM products p WHERE p.subcategory_id = s.id) as product_count
+            FROM subcategories s
+            LEFT JOIN categories c ON s.category_id = c.id
+            WHERE s.category_id = ?
             ORDER BY s.sort_order ASC, s.name ASC
         ");
         $stmt->execute([$categoryId]);
@@ -68,10 +67,10 @@ class Subcategory extends Model {
     public function findWithCategory(int $id): ?array {
         $stmt = $this->db->prepare("
             SELECT s.*, c.name as category_name,
-                   (SELECT COUNT(*) FROM products p WHERE p.category_id = s.id) as product_count
-            FROM categories s
-            LEFT JOIN categories c ON s.parent_id = c.id
-            WHERE s.id = ? AND s.parent_id IS NOT NULL
+                   (SELECT COUNT(*) FROM products p WHERE p.subcategory_id = s.id) as product_count
+            FROM subcategories s
+            LEFT JOIN categories c ON s.category_id = c.id
+            WHERE s.id = ?
         ");
         $stmt->execute([$id]);
         $res = $stmt->fetch();
@@ -79,10 +78,10 @@ class Subcategory extends Model {
     }
 
     /**
-     * Check if slug exists in subcategories or categories (ignoring specific subcategory ID)
+     * Check if slug exists in subcategories (ignoring specific subcategory ID)
      */
     public function slugExists(string $slug, int $ignoreId = 0): bool {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM categories WHERE slug = ? AND id != ?");
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM subcategories WHERE slug = ? AND id != ?");
         $stmt->execute([$slug, $ignoreId]);
         return (int)$stmt->fetchColumn() > 0;
     }
@@ -91,7 +90,7 @@ class Subcategory extends Model {
      * Count products assigned to this subcategory
      */
     public function getProductCount(int $subcategoryId): int {
-        $stmt = $this->db->prepare("SELECT COUNT(*) FROM products WHERE category_id = ?");
+        $stmt = $this->db->prepare("SELECT COUNT(*) FROM products WHERE subcategory_id = ?");
         $stmt->execute([$subcategoryId]);
         return (int)$stmt->fetchColumn();
     }
@@ -101,8 +100,8 @@ class Subcategory extends Model {
      */
     public function createSubcategory(array $data): int {
         $stmt = $this->db->prepare("
-            INSERT INTO categories (parent_id, name, slug, image, description, sort_order, status, is_featured)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+            INSERT INTO subcategories (category_id, name, slug, image, description, sort_order, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             (int)$data['category_id'],
@@ -121,15 +120,15 @@ class Subcategory extends Model {
      */
     public function updateSubcategory(int $id, array $data): bool {
         $stmt = $this->db->prepare("
-            UPDATE categories SET
-                parent_id = ?,
+            UPDATE subcategories SET
+                category_id = ?,
                 name = ?,
                 slug = ?,
                 image = ?,
                 description = ?,
                 sort_order = ?,
                 status = ?
-            WHERE id = ? AND parent_id IS NOT NULL
+            WHERE id = ?
         ");
         return $stmt->execute([
             (int)$data['category_id'],
@@ -147,7 +146,7 @@ class Subcategory extends Model {
      * Delete subcategory
      */
     public function deleteSubcategory(int $id): bool {
-        $stmt = $this->db->prepare("DELETE FROM categories WHERE id = ? AND parent_id IS NOT NULL");
+        $stmt = $this->db->prepare("DELETE FROM subcategories WHERE id = ?");
         return $stmt->execute([$id]);
     }
 }
