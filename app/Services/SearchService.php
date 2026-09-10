@@ -68,14 +68,13 @@ class SearchService extends BaseService
             }
         }
 
-        if (!empty($filters['category_id'])) {
-            $where[] = "p.`category_id` = :cat_id";
-            $params['cat_id'] = (int)$filters['category_id'];
-        }
-
         if (!empty($filters['subcategory_id'])) {
             $where[] = "p.`subcategory_id` = :subcat_id";
             $params['subcat_id'] = (int)$filters['subcategory_id'];
+        } elseif (!empty($filters['category_id'])) {
+            $where[] = "(p.`category_id` = :cat_id OR p.`subcategory_id` IN (SELECT id FROM subcategories WHERE category_id = :cat_id_sub))";
+            $params['cat_id'] = (int)$filters['category_id'];
+            $params['cat_id_sub'] = (int)$filters['category_id'];
         }
 
         if (!empty($filters['brand_id'])) {

@@ -549,6 +549,7 @@ class CatalogController extends BaseController
         if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest' || !empty($_GET['ajax'])) {
             header('Content-Type: application/json');
             ob_start();
+            extract($viewData);
             require __DIR__ . '/../../../views/web/shop.php';
             $fullHtml = ob_get_clean();
             echo json_encode([
@@ -573,22 +574,61 @@ class CatalogController extends BaseController
             $db = Database::getReadConnection();
             $cats = $db->query("
                 SELECT c.*, 
-                       (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id AND p.status = 'active') as product_count
+                       (SELECT COUNT(DISTINCT p.id) 
+                        FROM products p 
+                        WHERE (p.category_id = c.id OR p.subcategory_id IN (SELECT id FROM subcategories WHERE category_id = c.id)) 
+                          AND p.status = 'active') as product_count
                 FROM categories c
-                WHERE c.status = 'active'
+                WHERE (c.status = 'active' OR c.status = 'enabled') 
+                  AND (c.parent_id IS NULL OR c.parent_id = 0)
                 ORDER BY c.sort_order ASC, c.name ASC
-            ")->fetchAll();
+            ")->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
             foreach ($cats as &$cat) {
                 $subStmt = $db->prepare("
                     SELECT s.*, 
-                           (SELECT COUNT(*) FROM products p WHERE p.subcategory_id = s.id AND p.status = 'active') as product_count
+                           (SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.subcategory_id = s.id AND p.status = 'active') as product_count
                     FROM subcategories s
-                    WHERE s.category_id = ? AND s.status = 'active'
+                    WHERE s.category_id = ? AND (s.status = 'active' OR s.status = 'enabled')
                     ORDER BY s.sort_order ASC, s.name ASC
                 ");
                 $subStmt->execute([$cat['id']]);
-                $cat['subcategories'] = $subStmt->fetchAll();
+                $rawSub1 = $subStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+                $subStmt2 = $db->prepare("
+                    SELECT c.*, 
+                           (SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.category_id = c.id AND p.status = 'active') as product_count
+                    FROM categories c
+                    WHERE c.parent_id = ? AND (c.status = 'active' OR c.status = 'enabled')
+                    ORDER BY c.sort_order ASC, c.name ASC
+                ");
+                $subStmt2->execute([$cat['id']]);
+                $rawSub2 = $subStmt2->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+                $mergedSubs = array_merge($rawSub1, $rawSub2);
+
+                $dedupSubs = [];
+                foreach ($mergedSubs as $s) {
+                    $normKey = $this->normalizeSubcategoryKey($s['name']);
+                    if (isset($dedupSubs[$normKey])) {
+                        $existing = $dedupSubs[$normKey];
+                        $existingCount = (int)($existing['product_count'] ?? 0);
+                        $currentCount  = (int)($s['product_count'] ?? 0);
+                        $dedupSubs[$normKey]['product_count'] = $existingCount + $currentCount;
+                        $isCurrentPlural = str_ends_with(strtolower(trim($s['name'])), 's');
+                        $isExistingPlural = str_ends_with(strtolower(trim($existing['name'])), 's');
+                        if (($isCurrentPlural && !$isExistingPlural) || ($isCurrentPlural === $isExistingPlural && $currentCount > $existingCount)) {
+                            $dedupSubs[$normKey]['name'] = $s['name'];
+                            $dedupSubs[$normKey]['id']   = $s['id'];
+                            $dedupSubs[$normKey]['slug'] = $s['slug'];
+                        }
+                    } else {
+                        $s['product_count'] = (int)($s['product_count'] ?? 0);
+                        $dedupSubs[$normKey] = $s;
+                    }
+                }
+
+                $cat['subcategories'] = array_values($dedupSubs);
             }
             unset($cat);
 

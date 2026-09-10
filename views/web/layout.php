@@ -1131,6 +1131,10 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         if (typeof updateHeaderWishlistCount === 'function') {
           updateHeaderWishlistCount(data.count);
         }
+
+        if (typeof window.onWishlistToggled === 'function') {
+          window.onWishlistToggled(productId, isAdded, data.count);
+        }
       } catch (e) {
         if (btn) btn.classList.toggle('active');
       }

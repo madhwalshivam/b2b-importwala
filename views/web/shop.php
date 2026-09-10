@@ -8,6 +8,7 @@
 $pageTitle = $pageHeading ?? "All Wholesale Products";
 $seoTitle = $seoOptions['title'] ?? ($pageTitle . " | ImportWale");
 $title = $seoTitle;
+$baseUrl = $seoOptions['canonical'] ?? url('shop');
 
 $activeCatId = (int)($filters['category_id'] ?? 0);
 $activeSubId = (int)($filters['subcategory_id'] ?? 0);
@@ -20,6 +21,8 @@ $currentMaxMoq = $filters['max_moq'] ?? '';
 $searchQuery = $q ?? '';
 $selectedAttrs = $filters['attr'] ?? [];
 
+$currentPage = max(1, (int)($currentPage ?? 1));
+$perPage = max(1, (int)($perPage ?? 25));
 $totalCount = $totalItems ?? 0;
 $itemsCount = count($results['items'] ?? []);
 $startItem = $totalCount > 0 ? (($currentPage - 1) * $perPage + 1) : 0;
@@ -30,7 +33,8 @@ $optionCounts = $results['facets']['option_counts'] ?? [];
 // Calculate Active Filter Chips
 $activeChips = [];
 
-if (!empty($activeCategory)) {
+// Category chip is only shown when on generic shop page with explicitly selected category_id filter
+if ($baseUrl === url('shop') && !empty($activeCategory)) {
     $activeChips[] = [
         'label' => 'Category: ' . htmlspecialchars($activeCategory['name']),
         'type'  => 'category_id',
@@ -130,7 +134,7 @@ ob_start();
             </span>
           <?php endforeach; ?>
 
-          <a href="<?= !empty($activeSection) ? url('section/' . ($activeSection['slug'] ?: $activeSection['section_key'])) : url('shop') ?>" style="font-size: 12.5px; font-weight: 600; color: #ef4444; text-decoration: none; margin-left: 4px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+          <a href="<?= htmlspecialchars($baseUrl) ?>" style="font-size: 12.5px; font-weight: 600; color: #ef4444; text-decoration: none; margin-left: 4px;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
             Clear All
           </a>
         </div>
@@ -175,21 +179,20 @@ ob_start();
         <span style="font-size: 13.5px; font-weight: 700; color: #0f172a;">
           <?= $activeFilterCount ?> filter<?= $activeFilterCount !== 1 ? 's' : '' ?> applied
         </span>
-        <a href="<?= !empty($activeSection) ? url('section/' . ($activeSection['slug'] ?: $activeSection['section_key'])) : url('shop') ?>" style="font-size: 12.5px; font-weight: 600; color: #1e293b; text-decoration: underline;">
-          Clear All
-        </a>
+        <?php if ($activeFilterCount > 0): ?>
+          <a href="<?= htmlspecialchars($baseUrl) ?>" style="font-size: 12.5px; font-weight: 600; color: #1e293b; text-decoration: underline;">
+            Clear All
+          </a>
+        <?php endif; ?>
       </div>
 
       <!-- FILTER FORM -->
-      <form id="shopFilterForm" action="<?= !empty($activeSection) ? url('section/' . ($activeSection['slug'] ?: $activeSection['section_key'])) : url('shop') ?>" method="GET">
+      <form id="shopFilterForm" action="<?= htmlspecialchars($baseUrl) ?>" method="GET">
         <?php if (!empty($searchQuery)): ?>
           <input type="hidden" name="q" value="<?= htmlspecialchars($searchQuery) ?>">
         <?php endif; ?>
         <?php if (!empty($activeSection)): ?>
           <input type="hidden" name="section_id" value="<?= $activeSection['id'] ?>">
-        <?php endif; ?>
-        <?php if (!empty($searchQuery)): ?>
-          <input type="hidden" name="q" value="<?= htmlspecialchars($searchQuery) ?>">
         <?php endif; ?>
 
         <!-- ACCORDION 1: CATEGORIES -->
@@ -202,20 +205,61 @@ ob_start();
           <div class="shop-accordion-content" style="margin-top: 10px;">
             <div class="shop-scroll-area" style="display: flex; flex-direction: column; gap: 2px;">
               <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: <?= empty($activeCatId) ? '#f05a29' : '#334155' ?>; font-weight: <?= empty($activeCatId) ? '600' : '400' ?>; cursor: pointer; padding: 3px 0;">
-                <input type="radio" name="category_id" value="" <?= empty($activeCatId) ? 'checked' : '' ?> onchange="this.form.submit()" style="accent-color: #f05a29; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
+                <input type="radio" name="category_id" value="" <?= empty($activeCatId) ? 'checked' : '' ?> onchange="window.location.href='<?= url('shop') ?>'" style="accent-color: #f05a29; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
                 <span>All Categories</span>
               </label>
 
               <?php if (!empty($categoriesTree)): ?>
                 <?php foreach ($categoriesTree as $cat): ?>
-                  <?php $isCatChecked = ($activeCatId === (int)$cat['id']); ?>
-                  <label style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 13px; color: <?= $isCatChecked ? '#f05a29' : '#334155' ?>; font-weight: <?= $isCatChecked ? '600' : '400' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
-                    <span style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0;">
-                      <input type="radio" name="category_id" value="<?= $cat['id'] ?>" <?= $isCatChecked ? 'checked' : '' ?> onchange="this.form.submit()" style="accent-color: #f05a29; margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
-                      <span style="flex: 1; min-width: 0; word-break: break-word; line-height: 1.35;"><?= htmlspecialchars($cat['name']) ?></span>
-                    </span>
-                    <span style="flex-shrink: 0; font-size: 11px; color: #94a3b8; font-weight: 500; background: #f8fafc; padding: 1px 6px; border-radius: 9999px; border: 1px solid #e2e8f0; margin-left: 4px; display: inline-block; min-width: 18px; text-align: center; margin-top: 1px;"><?= $cat['product_count'] ?? 0 ?></span>
-                  </label>
+                  <?php 
+                  $catCount = (int)($cat['product_count'] ?? 0);
+                  $isCatChecked = ($activeCatId === (int)$cat['id'] && empty($activeSubId));
+                  $hasActiveSub = ($activeCatId === (int)$cat['id'] && !empty($activeSubId));
+
+                  // Filter subcategories to show only those with products > 0 or currently active
+                  $visibleSubcategories = [];
+                  if (!empty($cat['subcategories'])) {
+                      foreach ($cat['subcategories'] as $sub) {
+                          $subId = (int)$sub['id'];
+                          $isSubActive = ($activeSubId === $subId || (isset($activeSubcategory['id']) && (int)$activeSubcategory['id'] === $subId));
+                          $subCount = (int)($sub['product_count'] ?? 0);
+                          if ($subCount > 0 || $isSubActive) {
+                              $visibleSubcategories[] = $sub;
+                          }
+                      }
+                  }
+
+                  // Hide main category if 0 products, 0 visible subcategories, and not active
+                  if ($catCount <= 0 && empty($visibleSubcategories) && !$isCatChecked && !$hasActiveSub) {
+                      continue;
+                  }
+                  ?>
+                  <div style="display: flex; flex-direction: column;">
+                    <label style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 13px; color: <?= ($isCatChecked || $hasActiveSub) ? '#f05a29' : '#334155' ?>; font-weight: <?= ($isCatChecked || $hasActiveSub) ? '700' : '500' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
+                      <span style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0;">
+                        <input type="radio" name="category_id" value="<?= $cat['id'] ?>" <?= $isCatChecked ? 'checked' : '' ?> onchange="window.location.href='<?= category_url($cat) ?>'" style="accent-color: #f05a29; margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
+                        <span style="flex: 1; min-width: 0; word-break: break-word; line-height: 1.35;" onclick="window.location.href='<?= category_url($cat) ?>'"><?= htmlspecialchars($cat['name']) ?></span>
+                      </span>
+                    </label>
+
+                    <?php if (!empty($visibleSubcategories)): ?>
+                      <div style="margin-left: 20px; padding-left: 8px; border-left: 2px solid #f1f5f9; display: flex; flex-direction: column; gap: 1px; margin-bottom: 4px;">
+                        <?php foreach ($visibleSubcategories as $sub): ?>
+                          <?php 
+                          $subId = (int)$sub['id'];
+                          $isSubActive = ($activeSubId === $subId || (isset($activeSubcategory['id']) && (int)$activeSubcategory['id'] === $subId));
+                          $subUrl = subcategory_url($cat, $sub);
+                          ?>
+                          <label onclick="window.location.href='<?= $subUrl ?>'" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; color: <?= $isSubActive ? '#f05a29' : '#64748b' ?>; font-weight: <?= $isSubActive ? '700' : '400' ?>; cursor: pointer; padding: 2px 0;">
+                            <span style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
+                              <span style="width: 5px; height: 5px; border-radius: 50%; background: <?= $isSubActive ? '#f05a29' : '#cbd5e1' ?>; flex-shrink: 0;"></span>
+                              <a href="<?= $subUrl ?>" onclick="event.stopPropagation();" style="color: inherit; text-decoration: none; flex: 1; min-width: 0; word-break: break-word;" onmouseover="this.style.color='#f05a29'" onmouseout="this.style.color='<?= $isSubActive ? '#f05a29' : '#64748b' ?>'"><?= htmlspecialchars($sub['name']) ?></a>
+                            </span>
+                          </label>
+                        <?php endforeach; ?>
+                      </div>
+                    <?php endif; ?>
+                  </div>
                 <?php endforeach; ?>
               <?php endif; ?>
             </div>
@@ -296,6 +340,28 @@ ob_start();
             if (!is_array($selectedOptIds)) {
                 $selectedOptIds = array_filter(array_map('trim', explode(',', (string)$selectedOptIds)));
             }
+
+            // Only show options with liveCount > 0 or currently checked
+            $visibleOptions = [];
+            if (!empty($attr['options']) && is_array($attr['options'])) {
+                foreach ($attr['options'] as $opt) {
+                    $optId = $opt['id'];
+                    $isChecked = in_array($optId, $selectedOptIds) || in_array((string)$optId, $selectedOptIds);
+                    $liveCount = $optionCounts[$optId] ?? 0;
+                    if ($liveCount > 0 || $isChecked) {
+                        $visibleOptions[] = [
+                            'opt' => $opt,
+                            'isChecked' => $isChecked,
+                            'liveCount' => $liveCount
+                        ];
+                    }
+                }
+            }
+
+            // Hide whole accordion if no options are visible
+            if (empty($visibleOptions)) {
+                continue;
+            }
             ?>
             <div class="shop-accordion-item" style="border-bottom: 1px solid #f1f5f9; padding: 10px 0;">
               <button type="button" class="shop-accordion-header" onclick="toggleAccordion(this)" style="width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; text-align: left; padding: 0; cursor: pointer;">
@@ -305,11 +371,12 @@ ob_start();
 
               <div class="shop-accordion-content" style="margin-top: 10px;">
                 <div class="shop-scroll-area" style="display: flex; flex-direction: column; gap: 2px;">
-                  <?php foreach ($attr['options'] as $opt): ?>
+                  <?php foreach ($visibleOptions as $item): ?>
                     <?php
+                    $opt = $item['opt'];
                     $optId = $opt['id'];
-                    $isChecked = in_array($optId, $selectedOptIds) || in_array((string)$optId, $selectedOptIds);
-                    $liveCount = $optionCounts[$optId] ?? 0;
+                    $isChecked = $item['isChecked'];
+                    $liveCount = $item['liveCount'];
                     ?>
                     <label style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 13px; color: <?= $isChecked ? '#f05a29' : '#334155' ?>; font-weight: <?= $isChecked ? '600' : '400' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
                       <span style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0;">
@@ -382,16 +449,17 @@ ob_start();
         <nav class="shop-pagination-wrapper" aria-label="Page navigation" style="margin-top: 36px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;">
           
           <?php
-          $buildPageUrl = function($targetPage) use ($filters, $searchQuery) {
+          $buildPageUrl = function($targetPage) use ($baseUrl) {
             $params = $_GET;
+            unset($params['ajax']);
             $params['page'] = $targetPage;
-            return url('shop') . '?' . http_build_query($params);
+            return $baseUrl . (count($params) > 0 ? ('?' . http_build_query($params)) : '');
           };
           ?>
 
           <!-- Previous Button -->
           <?php if ($currentPage > 1): ?>
-            <a href="<?= $buildPageUrl($currentPage - 1) ?>" onclick="goToShopPage(event, <?= $currentPage - 1 ?>)" class="shop-page-btn shop-page-prev" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #1e293b; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;" onmouseover="this.style.borderColor='#94a3b8'; this.style.background='#f8fafc';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#ffffff';">
+            <a href="<?= htmlspecialchars($buildPageUrl($currentPage - 1)) ?>" onclick="goToShopPage(event, <?= $currentPage - 1 ?>)" class="shop-page-btn shop-page-prev" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #1e293b; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;" onmouseover="this.style.borderColor='#94a3b8'; this.style.background='#f8fafc';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#ffffff';">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
               Previous
             </a>
@@ -411,7 +479,7 @@ ob_start();
                 <?= $p ?>
               </span>
             <?php else: ?>
-              <a href="<?= $buildPageUrl((int)$p) ?>" onclick="goToShopPage(event, <?= (int)$p ?>)" class="shop-page-btn" style="display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; padding: 0 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #334155; font-size: 13.5px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;" onmouseover="this.style.borderColor='#f05a29'; this.style.color='#f05a29'; this.style.background='#fff7ed';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#334155'; this.style.background='#ffffff';">
+              <a href="<?= htmlspecialchars($buildPageUrl((int)$p)) ?>" onclick="goToShopPage(event, <?= (int)$p ?>)" class="shop-page-btn" style="display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; padding: 0 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #334155; font-size: 13.5px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;" onmouseover="this.style.borderColor='#f05a29'; this.style.color='#f05a29'; this.style.background='#fff7ed';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#334155'; this.style.background='#ffffff';">
                 <?= $p ?>
               </a>
             <?php endif; ?>
@@ -419,7 +487,7 @@ ob_start();
 
           <!-- Next Button -->
           <?php if ($currentPage < $totalPages): ?>
-            <a href="<?= $buildPageUrl($currentPage + 1) ?>" onclick="goToShopPage(event, <?= $currentPage + 1 ?>)" class="shop-page-btn shop-page-next" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #1e293b; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;" onmouseover="this.style.borderColor='#94a3b8'; this.style.background='#f8fafc';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#ffffff';">
+            <a href="<?= htmlspecialchars($buildPageUrl($currentPage + 1)) ?>" onclick="goToShopPage(event, <?= $currentPage + 1 ?>)" class="shop-page-btn shop-page-next" style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #1e293b; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;" onmouseover="this.style.borderColor='#94a3b8'; this.style.background='#f8fafc';" onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#ffffff';">
               Next
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </a>
@@ -546,9 +614,13 @@ function toggleShopSidebar() {
 
 function removeFilterChip(type, attrId, optId) {
   const form = document.getElementById('shopFilterForm');
-  if (type === 'category_id') {
-    const r = form.querySelector('input[name="category_id"][value=""]');
-    if (r) r.checked = true;
+  if (type === 'category_id' || type === 'subcategory_id') {
+    if (type === 'subcategory_id' && '<?= !empty($activeCategory) ? category_url($activeCategory) : '' ?>') {
+      window.location.href = '<?= !empty($activeCategory) ? category_url($activeCategory) : url("shop") ?>';
+      return;
+    }
+    window.location.href = '<?= url("shop") ?>';
+    return;
   } else if (type === 'price') {
     const minI = form.querySelector('input[name="min_price"]');
     const maxI = form.querySelector('input[name="max_price"]');
@@ -612,8 +684,14 @@ function submitShopFilterForm() {
     }
   }
 
-  const targetUrl = form.action + '?' + params.toString();
-  
+  if (form.action.includes('/category/')) {
+    params.delete('category_id');
+    params.delete('subcategory_id');
+  }
+
+  const queryString = params.toString();
+  const targetUrl = form.action + (queryString ? ('?' + queryString) : '');
+
   const grid = document.getElementById('shopProductGrid');
   const skeleton = document.getElementById('shopSkeletonGrid');
   if (grid && skeleton) {
@@ -630,9 +708,17 @@ function submitShopFilterForm() {
   })
   .then(res => {
     if (!res.ok) throw new Error('Network error');
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      return res.json().then(data => data.html || '');
+    }
     return res.text();
   })
   .then(html => {
+    if (!html) {
+      window.location.href = targetUrl;
+      return;
+    }
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
     const newContent = doc.querySelector('.shop-page-wrapper');
@@ -640,6 +726,7 @@ function submitShopFilterForm() {
 
     if (newContent && currentContainer) {
       currentContainer.innerHTML = newContent.innerHTML;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       window.location.href = targetUrl;
     }
