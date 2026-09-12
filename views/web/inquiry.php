@@ -4,6 +4,17 @@ ob_start();
 ?>
 
 <div style="max-width: 1200px; margin: 0 auto; padding-top: 12px;">
+<style>
+@media (max-width: 767px) {
+  #inquiryStage {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  #inquiryForm div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
 
   <!-- Page Header -->
   <div style="margin-bottom:24px; border-bottom:1px solid #f1f5f9; padding-bottom:16px;">

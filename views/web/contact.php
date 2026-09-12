@@ -12,8 +12,16 @@ ob_start();
   <p style="font-size: 14px; color: #9ca3af; max-width: 600px; margin: 0 auto;">Have a question about your order, shipping, custom quotes, or returns? We are here to assist your wholesale sourcing needs.</p>
 </div>
 
+<style>
+@media (max-width: 640px) {
+  div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+}
+</style>
 <!-- Main Contact Layout Grid -->
-<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; margin-bottom: 50px;">
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; margin-bottom: 50px;">
 
   <!-- Left Column: Direct Contact Info & Online Badge -->
   <div style="display: flex; flex-direction: column; gap: 20px;">

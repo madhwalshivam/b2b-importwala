@@ -3,10 +3,12 @@ namespace App\Models;
 
 use App\Core\Model;
 
-class FeaturedSubcategory extends Model {
+class FeaturedSubcategory extends Model
+{
     protected string $table = 'featured_subcategories';
 
-    public function getByCategory(int $categoryId): array {
+    public function getByCategory(int $categoryId): array
+    {
         $stmt = $this->db->prepare("
             SELECT * FROM featured_subcategories 
             WHERE featured_category_id = ? 
@@ -16,13 +18,15 @@ class FeaturedSubcategory extends Model {
         return $stmt->fetchAll() ?: [];
     }
 
-    public function findById(int $id): ?array {
+    public function findById(int $id): ?array
+    {
         $stmt = $this->db->prepare("SELECT * FROM featured_subcategories WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch() ?: null;
     }
 
-    public function createSubcategory(array $data): int {
+    public function createSubcategory(array $data): int
+    {
         $slug = $this->generateUniqueSlug($data['name']);
         $stmt = $this->db->prepare("
             INSERT INTO featured_subcategories 
@@ -30,18 +34,19 @@ class FeaturedSubcategory extends Model {
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
-            (int)$data['featured_category_id'],
+            (int) $data['featured_category_id'],
             $data['name'],
             $slug,
             $data['image'] ?? '',
             $data['link_url'] ?? '',
-            (int)($data['sort_order'] ?? 0),
-            isset($data['is_active']) ? (int)$data['is_active'] : 1
+            (int) ($data['sort_order'] ?? 0),
+            isset($data['is_active']) ? (int) $data['is_active'] : 1
         ]);
-        return (int)$this->db->lastInsertId();
+        return (int) $this->db->lastInsertId();
     }
 
-    public function updateSubcategory(int $id, array $data): bool {
+    public function updateSubcategory(int $id, array $data): bool
+    {
         $slug = !empty($data['name']) ? $this->generateUniqueSlug($data['name'], $id) : null;
         $stmt = $this->db->prepare("
             UPDATE featured_subcategories 
@@ -49,30 +54,33 @@ class FeaturedSubcategory extends Model {
             WHERE id = ?
         ");
         return $stmt->execute([
-            (int)$data['featured_category_id'],
+            (int) $data['featured_category_id'],
             $data['name'],
             $slug,
             $data['image'] ?? '',
             $data['link_url'] ?? '',
-            (int)($data['sort_order'] ?? 0),
-            isset($data['is_active']) ? (int)$data['is_active'] : 1,
+            (int) ($data['sort_order'] ?? 0),
+            isset($data['is_active']) ? (int) $data['is_active'] : 1,
             $id
         ]);
     }
 
-    public function deleteSubcategory(int $id): bool {
+    public function deleteSubcategory(int $id): bool
+    {
         $stmt = $this->db->prepare("DELETE FROM featured_subcategories WHERE id = ?");
         return $stmt->execute([$id]);
     }
 
-    public function updateSortOrder(array $orderMap): void {
+    public function updateSortOrder(array $orderMap): void
+    {
         $stmt = $this->db->prepare("UPDATE featured_subcategories SET sort_order = ? WHERE id = ?");
         foreach ($orderMap as $id => $order) {
-            $stmt->execute([(int)$order, (int)$id]);
+            $stmt->execute([(int) $order, (int) $id]);
         }
     }
 
-    private function generateUniqueSlug(string $name, ?int $ignoreId = null): string {
+    private function generateUniqueSlug(string $name, ?int $ignoreId = null): string
+    {
         $base = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $name), '-'));
         $slug = $base;
         $count = 1;

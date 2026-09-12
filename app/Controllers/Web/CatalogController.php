@@ -237,9 +237,28 @@ class CatalogController extends BaseController
      */
     public function section(string $slug): void
     {
-        $slug = slugify($slug);
+        $cleanSlug = slugify($slug);
         $sectionModel = new \App\Models\HomeSection();
-        $section = $sectionModel->findBySlug($slug);
+        $section = $sectionModel->findBySlug($cleanSlug);
+        $isTopDeals = false;
+
+        if (!$section) {
+            $topDealModel = new \App\Models\TopDealSection();
+            $tdSettings = $topDealModel->getSettings();
+            $tdSlug = slugify($tdSettings['slug'] ?? 'top-deals');
+
+            if ($cleanSlug === 'top-deals' || $cleanSlug === $tdSlug || str_contains($cleanSlug, 'top-deal')) {
+                $section = [
+                    'id'           => 999999,
+                    'title'        => $tdSettings['title'] ?? 'Top Deals',
+                    'slug'         => $tdSettings['slug'] ?? 'top-deals',
+                    'subtitle'     => $tdSettings['subtitle'] ?? '',
+                    'status'       => $tdSettings['status'] ?? 'active',
+                    'is_top_deals' => true
+                ];
+                $isTopDeals = true;
+            }
+        }
 
         if (!$section || ($section['status'] !== 'active' && $section['status'] !== 'enabled')) {
             http_response_code(404);
@@ -249,17 +268,14 @@ class CatalogController extends BaseController
             return;
         }
 
-        $page = max(1, (int)($_GET['page'] ?? 1));
-        $perPage = 25;
-        $paginatedData = $sectionModel->getSectionProductsPaginated((int)$section['id'], $page, $perPage);
-
         $heading = $section['title'];
         $seoTitle = $heading . ' Wholesale Catalog | ImportWale';
         $seoDesc = !empty($section['subtitle']) ? $section['subtitle'] : ('Buy wholesale ' . $heading . ' at factory-direct prices from ImportWale.');
-        $canonical = url('section/' . ($section['slug'] ?: $section['section_key']));
+        $canonical = url('section/' . ($section['slug'] ?: $cleanSlug));
 
         $this->renderCatalogPage([
             'section_id'     => (int)$section['id'],
+            'is_top_deals'   => $isTopDeals,
             'active_section' => $section,
             'seo_title'      => $seoTitle,
             'seo_description'=> $seoDesc,
@@ -458,11 +474,11 @@ class CatalogController extends BaseController
         $maxMoq   = (isset($_GET['max_moq']) && $_GET['max_moq'] !== '') ? (int)$_GET['max_moq'] : null;
         $sort     = $_GET['sort'] ?? 'relevance';
 
-        // Selectable per-page size (default: 25)
-        $allowedLimits = [12, 24, 25, 48, 50, 100];
-        $perPage = (int)($_GET['per_page'] ?? 25);
+        // Selectable per-page size (default: 24 for 2-column mobile rows)
+        $allowedLimits = [12, 24, 48, 60, 100];
+        $perPage = (int)($_GET['per_page'] ?? 24);
         if (!in_array($perPage, $allowedLimits)) {
-            $perPage = 25;
+            $perPage = 24;
         }
 
         $page = max(1, (int)($_GET['page'] ?? 1));

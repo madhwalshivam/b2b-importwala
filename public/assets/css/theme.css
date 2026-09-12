@@ -622,6 +622,7 @@ html.dark footer {
     position: relative;
     scroll-behavior: smooth;
     padding-bottom: 0 !important;
+    background: #FAF9F6 !important;
   }
 
   button,
@@ -749,6 +750,7 @@ html.dark footer {
 
   footer {
     padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
   }
 }
 

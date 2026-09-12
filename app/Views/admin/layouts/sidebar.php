@@ -78,6 +78,13 @@ $isActive = function(string $path) use ($currentUri): bool {
                     <span class="truncate">Feat. Cats</span>
                 </a>
 
+                <a href="<?= url('admin/top-deals') ?>"
+                    class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/top-deals') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-yellow-400 border-slate-700/60' ?>"
+                    title="Standalone Top Deals Section">
+                    <i data-lucide="zap" class="w-4 h-4 shrink-0 text-yellow-400"></i>
+                    <span class="truncate">Top Deals</span>
+                </a>
+
                 <a href="<?= url('admin/homepage-sections') ?>"
                     class="flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/homepage-sections') ? 'bg-red-600 text-white border-red-500 shadow-xs' : 'bg-slate-800/60 hover:bg-slate-800 text-slate-200 border-slate-700/60' ?>"
                     title="Homepage Sections">

@@ -10,6 +10,17 @@ ob_start();
 ?>
 
 <!-- Categories Directory Wrapper -->
+<style>
+@media (max-width: 640px) {
+  #categoriesGrid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .categories-page-wrapper {
+    padding: 10px 12px 24px 12px !important;
+  }
+}
+</style>
 <div class="categories-page-wrapper" style="max-width: 1440px; margin: 0 auto; padding: 16px 20px 32px 20px; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
 
   <!-- Breadcrumb -->

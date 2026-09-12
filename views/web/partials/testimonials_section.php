@@ -32,44 +32,63 @@ if (empty($testimonials)) return;
       </div>
     </div>
 
-    <!-- Right Column: 2x3 Responsive Review Cards Grid -->
+    <!-- Right Column: 2x3 Responsive Review Cards Grid & Mobile Carousel -->
     <div class="everful-testimonials-right">
-      <div class="everful-cards-grid">
-        <?php foreach ($testimonials as $item): ?>
-          <div class="everful-review-card">
-            
-            <!-- Rating Row (5 Amber Star Rating Boxes - NO GREEN) -->
-            <div class="everful-rating-row">
-              <?php for ($s = 1; $s <= 5; $s++): ?>
-                <span class="everful-star-box <?= $s <= $item['rating'] ? 'active' : '' ?>">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="#FFFFFF" class="no-size-reset">
-                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                  </svg>
-                </span>
-              <?php endfor; ?>
-            </div>
-
-            <!-- Review Text Snippet -->
-            <p class="everful-review-text" title="<?= htmlspecialchars($item['review_text']) ?>">
-              "<?= htmlspecialchars($item['review_text']) ?>"
-            </p>
-
-            <!-- Reviewer Details (Photo ONLY if uploaded, NO initial letter circle) -->
-            <div class="everful-reviewer-info">
-              <?php if (!empty($item['photo_path'])): ?>
-                <img src="<?= url(ltrim($item['photo_path'], '/')) ?>" 
-                     alt="<?= htmlspecialchars($item['reviewer_name']) ?>" 
-                     class="everful-avatar-img">
-              <?php endif; ?>
-
-              <div class="everful-reviewer-meta">
-                <div class="everful-reviewer-name"><?= htmlspecialchars($item['reviewer_name']) ?></div>
-                <div class="everful-reviewer-location"><?= htmlspecialchars($item['location']) ?></div>
+      <div class="reviews-carousel-wrapper">
+        <div class="everful-cards-grid" id="reviewsCarouselGrid">
+          <?php foreach ($testimonials as $item): ?>
+            <div class="everful-review-card">
+              
+              <!-- Rating Row (5 Amber Star Rating Boxes - NO GREEN) -->
+              <div class="everful-rating-row">
+                <?php for ($s = 1; $s <= 5; $s++): ?>
+                  <span class="everful-star-box <?= $s <= $item['rating'] ? 'active' : '' ?>">
+                    <svg viewBox="0 0 24 24" width="13" height="13" fill="#FFFFFF" class="no-size-reset">
+                      <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                    </svg>
+                  </span>
+                <?php endfor; ?>
               </div>
-            </div>
 
-          </div>
-        <?php endforeach; ?>
+              <!-- Review Text Snippet -->
+              <p class="everful-review-text" title="<?= htmlspecialchars($item['review_text']) ?>">
+                "<?= htmlspecialchars($item['review_text']) ?>"
+              </p>
+
+              <!-- Reviewer Details (Photo ONLY if uploaded, NO initial letter circle) -->
+              <div class="everful-reviewer-info">
+                <?php if (!empty($item['photo_path'])): ?>
+                  <img src="<?= url(ltrim($item['photo_path'], '/')) ?>" 
+                       alt="<?= htmlspecialchars($item['reviewer_name']) ?>" 
+                       class="everful-avatar-img">
+                <?php endif; ?>
+
+                <div class="everful-reviewer-meta">
+                  <div class="everful-reviewer-name"><?= htmlspecialchars($item['reviewer_name']) ?></div>
+                  <div class="everful-reviewer-location"><?= htmlspecialchars($item['location']) ?></div>
+                </div>
+              </div>
+
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
+      <!-- Mobile Bottom Controls: Left Arrow - Dots - Right Arrow -->
+      <div class="reviews-bottom-controls">
+        <button type="button" class="reviews-nav-btn reviews-nav-prev" onclick="scrollReviewsCarousel(-1)" aria-label="Previous Review">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+
+        <div class="reviews-dots-container" id="reviewsDotsContainer">
+          <?php foreach ($testimonials as $idx => $item): ?>
+            <span class="reviews-dot <?= $idx === 0 ? 'active' : '' ?>" onclick="goToReviewsSlide(<?= $idx ?>)"></span>
+          <?php endforeach; ?>
+        </div>
+
+        <button type="button" class="reviews-nav-btn reviews-nav-next" onclick="scrollReviewsCarousel(1)" aria-label="Next Review">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
       </div>
 
       <div class="everful-testimonials-cta-mobile">
@@ -308,8 +327,17 @@ if (empty($testimonials)) return;
   text-overflow: ellipsis !important;
 }
 
-/* Responsive Media Queries */
-@media (max-width: 1080px) {
+/* Reviews Mobile Carousel CSS & JS Controls */
+.reviews-carousel-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.reviews-bottom-controls {
+  display: none !important;
+}
+
+@media (max-width: 1080px) and (min-width: 768px) {
   .everful-testimonials-container {
     flex-direction: column !important;
     gap: 24px !important;
@@ -331,11 +359,24 @@ if (empty($testimonials)) return;
     display: block !important;
   }
   .everful-cards-grid {
+    display: grid !important;
     grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px !important;
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 767px) {
+  .everful-testimonials-container {
+    flex-direction: column !important;
+    gap: 24px !important;
+    align-items: flex-start !important;
+  }
+  .everful-testimonials-left {
+    flex: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-top: 0 !important;
+  }
   .everful-testimonials-wrapper {
     padding: 28px 18px !important;
     border-radius: 16px !important;
@@ -344,16 +385,122 @@ if (empty($testimonials)) return;
   .everful-testimonials-title {
     font-size: 22px !important;
   }
-  .everful-cards-grid {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
+  .everful-testimonials-cta-desktop {
+    display: none !important;
   }
-  .everful-review-card {
-    padding: 20px !important;
-    min-height: auto !important;
+  .everful-testimonials-cta-mobile {
+    display: block !important;
   }
   .hidden-mobile {
     display: none !important;
   }
+
+  .reviews-bottom-controls {
+    display: none !important;
+  }
+
+  .reviews-nav-btn {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #0F172A !important;
+    cursor: pointer !important;
+    padding: 4px !important;
+    transition: opacity 0.2s ease !important;
+  }
+  .reviews-nav-btn:active {
+    opacity: 0.6 !important;
+  }
+
+  .everful-cards-grid {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    scroll-behavior: smooth !important;
+    scroll-snap-type: x mandatory !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 4px 0 !important;
+  }
+  .everful-cards-grid::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .everful-review-card {
+    flex: 0 0 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    scroll-snap-align: start !important;
+    box-sizing: border-box !important;
+    padding: 20px !important;
+    min-height: auto !important;
+  }
+
+  .reviews-dots-container {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    margin: 0 !important;
+  }
+  .reviews-dot {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background: #CBD5E1 !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+  }
+  .reviews-dot.active {
+    background: #f05a29 !important;
+    width: 22px !important;
+    border-radius: 99px !important;
+  }
 }
 </style>
+
+<script>
+function scrollReviewsCarousel(direction) {
+  const container = document.getElementById('reviewsCarouselGrid');
+  if (!container) return;
+  const cardWidth = container.clientWidth;
+  container.scrollBy({ left: direction * cardWidth, behavior: 'smooth' });
+}
+
+function goToReviewsSlide(index) {
+  const container = document.getElementById('reviewsCarouselGrid');
+  if (!container) return;
+  const cardWidth = container.clientWidth;
+  container.scrollTo({ left: index * cardWidth, behavior: 'smooth' });
+}
+
+function updateReviewsDots() {
+  const container = document.getElementById('reviewsCarouselGrid');
+  const dots = document.querySelectorAll('#reviewsDotsContainer .reviews-dot');
+  if (!container || !dots.length) return;
+  const scrollPos = container.scrollLeft;
+  const cardWidth = container.clientWidth;
+  const activeIndex = Math.round(scrollPos / cardWidth);
+  dots.forEach((dot, idx) => {
+    if (idx === activeIndex) {
+      dot.classList.add('active');
+    } else {
+      dot.classList.remove('active');
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.getElementById('reviewsCarouselGrid');
+  if (container) {
+    container.addEventListener('scroll', updateReviewsDots, { passive: true });
+  }
+});
+</script>

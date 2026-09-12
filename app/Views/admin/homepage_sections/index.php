@@ -89,6 +89,14 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
                         class="w-full h-10 px-3 border border-slate-200 rounded-xl text-xs font-mono focus:outline-none focus:border-red-600">
                 </div>
 
+                <div class="space-y-1.5">
+                    <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Card UI Style Layout</label>
+                    <select name="section_style" class="w-full h-10 px-3 border border-slate-200 rounded-xl text-xs font-semibold focus:outline-none focus:border-red-600">
+                        <option value="grid">Standard Product Grid</option>
+                        <option value="deals_row">Deals Row (Top Deals Jumia Style Horizontal Scroll)</option>
+                    </select>
+                </div>
+
                 <div class="grid grid-cols-2 gap-3">
                     <div class="space-y-1.5">
                         <label class="block text-[11px] font-semibold text-slate-700 uppercase">Homepage Limit</label>
@@ -332,8 +340,17 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
                                 class="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
                         </div>
 
+                        <!-- Card UI Style -->
+                        <div class="md:col-span-2 space-y-1.5">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">UI Style</label>
+                            <select name="section_style" class="w-full h-10 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-red-600 transition">
+                                <option value="grid" <?= ($sec['section_style'] ?? 'grid') === 'grid' ? 'selected' : '' ?>>Standard Grid</option>
+                                <option value="deals_row" <?= ($sec['section_style'] ?? 'grid') === 'deals_row' ? 'selected' : '' ?>>Deals Row (Jumia Style)</option>
+                            </select>
+                        </div>
+
                         <!-- Subtitle -->
-                        <div class="md:col-span-3 space-y-1.5">
+                        <div class="md:col-span-2 space-y-1.5">
                             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Subtitle</label>
                             <input type="text" name="subtitle" value="<?= htmlspecialchars($sec['subtitle'] ?? '') ?>"
                                 placeholder="Subtitle text..."
@@ -341,7 +358,7 @@ $displaySections = !empty($rawSections) ? $rawSections : array_values($sections)
                         </div>
 
                         <!-- Custom View All Link -->
-                        <div class="md:col-span-3 space-y-1.5">
+                        <div class="md:col-span-2 space-y-1.5">
                             <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">
                                 Custom Link <span class="text-slate-400 font-normal lowercase">(optional)</span>
                             </label>

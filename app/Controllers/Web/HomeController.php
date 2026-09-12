@@ -45,12 +45,21 @@ class HomeController extends BaseController
         $homeSectionModel = new \App\Models\HomeSection();
         $homepageSections = $homeSectionModel->getEnabledSectionsWithProducts();
 
+        $topDealModel = new \App\Models\TopDealSection();
+        $topDealsSettings = $topDealModel->getSettings();
+        $topDealsProducts = $topDealModel->getProducts();
+        $topDealsData = [
+            'settings' => $topDealsSettings,
+            'products' => $topDealsProducts
+        ];
+
         $this->renderView('web/home', [
             'categories'         => $categories,
             'featuredProducts'   => $featuredProducts,
             'newArrivals'        => $newArrivals,
             'bestSellers'        => $bestSellers,
             'homepageSections'   => $homepageSections,
+            'topDealsData'       => $topDealsData,
             'featuredCategories' => $featuredCategories,
             'heroBanners'        => $heroBanners,
             'collectionCards'    => $collectionCards,

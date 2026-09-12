@@ -38,7 +38,7 @@ ob_start();
     </div>
 
     <!-- Unified Product Grid (Exact Site-wide 5-Col Grid Style) -->
-    <div id="wishlistGridContainer" class="product-grid" style="display: <?= !empty($items) ? 'grid' : 'none' ?>; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px 12px; width: 100%;">
+    <div id="wishlistGridContainer" class="product-grid" style="display: <?= !empty($items) ? 'grid' : 'none' ?>;">
         <?php foreach ($items as $product): ?>
             <?php 
             $pId = $product['id'] ?? $product['product_id'] ?? 0;

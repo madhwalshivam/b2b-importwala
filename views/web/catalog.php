@@ -25,6 +25,24 @@ $currentSort = $filters['sort'] ?? 'relevance';
 $activeCategory = $filters['category_id'] ?? null;
 ?>
 
+<style>
+@media (max-width: 640px) {
+  .everful-collection-banner img {
+    height: 160px !important;
+  }
+  .everful-collection-banner > div {
+    padding: 16px 18px !important;
+  }
+  .catalog-heading {
+    font-size: 20px !important;
+  }
+  .catalog-top-toolbar {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+  }
+}
+</style>
+
 <div class="catalog-page-wrapper" style="margin-top: 0; margin-bottom: 50px;">
 
   <!-- ============================================================

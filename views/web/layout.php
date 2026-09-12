@@ -244,10 +244,19 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
   <!-- Header Main -->
   <header class="header-container">
     <div class="header-main">
-      <!-- Official ImportWale Logo (Double Sized) -->
-      <a href="<?= url('') ?>" class="brand-logo">
-        <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" class="brand-logo-img">
-      </a>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <!-- Mobile Hamburger Toggle Button -->
+        <button type="button" class="mobile-menu-toggle-btn" onclick="openMobileNavDrawer()" aria-label="Open Navigation Menu">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <!-- Official ImportWale Logo -->
+        <a href="<?= url('') ?>" class="brand-logo">
+          <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" class="brand-logo-img">
+        </a>
+      </div>
 
       <!-- Search Bar with Camera & Voice Search -->
       <form action="<?= url('catalog') ?>" method="GET" class="search-bar-wrapper">
@@ -446,6 +455,59 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       </div>
     </nav>
   </header>
+
+  <!-- Mobile Slide-Out Navigation Drawer -->
+  <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop" onclick="closeMobileNavDrawer()">
+    <div class="mobile-drawer-panel" onclick="event.stopPropagation()">
+      <div class="mobile-drawer-header">
+        <div class="mobile-drawer-title">
+          <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" style="height: 24px; width: auto;">
+        </div>
+        <button type="button" class="mobile-drawer-close-btn" onclick="closeMobileNavDrawer()" aria-label="Close Menu">✕</button>
+      </div>
+      <div class="mobile-drawer-body">
+        <div class="mobile-drawer-section-title">Navigation</div>
+        <ul class="mobile-drawer-nav-list">
+          <li class="mobile-drawer-nav-item"><a href="<?= url('') ?>" class="<?= ($currentUri === '' || str_contains($currentUri, 'importwala/index.php')) ? 'active' : '' ?>">Home</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('catalog') ?>" class="<?= str_contains($currentUri, 'catalog') ? 'active' : '' ?>">All Products / Catalog</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('categories') ?>" class="<?= str_contains($currentUri, 'categories') ? 'active' : '' ?>">All Categories</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('factories') ?>" class="<?= str_contains($currentUri, 'factories') ? 'active' : '' ?>">Verified Factories</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('wishlist') ?>" class="<?= str_contains($currentUri, 'wishlist') ? 'active' : '' ?>">My Wishlist</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('inquiry') ?>" class="<?= str_contains($currentUri, 'inquiry') ? 'active' : '' ?>">My Inquiries / Custom Quotes</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('account') ?>" class="<?= str_contains($currentUri, 'account') ? 'active' : '' ?>">My Account</a></li>
+        </ul>
+
+        <?php if (!empty($dynamicNavTree)): ?>
+          <div class="mobile-drawer-section-title">Categories</div>
+          <ul class="mobile-drawer-nav-list">
+            <?php foreach ($dynamicNavTree as $navItem): ?>
+              <?php
+              $cleanPath = ltrim($navItem['url'], '/');
+              $targetUrl = url($cleanPath);
+              ?>
+              <li class="mobile-drawer-nav-item">
+                <a href="<?= $targetUrl ?>"><?= htmlspecialchars($navItem['label']) ?></a>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        <?php endif; ?>
+
+        <div class="mobile-drawer-section-title">Help & Support</div>
+        <ul class="mobile-drawer-nav-list">
+          <li class="mobile-drawer-nav-item"><a href="<?= url('support') ?>">Help Center & FAQs</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('about-us') ?>">About ImportWale</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('contact-us') ?>">Contact Support</a></li>
+          <li class="mobile-drawer-nav-item"><a href="https://wa.me/919217714452" target="_blank" rel="noopener">WhatsApp (+91 92177 14452)</a></li>
+        </ul>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0;">
+          <button type="button" onclick="closeMobileNavDrawer(); openRfqModal(null, true);" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #F05A29; color: #fff; font-size: 14px; font-weight: 700; padding: 12px; border-radius: 10px; border: none; cursor: pointer;">
+            Get a Custom Quote
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Page Dynamic Content -->
   <main class="main-container">
@@ -674,7 +736,66 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     Need Help?
   </a>
 
+  <!-- Fixed App-Style Bottom Navigation Bar (Mobile Only) -->
+  <!-- Fixed App-Style Bottom Navigation Bar (Mobile Only: 5 Items - Category, Shop, Factory, Inquiry, Me) -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Mobile Navigation" style="background: #ffffff !important; background-color: #ffffff !important; bottom: 0 !important; z-index: 999999 !important; border-top: 1px solid #e2e8f0 !important;">
+    
+    <!-- Item 1: Category -->
+    <a href="<?= url('categories') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'categories') ? 'active' : '' ?>" title="Category">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+      </svg>
+      <span>Category</span>
+    </a>
+
+    <!-- Item 2: Shop -->
+    <a href="<?= url('shop') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'shop') ? 'active' : '' ?>" title="Shop">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.25a.75.75 0 01-.75-.75V8.25m18 0V20.25a.75.75 0 01-.75.75H13.5M2.25 8.25l9.75-5.25 9.75 5.25M2.25 8.25v.75H21.75v-.75" />
+      </svg>
+      <span>Shop</span>
+    </a>
+
+    <!-- Item 3: Factory -->
+    <a href="<?= url('factories') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'factories') || str_contains($currentUri, 'factory') ? 'active' : '' ?>" title="Factory">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5l-6-3.75v17.25m-4.5-12h.008v.008H9V9zm0 3.75h.008v.008H9v-.008zm0 3.75h.008v.008H9v-.008zm-4.5-7.5h.008v.008H4.5V9zm0 3.75h.008v.008H4.5v-.008zm0 3.75h.008v.008H4.5v-.008z" />
+      </svg>
+      <span>Factory</span>
+    </a>
+
+    <!-- Item 4: Inquiry -->
+    <?php
+    if (session_status() === PHP_SESSION_NONE) @session_start();
+    $initialInquiryCount = !empty($_SESSION['inquiry_list']) ? count($_SESSION['inquiry_list']) : 0;
+    ?>
+    <a href="<?= url('inquiry') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'inquiry') ? 'active' : '' ?>" title="Inquiry">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <span class="mobile-nav-badge" id="mobileInquiryCount" style="display:<?= $initialInquiryCount > 0 ? 'flex' : 'none' ?>;"><?= $initialInquiryCount ?></span>
+      <span>Inquiry</span>
+    </a>
+
+    <!-- Item 5: Me / Account -->
+    <a href="<?= url('account') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'account') || str_contains($currentUri, 'login') ? 'active' : '' ?>" title="Me">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+      </svg>
+      <span>Me</span>
+    </a>
+
+  </nav>
+
   <script>
+    function openMobileNavDrawer() {
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      if (backdrop) backdrop.classList.add('active');
+    }
+    function closeMobileNavDrawer() {
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      if (backdrop) backdrop.classList.remove('active');
+    }
     // Country to Currency Mapping
     const countryToCurrencyMap = {
       'US': 'USD',
@@ -1033,7 +1154,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       });
 
       // 2. Cart Buttons on Product Cards
-      document.querySelectorAll('.ef-cart-btn, .btn-add-cart').forEach(btn => {
+      document.querySelectorAll('.ef-cart-btn, .ef-add-to-cart-btn, .btn-add-cart').forEach(btn => {
         let pId = parseInt(btn.dataset.productId);
         if (!pId) {
           const card = btn.closest('[data-product-id]');
@@ -1045,6 +1166,8 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           btn.title = 'In Cart (Click to open Cart)';
           btn.style.background = '#10b981';
           btn.style.color = '#ffffff';
+          const textSpan = btn.querySelector('.ef-cart-btn-text');
+          if (textSpan) textSpan.textContent = 'In Cart';
           const icon = btn.querySelector('.ef-cart-icon, svg');
           if (icon) {
             icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>';
@@ -1054,6 +1177,8 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           btn.title = 'Add to Cart';
           btn.style.background = '';
           btn.style.color = '';
+          const textSpan = btn.querySelector('.ef-cart-btn-text');
+          if (textSpan) textSpan.textContent = 'Add to cart';
           const icon = btn.querySelector('.ef-cart-icon, svg');
           if (icon) {
             icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"/>';
@@ -1141,11 +1266,17 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     };
 
     window.updateHeaderWishlistCount = function (count) {
-      const badge = document.getElementById('headerWishlistCount');
-      if (!badge) return;
       const numCount = parseInt(count) || 0;
-      badge.innerText = numCount;
-      badge.style.display = numCount > 0 ? 'flex' : 'none';
+      const badge = document.getElementById('headerWishlistCount');
+      if (badge) {
+        badge.innerText = numCount;
+        badge.style.display = numCount > 0 ? 'flex' : 'none';
+      }
+      const mobileBadge = document.getElementById('mobileWishlistCount');
+      if (mobileBadge) {
+        mobileBadge.innerText = numCount;
+        mobileBadge.style.display = numCount > 0 ? 'flex' : 'none';
+      }
     };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -2937,6 +3068,24 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
   </div>
 
   <script>
+    function updateCardCarouselDots(track) {
+      if (!track) return;
+      const slideWidth = track.clientWidth;
+      if (!slideWidth) return;
+      const index = Math.round(track.scrollLeft / slideWidth);
+      const dotsContainer = track.parentElement ? track.parentElement.querySelector('.ef-img-dots') : null;
+      if (dotsContainer) {
+        const dots = dotsContainer.querySelectorAll('.ef-img-dot');
+        dots.forEach((dot, i) => {
+          if (i === index) {
+            dot.classList.add('active');
+          } else {
+            dot.classList.remove('active');
+          }
+        });
+      }
+    }
+
     let quickAddCardInFlight = {};
     async function quickAddToCartCard(productId, moq, btn) {
       if (!productId) return;
@@ -3016,16 +3165,43 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     }
 
     function updateHeaderCartBadge(count) {
+      const numCount = parseInt(count) || 0;
       const badge = document.getElementById('headerCartCount');
       if (badge) {
-        if (count > 0) {
-          badge.textContent = count;
+        if (numCount > 0) {
+          badge.textContent = numCount;
           badge.style.display = 'flex';
         } else {
           badge.style.display = 'none';
         }
       }
+      const mobileBadge = document.getElementById('mobileCartCount');
+      if (mobileBadge) {
+        if (numCount > 0) {
+          mobileBadge.textContent = numCount;
+          mobileBadge.style.display = 'flex';
+        } else {
+          mobileBadge.style.display = 'none';
+        }
+      }
     }
+
+    window.updateHeaderCartCount = function(count) {
+      updateHeaderCartBadge(count);
+    };
+
+    window.updateInquiryCountBadge = function(count) {
+      const numCount = parseInt(count) || 0;
+      const mobileBadge = document.getElementById('mobileInquiryCount');
+      if (mobileBadge) {
+        if (numCount > 0) {
+          mobileBadge.textContent = numCount;
+          mobileBadge.style.display = 'flex';
+        } else {
+          mobileBadge.style.display = 'none';
+        }
+      }
+    };
 
     function renderCartDrawerUI(items, subtotal, count) {
       const countEl = document.getElementById('drawerCountText');
@@ -3152,6 +3328,30 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       }
     });
   </script>
+  <style>
+    /* ===== MOBILE FOOTER GAP FIX ===== */
+    @media (max-width: 767px) {
+      /* Body ko padding-bottom NAHI dena — warna body ka background gap dikhata hai */
+      html, body {
+        padding-bottom: 0 !important;
+        background: #FAF9F6 !important;
+      }
+      /* Footer ko padding-bottom do — uski apni background fill karti hai woh space */
+      footer.footer-container {
+        padding: 0 0 62px 0 !important;
+        margin: 0 !important;
+        background: #FAF9F6 !important;
+      }
+      .footer-trust-strip { display: none !important; }
+      .footer-newsletter-box { display: none !important; }
+      .footer-main-wrapper { padding: 16px 16px 0 16px !important; margin: 0 !important; }
+      .footer-inner { margin-bottom: 12px !important; gap: 16px !important; }
+      .footer-divider { margin-bottom: 10px !important; }
+      .footer-bottom { margin: 0 !important; padding: 0 !important; gap: 8px !important; }
+      .footer-bottom-copy { display: none !important; }
+      .footer-payment-badges { margin: 0 0 12px 0 !important; padding: 0 !important; }
+    }
+  </style>
 </body>
 
 </html>

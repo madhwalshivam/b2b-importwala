@@ -250,6 +250,14 @@ $router->post('/admin/collection-cards/reorder', 'Admin\CollectionCardController
 // Public API for Collection Cards (storefront)
 $router->get('/api/collection-cards', 'Admin\CollectionCardController@apiIndex');
 
+// Standalone Top Deals & Deals Row Manager
+$router->get('/admin/top-deals', 'Admin\TopDealsController@index', [AdminMiddleware::class]);
+$router->post('/admin/top-deals/store', 'Admin\TopDealsController@store', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/top-deals/update/{key}', 'Admin\TopDealsController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/top-deals/update', 'Admin\TopDealsController@update', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/top-deals/delete/{id}', 'Admin\TopDealsController@delete', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/top-deals/delete/{id}', 'Admin\TopDealsController@delete', [AdminMiddleware::class]);
+
 // Homepage Sections Manager (Dynamic Admin-Manageable Sections)
 $router->get('/admin/homepage-sections', 'Admin\HomepageSectionsController@index', [AdminMiddleware::class]);
 $router->post('/admin/homepage-sections/store', 'Admin\HomepageSectionsController@store', [AdminMiddleware::class, CsrfMiddleware::class]);

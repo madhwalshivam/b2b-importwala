@@ -53,14 +53,30 @@ class HomeSection extends Model {
     }
 
     /**
-     * Find section by slug
+     * Find section by slug, key, id, or title
      */
     public function findBySlug(string $slug): ?array {
         $cleanSlug = slugify($slug);
-        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE slug = ? OR section_key = ? LIMIT 1");
-        $stmt->execute([$cleanSlug, str_replace('-', '_', $cleanSlug)]);
+        if (is_numeric($slug) && (int)$slug > 0) {
+            $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE id = ? LIMIT 1");
+            $stmt->execute([(int)$slug]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($row) return $row;
+        }
+
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE slug = ? OR section_key = ? OR LOWER(REPLACE(title, ' ', '-')) = ? LIMIT 1");
+        $stmt->execute([$cleanSlug, str_replace('-', '_', $cleanSlug), $cleanSlug]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ?: null;
+        if ($row) return $row;
+
+        $all = $this->getAllSections();
+        foreach ($all as $sec) {
+            if (slugify($sec['title'] ?? '') === $cleanSlug || slugify($sec['slug'] ?? '') === $cleanSlug) {
+                return $sec;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -105,6 +121,7 @@ class HomeSection extends Model {
 
         $subtitle = trim($data['subtitle'] ?? '');
         $customUrl = trim($data['custom_url'] ?? '');
+        $sectionStyle = trim($data['section_style'] ?? 'grid');
         $maxProducts = max(1, (int)($data['max_products'] ?? 8));
         $displayCount = max(1, (int)($data['homepage_display_count'] ?? 5));
         $sortOrder = (int)($data['sort_order'] ?? 0);
@@ -112,10 +129,10 @@ class HomeSection extends Model {
         $sectionKey = str_replace('-', '_', $slug);
 
         $stmt = $this->db->prepare("
-            INSERT INTO {$this->table} (section_key, slug, title, subtitle, custom_url, max_products, homepage_display_count, sort_order, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO {$this->table} (section_key, slug, title, subtitle, custom_url, section_style, max_products, homepage_display_count, sort_order, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->execute([$sectionKey, $slug, $title, $subtitle, $customUrl, $maxProducts, $displayCount, $sortOrder, $status]);
+        $stmt->execute([$sectionKey, $slug, $title, $subtitle, $customUrl, $sectionStyle, $maxProducts, $displayCount, $sortOrder, $status]);
 
         return (int)$this->db->lastInsertId();
     }
@@ -145,6 +162,10 @@ class HomeSection extends Model {
         if (isset($data['custom_url'])) {
             $updateFields[] = "custom_url = ?";
             $params[] = trim($data['custom_url']);
+        }
+        if (isset($data['section_style'])) {
+            $updateFields[] = "section_style = ?";
+            $params[] = trim($data['section_style']);
         }
         if (isset($data['max_products'])) {
             $updateFields[] = "max_products = ?";

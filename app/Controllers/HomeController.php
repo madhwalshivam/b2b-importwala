@@ -73,9 +73,18 @@ class HomeController extends Controller {
             $homepageCompareProducts = array_slice($allProducts, 0, 3);
         }
 
+        $topDealModel = new \App\Models\TopDealSection();
+        $topDealsSettings = $topDealModel->getSettings();
+        $topDealsProducts = $topDealModel->getProducts();
+        $topDealsData = [
+            'settings' => $topDealsSettings,
+            'products' => $topDealsProducts
+        ];
+
         return $this->render('storefront/home', [
             'sections'                => $sections,
             'homepageSections'        => $homepageSections,
+            'topDealsData'            => $topDealsData,
             'heroBanners'             => $heroBanners,
             'brands'                  => $brands,
             'categories'              => $categories,

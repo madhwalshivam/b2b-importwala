@@ -92,7 +92,15 @@ class SearchService extends BaseService
             $params['collection_id'] = (int)$filters['collection_id'];
         }
 
-        if (!empty($filters['section_id'])) {
+        if (!empty($filters['is_top_deals']) || (!empty($filters['section_id']) && (int)$filters['section_id'] === 999999)) {
+            $checkStmt = $db->query("SELECT COUNT(*) FROM `top_deals_products`");
+            $mappedCount = (int)($checkStmt ? $checkStmt->fetchColumn() : 0);
+            if ($mappedCount > 0) {
+                $where[] = "p.`id` IN (SELECT `product_id` FROM `top_deals_products`)";
+            } else {
+                $where[] = "(p.`sale_price` IS NOT NULL AND p.`sale_price` > 0 AND p.`sale_price` < p.`price`)";
+            }
+        } elseif (!empty($filters['section_id'])) {
             $secId = (int)$filters['section_id'];
             $checkStmt = $db->prepare("SELECT COUNT(*) FROM `homepage_section_products` WHERE `section_id` = ?");
             $checkStmt->execute([$secId]);

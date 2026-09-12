@@ -13,7 +13,7 @@ $baseUrl = $seoOptions['canonical'] ?? url('shop');
 $activeCatId = (int)($filters['category_id'] ?? 0);
 $activeSubId = (int)($filters['subcategory_id'] ?? 0);
 $currentSort = $filters['sort'] ?? 'relevance';
-$currentPerPage = (int)($filters['per_page'] ?? 25);
+$currentPerPage = (int)($filters['per_page'] ?? 24);
 $currentMinPrice = $filters['min_price'] ?? '';
 $currentMaxPrice = $filters['max_price'] ?? '';
 $currentMinMoq = $filters['min_moq'] ?? '';
@@ -22,7 +22,7 @@ $searchQuery = $q ?? '';
 $selectedAttrs = $filters['attr'] ?? [];
 
 $currentPage = max(1, (int)($currentPage ?? 1));
-$perPage = max(1, (int)($perPage ?? 25));
+$perPage = max(1, (int)($perPage ?? 24));
 $totalCount = $totalItems ?? 0;
 $itemsCount = count($results['items'] ?? []);
 $startItem = $totalCount > 0 ? (($currentPage - 1) * $perPage + 1) : 0;
@@ -102,27 +102,58 @@ ob_start();
 ?>
 
 <!-- Shop Page Wrapper -->
+<style>
+@media (max-width: 767px) {
+  .shop-page-wrapper {
+    padding: 10px 12px !important;
+  }
+  .shop-main-layout {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  #shopSidebar {
+    width: 100% !important;
+    position: static !important;
+    max-height: none !important;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 16px !important;
+  }
+  .shop-top-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+  .shop-top-controls-mobile {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+  .shop-top-controls-mobile #filterToggleBtn {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+  .shop-top-controls-mobile .sort-dropdown-wrap {
+    flex: 1 !important;
+  }
+  .shop-top-controls-mobile #sortSelect {
+    width: 100% !important;
+    text-align: center !important;
+  }
+}
+</style>
 <div class="shop-page-wrapper" style="max-width: 1440px; margin: 0 auto; padding: 16px 20px 12px 20px; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
-
-
 
   <!-- ============================================================
        1. TOP CONTROL BAR (TOGGLE BTN + CHIPS + RESULT COUNT + SORT)
        ============================================================ -->
   <div class="shop-top-bar" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding: 8px 0;">
     
-    <!-- Left: Filter Toggle Button -->
+    <!-- Info Line: Result Count + Active Filter Chips -->
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-      <button type="button" id="filterToggleBtn" onclick="toggleShopSidebar()" class="<?= $sidebarOpenByDefault ? 'is-open' : '' ?>" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 9999px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; <?= $sidebarOpenByDefault ? 'background: #1e293b; color: #ffffff; border: 1px solid #1e293b;' : 'background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1;' ?>">
-        <span id="filterToggleIcon">
-          <?php if ($sidebarOpenByDefault): ?>
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
-          <?php else: ?>
-            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-          <?php endif; ?>
-        </span>
-        <span id="filterToggleText"><?= $sidebarOpenByDefault ? 'Hide Filters' : 'Show Filters' ?></span>
-      </button>
+      <span style="font-size: 13.5px; color: #64748b; font-weight: 500; white-space: nowrap;">
+        <?= $startItem ?>-<?= $endItem ?> of <?= number_format($totalCount) ?> results
+      </span>
 
       <!-- REMOVABLE FILTER CHIPS/TAGS -->
       <?php if (!empty($activeChips)): ?>
@@ -139,16 +170,22 @@ ob_start();
           </a>
         </div>
       <?php endif; ?>
-
     </div>
 
-    <!-- Right: Result Count + Sort Dropdown -->
-    <div style="display: flex; align-items: center; gap: 16px;">
-      <span style="font-size: 13.5px; color: #64748b; font-weight: 500; white-space: nowrap;">
-        <?= $startItem ?>-<?= $endItem ?> of <?= number_format($totalCount) ?> results
-      </span>
+    <!-- Side-by-side Mobile Controls: Show Filters & Featured Sort Dropdown -->
+    <div class="shop-top-controls-mobile" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <button type="button" id="filterToggleBtn" onclick="toggleShopSidebar()" class="<?= $sidebarOpenByDefault ? 'is-open' : '' ?>" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 9999px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; <?= $sidebarOpenByDefault ? 'background: #1e293b; color: #ffffff; border: 1px solid #1e293b;' : 'background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1;' ?>">
+        <span id="filterToggleIcon">
+          <?php if ($sidebarOpenByDefault): ?>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+          <?php else: ?>
+            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+          <?php endif; ?>
+        </span>
+        <span id="filterToggleText"><?= $sidebarOpenByDefault ? 'Hide Filters' : 'Show Filters' ?></span>
+      </button>
 
-      <div style="position: relative; display: inline-block;">
+      <div class="sort-dropdown-wrap" style="position: relative; display: inline-block;">
         <select id="sortSelect" onchange="changeSort(this.value)" style="appearance: none; -webkit-appearance: none; background: #ffffff; color: #0f172a; font-size: 13px; font-weight: 600; padding: 7px 34px 7px 16px; border-radius: 9999px; border: 1px solid #cbd5e1; cursor: pointer; outline: none; font-family: 'Inter', system-ui, sans-serif;">
           <option value="relevance" <?= $currentSort === 'relevance' ? 'selected' : '' ?>>Featured</option>
           <option value="price_asc" <?= ($currentSort === 'price_asc' || $currentSort === 'price_low_high') ? 'selected' : '' ?>>Price: Low to High</option>
@@ -561,7 +598,8 @@ ob_start();
 @media (max-width: 480px) {
   .shop-main-layout.sidebar-is-closed .product-grid,
   .shop-main-layout.sidebar-is-open .product-grid {
-    grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px 6px !important;
   }
 }
 </style>

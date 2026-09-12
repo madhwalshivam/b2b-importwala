@@ -16,7 +16,7 @@ class ShopController extends Controller {
         $scooterModel = new ScooterModel();
 
         $page = (int)($this->request->input('page', 1));
-        $perPage = (int)($this->request->input('per_page', 25));
+        $perPage = (int)($this->request->input('per_page', 24));
 
         $filters = [
             'brand_id' => $this->request->input('brand_id'),

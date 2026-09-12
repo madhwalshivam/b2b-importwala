@@ -239,6 +239,149 @@ include __DIR__ . '/layouts/header.php';
 
 
 
+<!-- JUMIA-STYLE DEALS SECTIONS (Multiple Sections Support: All Enabled Sections with section_style = deals_row) -->
+<?php
+$sfDealsRowSections = [];
+$seenSfDealsSlugs = [];
+
+if (!empty($homepageSections)) {
+    foreach ($homepageSections as $secKey => $sec) {
+        if (empty($sec)) continue;
+        $status = strtolower((string)($sec['status'] ?? 'inactive'));
+        if ($status !== 'active' && $status !== 'enabled') continue;
+
+        $style = $sec['section_style'] ?? 'grid';
+        $slug = !empty($sec['slug']) ? $sec['slug'] : slugify($sec['title'] ?? $secKey);
+
+        if ($style === 'deals_row' || $slug === 'top-deals' || $secKey === 'featured_deals') {
+            if (isset($seenSfDealsSlugs[$slug])) continue;
+            $secProducts = $sec['products'] ?? [];
+            if (empty($secProducts)) continue;
+
+            $secTitle = $sec['title'] ?? ucwords(str_replace(['_', '-'], ' ', $secKey));
+            $customLink = trim($sec['custom_url'] ?? $sec['custom_link'] ?? '');
+            if (!empty($customLink)) {
+                $viewAllUrl = (str_starts_with($customLink, 'http://') || str_starts_with($customLink, 'https://')) ? $customLink : url(ltrim($customLink, '/'));
+            } else {
+                $viewAllUrl = url('section/' . $slug);
+            }
+            $sfDealsRowSections[] = [
+                'id' => 'sf_sec_' . preg_replace('/[^a-z0-9]/', '_', strtolower($slug)),
+                'title' => $secTitle,
+                'view_all_url' => $viewAllUrl,
+                'products' => $secProducts,
+                'sort_order' => (int)($sec['sort_order'] ?? 1)
+            ];
+            $seenSfDealsSlugs[$slug] = true;
+        }
+    }
+}
+
+// Fallback for topDealsData if top-deals section wasn't in homepageSections
+$topDealsSettings = $topDealsData['settings'] ?? [];
+$topDealsProducts = $topDealsData['products'] ?? [];
+$tdStatus = strtolower((string)($topDealsSettings['status'] ?? 'active'));
+$tdSlug = !empty($topDealsSettings['slug']) ? $topDealsSettings['slug'] : 'top-deals';
+
+if (($tdStatus === 'active' || $tdStatus === 'enabled') && !empty($topDealsProducts) && !isset($seenSfDealsSlugs[$tdSlug])) {
+    $tdTitle = $topDealsSettings['title'] ?? 'Top Deals';
+    $tdCustomUrl = trim($topDealsSettings['custom_url'] ?? '');
+    if (!empty($tdCustomUrl)) {
+        $tdViewAllUrl = (str_starts_with($tdCustomUrl, 'http://') || str_starts_with($tdCustomUrl, 'https://')) ? $tdCustomUrl : url(ltrim($tdCustomUrl, '/'));
+    } else {
+        $tdViewAllUrl = url('section/' . $tdSlug);
+    }
+    $sfDealsRowSections[] = [
+        'id' => 'sf_top_deals_standalone',
+        'title' => $tdTitle,
+        'view_all_url' => $tdViewAllUrl,
+        'products' => $topDealsProducts,
+        'sort_order' => (int)($topDealsSettings['sort_order'] ?? 1)
+    ];
+}
+
+// Sort all enabled deals sections by sort_order ASC
+usort($sfDealsRowSections, fn($a, $b) => $a['sort_order'] <=> $b['sort_order']);
+?>
+
+<?php if (!empty($sfDealsRowSections)): ?>
+<?php foreach ($sfDealsRowSections as $dSec): ?>
+  <?php $trackId = 'track_' . $dSec['id']; ?>
+  <div class="top-deals-standalone-wrapper my-3 font-sans py-2 bg-white -mx-2 px-2 sm:mx-0 sm:px-0">
+    <div class="w-full space-y-2">
+      
+      <!-- Section Header Row: Lighter Title (font-semibold), NO Subtitle, Orange See All (No Arrow) -->
+      <div class="flex items-center justify-between px-0.5">
+        <h2 class="text-base sm:text-lg font-semibold text-[#282828] tracking-tight leading-tight">
+          <?= htmlspecialchars($dSec['title']) ?>
+        </h2>
+        <a href="<?= $dSec['view_all_url'] ?>" class="inline-flex items-center gap-0.5 text-xs sm:text-sm font-semibold text-[#f05a29] hover:underline shrink-0">
+          <span>See All</span>
+        </a>
+      </div>
+
+      <!-- Single Horizontal Scrollable Row with BOTH Left & Right Navigation Arrows -->
+      <div class="relative group/topdeals">
+        <!-- Left Navigation Arrow (Desktop) -->
+        <button type="button" onclick="document.getElementById('<?= $trackId ?>').scrollBy({ left: -320, behavior: 'smooth' })" class="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-700 shadow-md items-center justify-center z-10 hover:bg-gray-50 transition" title="Scroll Previous">
+          <i data-lucide="chevron-left" class="w-5 h-5"></i>
+        </button>
+
+        <div id="<?= $trackId ?>" class="flex gap-2.5 sm:gap-3 overflow-x-auto scroll-smooth no-scrollbar pb-1">
+          <?php foreach ($dSec['products'] as $prod): ?>
+            <?php
+              $pSlug = !empty($prod['slug']) ? trim($prod['slug']) : (int)$prod['id'];
+              $hasDiscount = !empty($prod['sale_price']) && $prod['price'] > $prod['sale_price'];
+              $discountPercent = $hasDiscount ? round((($prod['price'] - $prod['sale_price']) / $prod['price']) * 100) : 0;
+              $displayPrice = $prod['sale_price'] ?: $prod['price'];
+              $mainImg = asset($prod['main_image'] ?? 'assets/images/placeholder.jpg');
+            ?>
+            <a href="<?= url('product/' . $pSlug) ?>" class="flex-none w-[125px] min-w-[125px] max-w-[150px] sm:w-[170px] sm:min-w-[170px] sm:max-w-[170px] block text-gray-900 text-decoration-none rounded-md transition">
+              
+              <!-- Square Image Container (Full Bleed Image, Fill Entire Box) -->
+              <div class="relative w-full aspect-square bg-[#f4f4f4] rounded-md overflow-hidden mb-1.5">
+                <?php if ($hasDiscount): ?>
+                  <span class="absolute top-1 right-1 z-10 bg-[#fef3e6] text-[#f68b1e] font-bold text-[10px] sm:text-xs px-1.5 py-0.5 rounded">
+                    -<?= $discountPercent ?>%
+                  </span>
+                <?php endif; ?>
+                <img src="<?= $mainImg ?>" alt="<?= htmlspecialchars($prod['name']) ?>" loading="lazy" class="w-full h-full object-cover block">
+              </div>
+
+              <!-- Title & Price Block -->
+              <div class="space-y-0.5">
+                <h3 class="text-xs sm:text-sm font-normal text-[#282828] truncate leading-snug">
+                  <?= htmlspecialchars($prod['name']) ?>
+                </h3>
+                <div class="flex items-baseline gap-1.5 flex-wrap">
+                  <span class="text-sm sm:text-base font-bold text-[#282828] leading-tight">
+                    <?= format_price($displayPrice) ?>
+                  </span>
+                  <?php if ($hasDiscount): ?>
+                    <span class="text-[11px] sm:text-xs text-[#757575] line-through font-normal leading-tight">
+                      <?= format_price($prod['price']) ?>
+                    </span>
+                  <?php endif; ?>
+                </div>
+              </div>
+
+            </a>
+          <?php endforeach; ?>
+        </div>
+
+        <!-- Right Navigation Arrow (Desktop) -->
+        <button type="button" onclick="document.getElementById('<?= $trackId ?>').scrollBy({ left: 320, behavior: 'smooth' })" class="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white border border-gray-200 text-gray-700 shadow-md items-center justify-center z-10 hover:bg-gray-50 transition" title="Scroll Next">
+          <i data-lucide="chevron-right" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+    </div>
+  </div>
+<?php endforeach; ?>
+<?php endif; ?>
+
+
+
 <!-- CATEGORIES GRID -->
 <section class="py-5 md:py-7 bg-theme-bg border-b border-gray-100 font-sans">
     <div class="container mx-auto px-4 space-y-4 md:space-y-6">
@@ -320,7 +463,8 @@ include __DIR__ . '/layouts/header.php';
 <?php if (!empty($homepageSections)): ?>
     <?php foreach ($homepageSections as $secKey => $sec): ?>
         <?php
-        if (empty($sec) || ($sec['status'] !== 'active' && $sec['status'] !== 'enabled')) continue;
+        $secSlug = !empty($sec['slug']) ? $sec['slug'] : slugify($sec['title'] ?? $secKey);
+        if (empty($sec) || ($sec['status'] !== 'active' && $sec['status'] !== 'enabled') || ($sec['section_style'] ?? 'grid') === 'deals_row' || isset($seenSfDealsSlugs[$secSlug])) continue;
         $secProducts = $sec['products'] ?? [];
         if (empty($secProducts)) continue;
 
