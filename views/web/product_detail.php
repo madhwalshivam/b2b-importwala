@@ -77,18 +77,40 @@ ob_start();
 ?>
 
 <!-- ============================================================ -->
+<style>
+    @media (max-width: 640px) {
+        .floating-need-help-btn {
+            display: none !important;
+        }
+        .product-cover-card {
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 1 / 1 !important;
+            max-height: 360px !important;
+        }
+        .product-cover-card img {
+            object-fit: cover !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    }
+</style>
+
+<!-- ============================================================ -->
 <!-- MAIN PRODUCT LAYOUT -->
 <!-- ============================================================ -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16 font-sans text-gray-900">
-    <div class="flex flex-col lg:flex-row gap-6 items-start">
+<div class="w-full max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 pt-2 sm:pt-6 pb-16 sm:pb-16 font-sans text-gray-900">
+    <div class="w-full flex flex-col lg:flex-row gap-4 sm:gap-6 items-start">
 
         <!-- ======================================================= -->
         <!-- LEFT — IMAGE GALLERY (Sticky on Scroll) -->
         <!-- ======================================================= -->
-        <div class="w-full lg:w-[420px] xl:w-[450px] shrink-0 lg:sticky lg:top-24 self-start">
+        <!-- ======================================================= -->
+        <!-- LEFT — IMAGE GALLERY (Sticky on Scroll) -->
+        <!-- ======================================================= -->
+        <div class="w-full lg:w-[410px] xl:w-[450px] shrink-0 lg:sticky lg:top-[160px] self-start">
             <!-- Main Image Card -->
-            <div class="relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xs group/mainimg"
-                style="aspect-ratio:1/1;">
+            <div id="mainImgCardWrapper" class="product-cover-card relative bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-2xs group/mainimg sm:aspect-square">
                 <img id="mainProductImage" src="<?= htmlspecialchars($mainImage) ?>" alt="<?= $productName ?>"
                     class="w-full h-full object-cover transition duration-300 cursor-zoom-in"
                     onclick="openLightbox(this.src)">
@@ -105,17 +127,17 @@ ob_start();
                 </button>
 
                 <?php if ($totalImgs > 1): ?>
-                    <!-- Left Slide Arrow -->
+                    <!-- Left Slide Arrow (Hidden on Mobile - Swipe to Slide) -->
                     <button onclick="prevImage()" type="button" aria-label="Previous Image"
-                        class="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-800 hover:text-[#f05a29] shadow-md flex items-center justify-center border-0 focus:outline-none transition-all cursor-pointer z-10 opacity-90 hover:opacity-100 hover:scale-105">
+                        class="hidden sm:flex absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-800 hover:text-[#f05a29] shadow-md items-center justify-center border-0 focus:outline-none transition-all cursor-pointer z-10 opacity-90 hover:opacity-100 hover:scale-105">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                     </button>
 
-                    <!-- Right Slide Arrow -->
+                    <!-- Right Slide Arrow (Hidden on Mobile - Swipe to Slide) -->
                     <button onclick="nextImage()" type="button" aria-label="Next Image"
-                        class="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-800 hover:text-[#f05a29] shadow-md flex items-center justify-center border-0 focus:outline-none transition-all cursor-pointer z-10 opacity-90 hover:opacity-100 hover:scale-105">
+                        class="hidden sm:flex absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-800 hover:text-[#f05a29] shadow-md items-center justify-center border-0 focus:outline-none transition-all cursor-pointer z-10 opacity-90 hover:opacity-100 hover:scale-105">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
@@ -123,26 +145,26 @@ ob_start();
                 <?php endif; ?>
             </div>
 
-            <!-- Thumbnail Strip with Borderless Scroll Buttons -->
+            <!-- Thumbnail Strip with Borderless Scroll Buttons (Arrows hidden on mobile) -->
             <?php if ($totalImgs > 1): ?>
                 <style>
                     #thumbStrip::-webkit-scrollbar {
                         display: none !important;
                     }
                 </style>
-                <div class="relative flex items-center mt-3">
+                <div class="relative flex items-center mt-2 sm:mt-3 px-0">
                     <button onclick="scrollThumbs('left')" type="button" aria-label="Scroll Left"
-                        class="shrink-0 w-7 h-7 rounded-full bg-white text-gray-700 hover:text-[#f05a29] shadow-xs flex items-center justify-center border-0 focus:outline-none transition cursor-pointer mr-1 z-10">
+                        class="hidden sm:flex shrink-0 w-7 h-7 rounded-full bg-white text-gray-700 hover:text-[#f05a29] shadow-xs items-center justify-center border-0 focus:outline-none transition cursor-pointer mr-1 z-10">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
                         </svg>
                     </button>
 
-                    <div class="flex gap-2.5 overflow-x-auto py-1 scroll-smooth flex-1 [scrollbar-width:none] [-ms-overflow-style:none]"
+                    <div class="flex gap-2 overflow-x-auto py-0.5 scroll-smooth flex-1 [scrollbar-width:none] [-ms-overflow-style:none] px-0 snap-x snap-mandatory"
                         id="thumbStrip">
                         <?php foreach ($gallery as $idx => $imgUrl): ?>
                             <button onclick="switchImage(<?= $idx ?>, '<?= htmlspecialchars($imgUrl) ?>')"
-                                class="thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all focus:outline-none cursor-pointer <?= $idx === 0 ? 'border-2 border-[#f05a29] ring-2 ring-orange-100/60 shadow-2xs' : 'border border-gray-200 hover:border-gray-400' ?>"
+                                class="thumb-btn shrink-0 w-[calc((100%-24px)/4)] aspect-square sm:w-[58px] sm:h-[58px] rounded-lg sm:rounded-xl overflow-hidden transition-all focus:outline-none cursor-pointer snap-start <?= $idx === 0 ? 'border-2 border-[#f05a29] ring-2 ring-orange-100/60 shadow-2xs' : 'border border-gray-200 hover:border-gray-400' ?>"
                                 data-idx="<?= $idx ?>">
                                 <img src="<?= htmlspecialchars($imgUrl) ?>" alt="Thumb <?= $idx + 1 ?>"
                                     class="w-full h-full object-cover" loading="lazy">
@@ -151,7 +173,7 @@ ob_start();
                     </div>
 
                     <button onclick="scrollThumbs('right')" type="button" aria-label="Scroll Right"
-                        class="shrink-0 w-7 h-7 rounded-full bg-white text-gray-700 hover:text-[#f05a29] shadow-xs flex items-center justify-center border-0 focus:outline-none transition cursor-pointer ml-1 z-10">
+                        class="hidden sm:flex shrink-0 w-7 h-7 rounded-full bg-white text-gray-700 hover:text-[#f05a29] shadow-xs items-center justify-center border-0 focus:outline-none transition cursor-pointer ml-1 z-10">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
@@ -163,32 +185,24 @@ ob_start();
         <!-- ======================================================= -->
         <!-- CENTER — PRODUCT DETAILS & PRICING -->
         <!-- ======================================================= -->
-        <div class="flex-1 min-w-0 space-y-5">
+        <div class="w-full lg:flex-1 min-w-0 space-y-4 sm:space-y-5">
 
             <!-- Product Title Card Container -->
-            <div class="bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs space-y-4">
-                <h1 class="text-sm sm:text-base font-medium text-gray-800 leading-snug tracking-normal">
+            <div class="bg-white border border-gray-200 rounded-2xl p-3.5 sm:p-5 shadow-2xs space-y-3 sm:space-y-4">
+                <h1 class="text-xs sm:text-sm lg:text-base xl:text-lg font-bold text-gray-900 leading-snug tracking-tight">
                     <?= $productName ?>
                 </h1>
 
                 <!-- Pricing Box inside Title Card -->
-                <div class="bg-[#F8FAFC] border border-gray-100 rounded-xl p-3.5 space-y-3">
-                    <!-- One-Piece / Wholesale Toggle -->
-                    <div class="bg-gray-200/70 rounded-full p-1 max-w-[300px] flex items-center justify-between">
+                <div class="bg-[#F8FAFC] border border-gray-100 rounded-xl p-3.5 sm:p-4 space-y-3">
+                    <!-- One-Piece / Wholesale Toggle (Sharp / Square Edge Style) -->
+                    <div class="bg-gray-100 p-1 rounded-none max-w-[320px] flex items-center gap-1 border border-gray-200/80 shadow-2xs">
                         <button id="btnOnePiece" onclick="setPricingMode('onepiece')" type="button"
-                            class="flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600">
+                            class="flex-1 py-2 px-3 text-xs lg:text-sm font-bold rounded-none text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600 bg-transparent">
                             One-Piece
                         </button>
-
-                        <div onclick="togglePricingMode()"
-                            class="w-8 h-4 bg-[#f05a29] rounded-full flex items-center px-0.5 cursor-pointer shrink-0 mx-1">
-                            <div id="toggleSwitchDot"
-                                class="w-3 h-3 bg-white rounded-full transition-transform duration-200 translate-x-4">
-                            </div>
-                        </div>
-
                         <button id="btnWholesale" onclick="setPricingMode('wholesale')" type="button"
-                            class="flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-black text-white">
+                            class="flex-1 py-2 px-3 text-xs lg:text-sm font-bold rounded-none text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-[#334155] text-white shadow-xs">
                             Wholesale
                         </button>
                     </div>
@@ -196,9 +210,9 @@ ob_start();
                     <!-- Single Price Display (One-Piece Mode) -->
                     <div id="singlePriceRow" class="pt-0.5 hidden">
                         <div
-                            class="text-xl sm:text-2xl font-semibold text-[#f05a29] flex items-baseline gap-0.5 whitespace-nowrap">
+                            class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#f05a29] flex items-baseline gap-0.5 whitespace-nowrap">
                             <span>₹</span><span id="priceDisplay"><?= number_format($onePieceStartPrice, 2) ?></span>
-                            <span class="text-xs text-gray-500 font-normal ml-1">/ piece</span>
+                            <span class="text-xs lg:text-sm text-gray-500 font-normal ml-1">/ piece</span>
                         </div>
                     </div>
 
@@ -219,22 +233,22 @@ ob_start();
                                 $tPrice = (float) $t['unit_price'];
                                 $rangeLabel = $tMax ? "{$tMin}-{$tMax} piece" : "≥ {$tMin} piece";
                                 ?>
-                                <div class="tier-card p-2.5 rounded-xl border transition-all text-center min-w-[105px] shrink-0 <?= $tIdx === 0 ? 'border-[#f05a29] bg-orange-50/40 shadow-2xs' : 'border-gray-200 bg-white hover:border-gray-300' ?>"
+                                <div class="tier-card p-2.5 lg:p-3 rounded-xl border transition-all text-center min-w-[105px] lg:min-w-[120px] shrink-0 <?= $tIdx === 0 ? 'border-[#f05a29] bg-orange-50/40 shadow-2xs' : 'border-gray-200 bg-white hover:border-gray-300' ?>"
                                     data-tier-idx="<?= $tIdx ?>">
                                     <div
-                                        class="text-sm sm:text-base font-semibold <?= $tIdx === 0 ? 'text-[#f05a29]' : 'text-gray-900' ?>">
+                                        class="text-sm sm:text-base lg:text-lg font-bold <?= $tIdx === 0 ? 'text-[#f05a29]' : 'text-gray-900' ?>">
                                         ₹<?= number_format($tPrice, 0) ?> <span
-                                            class="text-[10px] font-normal text-gray-500">/ piece</span>
+                                            class="text-[10px] lg:text-xs font-normal text-gray-500">/ piece</span>
                                     </div>
                                     <div
-                                        class="text-[11px] <?= $tIdx === 0 ? 'text-gray-800 font-semibold' : 'text-gray-500 font-medium' ?> mt-0.5">
+                                        class="text-[11px] lg:text-xs <?= $tIdx === 0 ? 'text-gray-800 font-semibold' : 'text-gray-500 font-medium' ?> mt-0.5">
                                         <?= $rangeLabel ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                         <div
-                            class="text-[11px] text-gray-500 bg-amber-50/80 border border-amber-200/80 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                            class="text-[11px] lg:text-xs text-gray-500 bg-amber-50/80 border border-amber-200/80 px-3 py-1.5 rounded-lg flex items-center gap-1">
                             <span>This is the <strong class="text-gray-800">Product price</strong> only. Procurement,
                                 taxes, duties & are charged separately.</span>
                         </div>
@@ -242,7 +256,7 @@ ob_start();
 
                     <!-- Estimated Delivery Card -->
                     <div
-                        class="bg-white border border-gray-200/80 rounded-xl px-3 py-2 flex items-center gap-2 text-xs text-gray-700">
+                        class="bg-white border border-gray-200/80 rounded-xl px-3 py-2 sm:py-2.5 flex items-center gap-2 text-xs lg:text-sm text-gray-700">
                         <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -319,10 +333,9 @@ ob_start();
             <!-- Variant List (Expandable Color/Size Multi-Product Card Items) -->
             <?php if (!empty($variants)): ?>
                 <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-3">
-                    <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                        <h3 class="text-xs font-semibold text-gray-900 uppercase tracking-wider">Select Product Variants
-                        </h3>
-                        <span class="text-[11px] text-gray-500 font-medium"><?= count($variants) ?> Options Available</span>
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                        <h3 class="text-[11px] sm:text-xs font-bold text-gray-900 uppercase tracking-wide" style="font-size: 11.5px !important; font-weight: 700 !important; margin: 0;">Select Product Variants</h3>
+                        <span class="text-[10px] sm:text-[11px] text-gray-500 font-medium"><?= count($variants) ?> Options</span>
                     </div>
 
                     <!-- Scrollable Container with Individual Card Borders for Multi-Products -->
@@ -338,49 +351,51 @@ ob_start();
                             $vWeight = htmlspecialchars($v['weight'] ?? '');
                             $isActive = ($vi === 0);
                             ?>
-                            <div class="variant-row flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 <?= $isActive ? 'border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs' : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs' ?>"
+                            <div class="variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 <?= $isActive ? 'border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs' : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs' ?>"
                                 data-variant-idx="<?= $vi ?>" data-wholesale="<?= $vWholesale ?>"
                                 data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
                                 data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)">
 
-                                <div
-                                    class="variant-img-box w-12 h-12 rounded-lg border <?= $isActive ? 'border-[#f05a29]' : 'border-gray-200' ?> overflow-hidden shrink-0 bg-white shadow-2xs transition-all">
-                                    <img src="<?= htmlspecialchars($vImg) ?>" alt="<?= $vName ?>"
-                                        class="w-full h-full object-cover">
-                                </div>
-
-                                <div class="flex-1 min-w-0">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-xs font-semibold text-gray-900 truncate"><?= $vName ?></span>
-                                    </div>
-                                    <?php if ($vWeight || $vDim): ?>
-                                        <div class="text-[11px] text-gray-400 mt-0.5 flex flex-wrap items-center gap-1">
-                                            <?php if ($vWeight): ?><span>Wt: <?= $vWeight ?></span><?php endif; ?>
-                                            <?php if ($vWeight && $vDim): ?> &bull; <?php endif; ?>
-                                            <?php if ($vDim): ?><span>Fit: <?= $vDim ?></span><?php endif; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-
-                                <!-- Stepper & Price Section -->
-                                <div class="flex items-center gap-2.5 shrink-0">
-                                    <!-- Quantity Stepper (- 0 +) -->
-                                    <div class="flex items-center border border-gray-200 rounded-lg bg-gray-50 overflow-hidden text-xs font-semibold select-none"
-                                        onclick="event.stopPropagation()">
-                                        <button type="button" onclick="updateVariantQty(<?= $vi ?>, -1)"
-                                            class="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition cursor-pointer border-0 bg-transparent">-</button>
-                                        <span id="vQtyVal_<?= $vi ?>" class="w-5 text-center text-gray-800 text-[11px]">0</span>
-                                        <button type="button" onclick="updateVariantQty(<?= $vi ?>, 1)"
-                                            class="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition cursor-pointer border-0 bg-transparent">+</button>
+                                <div class="flex items-center gap-2.5 sm:gap-3">
+                                    <!-- Left: Image Thumbnail -->
+                                    <div
+                                        class="variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border <?= $isActive ? 'border-[#f05a29]' : 'border-gray-200' ?> overflow-hidden shrink-0 bg-white shadow-2xs transition-all">
+                                        <img src="<?= htmlspecialchars($vImg) ?>" alt="<?= $vName ?>"
+                                            class="w-full h-full object-cover">
                                     </div>
 
-                                    <div class="text-right">
-                                        <div class="text-xs font-semibold text-[#f05a29] variant-price-display"
-                                            data-wholesale="<?= number_format($vWholesale, 2) ?>"
-                                            data-onepiece="<?= number_format($vOnePiece, 2) ?>">
-                                            ₹<?= number_format($vWholesale, 2) ?>
+                                    <!-- Middle: Variant Name (Line 1) + Price & Details (Line 2) -->
+                                    <div class="min-w-0 flex-1">
+                                        <div class="text-[11.5px] sm:text-xs font-bold text-gray-900 leading-snug break-words">
+                                            <?= $vName ?>
                                         </div>
-                                        <div class="text-[10px] text-gray-400">/piece</div>
+                                        <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                            <div class="text-xs sm:text-sm font-extrabold text-[#f05a29] variant-price-display shrink-0"
+                                                data-wholesale="<?= number_format($vWholesale, 2) ?>"
+                                                data-onepiece="<?= number_format($vOnePiece, 2) ?>">
+                                                ₹<?= number_format($vWholesale, 2) ?> <span class="text-[9px] sm:text-[10px] text-gray-400 font-normal">/piece</span>
+                                            </div>
+                                            <?php if ($vWeight || $vDim): ?>
+                                                <span class="text-gray-300 text-[10px]">&bull;</span>
+                                                <span class="text-[10px] sm:text-[11px] text-gray-400">
+                                                    <?php if ($vWeight): ?>Wt: <?= $vWeight ?><?php endif; ?>
+                                                    <?php if ($vWeight && $vDim): ?> &bull; <?php endif; ?>
+                                                    <?php if ($vDim): ?>Fit: <?= $vDim ?><?php endif; ?>
+                                                </span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right: Quantity Stepper (- 0 +) -->
+                                    <div class="shrink-0 pl-0.5">
+                                        <div class="flex items-center border border-gray-300 rounded-lg bg-gray-50 overflow-hidden text-xs font-semibold select-none shadow-2xs"
+                                            onclick="event.stopPropagation()">
+                                            <button type="button" onclick="updateVariantQty(<?= $vi ?>, -1)"
+                                                class="w-6 h-7 sm:w-7 sm:h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 active:bg-gray-300 transition cursor-pointer border-0 bg-transparent text-sm font-bold">-</button>
+                                            <span id="vQtyVal_<?= $vi ?>" class="w-5 sm:w-6 text-center text-gray-900 font-bold text-xs">0</span>
+                                            <button type="button" onclick="updateVariantQty(<?= $vi ?>, 1)"
+                                                class="w-6 h-7 sm:w-7 sm:h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 active:bg-gray-300 transition cursor-pointer border-0 bg-transparent text-sm font-bold">+</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -390,50 +405,43 @@ ob_start();
             <?php endif; ?>
 
             <!-- ====================================================== -->
-            <!-- ONLINE ORDER ACTION BOX -->
+            <!-- ONLINE ORDER ACTION BOX (Desktop Only: 1 Single Row) -->
             <!-- ====================================================== -->
-            <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs">
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                    <!-- Quantity Input Stepper -->
-                    <div
-                        class="flex items-center justify-between border border-gray-300 rounded-xl bg-gray-50 h-11 px-2 select-none shrink-0">
-                        <button type="button" onclick="changeDetailQty(-1)"
-                            class="w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 rounded-lg transition font-semibold text-sm cursor-pointer border-0 bg-transparent">-</button>
-                        <input type="number" id="detailQtyInput" value="1" min="1" onchange="onDetailQtyInputChange()"
-                            class="w-12 text-center text-gray-900 font-semibold text-xs bg-transparent border-0 focus:outline-none">
-                        <button type="button" onclick="changeDetailQty(1)"
-                            class="w-8 h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 rounded-lg transition font-semibold text-sm cursor-pointer border-0 bg-transparent">+</button>
+            <div class="hidden sm:block bg-white border border-gray-200 rounded-2xl p-3.5 shadow-2xs">
+                <div class="flex items-center gap-2.5">
+                    <input type="hidden" id="detailQtyInput" value="1">
+
+                    <!-- 1. Add to Cart / Stepper Container (Inline Desktop) -->
+                    <div class="flex-1 h-11 relative overflow-hidden rounded-none bg-[#ff7a45]" id="inlineAtcWrapper">
+                        <!-- State 1: Add to Cart Button -->
+                        <button type="button" id="inlineAtcBtnInitial" onclick="handleAddToCartClick('inline')"
+                            class="w-full h-full bg-[#ff7a45] hover:bg-[#f0642f] active:bg-[#e0531f] text-white font-bold text-xs sm:text-sm rounded-none transition-all duration-200 flex items-center justify-center cursor-pointer border-0 absolute inset-0 z-10 select-none">
+                            <span>Add to Cart</span>
+                        </button>
+
+                        <!-- State 2: Quantity Stepper (- 1 +) -->
+                        <div id="inlineAtcStepper"
+                            class="w-full h-full bg-[#ff7a45] text-white rounded-none transition-all duration-200 flex items-center justify-between px-3 absolute inset-0 z-20 opacity-0 scale-95 pointer-events-none">
+                            <button type="button" onclick="event.stopPropagation(); event.preventDefault(); changeAtcQty(-1);"
+                                class="w-9 h-full flex items-center justify-center text-white hover:bg-black/15 active:bg-black/25 transition font-extrabold text-lg cursor-pointer border-0 bg-transparent select-none">−</button>
+                            <span id="inlineAtcQtyText" class="font-extrabold text-sm text-white select-none">1</span>
+                            <button type="button" onclick="event.stopPropagation(); event.preventDefault(); changeAtcQty(1);"
+                                class="w-9 h-full flex items-center justify-center text-white hover:bg-black/15 active:bg-black/25 transition font-extrabold text-lg cursor-pointer border-0 bg-transparent select-none">+</button>
+                        </div>
                     </div>
 
-                    <!-- Add to Cart Button -->
-                    <button type="button" id="mainAddToCartBtn" onclick="addToCartFromDetail()"
-                        class="flex-1 h-11 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl shadow-xs transition inline-flex items-center justify-center gap-2 cursor-pointer border-0">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                        </svg>
-                        <span>Add to Cart</span>
+                    <!-- 2. Request Quote Button -->
+                    <button type="button" onclick="openRfqWithProducts()"
+                        class="flex-1 h-11 bg-[#334155] hover:bg-[#475569] active:bg-[#1e293b] text-white font-bold text-xs sm:text-sm rounded-none transition flex items-center justify-center cursor-pointer border-0 shadow-2xs">
+                        <span>Request Quote</span>
                     </button>
 
-                    <!-- Buy Now Button -->
+                    <!-- 3. Buy Now Button -->
                     <button type="button" onclick="buyNowFromDetail()"
-                        class="px-5 h-11 bg-gray-900 hover:bg-black text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer border-0">
-                        Buy Now
+                        class="flex-1 h-11 bg-[#0f172a] hover:bg-black active:bg-black text-white font-bold text-xs sm:text-sm rounded-none transition cursor-pointer border-0 flex items-center justify-center gap-1.5 shadow-2xs">
+                        <span>Buy Now</span>
                     </button>
                 </div>
-            </div>
-
-            <!-- Navy Blue RFQ Banner -->
-            <div class="bg-[#0F172A] rounded-2xl p-4 text-white flex items-center justify-between gap-4 shadow-xs">
-                <div>
-                    <div class="text-xs font-semibold text-white">Need a Better Price?</div>
-                    <div class="text-[11px] text-gray-300 mt-0.5">Share your required quantity &amp; target price for a
-                        tailored quote.</div>
-                </div>
-                <button onclick="openRfqWithProducts()"
-                    class="shrink-0 px-5 py-2.5 bg-[#f05a29] hover:bg-[#d94818] text-white text-xs font-semibold rounded-full border-0 focus:outline-none transition cursor-pointer">
-                    Request for Quote
-                </button>
             </div>
 
             <!-- ====================================================== -->
@@ -441,20 +449,21 @@ ob_start();
             <!-- ====================================================== -->
             <?php if (!empty($specs)): ?>
                 <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
-                    <div class="px-5 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                        <h2 class="text-xs sm:text-sm font-semibold text-gray-900 uppercase tracking-wider">Product
-                            Specifications</h2>
+                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                        <h2 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
+                            <span>Product Specifications</span>
+                        </h2>
                     </div>
 
-                    <div class="divide-y divide-gray-100 text-xs">
+                    <div class="divide-y divide-gray-100 text-xs lg:text-sm">
                         <?php foreach ($specs as $si => $s): ?>
                             <div
-                                class="spec-row flex items-center justify-between px-5 py-3 transition <?php echo ($si >= 5) ? 'hidden spec-row-extra' : ''; ?> <?php echo ($si % 2 === 1) ? 'bg-gray-50/40' : 'bg-white'; ?>">
-                                <div class="w-1/2 sm:w-5/12 text-gray-600 font-medium pr-4 truncate">
+                                class="spec-row flex items-center justify-between px-4 py-2.5 transition <?php echo ($si >= 5) ? 'hidden spec-row-extra' : ''; ?> <?php echo ($si % 2 === 1) ? 'bg-gray-50/40' : 'bg-white'; ?>">
+                                <div class="w-1/2 sm:w-5/12 text-gray-600 font-medium pr-3 truncate text-xs lg:text-sm">
                                     <?= htmlspecialchars($s['spec_key'] ?? '') ?>
                                 </div>
                                 <div
-                                    class="w-1/2 sm:w-7/12 text-gray-900 font-semibold text-right sm:text-left leading-relaxed">
+                                    class="w-1/2 sm:w-7/12 text-gray-900 font-semibold text-right sm:text-left leading-relaxed text-xs lg:text-sm">
                                     <?= htmlspecialchars($s['spec_value'] ?? '') ?>
                                 </div>
                             </div>
@@ -463,13 +472,13 @@ ob_start();
 
                     <?php if (count($specs) > 5): ?>
                         <div
-                            class="py-5 px-4 text-center bg-gray-50/40 border-t border-gray-100 flex items-center justify-center">
+                            class="py-3 px-4 text-center bg-gray-50/40 border-t border-gray-100 flex items-center justify-center">
                             <button type="button" id="toggleSpecsBtn" onclick="toggleAllSpecs()"
-                                style="display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 22px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #374151; cursor: pointer; outline: none; transition: all 0.15s ease-in-out; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);"
+                                style="display: inline-flex; align-items: center; justify-content: center; height: 28px; padding: 0 14px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 9999px; font-size: 11px; font-weight: 600; color: #374151; cursor: pointer; outline: none; transition: all 0.15s ease-in-out; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);"
                                 class="hover:bg-gray-50 hover:border-gray-400 shrink-0">
-                                <span id="specsBtnText">Show all specifications</span>
+                                <span id="specsBtnText">Show specifications</span>
                                 <svg id="specsChevron"
-                                    class="w-3.5 h-3.5 transition-transform duration-200 text-gray-500 shrink-0 ml-2"
+                                    class="w-3 h-3 transition-transform duration-200 text-gray-500 shrink-0 ml-1.5"
                                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                                 </svg>
@@ -548,11 +557,10 @@ ob_start();
                 }
                 ?>
                 <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-2xs">
-                    <div class="px-5 py-4 bg-gray-50/50 flex items-center justify-between cursor-pointer select-none"
+                    <div class="px-4 py-3 bg-gray-50/50 flex items-center justify-between cursor-pointer select-none"
                         onclick="toggleProductDesc()">
-                        <h2
-                            class="text-xs sm:text-sm font-semibold text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                            <svg class="w-4 h-4 text-[#f05a29] shrink-0" fill="none" viewBox="0 0 24 24"
+                        <h2 class="text-xs sm:text-sm lg:text-base font-bold text-gray-900 uppercase tracking-wide flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 text-[#f05a29] shrink-0" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round"
                                     d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -560,11 +568,11 @@ ob_start();
                             <span>Product Description</span>
                         </h2>
                         <button type="button"
-                            style="display: inline-flex; align-items: center; justify-content: center; height: 32px; padding: 0 16px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 9999px; font-size: 12px; font-weight: 600; color: #374151; cursor: pointer; outline: none; transition: all 0.15s ease-in-out; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);"
+                            style="display: inline-flex; align-items: center; justify-content: center; height: 28px; padding: 0 12px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 9999px; font-size: 11px; font-weight: 600; color: #374151; cursor: pointer; outline: none; transition: all 0.15s ease-in-out; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);"
                             class="hover:bg-gray-50 hover:border-gray-400 shrink-0">
                             <span id="descHeaderBtnText">Show description</span>
                             <svg id="descChevron"
-                                class="w-3.5 h-3.5 transition-transform duration-200 text-gray-500 shrink-0 ml-1.5"
+                                class="w-3 h-3 transition-transform duration-200 text-gray-500 shrink-0 ml-1.5"
                                 fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                             </svg>
@@ -572,7 +580,7 @@ ob_start();
                     </div>
                     <!-- Content hidden / closed by default -->
                     <div id="productDescContent"
-                        class="hidden p-5 sm:p-6 text-xs sm:text-sm text-gray-700 leading-relaxed font-sans prose prose-sm max-w-none border-t border-gray-100">
+                        class="hidden p-4 sm:p-5 text-[11px] sm:text-xs text-gray-700 leading-normal font-sans prose prose-sm max-w-none border-t border-gray-100">
                         <?= $formattedDesc ?>
                     </div>
                 </div>
@@ -583,18 +591,17 @@ ob_start();
         <!-- ======================================================= -->
         <!-- RIGHT — ORDER SUMMARY & PROTECTION SIDEBAR (Sticky) -->
         <!-- ======================================================= -->
-        <div class="w-full lg:w-[280px] xl:w-[300px] shrink-0 space-y-4 lg:sticky lg:top-24 self-start">
+        <div class="w-full lg:w-[280px] xl:w-[300px] shrink-0 space-y-4 lg:sticky lg:top-[160px] self-start">
 
             <!-- Importerr Order Summary Card -->
             <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-3">
-                <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
-                    <h3 class="text-xs font-semibold text-gray-900 uppercase tracking-wider">Order Summary</h3>
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                    <h3 class="text-[11px] sm:text-xs font-bold text-gray-900 uppercase tracking-wide" style="font-size: 11.5px !important; font-weight: 700 !important; margin: 0;">Order Summary</h3>
                     <div class="flex items-center gap-1.5">
                         <span
-                            class="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-semibold rounded uppercase">WHOLESALE</span>
+                            class="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-[9px] font-semibold rounded uppercase">WHOLESALE</span>
                         <span
-                            class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-semibold rounded uppercase">MOQ
-                            1</span>
+                            class="px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-semibold rounded uppercase">MOQ 1</span>
                     </div>
                 </div>
 
@@ -610,7 +617,7 @@ ob_start();
                 </div>
 
                 <button type="button" onclick="buyNowFromDetail()"
-                    class="w-full py-3 bg-gray-900 hover:bg-black text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer border-0">
+                    class="w-full h-11 bg-[#0f172a] hover:bg-black text-white font-bold text-xs sm:text-sm rounded-none shadow-xs transition cursor-pointer border-0 flex items-center justify-center">
                     Buy Now
                 </button>
             </div>
@@ -761,6 +768,39 @@ ob_start();
 </div><!-- end main container -->
 
 <!-- ============================================================ -->
+<!-- FIXED STICKY ACTION BAR (MOBILE ONLY: Add to Cart + Request Quote + Buy Now) -->
+<!-- ============================================================ -->
+<div id="mobileProductActionStickyBar"
+    class="fixed bottom-[56px] left-0 right-0 z-35 bg-white/95 backdrop-blur-md border-t border-gray-200 p-2 shadow-xl block sm:hidden">
+    <div class="flex items-center gap-1.5">
+        <!-- 1. Add to Cart / Stepper Container (Mobile) -->
+        <div class="flex-1 h-10 relative overflow-hidden rounded-none bg-[#ff7a45]" id="mobileAtcWrapper">
+            <!-- State 1: Add to Cart Button -->
+            <button type="button" id="mobileAtcBtnInitial" onclick="handleAddToCartClick('mobile')"
+                class="w-full h-full bg-[#ff7a45] hover:bg-[#f0642f] active:bg-[#e0531f] text-white font-bold text-[11px] rounded-none transition-all duration-200 flex items-center justify-center cursor-pointer border-0 absolute inset-0 z-10 select-none">
+                Add to Cart
+            </button>
+
+            <!-- State 2: Quantity Stepper (- 1 +) -->
+            <div id="mobileAtcStepper"
+                class="w-full h-full bg-[#ff7a45] text-white rounded-none transition-all duration-200 flex items-center justify-between px-1.5 absolute inset-0 z-20 opacity-0 scale-95 pointer-events-none">
+                <button type="button" onclick="event.stopPropagation(); event.preventDefault(); changeAtcQty(-1);"
+                    class="w-7 h-full flex items-center justify-center text-white hover:bg-black/15 active:bg-black/25 transition font-extrabold text-base cursor-pointer border-0 bg-transparent select-none">−</button>
+                <span id="mobileAtcQtyText" class="font-extrabold text-xs text-white select-none">1</span>
+                <button type="button" onclick="event.stopPropagation(); event.preventDefault(); changeAtcQty(1);"
+                    class="w-7 h-full flex items-center justify-center text-white hover:bg-black/15 active:bg-black/25 transition font-extrabold text-base cursor-pointer border-0 bg-transparent select-none">+</button>
+            </div>
+        </div>
+
+        <!-- 2. Request for Quote Button -->
+        <button type="button" onclick="openRfqWithProducts()"
+            class="flex-1 h-10 bg-[#334155] hover:bg-[#475569] active:bg-[#1e293b] text-white font-bold text-xs rounded-none transition flex items-center justify-center cursor-pointer border-0">
+            Request Quote
+        </button>
+    </div>
+</div>
+
+<!-- ============================================================ -->
 <!-- LIGHTBOX MODAL -->
 <!-- ============================================================ -->
 <div id="lightboxModal"
@@ -790,22 +830,19 @@ ob_start();
         currentMode = mode;
         const btnOP = document.getElementById('btnOnePiece');
         const btnWS = document.getElementById('btnWholesale');
-        const switchDot = document.getElementById('toggleSwitchDot');
         const singlePriceRow = document.getElementById('singlePriceRow');
         const wholesaleTierContainer = document.getElementById('wholesaleTierContainer');
         const priceEl = document.getElementById('priceDisplay');
 
         if (mode === 'wholesale') {
-            if (btnWS) btnWS.className = 'flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-black text-white';
-            if (btnOP) btnOP.className = 'flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600';
-            if (switchDot) switchDot.className = 'w-3 h-3 bg-white rounded-full transition-transform duration-200 translate-x-4';
+            if (btnWS) btnWS.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-none text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-[#334155] text-white shadow-xs';
+            if (btnOP) btnOP.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-none text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600 bg-transparent';
 
             if (singlePriceRow) singlePriceRow.classList.add('hidden');
             if (wholesaleTierContainer) wholesaleTierContainer.classList.remove('hidden');
         } else {
-            if (btnOP) btnOP.className = 'flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-black text-white';
-            if (btnWS) btnWS.className = 'flex-1 py-1.5 px-3 text-xs font-semibold rounded-full text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600';
-            if (switchDot) switchDot.className = 'w-3 h-3 bg-white rounded-full transition-transform duration-200 translate-x-0';
+            if (btnOP) btnOP.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-none text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer bg-[#f05a29] text-white shadow-xs';
+            if (btnWS) btnWS.className = 'flex-1 py-2 px-3 text-xs font-bold rounded-none text-center border-0 focus:outline-none transition-all duration-200 cursor-pointer text-gray-600 bg-transparent';
 
             if (singlePriceRow) singlePriceRow.classList.remove('hidden');
             if (wholesaleTierContainer) wholesaleTierContainer.classList.add('hidden');
@@ -936,7 +973,7 @@ ob_start();
         if (mainImg) mainImg.src = src;
         document.querySelectorAll('.thumb-btn').forEach(btn => {
             const isActive = parseInt(btn.dataset.idx) === idx;
-            btn.className = `thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all focus:outline-none cursor-pointer ${isActive ? 'border-2 border-[#f05a29] ring-2 ring-orange-100/60 shadow-2xs' : 'border border-gray-200 hover:border-gray-400'}`;
+            btn.className = `thumb-btn shrink-0 w-[calc((100%-24px)/4)] aspect-square sm:w-[58px] sm:h-[58px] rounded-lg sm:rounded-xl overflow-hidden transition-all focus:outline-none cursor-pointer snap-start ${isActive ? 'border-2 border-[#f05a29] ring-2 ring-orange-100/60 shadow-2xs' : 'border border-gray-200 hover:border-gray-400'}`;
         });
         const activeThumb = document.querySelector(`.thumb-btn[data-idx="${idx}"]`);
         if (activeThumb) {
@@ -1108,6 +1145,8 @@ ob_start();
         if (v.image) {
             const mainImg = document.getElementById('mainProductImage');
             if (mainImg) mainImg.src = v.image;
+            const fixedImg = document.getElementById('desktopFixedBarImg');
+            if (fixedImg) fixedImg.src = v.image;
         }
 
         // 5. Update Tier Pricing Cards for selected variant
@@ -1119,6 +1158,11 @@ ob_start();
         const targetPrice = (currentMode === 'wholesale') ? (v.wholesale_price || WS_START) : (v.one_piece_price || OP_START);
         const priceEl = document.getElementById('priceDisplay');
         if (priceEl && targetPrice > 0) priceEl.textContent = formatNum(targetPrice);
+
+        const fixedPrice = document.getElementById('desktopFixedBarPrice');
+        if (fixedPrice && targetPrice > 0) {
+            fixedPrice.innerHTML = `₹${formatNum(targetPrice)} <span class="text-[10px] text-gray-400 font-normal">/ piece</span>`;
+        }
 
         // 6. Update URL to clean SEO route without page reload
         const baseUrl = <?= json_encode($canonicalUrl) ?>;
@@ -1206,6 +1250,29 @@ ob_start();
         }
 
         checkDetailWishlistStatus();
+
+        // Mobile touch swipe listener for main cover image
+        const card = document.getElementById('mainImgCardWrapper');
+        if (card) {
+            let touchStartX = 0;
+            let touchEndX = 0;
+            card.addEventListener('touchstart', (e) => {
+                if (e.changedTouches && e.changedTouches[0]) {
+                    touchStartX = e.changedTouches[0].clientX;
+                }
+            }, { passive: true });
+            card.addEventListener('touchend', (e) => {
+                if (e.changedTouches && e.changedTouches[0]) {
+                    touchEndX = e.changedTouches[0].clientX;
+                    const diff = touchStartX - touchEndX;
+                    if (diff > 35) {
+                        if (typeof nextImage === 'function') nextImage();
+                    } else if (diff < -35) {
+                        if (typeof prevImage === 'function') prevImage();
+                    }
+                }
+            }, { passive: true });
+        }
     });
 
     // ========================================================
@@ -1322,40 +1389,174 @@ ob_start();
         inp.value = val;
     }
 
-    let detailAddToCartInFlight = false;
-    async function addToCartFromDetail() {
-        const pId = <?= (int) $product['id'] ?>;
-        const mainBtn = document.getElementById('mainAddToCartBtn');
-        if (mainBtn && mainBtn.classList.contains('added')) {
-            if (typeof openCartDrawer === 'function') openCartDrawer();
+    let currentAtcQty = 0;
+
+    function handleAddToCartClick(source) {
+        currentAtcQty = 1;
+        updateAtcStepperUI();
+        addToCartFromDetail(currentAtcQty);
+    }
+
+    function changeAtcQty(delta) {
+        currentAtcQty = Math.max(0, currentAtcQty + delta);
+        updateAtcStepperUI();
+
+        if (currentAtcQty === 0) {
+            addToCartFromDetail(0);
+        } else {
+            addToCartFromDetail(currentAtcQty);
+        }
+    }
+
+    function updateAtcStepperUI() {
+        const mobileInit = document.getElementById('mobileAtcBtnInitial');
+        const mobileStep = document.getElementById('mobileAtcStepper');
+        const mobileQty = document.getElementById('mobileAtcQtyText');
+
+        const inlineInit = document.getElementById('inlineAtcBtnInitial');
+        const inlineStep = document.getElementById('inlineAtcStepper');
+        const inlineQty = document.getElementById('inlineAtcQtyText');
+
+        const fixedInit = document.getElementById('desktopFixedAtcBtnInitial');
+        const fixedStep = document.getElementById('desktopFixedAtcStepper');
+        const fixedQty = document.getElementById('desktopFixedAtcQtyText');
+
+        const qtyInput = document.getElementById('detailQtyInput');
+        if (qtyInput) {
+            qtyInput.value = currentAtcQty > 0 ? currentAtcQty : 1;
+        }
+
+        if (currentAtcQty > 0) {
+            if (mobileInit) {
+                mobileInit.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                mobileInit.classList.remove('opacity-100', 'scale-100');
+            }
+            if (mobileStep) {
+                mobileStep.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                mobileStep.classList.add('opacity-100', 'scale-100');
+            }
+            if (mobileQty) mobileQty.textContent = currentAtcQty;
+
+            if (inlineInit) {
+                inlineInit.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                inlineInit.classList.remove('opacity-100', 'scale-100');
+            }
+            if (inlineStep) {
+                inlineStep.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                inlineStep.classList.add('opacity-100', 'scale-100');
+            }
+            if (inlineQty) inlineQty.textContent = currentAtcQty;
+
+            if (fixedInit) {
+                fixedInit.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                fixedInit.classList.remove('opacity-100', 'scale-100');
+            }
+            if (fixedStep) {
+                fixedStep.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                fixedStep.classList.add('opacity-100', 'scale-100');
+            }
+            if (fixedQty) fixedQty.textContent = currentAtcQty;
+        } else {
+            if (mobileInit) {
+                mobileInit.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                mobileInit.classList.add('opacity-100', 'scale-100');
+            }
+            if (mobileStep) {
+                mobileStep.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                mobileStep.classList.remove('opacity-100', 'scale-100');
+            }
+
+            if (inlineInit) {
+                inlineInit.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                inlineInit.classList.add('opacity-100', 'scale-100');
+            }
+            if (inlineStep) {
+                inlineStep.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                inlineStep.classList.remove('opacity-100', 'scale-100');
+            }
+
+            if (fixedInit) {
+                fixedInit.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
+                fixedInit.classList.add('opacity-100', 'scale-100');
+            }
+            if (fixedStep) {
+                fixedStep.classList.add('opacity-0', 'scale-95', 'pointer-events-none');
+                fixedStep.classList.remove('opacity-100', 'scale-100');
+            }
+        }
+    }
+
+    window.syncProductDetailCartState = function(items, cartCount) {
+        const currentProductId = <?= (int) $product['id'] ?>;
+
+        if (!items || !Array.isArray(items)) {
+            currentAtcQty = 0;
+            updateAtcStepperUI();
             return;
         }
 
+        const prodItems = items.filter(i => parseInt(i.product_id) === currentProductId);
+        if (prodItems.length > 0) {
+            let totalQty = 0;
+            prodItems.forEach(i => { totalQty += (parseInt(i.quantity) || 0); });
+            currentAtcQty = totalQty;
+        } else {
+            currentAtcQty = 0;
+        }
+        updateAtcStepperUI();
+
+        if (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST && VARIANTS_LIST.length > 0) {
+            VARIANTS_LIST.forEach((v, vi) => {
+                const span = document.getElementById('vQtyVal_' + vi);
+                if (span) {
+                    const match = items.find(i => parseInt(i.product_id) === currentProductId && parseInt(i.variant_id) === parseInt(v.id));
+                    span.textContent = match ? match.quantity : 0;
+                }
+            });
+        }
+    };
+
+    let detailAddToCartInFlight = false;
+    async function addToCartFromDetail(overrideQty = null) {
+        const pId = <?= (int) $product['id'] ?>;
         if (detailAddToCartInFlight) return;
         detailAddToCartInFlight = true;
 
-        const qtyInp = document.getElementById('detailQtyInput');
-        let qty = parseInt(qtyInp ? qtyInp.value : 1);
-        if (isNaN(qty) || qty < 1) qty = 1;
+        let qty = 1;
+        if (overrideQty !== null) {
+            qty = overrideQty;
+        } else {
+            const qtyInp = document.getElementById('detailQtyInput');
+            qty = parseInt(qtyInp ? qtyInp.value : (currentAtcQty > 0 ? currentAtcQty : 1));
+        }
 
         const payload = new URLSearchParams();
         payload.append('product_id', pId);
         payload.append('quantity', qty);
+        payload.append('set_exact_qty', '1');
         payload.append('pricing_mode', currentMode);
 
         try {
             const res = await fetch('<?= url('cart/add') ?>', { method: 'POST', body: payload });
             const data = await res.json();
             if (data.success) {
-                if (!window.USER_CART_PRODUCT_IDS.includes(pId)) {
-                    window.USER_CART_PRODUCT_IDS.push(pId);
+                if (qty > 0) {
+                    if (!window.USER_CART_PRODUCT_IDS.includes(pId)) {
+                        window.USER_CART_PRODUCT_IDS.push(pId);
+                    }
+                } else {
+                    const idx = window.USER_CART_PRODUCT_IDS.indexOf(pId);
+                    if (idx > -1) window.USER_CART_PRODUCT_IDS.splice(idx, 1);
                 }
                 if (typeof window.applyUserProductStates === 'function') {
                     window.applyUserProductStates();
                 }
                 const cCount = data.cart_count || data.count;
+                if (typeof window.syncProductDetailCartState === 'function') {
+                    window.syncProductDetailCartState(data.items, cCount);
+                }
                 if (typeof showCartToast === 'function') {
-                    showCartToast('Item added to cart!');
+                    showCartToast(qty > 0 ? 'Cart updated!' : 'Item removed from cart');
                 }
                 if (typeof updateHeaderCartBadge === 'function') {
                     updateHeaderCartBadge(cCount);
@@ -1370,18 +1571,21 @@ ob_start();
                     renderCartDrawerUI(data.items, data.subtotal, cCount);
                 }
             } else {
-                alert(data.message || 'Could not add to cart');
+                alert(data.message || 'Could not update cart');
             }
         } catch (e) {
-            alert('Error adding to cart');
+            alert('Error updating cart');
         } finally {
             detailAddToCartInFlight = false;
         }
     }
 
     async function buyNowFromDetail() {
-        await addToCartFromDetail();
-        window.location.href = '<?= url('checkout') ?>';
+        if (typeof showComingSoonModal === 'function') {
+            showComingSoonModal();
+        } else {
+            alert('This option is coming soon. Please request a quote and we will get back to you.');
+        }
     }
 
     async function checkDetailWishlistStatus() {

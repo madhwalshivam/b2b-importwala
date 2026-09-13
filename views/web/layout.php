@@ -175,6 +175,9 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
 <body>
 
+  <!-- Top Header Wrapper (Announcement Bar + Main Header for Mobile Auto-Hide) -->
+  <div class="top-header-wrapper" id="topHeaderWrapper">
+
   <!-- Top Announcement Bar (Dynamic Full-Bar Clickable Marquee) -->
   <?php
   $db = \App\Core\Database::getInstance();
@@ -230,7 +233,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       <!-- Close Button Only -->
       <div
         style="display:flex !important; align-items:center !important; flex-shrink:0; background:#FFF2ED; height:100%; padding-left:8px; z-index:10;">
-        <button type="button" onclick="document.getElementById('topAnnouncementBar').style.display='none'"
+        <button type="button" onclick="document.getElementById('topAnnouncementBar').style.display='none'; if(typeof adjustTopHeaderSpacer === 'function') adjustTopHeaderSpacer();"
           title="Close Announcement"
           style="background:none !important; border:none !important; outline:none !important; box-shadow:none !important; font-size:14px; color:#9CA3AF; cursor:pointer; padding:2px 4px; line-height:1;"
           onmouseover="this.style.color='#111827';" onmouseout="this.style.color='#9CA3AF';">
@@ -455,6 +458,8 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       </div>
     </nav>
   </header>
+  </div>
+  <div id="topHeaderSpacer" style="display:none;"></div>
 
   <!-- Mobile Slide-Out Navigation Drawer -->
   <div class="mobile-drawer-backdrop" id="mobileDrawerBackdrop" onclick="closeMobileNavDrawer()">
@@ -764,18 +769,13 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       <span>Factory</span>
     </a>
 
-    <!-- Item 4: Inquiry -->
-    <?php
-    if (session_status() === PHP_SESSION_NONE) @session_start();
-    $initialInquiryCount = !empty($_SESSION['inquiry_list']) ? count($_SESSION['inquiry_list']) : 0;
-    ?>
-    <a href="<?= url('inquiry') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'inquiry') ? 'active' : '' ?>" title="Inquiry">
+    <!-- Item 4: Request Quote (Opens RFQ Modal Popup) -->
+    <button type="button" onclick="if (typeof openRfqWithProducts === 'function') { openRfqWithProducts(); } else if (typeof openRfqModal === 'function') { openRfqModal(null, true); }" class="mobile-nav-item border-0 bg-transparent cursor-pointer" title="Request Quote" style="background: none; border: none; outline: none; padding: 0;">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
-      <span class="mobile-nav-badge" id="mobileInquiryCount" style="display:<?= $initialInquiryCount > 0 ? 'flex' : 'none' ?>;"><?= $initialInquiryCount ?></span>
-      <span>Inquiry</span>
-    </a>
+      <span>Request Quote</span>
+    </button>
 
     <!-- Item 5: Me / Account -->
     <a href="<?= url('account') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'account') || str_contains($currentUri, 'login') ? 'active' : '' ?>" title="Me">
@@ -1298,12 +1298,12 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.6);
+      background: rgba(15, 23, 42, 0.65);
       backdrop-filter: blur(6px);
-      z-index: 99999;
+      z-index: 999999;
       align-items: center;
       justify-content: center;
-      padding: 12px;
+      padding: 16px;
       overflow-y: auto;
     }
 
@@ -1313,21 +1313,22 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
     /* ---- Dialog ---- */
     #rfqModal {
-      background: #fff;
+      background: #ffffff;
       border-radius: 20px;
       width: 100%;
       max-width: 680px;
-      max-height: 92vh;
+      max-height: 90vh;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       animation: rfqPop .25s cubic-bezier(.34, 1.56, .64, 1);
     }
 
     @keyframes rfqPop {
       from {
         opacity: 0;
-        transform: scale(.92);
+        transform: scale(.94);
       }
 
       to {
@@ -1336,38 +1337,50 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       }
     }
 
-    /* ---- Header ---- */
+    /* Mobile Full-Screen Layout (< 640px) */
+    @media (max-width: 639px) {
+      #rfqModalOverlay {
+        padding: 0 !important;
+      }
+
+      #rfqModal {
+        width: 100vw !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        max-height: 100dvh !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        box-shadow: none !important;
+      }
+    }
+
+    /* ---- Sticky Header ---- */
     .rfq-hd {
       display: flex;
       align-items: center;
-      gap: 14px;
-      padding: 18px 22px 16px;
-      border-bottom: 1px solid #f1f5f9;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 30;
       flex-shrink: 0;
     }
 
-    .rfq-hd-badge {
-      background: linear-gradient(135deg, #f05a29, #ff8c5a);
-      color: #fff;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: .8px;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: 20px;
-    }
-
     .rfq-hd-title {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 800;
       color: #0f172a;
-      flex: 1;
-      line-height: 1.2;
+      line-height: 1.25;
     }
 
     .rfq-hd-sub {
       font-size: 11px;
-      color: #94a3b8;
+      color: #64748b;
       font-weight: 500;
       margin-top: 2px;
     }
@@ -1375,16 +1388,18 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     .rfq-hd-close {
       background: #f1f5f9;
       border: none;
-      color: #64748b;
-      width: 34px;
-      height: 34px;
+      color: #475569;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
       border-radius: 50%;
-      font-size: 16px;
+      font-size: 18px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background .15s, color .15s;
+      transition: all .15s;
       flex-shrink: 0;
     }
 
@@ -1393,97 +1408,121 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       color: #ef4444;
     }
 
-    /* ---- Progress Bar Stepper ---- */
+    /* ---- Native Stepper Grid ---- */
     .rfq-progress-wrap {
-      padding: 14px 22px 0;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 16px;
       flex-shrink: 0;
     }
 
-    .rfq-progress-labels {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-
-    .rfq-progress-label {
-      font-size: 11px;
-      font-weight: 700;
-      color: #cbd5e1;
+    .rfq-stepper-grid {
       display: flex;
       align-items: center;
-      gap: 5px;
-      transition: color .3s;
+      justify-content: space-between;
+      gap: 6px;
     }
 
-    .rfq-progress-label.active {
+    .rfq-step-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .rfq-step-badge {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      min-height: 24px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .25s;
+      flex-shrink: 0;
+    }
+
+    .rfq-step-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .rfq-step-tag {
+      font-size: 9px;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      line-height: 1;
+    }
+
+    .rfq-step-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.3;
+      margin-top: 1px;
+    }
+
+    .rfq-step-line {
+      height: 2px;
+      flex: 1;
+      background: #e2e8f0;
+      border-radius: 2px;
+      transition: background .3s;
+      min-width: 10px;
+    }
+
+    /* Stepper States */
+    .rfq-step-item.active .rfq-step-badge {
+      background: #f05a29;
+      color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(240, 90, 41, 0.2);
+    }
+
+    .rfq-step-item.active .rfq-step-tag {
       color: #f05a29;
     }
 
-    .rfq-progress-label.done {
+    .rfq-step-item.active .rfq-step-title {
+      color: #0f172a;
+      font-weight: 800;
+    }
+
+    .rfq-step-item.done .rfq-step-badge {
+      background: #10b981;
+      color: #ffffff;
+    }
+
+    .rfq-step-item.done .rfq-step-tag {
       color: #10b981;
     }
 
-    .rfq-progress-num {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #e2e8f0;
-      color: #94a3b8;
-      font-size: 10px;
-      font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: all .3s;
+    .rfq-step-item.done .rfq-step-title {
+      color: #0f172a;
+      font-weight: 700;
     }
 
-    .rfq-progress-label.active .rfq-progress-num {
-      background: #f05a29;
-      color: #fff;
-    }
-
-    .rfq-progress-label.done .rfq-progress-num {
+    .rfq-step-line.done {
       background: #10b981;
-      color: #fff;
     }
 
-    .rfq-progress-bar-track {
-      height: 5px;
-      background: #f1f5f9;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-
-    .rfq-progress-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #f05a29, #ff8c5a);
-      border-radius: 10px;
-      transition: width .4s cubic-bezier(.4, 0, .2, 1);
-    }
-
-    /* Mobile: hide labels, keep bar */
-    @media (max-width:500px) {
-      .rfq-progress-labels {
+    @media (max-width: 480px) {
+      .rfq-step-tag {
         display: none;
       }
-
-      .rfq-progress-bar-track {
-        margin-bottom: 8px;
-      }
-    }
-
-    .rfq-mobile-step {
-      display: none;
-      font-size: 12px;
-      font-weight: 700;
-      color: #f05a29;
-      padding: 6px 22px 10px;
-    }
-
-    @media (max-width:500px) {
-      .rfq-mobile-step {
-        display: block;
+      .rfq-step-title {
+        font-size: 10px;
       }
     }
 
@@ -1498,7 +1537,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
     /* ---- Scrollable Body ---- */
     .rfq-body {
-      padding: 6px 22px 20px;
+      padding: 16px;
       overflow-y: auto;
       flex: 1;
       min-height: 0;
@@ -1506,12 +1545,11 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     }
 
     .rfq-body::-webkit-scrollbar {
-      width: 6px;
+      width: 5px;
     }
 
     .rfq-body::-webkit-scrollbar-track {
       background: #f1f5f9;
-      border-radius: 10px;
     }
 
     .rfq-body::-webkit-scrollbar-thumb {
@@ -1519,36 +1557,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       border-radius: 10px;
     }
 
-    .rfq-body::-webkit-scrollbar-thumb:hover {
-      background: #f05a29;
-    }
-
-    /* ---- Section heading ---- */
-    .rfq-section-title {
-      font-size: 13px;
-      font-weight: 800;
-      color: #334155;
-      padding: 12px 0 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 1.5px dashed #e2e8f0;
-      margin-bottom: 16px;
-    }
-
-    .rfq-section-icon {
-      width: 28px;
-      height: 28px;
-      background: #fff7ed;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #f05a29;
-      flex-shrink: 0;
-    }
-
-    /* ---- Fields ---- */
+    /* ---- Form Controls ---- */
     .rfq-field {
       margin-bottom: 14px;
     }
@@ -1559,16 +1568,17 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       font-weight: 700;
       color: #334155;
       margin-bottom: 6px;
-      letter-spacing: .2px;
+      letter-spacing: .1px;
     }
 
     .rfq-req {
       color: #ef4444;
+      font-weight: 800;
     }
 
     .rfq-opt {
-      color: #64748b;
-      font-weight: 500;
+      color: #94a3b8;
+      font-weight: 400;
       font-size: 11px;
     }
 
@@ -1576,30 +1586,36 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     .rfq-select,
     .rfq-textarea {
       width: 100%;
-      padding: 10px 14px;
-      border: 1.5px solid #94a3b8;
+      height: 42px;
+      padding: 0 14px;
+      border: 1.5px solid #cbd5e1;
       border-radius: 10px;
       font-size: 13px;
       font-family: inherit;
       color: #0f172a;
       background: #ffffff;
       outline: none;
-      transition: border-color .2s, box-shadow .2s;
+      transition: border-color .15s, box-shadow .15s;
       box-sizing: border-box;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .rfq-textarea {
+      height: auto;
+      min-height: 80px;
+      padding: 10px 14px;
+      resize: vertical;
     }
 
     .rfq-input:hover,
     .rfq-select:hover,
     .rfq-textarea:hover {
-      border-color: #64748b;
+      border-color: #94a3b8;
     }
 
     .rfq-input:focus,
     .rfq-select:focus,
     .rfq-textarea:focus {
       border-color: #f05a29;
-      background: #fff;
       box-shadow: 0 0 0 3.5px rgba(240, 90, 41, .15);
     }
 
@@ -1615,11 +1631,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       color: #ef4444;
       margin-top: 4px;
       display: none;
-    }
-
-    .rfq-textarea {
-      resize: vertical;
-      min-height: 76px;
+      font-weight: 500;
     }
 
     .rfq-g2 {
@@ -1634,32 +1646,26 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       gap: 12px;
     }
 
-    @media (max-width:480px) {
-
+    @media (max-width: 540px) {
       .rfq-g2,
       .rfq-g3 {
         grid-template-columns: 1fr;
       }
     }
 
-    /* Phone + Price prefix inputs */
+    /* Prefix Input Wrapper */
     .rfq-prefix-wrap {
       display: flex;
-      border: 1.5px solid #94a3b8;
+      height: 42px;
+      border: 1.5px solid #cbd5e1;
       border-radius: 10px;
       overflow: hidden;
       background: #ffffff;
-      transition: border-color .2s, box-shadow .2s;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-    }
-
-    .rfq-prefix-wrap:hover {
-      border-color: #64748b;
+      transition: border-color .15s, box-shadow .15s;
     }
 
     .rfq-prefix-wrap:focus-within {
       border-color: #f05a29;
-      background: #fff;
       box-shadow: 0 0 0 3.5px rgba(240, 90, 41, .15);
     }
 
@@ -1668,13 +1674,15 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     }
 
     .rfq-prefix-tag {
-      padding: 10px 14px;
+      padding: 0 12px;
       background: #f1f5f9;
       font-size: 13px;
       font-weight: 700;
-      color: #334155;
-      border-right: 1.5px solid #cbd5e1;
+      color: #475569;
+      border-right: 1.5px solid #e2e8f0;
       white-space: nowrap;
+      display: flex;
+      align-items: center;
       flex-shrink: 0;
     }
 
@@ -1684,17 +1692,18 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       outline: none !important;
       box-shadow: none !important;
       background: transparent !important;
-      padding: 10px 14px;
+      padding: 0 12px;
       font-size: 13px;
       font-family: inherit;
       color: #0f172a;
+      height: 100%;
     }
 
     /* Dropzone */
     .rfq-dz {
-      border: 2px dashed #e2e8f0;
+      border: 2px dashed #cbd5e1;
       border-radius: 12px;
-      padding: 18px;
+      padding: 16px;
       text-align: center;
       cursor: pointer;
       background: #f8fafc;
@@ -1709,11 +1718,11 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
     .rfq-dz-icon {
       color: #f05a29;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .rfq-dz-txt {
-      font-size: 13px;
+      font-size: 12px;
       color: #64748b;
     }
 
@@ -1724,7 +1733,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     .rfq-dz-hint {
       font-size: 11px;
       color: #94a3b8;
-      margin-top: 3px;
+      margin-top: 2px;
     }
 
     #rfqFileInput {
@@ -1740,11 +1749,11 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
     .rfq-thumb {
       position: relative;
-      width: 68px;
-      height: 68px;
+      width: 64px;
+      height: 64px;
       border-radius: 10px;
       overflow: hidden;
-      border: 2px solid #e2e8f0;
+      border: 1.5px solid #cbd5e1;
     }
 
     .rfq-thumb img {
@@ -1757,11 +1766,11 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       position: absolute;
       top: 2px;
       right: 2px;
-      background: rgba(0, 0, 0, .55);
+      background: rgba(0, 0, 0, .65);
       color: #fff;
       border: none;
-      width: 17px;
-      height: 17px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       font-size: 10px;
       cursor: pointer;
@@ -1778,8 +1787,9 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
     .rfq-toggle-btn {
       flex: 1;
-      padding: 9px 10px;
-      border: 1.5px solid #e2e8f0;
+      height: 42px;
+      padding: 0 12px;
+      border: 1.5px solid #cbd5e1;
       border-radius: 10px;
       cursor: pointer;
       font-size: 12px;
@@ -1803,31 +1813,87 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       accent-color: #f05a29;
     }
 
-    /* ---- Footer ---- */
+    /* ---- Variant List Scrollable Area ---- */
+    .rfq-var-list-box {
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 12px;
+      background: #ffffff;
+      -webkit-overflow-scrolling: touch;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .rfq-var-list-box::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    .rfq-var-list-box::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+
+    .rfq-var-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background .15s;
+    }
+
+    .rfq-var-row:last-child {
+      border-bottom: none;
+    }
+
+    .rfq-var-row.rfq-var-selected {
+      background: #fff8f5;
+      border-left: 4px solid #f05a29;
+    }
+
+    .rfq-var-chk {
+      width: 24px;
+      height: 24px;
+      min-width: 24px;
+      min-height: 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      accent-color: #f05a29;
+    }
+
+    /* ---- Sticky Footer ---- */
     .rfq-ft {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
       gap: 10px;
-      padding: 14px 22px;
-      border-top: 1px solid #f1f5f9;
-      background: #f8fafc;
+      padding: 12px 16px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      position: sticky;
+      bottom: 0;
+      z-index: 30;
       flex-shrink: 0;
-      border-radius: 0 0 20px 20px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
     }
 
     .rfq-btn {
+      height: 44px;
+      min-height: 44px;
       display: inline-flex;
       align-items: center;
-      gap: 7px;
-      padding: 10px 22px;
-      border-radius: 10px;
-      font-size: 13px;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 20px;
+      border-radius: 12px;
+      font-size: 14px;
       font-weight: 700;
       font-family: inherit;
       border: none;
       cursor: pointer;
-      transition: background .18s, transform .12s;
+      transition: all .15s;
+      flex: 1;
     }
 
     .rfq-btn:disabled {
@@ -1837,7 +1903,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
     .rfq-btn-primary {
       background: #f05a29;
-      color: #fff;
+      color: #ffffff;
     }
 
     .rfq-btn-primary:hover:not(:disabled) {
@@ -1845,65 +1911,54 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     }
 
     .rfq-btn-ghost {
-      background: #fff;
-      color: #64748b;
-      border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      color: #475569;
+      border: 1.5px solid #cbd5e1;
+      max-width: 110px;
+      flex: 0 0 auto;
     }
 
     .rfq-btn-ghost:hover {
       background: #f1f5f9;
+      color: #0f172a;
     }
 
-    /* ---- Success ---- */
+    /* Success State */
     .rfq-success-wrap {
       display: none;
-      padding: 44px 22px;
+      padding: 40px 16px;
       text-align: center;
     }
 
     .rfq-success-ring {
-      width: 80px;
-      height: 80px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       border: 3px solid #10b981;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 20px;
-      animation: rfqRing .5s ease forwards;
-    }
-
-    @keyframes rfqRing {
-      0% {
-        transform: scale(0);
-        opacity: 0;
-      }
-
-      70% {
-        transform: scale(1.1);
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
+      margin: 0 auto 16px;
+      animation: rfqRing .4s ease forwards;
     }
 
     .rfq-success-h {
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 800;
       color: #0f172a;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .rfq-success-p {
       font-size: 13px;
       color: #64748b;
-      line-height: 1.7;
+      line-height: 1.6;
     }
 
     .rfq-success-tag {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       margin-top: 16px;
       background: #fff7ed;
       color: #f05a29;
@@ -1932,24 +1987,36 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         </button>
       </div>
 
-      <!-- Progress bar stepper -->
+      <!-- Progress Stepper Header -->
       <div class="rfq-progress-wrap" id="rfqProgressWrap">
-        <div class="rfq-progress-labels">
-          <span class="rfq-progress-label active" id="rfqLbl1">
-            <span class="rfq-progress-num" id="rfqNum1">1</span> Product Info
-          </span>
-          <span class="rfq-progress-label" id="rfqLbl2">
-            <span class="rfq-progress-num" id="rfqNum2">2</span> Your Details
-          </span>
-          <span class="rfq-progress-label" id="rfqLbl3">
-            <span class="rfq-progress-num" id="rfqNum3">3</span> Business
-          </span>
-        </div>
-        <div class="rfq-progress-bar-track">
-          <div class="rfq-progress-bar-fill" id="rfqBarFill" style="width:33%;"></div>
+        <div class="rfq-stepper-grid">
+          <!-- Step 1 -->
+          <div class="rfq-step-item active" id="rfqStepItem1">
+            <div class="rfq-step-badge" id="rfqNum1">1</div>
+            <div class="rfq-step-text">
+              <span class="rfq-step-title">Product</span>
+            </div>
+          </div>
+          <div class="rfq-step-line" id="rfqStepLine1"></div>
+
+          <!-- Step 2 -->
+          <div class="rfq-step-item" id="rfqStepItem2">
+            <div class="rfq-step-badge" id="rfqNum2">2</div>
+            <div class="rfq-step-text">
+              <span class="rfq-step-title">Contact</span>
+            </div>
+          </div>
+          <div class="rfq-step-line" id="rfqStepLine2"></div>
+
+          <!-- Step 3 -->
+          <div class="rfq-step-item" id="rfqStepItem3">
+            <div class="rfq-step-badge" id="rfqNum3">3</div>
+            <div class="rfq-step-text">
+              <span class="rfq-step-title">Business</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="rfq-mobile-step" id="rfqMobileLbl">Step 1 of 3 — Product Info</div>
 
       <!-- Scrollable form body -->
       <form id="rfqForm" novalidate>
@@ -1957,15 +2024,15 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
           <!-- ===== STEP 1 ===== -->
           <div id="rfqStep1">
-            <div class="mb-3">
-              <div class="text-sm font-semibold text-gray-900">Step 1 of 3: Product Information</div>
-              <div class="text-xs text-gray-500 font-medium mt-0.5" id="rfqStep1SubText">Select variants &amp; add
+            <div class="mb-3.5">
+              <div class="text-sm font-extrabold text-slate-900">Step 1 of 3: Product Information</div>
+              <div class="text-xs text-slate-500 font-normal mt-0.5" id="rfqStep1SubText">Select variants &amp; add
                 quantity or describe the custom product to source.</div>
             </div>
 
             <!-- Custom Product Information Container (Shown when opened from Navbar / General Custom Quote) -->
             <div id="rfqCustomProductCard"
-              class="bg-gradient-to-br from-orange-50/70 via-white to-gray-50 border border-orange-200/90 rounded-2xl p-4 mb-4 shadow-sm">
+              class="bg-gradient-to-br from-orange-50/70 via-white to-gray-50 border border-orange-200/90 rounded-2xl p-4 mb-4 shadow-xs">
               <div class="flex items-center justify-between mb-3.5 pb-2.5 border-b border-orange-100">
                 <div class="flex items-center gap-2.5">
                   <div
@@ -2053,76 +2120,57 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
             </div>
 
             <!-- Main Product Details Card Container -->
-            <div id="rfqProductCard" class="bg-gray-50/80 border border-gray-200 rounded-2xl p-3.5 mb-4 shadow-2xs">
+            <div id="rfqProductCard" class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 mb-4 shadow-2xs">
               <div class="flex items-start gap-3.5">
                 <!-- Left Thumbnail Image -->
-                <div class="shrink-0 w-20 sm:w-24">
-                  <div
-                    class="relative w-full aspect-square rounded-xl bg-white border border-gray-200 overflow-hidden shadow-2xs">
+                <div class="shrink-0 w-16 h-16 sm:w-20 sm:h-20">
+                  <div class="relative w-full h-full rounded-xl bg-white border border-slate-200 overflow-hidden shadow-2xs">
                     <img id="rfqProductMainImg" src="" alt="Product Image" class="w-full h-full object-cover">
                   </div>
                 </div>
 
                 <!-- Right Metadata -->
-                <div class="flex-1 min-w-0 space-y-1.5">
-                  <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">PRODUCT DETAILS</div>
-                  <h3 id="rfqProductNameDisplay"
-                    class="text-xs sm:text-sm font-semibold text-gray-900 leading-snug line-clamp-2">Loading…</h3>
+                <div class="flex-1 min-w-0">
+                  <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">SELECTED ITEM</div>
+                  <h3 id="rfqProductNameDisplay" class="text-xs sm:text-sm font-bold text-slate-900 leading-snug break-words">Loading…</h3>
 
-                  <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-gray-500 font-medium">
-                    <span>SKU: <strong id="rfqProductSkuDisplay" class="text-gray-800">N/A</strong></span>
+                  <div class="flex items-center gap-2 text-xs font-semibold text-slate-600 mt-1">
+                    <span>Price: <strong id="rfqProductPriceDisplay" class="text-[#f05a29] font-bold text-sm">₹0.00</strong></span>
                     <span>•</span>
-                    <span>Price: <strong id="rfqProductPriceDisplay" class="text-[#f05a29]">₹0.00</strong></span>
-                    <span>•</span>
-                    <span>MOQ: <strong id="rfqProductMoqDisplay" class="text-gray-800">1</strong></span>
-                    <span>•</span>
-                    <span>Variants: <strong id="rfqProductVarCountDisplay" class="text-gray-800">0</strong></span>
+                    <span><strong id="rfqProductVarCountDisplay" class="text-slate-900 font-bold">0</strong> Variants</span>
+                    <span class="hidden" id="rfqProductSkuDisplay"></span>
+                    <span class="hidden" id="rfqProductMoqDisplay"></span>
                   </div>
                 </div>
               </div>
 
-              <!-- Variant Table Box -->
-              <div class="mt-3.5 pt-3 border-t border-gray-200">
+              <!-- Variant List Box -->
+              <div class="mt-3.5 pt-3 border-t border-slate-200">
                 <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-semibold text-gray-800">Variant-wise requirements <span
-                      class="text-red-500">*</span></label>
-                  <span class="text-[11px] text-gray-500 font-medium">Select variant &amp; add qty</span>
+                  <label class="text-xs font-bold text-slate-800">Variant-wise requirements <span class="text-red-500">*</span></label>
+                  <span class="text-[11px] text-slate-500 font-medium">Select variants &amp; add qty</span>
                 </div>
 
-                <div class="border border-gray-200 rounded-xl overflow-hidden bg-white max-h-56 overflow-y-auto">
-                  <table class="w-full text-left text-xs border-collapse">
-                    <thead
-                      class="bg-gray-50 border-b border-gray-200 text-[11px] font-semibold text-gray-500 uppercase tracking-wider sticky top-0 z-10">
-                      <tr>
-                        <th class="p-2 w-8 text-center"><input type="checkbox" id="rfqSelectAllVarsToggle"
-                            onchange="rfqToggleSelectAllVars(this.checked)" class="rounded border-gray-300"></th>
-                        <th class="p-2">VARIANT</th>
-                        <th class="p-2 w-24 text-right">PRICE</th>
-                        <th class="p-2 w-28 text-center">QTY</th>
-                      </tr>
-                    </thead>
-                    <tbody id="rfqVariantsTableBody" class="divide-y divide-gray-100 font-sans">
-                      <!-- Dynamic Variant Rows JS -->
-                    </tbody>
-                  </table>
+                <div class="rfq-var-list-box" id="rfqVariantsListWrap">
+                  <div id="rfqVariantsTableBody">
+                    <!-- Dynamic Variant Rows JS -->
+                  </div>
                 </div>
 
                 <!-- Table Bottom Toolbar -->
-                <div class="flex items-center justify-between mt-2 px-1">
-                  <div class="text-xs font-medium text-gray-600">
-                    Selected Total Quantity: <strong id="rfqTotalSelectedQty"
-                      class="text-gray-900 font-semibold">0</strong>
+                <div class="flex items-center justify-between mt-2.5 px-0.5">
+                  <div class="text-xs font-medium text-slate-600">
+                    Selected Qty: <strong id="rfqTotalSelectedQty" class="text-slate-900 font-bold text-sm">0</strong>
                   </div>
                   <div class="flex items-center gap-2">
                     <button type="button" onclick="rfqRenderCustomStep1()"
-                      class="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 shadow-2xs transition cursor-pointer">
+                      class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 shadow-2xs transition cursor-pointer">
                       Custom Sourcing
                     </button>
                     <button type="button" onclick="rfqToggleChangeProductSearch()"
-                      class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 shadow-2xs transition cursor-pointer">
-                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 shadow-2xs transition cursor-pointer">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                       Change Product
                     </button>
@@ -2225,14 +2273,16 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
           <!-- ===== STEP 2 ===== -->
           <div id="rfqStep2" style="display:none;">
-            <div class="rfq-section-title">
-              <div class="rfq-section-icon">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+            <div class="mb-3.5">
+              <div class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-orange-50 text-[#f05a29] flex items-center justify-center shrink-0">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </span>
+                Step 2 of 3: Your Contact Details
               </div>
-              How can we reach you?
+              <div class="text-xs text-slate-500 font-normal mt-0.5">Please provide your contact details so our team can send your custom quote.</div>
             </div>
 
             <div class="rfq-g2">
@@ -2268,14 +2318,16 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
           <!-- ===== STEP 3 ===== -->
           <div id="rfqStep3" style="display:none;">
-            <div class="rfq-section-title">
-              <div class="rfq-section-icon">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
+            <div class="mb-3.5">
+              <div class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-orange-50 text-[#f05a29] flex items-center justify-center shrink-0">
+                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </span>
+                Step 3 of 3: Business Information
               </div>
-              A bit about your business
+              <div class="text-xs text-slate-500 font-normal mt-0.5">Help us understand your business requirements for better pricing recommendations.</div>
             </div>
 
             <div class="rfq-g2">
@@ -2455,30 +2507,35 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         [1, 2, 3].forEach(function (i) {
           var el = document.getElementById('rfqStep' + i);
           if (el) el.style.display = (i === step) ? 'block' : 'none';
+
+          var item = document.getElementById('rfqStepItem' + i);
+          var badge = document.getElementById('rfqNum' + i);
+          if (item) {
+            item.className = 'rfq-step-item';
+            if (i < step) {
+              item.classList.add('done');
+              if (badge) badge.innerHTML = '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+            } else if (i === step) {
+              item.classList.add('active');
+              if (badge) badge.textContent = i;
+            } else {
+              if (badge) badge.textContent = i;
+            }
+          }
         });
+
+        var line1 = document.getElementById('rfqStepLine1');
+        if (line1) line1.className = step > 1 ? 'rfq-step-line done' : 'rfq-step-line';
+
+        var line2 = document.getElementById('rfqStepLine2');
+        if (line2) line2.className = step > 2 ? 'rfq-step-line done' : 'rfq-step-line';
+
         var sc = document.getElementById('rfqSuccess'); if (sc) sc.style.display = 'none';
 
         var ft = document.getElementById('rfqFt'); if (ft) ft.style.display = 'flex';
         var bb = document.getElementById('rfqBackBtn'); if (bb) bb.style.display = step > 1 ? 'inline-flex' : 'none';
         var nb = document.getElementById('rfqNextBtn'); if (nb) nb.style.display = step < 3 ? 'inline-flex' : 'none';
         var sb = document.getElementById('rfqSubmitBtn'); if (sb) sb.style.display = step === 3 ? 'inline-flex' : 'none';
-
-        var pct = { 1: '33%', 2: '66%', 3: '100%' };
-        var bf = document.getElementById('rfqBarFill'); if (bf) bf.style.width = pct[step];
-
-        [1, 2, 3].forEach(function (i) {
-          var lbl = document.getElementById('rfqLbl' + i);
-          var num = document.getElementById('rfqNum' + i);
-          if (lbl) {
-            lbl.className = 'rfq-progress-label';
-            if (i < step) { lbl.classList.add('done'); if (num) num.innerHTML = '<svg class="w-3 h-3 text-white inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>'; }
-            else if (i === step) { lbl.classList.add('active'); if (num) num.innerHTML = i; }
-            else { if (num) num.innerHTML = i; }
-          }
-        });
-
-        var ml = document.getElementById('rfqMobileLbl');
-        if (ml) ml.textContent = 'Step ' + step + ' of 3 \u2014 ' + mobileLabels[step - 1];
 
         var b = document.getElementById('rfqBodyScroll');
         if (b) b.scrollTop = 0;
@@ -2533,7 +2590,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         if (imgEl) imgEl.src = '<?= asset('assets/images/placeholder.jpg') ?>';
 
         var tbody = document.getElementById('rfqVariantsTableBody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-400 italic">Please search & select a product below</td></tr>';
+        if (tbody) tbody.innerHTML = '<div class="p-4 text-center text-xs text-slate-400 italic">Please search & select a product below</div>';
 
         rfqToggleChangeProductSearch(true);
       };
@@ -2600,7 +2657,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         tbody.innerHTML = '';
 
         if (!vars || vars.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-400 italic">No variants available</td></tr>';
+          tbody.innerHTML = '<div class="p-4 text-center text-xs text-slate-400 italic">No variants available</div>';
           return;
         }
 
@@ -2614,36 +2671,33 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
           var unitPrice = mode === 'onepiece' ? (v.one_piece_price || v.wholesale_price) : v.wholesale_price;
 
-          var tr = document.createElement('tr');
-          tr.id = 'rfqVarRow_' + idx;
-          tr.className = 'transition ' + (isChecked ? 'bg-orange-50/70 font-semibold border-l-4 border-l-[#f05a29] rfq-var-row-selected' : 'hover:bg-gray-50');
+          var row = document.createElement('div');
+          row.id = 'rfqVarRow_' + idx;
+          row.className = 'rfq-var-row ' + (isChecked ? 'rfq-var-selected' : '');
 
-          tr.innerHTML =
-            '<td class="p-2 text-center align-middle">' +
-            '<input type="checkbox" class="rfq-var-chk rounded border-gray-300 text-[#f05a29] focus:ring-[#f05a29] cursor-pointer" ' + (isChecked ? 'checked' : '') + ' onchange="rfqToggleVarCheck(' + idx + ', this.checked)">' +
-            '</td>' +
-            '<td class="p-2 align-middle">' +
-            '<div class="flex items-center gap-2">' +
-            (v.image ? '<img src="' + v.image + '" class="w-8 h-8 rounded border border-gray-200 object-cover shrink-0">' : '') +
-            '<div class="min-w-0">' +
-            '<div class="text-xs font-semibold text-gray-900 truncate">' + (v.value || v.label || 'Variant') + '</div>' +
-            (v.code ? '<div class="text-[10px] text-gray-400">SKU: ' + v.code + '</div>' : '') +
+          row.innerHTML =
+            '<div class="flex items-center gap-2.5 min-w-0 flex-1">' +
+            '<div class="p-0.5 flex items-center justify-center shrink-0" onclick="event.stopPropagation()">' +
+            '<input type="checkbox" class="rfq-var-chk" ' + (isChecked ? 'checked' : '') + ' onchange="rfqToggleVarCheck(' + idx + ', this.checked)">' +
+            '</div>' +
+            (v.image ? '<img src="' + v.image + '" class="w-9 h-9 rounded-lg border border-slate-200 object-cover shrink-0">' : '') +
+            '<div class="min-w-0 flex-1">' +
+            '<div class="text-xs font-bold text-slate-900 leading-snug break-words">' + (v.value || v.label || 'Variant') + '</div>' +
+            '<div class="text-xs font-bold text-[#f05a29] mt-0.5">₹' + (parseFloat(unitPrice) || 0).toFixed(2) + '</div>' +
             '</div>' +
             '</div>' +
-            '</td>' +
-            '<td class="p-2 text-right align-middle font-semibold text-gray-800">₹' + (parseFloat(unitPrice) || 0).toFixed(2) + '</td>' +
-            '<td class="p-2 text-center align-middle">' +
-            '<div class="inline-flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden shadow-2xs">' +
-            '<button type="button" onclick="rfqChangeVarQty(' + idx + ', -1)" class="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition cursor-pointer border-0">-</button>' +
-            '<input type="number" id="rfqVarQtyInp_' + idx + '" value="' + qty + '" min="0" onchange="rfqSetVarQty(' + idx + ', this.value)" class="w-10 text-center text-xs border-0 focus:outline-none font-semibold text-gray-900 bg-transparent">' +
-            '<button type="button" onclick="rfqChangeVarQty(' + idx + ', 1)" class="w-6 h-6 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition cursor-pointer border-0">+</button>' +
+            '<div class="flex items-center shrink-0">' +
+            '<div class="inline-flex items-center border border-slate-300 rounded-lg bg-white overflow-hidden shadow-2xs">' +
+            '<button type="button" onclick="rfqChangeVarQty(' + idx + ', -1)" class="w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 transition font-bold text-sm border-0 cursor-pointer select-none">−</button>' +
+            '<input type="number" id="rfqVarQtyInp_' + idx + '" value="' + qty + '" min="0" onchange="rfqSetVarQty(' + idx + ', this.value)" class="w-8 h-7 text-center text-xs border-0 focus:outline-none font-bold text-slate-900 bg-transparent">' +
+            '<button type="button" onclick="rfqChangeVarQty(' + idx + ', 1)" class="w-7 h-7 flex items-center justify-center text-slate-700 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 transition font-bold text-sm border-0 cursor-pointer select-none">+</button>' +
             '</div>' +
-            '</td>';
+            '</div>';
 
-          tbody.appendChild(tr);
+          tbody.appendChild(row);
 
           if (isChecked && !selectedRowEl) {
-            selectedRowEl = tr;
+            selectedRowEl = row;
           }
         });
 
@@ -2668,9 +2722,9 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         var inp = document.getElementById('rfqVarQtyInp_' + idx);
         if (inp) inp.value = v.qty;
 
-        var tr = document.getElementById('rfqVarRow_' + idx);
-        if (tr) {
-          tr.className = 'transition ' + (isChecked ? 'bg-orange-50/70 font-semibold border-l-4 border-l-[#f05a29] rfq-var-row-selected' : 'hover:bg-gray-50');
+        var row = document.getElementById('rfqVarRow_' + idx);
+        if (row) {
+          row.className = 'rfq-var-row ' + (isChecked ? 'rfq-var-selected' : '');
         }
         rfqRecalculateTotals();
       };
@@ -2692,11 +2746,11 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         var inp = document.getElementById('rfqVarQtyInp_' + idx);
         if (inp) inp.value = qty;
 
-        var tr = document.getElementById('rfqVarRow_' + idx);
-        if (tr) {
-          var chk = tr.querySelector('.rfq-var-chk');
+        var row = document.getElementById('rfqVarRow_' + idx);
+        if (row) {
+          var chk = row.querySelector('.rfq-var-chk');
           if (chk) chk.checked = v.checked;
-          tr.className = 'transition ' + (v.checked ? 'bg-orange-50/70 font-semibold border-l-4 border-l-[#f05a29] rfq-var-row-selected' : 'hover:bg-gray-50');
+          row.className = 'rfq-var-row ' + (v.checked ? 'rfq-var-selected' : '');
         }
         rfqRecalculateTotals();
       };
@@ -3054,8 +3108,60 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       <div class="grid grid-cols-2 gap-2">
         <a href="<?= url('cart') ?>"
           class="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold text-xs rounded-xl text-center transition flex items-center justify-center">View Cart</a>
-        <a href="<?= url('checkout') ?>"
-          class="py-2.5 px-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl text-center transition shadow-xs flex items-center justify-center">Checkout &rarr;</a>
+        <button type="button" onclick="showComingSoonModal()"
+          class="py-2.5 px-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl text-center transition shadow-xs flex items-center justify-center border-0 cursor-pointer">Checkout &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Site-Wide Coming Soon Modal (Professional B2B Replica) -->
+  <div id="comingSoonModalOverlay"
+    class="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden opacity-0 transition-opacity duration-200"
+    onclick="if(event.target===this)closeComingSoonModal()">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-left space-y-4 border border-gray-200">
+      
+      <!-- Close Button -->
+      <button type="button" onclick="closeComingSoonModal()"
+        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition border-0 bg-transparent cursor-pointer">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Clean Header Pill Badge -->
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-full font-bold text-[11px] tracking-wide uppercase border border-slate-200/80">
+        <span>B2B Wholesale Portal</span>
+      </div>
+
+      <!-- Title & Professional Message -->
+      <div class="space-y-2">
+        <h3 class="text-lg font-bold text-gray-900 leading-snug">
+          Direct Online Checkout Coming Soon
+        </h3>
+        <p class="text-xs text-gray-600 leading-relaxed font-sans">
+          Direct payment gateway integration is currently under final deployment. In the meantime, you can submit an instant <strong>Custom Quote Request</strong> to receive a proforma invoice and priority factory dispatch.
+        </p>
+      </div>
+
+      <!-- Professional B2B Guarantee Strip -->
+      <div class="bg-orange-50/60 border border-orange-200/60 rounded-xl p-3 flex items-start gap-2.5 text-xs text-gray-800">
+        <svg class="w-4 h-4 text-[#f05a29] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+        <span><strong>100% Trade Assurance:</strong> Orders placed via custom quote are protected with factory-direct pricing & escrow safety.</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-3 pt-1">
+        <button type="button"
+          onclick="closeComingSoonModal(); if (typeof openRfqWithProducts === 'function') openRfqWithProducts(); else if (typeof openRfqModal === 'function') openRfqModal(null, true);"
+          class="flex-1 py-3 px-4 bg-[#f05a29] hover:bg-[#d94e20] active:bg-[#c33e13] text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer border-0 text-center flex items-center justify-center gap-1.5">
+          <span>Request Instant Quote</span>
+        </button>
+        <button type="button" onclick="closeComingSoonModal()"
+          class="py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-xl transition cursor-pointer border-0">
+          Continue
+        </button>
       </div>
     </div>
   </div>
@@ -3068,6 +3174,20 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
   </div>
 
   <script>
+    window.showComingSoonModal = function () {
+      var modal = document.getElementById('comingSoonModalOverlay');
+      if (modal) {
+        modal.classList.remove('hidden');
+        setTimeout(function () { modal.classList.remove('opacity-0'); }, 10);
+      }
+    };
+    window.closeComingSoonModal = function () {
+      var modal = document.getElementById('comingSoonModalOverlay');
+      if (modal) {
+        modal.classList.add('opacity-0');
+        setTimeout(function () { modal.classList.add('hidden'); }, 200);
+      }
+    };
     function updateCardCarouselDots(track) {
       if (!track) return;
       const slideWidth = track.clientWidth;
@@ -3159,6 +3279,9 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           }
           if (typeof syncExistingCartToSteppers === 'function') {
             syncExistingCartToSteppers(data.items);
+          }
+          if (typeof window.syncProductDetailCartState === 'function') {
+            window.syncProductDetailCartState(data.items, data.count);
           }
         }
       } catch (e) { }
@@ -3290,6 +3413,9 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           if (typeof handleCartRemoveResponse === 'function') {
             handleCartRemoveResponse(data);
           }
+          if (typeof window.syncProductDetailCartState === 'function') {
+            window.syncProductDetailCartState(data.items, data.cart_count);
+          }
           if (typeof showCartToast === 'function') {
             showCartToast(data.message || 'Item removed from cart');
           }
@@ -3327,6 +3453,95 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         });
       }
     });
+
+    /* ============================================================
+       MOBILE/TABLET AUTO-HIDE STICKY TOP NAVBAR
+       ============================================================ */
+    (function () {
+      let lastScrollY = window.scrollY;
+      let ticking = false;
+      const scrollThreshold = 8; // Small 8px delta threshold to prevent flicker
+      const topBuffer = 10;      // Scroll position near 0 (very top)
+
+      function adjustTopHeaderSpacer() {
+        const topHeader = document.getElementById('topHeaderWrapper');
+        const spacer = document.getElementById('topHeaderSpacer');
+        if (topHeader && spacer) {
+          spacer.style.display = 'block';
+          spacer.style.height = topHeader.offsetHeight + 'px';
+        }
+      }
+
+      window.adjustTopHeaderSpacer = adjustTopHeaderSpacer;
+
+      function updateHeaderVisibility() {
+        const topHeader = document.getElementById('topHeaderWrapper');
+        if (!topHeader) {
+          ticking = false;
+          return;
+        }
+
+        // On iPad/Tablet and Desktop (>= 640px), header stays fixed at top: 0 always
+        if (window.innerWidth >= 640) {
+          topHeader.classList.remove('header-hidden');
+          adjustTopHeaderSpacer();
+          ticking = false;
+          return;
+        }
+
+        // Keep header visible if mobile navigation drawer is active
+        const drawer = document.getElementById('mobileDrawerBackdrop');
+        if (drawer && drawer.classList.contains('active')) {
+          topHeader.classList.remove('header-hidden');
+          lastScrollY = window.scrollY;
+          ticking = false;
+          return;
+        }
+
+        const currentScrollY = window.scrollY;
+        const delta = currentScrollY - lastScrollY;
+        const headerHeight = topHeader.offsetHeight || 100;
+
+        // 1. Within top header zone (scrollY <= headerHeight): ALWAYS keep header visible (prevents top gap)
+        if (currentScrollY <= headerHeight) {
+          topHeader.classList.remove('header-hidden');
+        }
+        // 2. Scroll DOWN past top header zone (delta > 8): hide header
+        else if (delta > scrollThreshold) {
+          topHeader.classList.add('header-hidden');
+        }
+        // 3. Scroll UP past threshold (delta < -8): show header
+        else if (delta < -scrollThreshold) {
+          topHeader.classList.remove('header-hidden');
+        }
+
+        lastScrollY = currentScrollY;
+        ticking = false;
+      }
+
+      function onScroll() {
+        if (!ticking) {
+          requestAnimationFrame(updateHeaderVisibility);
+          ticking = true;
+        }
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', function () {
+        adjustTopHeaderSpacer();
+        if (window.innerWidth >= 640) {
+          const topHeader = document.getElementById('topHeaderWrapper');
+          if (topHeader) topHeader.classList.remove('header-hidden');
+        }
+      }, { passive: true });
+
+      document.addEventListener('DOMContentLoaded', function() {
+        adjustTopHeaderSpacer();
+      });
+      window.addEventListener('load', function() {
+        adjustTopHeaderSpacer();
+      });
+    })();
   </script>
   <style>
     /* ===== MOBILE FOOTER GAP FIX ===== */

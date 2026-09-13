@@ -58,8 +58,16 @@ class BrandFrontendController extends Controller {
             }
         }
 
+        $isMobileUA = (bool)preg_match('/Mobile|Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i', $_SERVER['HTTP_USER_AGENT'] ?? '');
+        $defaultPerPage = $isMobileUA ? 24 : 25;
+
         $page = max(1, (int)$this->request->input('page', 1));
-        $perPage = 25;
+        $reqPerPage = (int)($this->request->input('per_page', 0));
+        if ($reqPerPage === 24 || $reqPerPage === 25 || $reqPerPage <= 0) {
+            $perPage = $defaultPerPage;
+        } else {
+            $perPage = $reqPerPage;
+        }
 
         $categoryModel = new Category();
         $scooterModel = new ScooterModel();

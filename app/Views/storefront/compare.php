@@ -230,18 +230,12 @@ if (!empty($products) && count($products) > 1) {
                                                         </button>
                                                     </form>
 
-                                                    <!-- Buy Now Form -->
-                                                    <form action="<?= url('cart/add') ?>" method="POST">
-                                                        <?= csrf_field() ?>
-                                                        <input type="hidden" name="product_id" value="<?= $p['id'] ?>">
-                                                        <input type="hidden" name="quantity" value="1">
-                                                        <input type="hidden" name="buy_now" value="1">
-                                                        <button type="submit"
-                                                            class="w-full h-8 bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold text-[11px] rounded-xl transition flex items-center justify-center space-x-1 border border-gray-700">
-                                                            <i data-lucide="zap" class="w-3 h-3 text-amber-400"></i>
-                                                            <span>Buy Now</span>
-                                                        </button>
-                                                    </form>
+                                                    <!-- Buy Now Button -->
+                                                    <button type="button" onclick="if(typeof showComingSoonModal==='function')showComingSoonModal();else alert('This option is coming soon.');"
+                                                        class="w-full h-8 bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold text-[11px] rounded-xl transition flex items-center justify-center space-x-1 border border-gray-700 cursor-pointer">
+                                                        <i data-lucide="zap" class="w-3 h-3 text-amber-400"></i>
+                                                        <span>Buy Now</span>
+                                                    </button>
                                                 </div>
 
                                             </div>

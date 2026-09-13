@@ -158,7 +158,7 @@ ob_start();
 
         <!-- Right: Importerr Replica Order Summary Sidebar -->
         <div
-            class="w-full lg:w-[380px] shrink-0 bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 lg:sticky lg:top-24">
+            class="w-full lg:w-[380px] shrink-0 bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 lg:sticky lg:top-[160px]">
             <div>
                 <h3 class="text-base font-semibold text-gray-900">Order Summary</h3>
                 <p class="text-[11px] text-gray-400 mt-0.5">Price details of all items in your cart</p>

@@ -190,7 +190,7 @@ ob_start();
             </div>
 
             <!-- Right Column: Order Summary (1/3 Width) -->
-            <div class="space-y-4 bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs h-fit sticky top-24">
+            <div class="space-y-4 bg-white border border-gray-200 rounded-2xl p-5 shadow-2xs h-fit sticky top-[160px]">
                 <div class="flex items-center gap-2.5 pb-4 border-b border-gray-100">
                     <div
                         class="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200/80 flex items-center justify-center text-[#f05a29]">
@@ -318,10 +318,10 @@ ob_start();
 
                 <!-- Action Buttons: Single Row (Place Order & Send Inquiry side-by-side) -->
                 <div class="grid grid-cols-2 gap-2.5 pt-1">
-                    <a href="<?= url('checkout') ?>"
-                        class="block w-full py-3 bg-[#f05a29] hover:bg-[#d94e20] text-white text-xs font-semibold text-center rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center">
+                    <button type="button" onclick="showComingSoonModal()"
+                        class="block w-full py-3 bg-[#f05a29] hover:bg-[#d94e20] text-white text-xs font-semibold text-center rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center border-0">
                         Place Order
-                    </a>
+                    </button>
 
                     <button type="button" onclick="openCartInquiryModal()"
                         class="block w-full py-3 bg-[#0F172A] hover:bg-black text-white text-xs font-semibold text-center rounded-xl shadow-xs transition cursor-pointer border-0 flex items-center justify-center gap-1.5">
@@ -598,6 +598,9 @@ if ($currentUserId) {
             if (typeof updateHeaderCartBadge === 'function') {
                 updateHeaderCartBadge(data.cart_count);
             }
+            if (typeof window.syncProductDetailCartState === 'function') {
+                window.syncProductDetailCartState(data.items, data.cart_count);
+            }
         }
     }
 
@@ -624,6 +627,9 @@ if ($currentUserId) {
 
             if (typeof updateHeaderCartBadge === 'function') {
                 updateHeaderCartBadge(data.cart_count);
+            }
+            if (typeof window.syncProductDetailCartState === 'function') {
+                window.syncProductDetailCartState(data.items, data.cart_count);
             }
             if (data.cart_count === 0) {
                 location.reload();

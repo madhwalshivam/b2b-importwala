@@ -12,8 +12,14 @@ $baseUrl = $seoOptions['canonical'] ?? url('shop');
 
 $activeCatId = (int)($filters['category_id'] ?? 0);
 $activeSubId = (int)($filters['subcategory_id'] ?? 0);
-$currentSort = $filters['sort'] ?? 'relevance';
-$currentPerPage = (int)($filters['per_page'] ?? 24);
+$isMobileUA = (bool)preg_match('/Mobile|Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i', $_SERVER['HTTP_USER_AGENT'] ?? '');
+$defaultPerPage = $isMobileUA ? 24 : 25;
+$reqPerPage = (int)($filters['per_page'] ?? $_GET['per_page'] ?? 0);
+if ($reqPerPage === 24 || $reqPerPage === 25 || $reqPerPage <= 0) {
+    $currentPerPage = $defaultPerPage;
+} else {
+    $currentPerPage = $reqPerPage;
+}
 $currentMinPrice = $filters['min_price'] ?? '';
 $currentMaxPrice = $filters['max_price'] ?? '';
 $currentMinMoq = $filters['min_moq'] ?? '';
@@ -22,7 +28,7 @@ $searchQuery = $q ?? '';
 $selectedAttrs = $filters['attr'] ?? [];
 
 $currentPage = max(1, (int)($currentPage ?? 1));
-$perPage = max(1, (int)($perPage ?? 24));
+$perPage = max(1, (int)($perPage ?? $defaultPerPage));
 $totalCount = $totalItems ?? 0;
 $itemsCount = count($results['items'] ?? []);
 $startItem = $totalCount > 0 ? (($currentPage - 1) * $perPage + 1) : 0;
@@ -489,6 +495,9 @@ ob_start();
           $buildPageUrl = function($targetPage) use ($baseUrl) {
             $params = $_GET;
             unset($params['ajax']);
+            if (isset($params['per_page']) && ((int)$params['per_page'] === 24 || (int)$params['per_page'] === 25)) {
+              unset($params['per_page']);
+            }
             $params['page'] = $targetPage;
             return $baseUrl . (count($params) > 0 ? ('?' . http_build_query($params)) : '');
           };

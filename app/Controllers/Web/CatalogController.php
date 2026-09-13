@@ -25,9 +25,9 @@ class CatalogController extends BaseController
     public function index(): void
     {
         $q = trim($_GET['q'] ?? '');
-        $catId = (int)($_GET['category_id'] ?? 0);
+        $catId = (int) ($_GET['category_id'] ?? 0);
         $catSlugParam = trim($_GET['category'] ?? '');
-        $collectionId = (int)($_GET['collection_id'] ?? $_GET['collection'] ?? 0);
+        $collectionId = (int) ($_GET['collection_id'] ?? $_GET['collection'] ?? 0);
 
         // 1. Auto-Redirect legacy query params to Clean SEO URLs if no extra filters
         $isPureQuery = empty($_GET['min_price']) && empty($_GET['max_price']) && empty($_GET['sort']) && empty($_GET['page']);
@@ -69,7 +69,7 @@ class CatalogController extends BaseController
                 // Check if query matches an existing Subcategory slug
                 $subMatch = $this->findSubcategoryBySlug($querySlug) ?: $this->findSubcategoryBySlug(slugify($q));
                 if ($subMatch) {
-                    $parentCat = $this->categoryRepo->findById((int)$subMatch['category_id']);
+                    $parentCat = $this->categoryRepo->findById((int) $subMatch['category_id']);
                     $catSlug = $parentCat['slug'] ?? 'catalog';
                     header('Location: ' . url('category/' . $catSlug . '/' . $subMatch['slug']), true, 301);
                     exit;
@@ -100,7 +100,7 @@ class CatalogController extends BaseController
             // Check subcategories table if not found in categories
             $sub = $this->findSubcategoryBySlug($slug);
             if ($sub) {
-                $parentCat = $this->categoryRepo->findById((int)$sub['category_id']);
+                $parentCat = $this->categoryRepo->findById((int) $sub['category_id']);
                 if ($parentCat) {
                     $this->subcategory($parentCat['slug'], $sub['slug']);
                     return;
@@ -117,7 +117,7 @@ class CatalogController extends BaseController
         $canonical = category_url($category);
 
         $this->renderCatalogPage([
-            'category_id' => (int)$category['id'],
+            'category_id' => (int) $category['id'],
             'active_category' => $category,
             'seo_title' => $seoTitle,
             'seo_description' => $seoDesc,
@@ -138,7 +138,7 @@ class CatalogController extends BaseController
         $subcategory = $this->findSubcategoryBySlug($subSlug);
 
         if (!$category && $subcategory) {
-            $category = $this->categoryRepo->findById((int)$subcategory['category_id']);
+            $category = $this->categoryRepo->findById((int) $subcategory['category_id']);
         }
 
         if (!$subcategory) {
@@ -156,8 +156,8 @@ class CatalogController extends BaseController
         $canonical = subcategory_url($category, $subcategory);
 
         $this->renderCatalogPage([
-            'category_id' => (int)($category['id'] ?? 0),
-            'subcategory_id' => (int)$subcategory['id'],
+            'category_id' => (int) ($category['id'] ?? 0),
+            'subcategory_id' => (int) $subcategory['id'],
             'active_category' => $category,
             'active_subcategory' => $subcategory,
             'seo_title' => $seoTitle,
@@ -211,7 +211,7 @@ class CatalogController extends BaseController
      */
     public function collection(string $slug): void
     {
-        $collectionId = (int)$slug;
+        $collectionId = (int) $slug;
         $collectionCard = null;
 
         if ($collectionId > 0) {
@@ -249,11 +249,11 @@ class CatalogController extends BaseController
 
             if ($cleanSlug === 'top-deals' || $cleanSlug === $tdSlug || str_contains($cleanSlug, 'top-deal')) {
                 $section = [
-                    'id'           => 999999,
-                    'title'        => $tdSettings['title'] ?? 'Top Deals',
-                    'slug'         => $tdSettings['slug'] ?? 'top-deals',
-                    'subtitle'     => $tdSettings['subtitle'] ?? '',
-                    'status'       => $tdSettings['status'] ?? 'active',
+                    'id' => 999999,
+                    'title' => $tdSettings['title'] ?? 'Top Deals',
+                    'slug' => $tdSettings['slug'] ?? 'top-deals',
+                    'subtitle' => $tdSettings['subtitle'] ?? '',
+                    'status' => $tdSettings['status'] ?? 'active',
                     'is_top_deals' => true
                 ];
                 $isTopDeals = true;
@@ -274,13 +274,13 @@ class CatalogController extends BaseController
         $canonical = url('section/' . ($section['slug'] ?: $cleanSlug));
 
         $this->renderCatalogPage([
-            'section_id'     => (int)$section['id'],
-            'is_top_deals'   => $isTopDeals,
+            'section_id' => (int) $section['id'],
+            'is_top_deals' => $isTopDeals,
             'active_section' => $section,
-            'seo_title'      => $seoTitle,
-            'seo_description'=> $seoDesc,
-            'canonical_url'  => $canonical,
-            'page_heading'   => $heading,
+            'seo_title' => $seoTitle,
+            'seo_description' => $seoDesc,
+            'canonical_url' => $canonical,
+            'page_heading' => $heading,
         ]);
     }
 
@@ -306,7 +306,7 @@ class CatalogController extends BaseController
         $stmt->execute([$slug]);
         $brand = $stmt->fetch();
 
-        $brandId = (int)($brand['id'] ?? 0);
+        $brandId = (int) ($brand['id'] ?? 0);
         $heading = $brand['name'] ?? ucwords(str_replace('-', ' ', $slug));
         $seoTitle = $heading . ' Products Wholesale | ImportWale';
         $canonical = url('brand/' . $slug);
@@ -326,7 +326,7 @@ class CatalogController extends BaseController
     public function categoriesDirectory(): void
     {
         $db = Database::getReadConnection();
-        
+
         $catStmt = $db->query("
             SELECT * FROM categories 
             WHERE (status = 'active' OR status = 'enabled') AND (parent_id IS NULL OR parent_id = 0)
@@ -344,7 +344,7 @@ class CatalogController extends BaseController
             ");
             $stmt->execute([$cat['id']]);
             $countRow = $stmt->fetch(\PDO::FETCH_ASSOC);
-            $cat['product_count'] = (int)($countRow['total'] ?? 0);
+            $cat['product_count'] = (int) ($countRow['total'] ?? 0);
 
             $subStmt = $db->prepare("
                 SELECT s.*, 
@@ -362,21 +362,21 @@ class CatalogController extends BaseController
                 $normKey = $this->normalizeSubcategoryKey($s['name']);
                 if (isset($dedupSubs[$normKey])) {
                     $existing = $dedupSubs[$normKey];
-                    $existingCount = (int)($existing['product_count'] ?? 0);
-                    $currentCount  = (int)($s['product_count'] ?? 0);
-                    
+                    $existingCount = (int) ($existing['product_count'] ?? 0);
+                    $currentCount = (int) ($s['product_count'] ?? 0);
+
                     $dedupSubs[$normKey]['product_count'] = $existingCount + $currentCount;
-                    
+
                     $isCurrentPlural = str_ends_with(strtolower(trim($s['name'])), 's');
                     $isExistingPlural = str_ends_with(strtolower(trim($existing['name'])), 's');
-                    
+
                     if (($isCurrentPlural && !$isExistingPlural) || ($isCurrentPlural === $isExistingPlural && $currentCount > $existingCount)) {
                         $dedupSubs[$normKey]['name'] = $s['name'];
-                        $dedupSubs[$normKey]['id']   = $s['id'];
+                        $dedupSubs[$normKey]['id'] = $s['id'];
                         $dedupSubs[$normKey]['slug'] = $s['slug'];
                     }
                 } else {
-                    $s['product_count'] = (int)($s['product_count'] ?? 0);
+                    $s['product_count'] = (int) ($s['product_count'] ?? 0);
                     $dedupSubs[$normKey] = $s;
                 }
             }
@@ -388,12 +388,12 @@ class CatalogController extends BaseController
         unset($cat);
 
         $this->renderView('web/categories_directory', [
-            'categories'         => $categories,
-            'totalCategories'    => count($categories),
+            'categories' => $categories,
+            'totalCategories' => count($categories),
             'totalSubcategories' => $totalSubcategories,
-            'seoTitle'           => 'All Wholesale Categories & Subcategories | ImportWale',
-            'seoDescription'     => 'Explore our complete factory-direct wholesale catalog across all categories and subcategories on ImportWale.',
-            'canonicalUrl'       => url('categories'),
+            'seoTitle' => 'All Wholesale Categories & Subcategories | ImportWale',
+            'seoDescription' => 'Explore our complete factory-direct wholesale catalog across all categories and subcategories on ImportWale.',
+            'canonicalUrl' => url('categories'),
         ]);
     }
 
@@ -414,10 +414,10 @@ class CatalogController extends BaseController
         $factories = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
         $this->renderView('web/factories', [
-            'factories'      => $factories,
-            'seoTitle'       => 'Verified Wholesale Factories & Manufacturers Directory | ImportWale',
+            'factories' => $factories,
+            'seoTitle' => 'Verified Wholesale Factories & Manufacturers Directory | ImportWale',
             'seoDescription' => 'Browse verified global manufacturers, factory direct suppliers, and isolated product catalogs on ImportWale.',
-            'canonicalUrl'   => url('factories'),
+            'canonicalUrl' => url('factories'),
         ]);
     }
 
@@ -433,7 +433,7 @@ class CatalogController extends BaseController
 
         $db = Database::getReadConnection();
         $stmt = $db->prepare("SELECT * FROM factories WHERE factory_code = ? OR id = ? LIMIT 1");
-        $stmt->execute([$code, (int)$code]);
+        $stmt->execute([$code, (int) $code]);
         $factory = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$factory) {
@@ -442,10 +442,10 @@ class CatalogController extends BaseController
         }
 
         $this->renderCatalogPage([
-            'factory_id'      => (int)$factory['id'],
-            'seo_title'       => htmlspecialchars($factory['name']) . ' (' . $factory['factory_code'] . ') - Wholesale Catalog | ImportWale',
+            'factory_id' => (int) $factory['id'],
+            'seo_title' => htmlspecialchars($factory['name']) . ' (' . $factory['factory_code'] . ') - Wholesale Catalog | ImportWale',
             'seo_description' => 'Browse direct wholesale products from ' . $factory['name'] . ' [' . $factory['factory_code'] . '] on ImportWale.',
-            'canonical_url'   => url('factory/' . $factory['factory_code']),
+            'canonical_url' => url('factory/' . $factory['factory_code']),
         ]);
     }
 
@@ -455,12 +455,12 @@ class CatalogController extends BaseController
     private function renderCatalogPage(array $options): void
     {
         $q = trim($options['q'] ?? $_GET['q'] ?? '');
-        $catId = (int)($options['category_id'] ?? $_GET['category_id'] ?? 0);
-        $subId = (int)($options['subcategory_id'] ?? $_GET['subcategory_id'] ?? 0);
-        $collectionId = (int)($options['collection_id'] ?? $_GET['collection_id'] ?? $_GET['collection'] ?? 0);
-        $sectionId = (int)($options['section_id'] ?? $_GET['section_id'] ?? $_GET['section'] ?? 0);
-        $brandId = (int)($options['brand_id'] ?? $_GET['brand_id'] ?? 0);
-        $factoryId = (int)($options['factory_id'] ?? $_GET['factory_id'] ?? 0);
+        $catId = (int) ($options['category_id'] ?? $_GET['category_id'] ?? 0);
+        $subId = (int) ($options['subcategory_id'] ?? $_GET['subcategory_id'] ?? 0);
+        $collectionId = (int) ($options['collection_id'] ?? $_GET['collection_id'] ?? $_GET['collection'] ?? 0);
+        $sectionId = (int) ($options['section_id'] ?? $_GET['section_id'] ?? $_GET['section'] ?? 0);
+        $brandId = (int) ($options['brand_id'] ?? $_GET['brand_id'] ?? 0);
+        $factoryId = (int) ($options['factory_id'] ?? $_GET['factory_id'] ?? 0);
 
         $activeSection = $options['active_section'] ?? null;
         if (!$activeSection && $sectionId > 0) {
@@ -468,22 +468,30 @@ class CatalogController extends BaseController
             $activeSection = $secModel->find($sectionId);
         }
 
-        $minPrice = (isset($_GET['min_price']) && $_GET['min_price'] !== '') ? (float)$_GET['min_price'] : null;
-        $maxPrice = (isset($_GET['max_price']) && $_GET['max_price'] !== '') ? (float)$_GET['max_price'] : null;
-        $minMoq   = (isset($_GET['min_moq']) && $_GET['min_moq'] !== '') ? (int)$_GET['min_moq'] : null;
-        $maxMoq   = (isset($_GET['max_moq']) && $_GET['max_moq'] !== '') ? (int)$_GET['max_moq'] : null;
-        $sort     = $_GET['sort'] ?? 'relevance';
+        $minPrice = (isset($_GET['min_price']) && $_GET['min_price'] !== '') ? (float) $_GET['min_price'] : null;
+        $maxPrice = (isset($_GET['max_price']) && $_GET['max_price'] !== '') ? (float) $_GET['max_price'] : null;
+        $minMoq = (isset($_GET['min_moq']) && $_GET['min_moq'] !== '') ? (int) $_GET['min_moq'] : null;
+        $maxMoq = (isset($_GET['max_moq']) && $_GET['max_moq'] !== '') ? (int) $_GET['max_moq'] : null;
+        $sort = $_GET['sort'] ?? 'relevance';
 
-        // Selectable per-page size (default: 24 for 2-column mobile rows)
-        $allowedLimits = [12, 24, 48, 60, 100];
-        $perPage = (int)($_GET['per_page'] ?? 24);
-        if (!in_array($perPage, $allowedLimits)) {
-            $perPage = 24;
+        $isMobileUA = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i', $_SERVER['HTTP_USER_AGENT'] ?? '');
+        $defaultPerPage = $isMobileUA ? 24 : 25;
+
+        // Selectable per-page size (default: 25 for desktop, 24 for 2-column mobile rows)
+        $allowedLimits = [12, 24, 25, 48, 50, 60, 100];
+        $reqPerPage = (int) ($_GET['per_page'] ?? 0);
+
+        if ($reqPerPage === 24 || $reqPerPage === 25 || $reqPerPage <= 0) {
+            $perPage = $defaultPerPage;
+        } elseif (in_array($reqPerPage, $allowedLimits)) {
+            $perPage = $reqPerPage;
+        } else {
+            $perPage = $defaultPerPage;
         }
 
-        $page = max(1, (int)($_GET['page'] ?? 1));
+        $page = max(1, (int) ($_GET['page'] ?? 1));
         $offset = ($page - 1) * $perPage;
-        $similarToId = (int)($_GET['similar_to'] ?? 0);
+        $similarToId = (int) ($_GET['similar_to'] ?? 0);
 
         $similarProduct = null;
         if ($similarToId > 0) {
@@ -497,20 +505,20 @@ class CatalogController extends BaseController
         }
 
         $filters = [
-            'category_id'    => $catId,
+            'category_id' => $catId,
             'subcategory_id' => $subId,
-            'collection_id'  => $collectionId,
-            'section_id'     => $sectionId,
-            'brand_id'       => $brandId,
-            'factory_id'     => $factoryId,
-            'similar_to'     => $similarToId,
-            'min_price'      => $minPrice,
-            'max_price'      => $maxPrice,
-            'min_moq'        => $minMoq,
-            'max_moq'        => $maxMoq,
-            'sort'           => $sort,
-            'per_page'       => $perPage,
-            'attr'           => $attrFilters,
+            'collection_id' => $collectionId,
+            'section_id' => $sectionId,
+            'brand_id' => $brandId,
+            'factory_id' => $factoryId,
+            'similar_to' => $similarToId,
+            'min_price' => $minPrice,
+            'max_price' => $maxPrice,
+            'min_moq' => $minMoq,
+            'max_moq' => $maxMoq,
+            'sort' => $sort,
+            'per_page' => $perPage,
+            'attr' => $attrFilters,
         ];
 
         $collectionCard = $options['collection_card'] ?? null;
@@ -525,8 +533,8 @@ class CatalogController extends BaseController
         $filterService = new \App\Services\FilterAttributeService();
         $dynamicFilterAttributes = $filterService->getAttributesForCategory($catId ?: null);
 
-        $totalItems = (int)($searchResults['total'] ?? 0);
-        $totalPages = max(1, (int)ceil($totalItems / $perPage));
+        $totalItems = (int) ($searchResults['total'] ?? 0);
+        $totalPages = max(1, (int) ceil($totalItems / $perPage));
 
         // Ensure requested page doesn't exceed max total pages
         if ($page > $totalPages && $totalPages > 0) {
@@ -536,28 +544,28 @@ class CatalogController extends BaseController
         $pageWindow = $this->getPageWindow($page, $totalPages);
 
         $seoOptions = [
-            'title'       => $options['seo_title'] ?? 'Shop All Wholesale Products | ImportWale',
+            'title' => $options['seo_title'] ?? 'Shop All Wholesale Products | ImportWale',
             'description' => $options['seo_description'] ?? 'Browse all wholesale products with direct factory pricing and low MOQ.',
-            'canonical'   => $options['canonical_url'] ?? url('shop'),
+            'canonical' => $options['canonical_url'] ?? url('shop'),
         ];
 
         $viewData = [
-            'q'                 => $q,
-            'filters'           => $filters,
-            'results'           => $searchResults,
-            'categoriesTree'    => $categoriesTree,
-            'collectionCard'    => $collectionCard,
-            'activeSection'     => $activeSection,
-            'similarProduct'    => $similarProduct,
-            'currentPage'       => $page,
-            'perPage'           => $perPage,
-            'totalPages'        => $totalPages,
-            'totalItems'        => $totalItems,
-            'pageWindow'        => $pageWindow,
-            'seoOptions'              => $seoOptions,
+            'q' => $q,
+            'filters' => $filters,
+            'results' => $searchResults,
+            'categoriesTree' => $categoriesTree,
+            'collectionCard' => $collectionCard,
+            'activeSection' => $activeSection,
+            'similarProduct' => $similarProduct,
+            'currentPage' => $page,
+            'perPage' => $perPage,
+            'totalPages' => $totalPages,
+            'totalItems' => $totalItems,
+            'pageWindow' => $pageWindow,
+            'seoOptions' => $seoOptions,
             'dynamicFilterAttributes' => $dynamicFilterAttributes,
-            'pageHeading'             => $options['page_heading'] ?? null,
-            'activeCategory'    => $options['active_category'] ?? null,
+            'pageHeading' => $options['page_heading'] ?? null,
+            'activeCategory' => $options['active_category'] ?? null,
             'activeSubcategory' => $options['active_subcategory'] ?? null,
         ];
 
@@ -569,11 +577,11 @@ class CatalogController extends BaseController
             require __DIR__ . '/../../../views/web/shop.php';
             $fullHtml = ob_get_clean();
             echo json_encode([
-                'success'    => true,
-                'total'      => $totalItems,
-                'page'       => $page,
+                'success' => true,
+                'total' => $totalItems,
+                'page' => $page,
                 'totalPages' => $totalPages,
-                'html'       => $fullHtml,
+                'html' => $fullHtml,
             ]);
             exit;
         }
@@ -628,18 +636,18 @@ class CatalogController extends BaseController
                     $normKey = $this->normalizeSubcategoryKey($s['name']);
                     if (isset($dedupSubs[$normKey])) {
                         $existing = $dedupSubs[$normKey];
-                        $existingCount = (int)($existing['product_count'] ?? 0);
-                        $currentCount  = (int)($s['product_count'] ?? 0);
+                        $existingCount = (int) ($existing['product_count'] ?? 0);
+                        $currentCount = (int) ($s['product_count'] ?? 0);
                         $dedupSubs[$normKey]['product_count'] = $existingCount + $currentCount;
                         $isCurrentPlural = str_ends_with(strtolower(trim($s['name'])), 's');
                         $isExistingPlural = str_ends_with(strtolower(trim($existing['name'])), 's');
                         if (($isCurrentPlural && !$isExistingPlural) || ($isCurrentPlural === $isExistingPlural && $currentCount > $existingCount)) {
                             $dedupSubs[$normKey]['name'] = $s['name'];
-                            $dedupSubs[$normKey]['id']   = $s['id'];
+                            $dedupSubs[$normKey]['id'] = $s['id'];
                             $dedupSubs[$normKey]['slug'] = $s['slug'];
                         }
                     } else {
-                        $s['product_count'] = (int)($s['product_count'] ?? 0);
+                        $s['product_count'] = (int) ($s['product_count'] ?? 0);
                         $dedupSubs[$normKey] = $s;
                     }
                 }
