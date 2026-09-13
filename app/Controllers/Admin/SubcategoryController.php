@@ -153,6 +153,10 @@ class SubcategoryController extends Controller {
 
             activity_log('Create Subcategory', 'Categories', $id, "Created subcategory: {$name}");
 
+            try {
+                \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+            } catch (\Throwable $e) {}
+
             if ($isAjax) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'message' => 'Subcategory created successfully.', 'id' => $id]);
@@ -256,6 +260,10 @@ class SubcategoryController extends Controller {
 
             activity_log('Update Subcategory', 'Categories', $id, "Updated subcategory: {$name}");
 
+            try {
+                \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+            } catch (\Throwable $e) {}
+
             if ($isAjax) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'message' => 'Subcategory updated successfully.']);
@@ -301,6 +309,10 @@ class SubcategoryController extends Controller {
 
         $this->subcategoryModel->deleteSubcategory($id);
         activity_log('Delete Subcategory', 'Categories', $id, "Deleted subcategory ID: {$id}");
+
+        try {
+            \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+        } catch (\Throwable $e) {}
 
         if ($isAjax) {
             header('Content-Type: application/json');

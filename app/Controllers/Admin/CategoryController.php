@@ -130,6 +130,10 @@ class CategoryController extends Controller {
 
             activity_log('Create Category', 'Categories', $id, "Added category: {$name}");
 
+            try {
+                \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+            } catch (\Throwable $e) {}
+
             if ($isAjax) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'message' => 'Category created successfully.', 'id' => $id]);
@@ -246,6 +250,10 @@ class CategoryController extends Controller {
 
             activity_log('Update Category', 'Categories', $id, "Updated category: {$name}");
 
+            try {
+                \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+            } catch (\Throwable $e) {}
+
             if ($isAjax) {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'message' => 'Category updated successfully.']);
@@ -315,6 +323,10 @@ class CategoryController extends Controller {
 
         $this->categoryModel->delete($id);
         activity_log('Delete Category', 'Categories', $id, "Deleted category: {$category['name']}");
+
+        try {
+            \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+        } catch (\Throwable $e) {}
 
         if ($isAjax) {
             header('Content-Type: application/json');

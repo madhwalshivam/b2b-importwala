@@ -128,8 +128,9 @@ include __DIR__ . '/../layouts/header.php';
                                             Cat: <?= htmlspecialchars($catName) ?></span>
                                     </div>
                                 </td>
-                                <td class="py-2.5 px-3 font-mono font-medium text-slate-600 text-[11px]">
-                                    <?= htmlspecialchars($p['sku']) ?></td>
+                                <td class="py-2.5 px-3 font-mono font-semibold text-indigo-700 text-[11px] whitespace-nowrap">
+                                    <span class="px-1.5 py-0.5 bg-indigo-50 border border-indigo-200/60 rounded text-indigo-700 font-mono font-bold"><?= htmlspecialchars($p['sku']) ?></span>
+                                </td>
                                 <td class="py-2.5 px-3 font-semibold text-slate-900 text-[11px]">
                                     <?= format_price($p['sale_price'] ?: $p['price']) ?></td>
 

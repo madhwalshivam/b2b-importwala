@@ -94,6 +94,10 @@ class BulkProductImportController extends BaseController
         if ($result['success']) {
             $_SESSION['bulk_import_last_errors'] = $result['errors'] ?? [];
             unset($_SESSION['bulk_import_preview']);
+
+            try {
+                \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+            } catch (\Throwable $e) {}
         }
 
         echo json_encode($result);

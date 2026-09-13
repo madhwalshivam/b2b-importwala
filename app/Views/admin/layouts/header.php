@@ -56,14 +56,19 @@
 
         body {
             font-family: var(--font-sans);
-            background-color: var(--color-bg-soft, #f9fafb);
-            color: var(--color-text, #111827);
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
+
+        .dark body {
+            background-color: #0f172a;
+            color: #f8fafc;
         }
 
         /* Custom Sleek Grey Vertical Scrollbar for Admin Panel Right Corner */
         ::-webkit-scrollbar {
-            width: 8px !important;
-            height: 8px !important;
+            width: 7px !important;
+            height: 7px !important;
         }
         ::-webkit-scrollbar-track {
             background: #f1f5f9 !important;
@@ -94,106 +99,15 @@
             overflow: hidden;
         }
 
-        html:not(.dark) .bg-red-50 {
-            background-color: rgba(240, 90, 41, 0.08) !important;
-        }
-
-        html:not(.dark) .bg-red-100 {
-            background-color: rgba(240, 90, 41, 0.12) !important;
-        }
-
-        html:not(.dark) .bg-red-200 {
-            background-color: rgba(240, 90, 41, 0.20) !important;
-        }
-
-        .bg-red-500,
-        .bg-red-600 {
+        /* Primary Brand Accent Definitions */
+        .bg-brand-primary {
             background-color: #f05a29 !important;
         }
-
-        .bg-red-700,
-        .bg-red-800 {
-            background-color: #d8481b !important;
-        }
-
-        .hover\:bg-red-600:hover {
-            background-color: #f05a29 !important;
-        }
-
-        .hover\:bg-red-700:hover {
-            background-color: #d8481b !important;
-        }
-
-        .text-red-400 {
-            color: rgba(240, 90, 41, 0.8) !important;
-        }
-
-        .text-red-500,
-        .text-red-600 {
+        .text-brand-primary {
             color: #f05a29 !important;
         }
-
-        .text-red-700 {
-            color: #d8481b !important;
-        }
-
-        .hover\:text-red-600:hover {
-            color: #f05a29 !important;
-        }
-
-        .hover\:text-red-700:hover {
-            color: #d8481b !important;
-        }
-
-        .border-red-500,
-        .border-red-600 {
+        .border-brand-primary {
             border-color: #f05a29 !important;
-        }
-
-        .border-red-700 {
-            border-color: #d8481b !important;
-        }
-
-        .hover\:border-red-600:hover {
-            border-color: #f05a29 !important;
-        }
-
-        .focus\:border-red-600:focus {
-            border-color: #f05a29 !important;
-        }
-
-        .focus\:ring-red-500:focus,
-        .focus\:ring-red-600:focus {
-            --tw-ring-color: #f05a29 !important;
-        }
-
-        .fill-red-500,
-        .fill-red-600 {
-            fill: #f05a29 !important;
-        }
-
-        .text-amber-400,
-        .text-amber-500 {
-            color: #f05a29 !important;
-        }
-
-        .fill-amber-400 {
-            fill: #f05a29 !important;
-        }
-
-        .bg-purple-600,
-        .bg-indigo-600 {
-            background-color: #f05a29 !important;
-        }
-
-        .hover\:bg-purple-700:hover,
-        .hover\:bg-indigo-700:hover {
-            background-color: #d8481b !important;
-        }
-
-        .text-purple-600,
-        .text-indigo-600 {
-            color: #f05a29 !important;
         }
     </style>
 
@@ -238,7 +152,7 @@
     <script src="<?= asset('js/logout-modal.js') ?>"></script>
 </head>
 
-<body class="bg-gray-100 text-gray-900 font-sans antialiased flex h-screen overflow-hidden">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased flex h-screen overflow-hidden">
 
     <!-- Fixed Sidebar Partial -->
     <?php include __DIR__ . '/sidebar.php'; ?>
@@ -248,17 +162,37 @@
 
         <!-- Fixed Top Header with Theme Switcher -->
         <header
-            class="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-xs shrink-0 sticky top-0 z-30">
-            <h1 class="text-base font-semibold text-gray-900 tracking-tight flex items-center gap-2">
-                <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#f05a29]"></span>
-                Wholesale Admin Panel
-            </h1>
+            class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3.5 flex items-center justify-between shadow-2xs shrink-0 sticky top-0 z-30">
+            <div class="flex items-center gap-3">
+                <div class="w-2.5 h-2.5 rounded-full bg-[#f05a29] animate-pulse"></div>
+                <h1 class="text-sm font-bold text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+                    Wholesale Admin Portal
+                </h1>
+                <span class="text-slate-300 dark:text-slate-700 text-xs">|</span>
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">B2B Import Platform</span>
+            </div>
 
             <div class="flex items-center space-x-3">
+                <!-- Storefront Quick Link -->
+                <a href="<?= url('/') ?>" target="_blank"
+                    class="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs flex items-center space-x-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                    title="View Storefront Website">
+                    <i data-lucide="globe" class="w-3.5 h-3.5 text-slate-500"></i>
+                    <span class="hidden sm:inline">View Website</span>
+                </a>
+
+                <!-- Theme Toggle Button -->
+                <button type="button" onclick="toggleMudsorTheme()"
+                    class="p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                    title="Toggle Light/Dark Theme">
+                    <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+                    <i data-lucide="moon" class="w-4 h-4 block dark:hidden text-slate-600"></i>
+                </button>
+
                 <!-- Admin Logout Header Button -->
                 <a href="<?= url('admin/logout') ?>"
                     onclick="openLogoutModal('<?= url('admin/logout') ?>'); return false;"
-                    class="px-3.5 py-1.5 rounded-xl border border-red-200 bg-red-50 text-red-700 font-semibold text-xs flex items-center space-x-1.5 hover:bg-red-600 hover:text-white transition shadow-2xs"
+                    class="px-3.5 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 font-semibold text-xs flex items-center space-x-1.5 hover:bg-rose-600 hover:text-white dark:hover:bg-rose-600 dark:hover:text-white transition shadow-2xs"
                     title="Log Out of Admin Panel">
                     <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
                     <span>Log Out</span>
@@ -267,7 +201,7 @@
         </header>
 
         <!-- Scrollable Main Content Container -->
-        <main class="flex-1 p-6 overflow-y-auto" style="background-color: var(--color-bg-soft);">
+        <main class="flex-1 p-6 overflow-y-auto bg-slate-100/70 dark:bg-slate-950">
             <?php if ($flash = (new App\Core\Session())->getFlash('success')): ?>
                 <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 1000)"
                     x-transition:enter="transition ease-out duration-200 transform"

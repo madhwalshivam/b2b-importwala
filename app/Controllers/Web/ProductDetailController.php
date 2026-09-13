@@ -32,7 +32,7 @@ class ProductDetailController extends BaseController
         $selectedVariantCode = $variantCode ?: ($_GET['variant'] ?? null);
         $product = $this->productRepo->findBySlug($slug);
         if (!$product && is_numeric($slug)) {
-            $product = $this->productRepo->find((int)$slug);
+            $product = $this->productRepo->find((int) $slug);
         }
 
         if (!$product || ($product['status'] ?? 'active') !== 'active') {
@@ -41,7 +41,7 @@ class ProductDetailController extends BaseController
             return;
         }
 
-        $productId = (int)$product['id'];
+        $productId = (int) $product['id'];
 
         // 1. Fetch Variants
         $variants = $this->variantModel->getByProduct($productId, true);
@@ -66,23 +66,23 @@ class ProductDetailController extends BaseController
         }
 
         // 4. Compute Dynamic Starting Prices for Dual Modes
-        $baseWholesale = (float)($product['price'] ?? 0);
-        $baseOnePiece  = !empty($product['sale_price']) ? (float)$product['sale_price'] : $baseWholesale;
+        $baseWholesale = (float) ($product['price'] ?? 0);
+        $baseOnePiece = !empty($product['sale_price']) ? (float) $product['sale_price'] : $baseWholesale;
 
         $wholesalePrices = [$baseWholesale];
-        $onePiecePrices  = [$baseOnePiece];
+        $onePiecePrices = [$baseOnePiece];
 
         foreach ($variants as $v) {
-            if ((float)$v['wholesale_price'] > 0) {
-                $wholesalePrices[] = (float)$v['wholesale_price'];
+            if ((float) $v['wholesale_price'] > 0) {
+                $wholesalePrices[] = (float) $v['wholesale_price'];
             }
-            if ((float)$v['one_piece_price'] > 0) {
-                $onePiecePrices[] = (float)$v['one_piece_price'];
+            if ((float) $v['one_piece_price'] > 0) {
+                $onePiecePrices[] = (float) $v['one_piece_price'];
             }
         }
 
         $minWholesale = min(array_filter($wholesalePrices, fn($p) => $p > 0) ?: [0]);
-        $minOnePiece  = min(array_filter($onePiecePrices, fn($p) => $p > 0) ?: [0]);
+        $minOnePiece = min(array_filter($onePiecePrices, fn($p) => $p > 0) ?: [0]);
 
         // 5. Visually Similar & Related Products (AI Feature Vector Match)
         $visualService = new \App\Services\VisualSearchService();
@@ -108,7 +108,7 @@ class ProductDetailController extends BaseController
             if (empty($t['variant_id'])) {
                 $productTiers[] = $t;
             } else {
-                $vId = (int)$t['variant_id'];
+                $vId = (int) $t['variant_id'];
                 if (!isset($variantTiersMap[$vId])) {
                     $variantTiersMap[$vId] = [];
                 }
@@ -117,20 +117,20 @@ class ProductDetailController extends BaseController
         }
 
         $this->renderView('web/product_detail', [
-            'product'               => $product,
-            'variants'              => $variants,
-            'specifications'        => $specifications,
-            'galleryImages'         => $galleryImages,
-            'minWholesalePrice'     => $minWholesale,
-            'minOnePiecePrice'      => $minOnePiece,
-            'categories'            => $categories,
-            'relatedProducts'       => $relatedProducts,
-            'visuallySimilar'       => $visuallySimilar['items'] ?? [],
-            'similarHeadline'       => $visuallySimilar['headline'] ?? 'Visually Similar Products',
-            'whatsappNumber'        => $whatsappNumber,
-            'productTiers'          => $productTiers,
-            'variantTiersMap'       => $variantTiersMap,
-            'selectedVariantCode'   => $selectedVariantCode,
+            'product' => $product,
+            'variants' => $variants,
+            'specifications' => $specifications,
+            'galleryImages' => $galleryImages,
+            'minWholesalePrice' => $minWholesale,
+            'minOnePiecePrice' => $minOnePiece,
+            'categories' => $categories,
+            'relatedProducts' => $relatedProducts,
+            'visuallySimilar' => $visuallySimilar['items'] ?? [],
+            'similarHeadline' => $visuallySimilar['headline'] ?? 'Visually Similar Products',
+            'whatsappNumber' => $whatsappNumber,
+            'productTiers' => $productTiers,
+            'variantTiersMap' => $variantTiersMap,
+            'selectedVariantCode' => $selectedVariantCode,
         ]);
     }
 }
