@@ -2,84 +2,126 @@
 include __DIR__ . '/../layouts/header.php';
 ?>
 
-<div class="bg-theme-bg py-16 min-h-[70vh] flex items-center justify-center font-sans border-b border-gray-900">
-    <div class="container mx-auto px-4 max-w-md">
+<div class="bg-gradient-to-b from-[#FFF2ED] via-[#FFF9F6] to-[#FFF2ED] dark:from-[#111827] dark:via-[#182030] dark:to-[#111827] py-10 sm:py-16 min-h-[80vh] flex items-center justify-center font-sans border-b border-gray-200/60 dark:border-gray-800 transition-colors">
+    <div class="container mx-auto px-4 max-w-4xl">
 
-        <div class="bg-white p-8 rounded-2xl border border-gray-900 shadow-md space-y-6">
+        <!-- Elevated Dual-Panel Split Auth Container -->
+        <div class="bg-white dark:bg-[#1f2937] rounded-3xl border border-[#f05a29]/20 dark:border-gray-700 shadow-2xl shadow-[#f05a29]/10 overflow-hidden grid grid-cols-1 md:grid-cols-12 min-h-[500px]">
+            
+            <!-- Left Side: Brand Hero & Security Notice -->
+            <div class="md:col-span-5 bg-gradient-to-br from-[#f05a29] via-[#d8481b] to-[#111827] p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
+                <!-- Background Glowing Accents -->
+                <div class="absolute -top-16 -left-16 w-48 h-48 bg-orange-400/20 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute -bottom-16 -right-16 w-48 h-48 bg-amber-400/20 rounded-full blur-3xl pointer-events-none"></div>
 
-            <div class="text-center space-y-2">
-                <div
-                    class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center mx-auto shadow-xs">
-                    <i data-lucide="lock" class="w-6 h-6"></i>
+                <div class="relative z-10 space-y-6">
+                    <div class="inline-flex items-center space-x-2 bg-white/15 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-semibold text-white border border-white/20 shadow-xs">
+                        <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-300"></i>
+                        <span>Secure Account Update</span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <h2 class="text-2xl font-black text-white leading-tight">Create New Password</h2>
+                        <p class="text-xs text-orange-100/90 leading-relaxed">Choose a strong, unique password to secure your ImportWale account.</p>
+                    </div>
+
+                    <div class="space-y-3.5 pt-2">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-7 h-7 rounded-lg bg-white/15 text-emerald-300 flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                                <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-xs font-bold text-white">Password Guidelines</h4>
+                                <p class="text-[11px] text-orange-100/80">Use at least 6 characters with letters & numbers</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h1 class="text-2xl font-semibold text-gray-900">Set New Password</h1>
-                <p class="text-xs text-gray-500">Please choose a new password for your account</p>
+
+                <div class="relative z-10 pt-6 mt-6 border-t border-white/15 text-[11px] text-orange-100/70">
+                    <span>ImportWale B2B Wholesale Security</span>
+                </div>
             </div>
 
-            <?php if (!empty($error)): ?>
-                <div
-                    class="bg-red-50 border border-red-200 text-red-700 text-xs font-semibold p-3.5 rounded-xl flex items-center space-x-2">
-                    <i data-lucide="alert-circle" class="w-4 h-4 text-red-600 shrink-0"></i>
-                    <span><?= htmlspecialchars($error) ?></span>
+            <!-- Right Side: Form -->
+            <div class="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center space-y-6">
+                
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-2xl bg-[#fff2ed] dark:bg-orange-950/40 text-[#f05a29] dark:text-orange-400 border border-[#f05a29]/20 flex items-center justify-center shrink-0 shadow-xs">
+                        <i data-lucide="lock" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Set New Password</h1>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Please enter your new account password below.</p>
+                    </div>
                 </div>
-            <?php endif; ?>
 
-            <?php if (!empty($tokenValid)): ?>
-                <form action="<?= url('reset-password') ?>" method="POST" class="space-y-4">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
-
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1.5">New Password</label>
-                        <div class="relative">
-                            <input type="password" id="custNewPass" name="password" required
-                                placeholder="Minimum 6 characters"
-                                class="w-full h-11 pl-4 pr-12 bg-gray-50 border border-gray-900 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-red-600 focus:bg-white transition">
-                            <button type="button" onclick="togglePassword('custNewPass', this)"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded-md hover:bg-gray-100 transition"
-                                title="Toggle password visibility">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                            </button>
-                        </div>
+                <?php if (!empty($error)): ?>
+                    <div class="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/60 text-red-700 dark:text-red-300 text-xs font-medium p-3.5 rounded-xl flex items-center space-x-2.5 shadow-xs">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-[#f05a29] dark:text-red-400 shrink-0"></i>
+                        <span><?= htmlspecialchars($error) ?></span>
                     </div>
+                <?php endif; ?>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1.5">Confirm New
-                            Password</label>
-                        <div class="relative">
-                            <input type="password" id="custConfPass" name="confirm_password" required
-                                placeholder="Re-enter new password"
-                                class="w-full h-11 pl-4 pr-12 bg-gray-50 border border-gray-900 rounded-xl text-xs font-medium text-gray-900 focus:outline-none focus:border-red-600 focus:bg-white transition">
-                            <button type="button" onclick="togglePassword('custConfPass', this)"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none p-1 rounded-md hover:bg-gray-100 transition"
-                                title="Toggle password visibility">
-                                <i data-lucide="eye" class="w-4 h-4"></i>
-                            </button>
+                <?php if (!empty($tokenValid)): ?>
+                    <form action="<?= url('reset-password') ?>" method="POST" class="space-y-4">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="token" value="<?= htmlspecialchars($token) ?>">
+
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">New Password</label>
+                            <div class="relative">
+                                <i data-lucide="lock" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                                <input type="password" id="custNewPass" name="password" required
+                                    placeholder="Minimum 6 characters"
+                                    class="w-full h-12 pl-10 pr-11 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-600 rounded-xl text-xs font-medium text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#f05a29] focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-[#f05a29]/15 transition-all">
+                                <button type="button" onclick="togglePassword('custNewPass', this)"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1 rounded-lg hover:bg-gray-200/50 dark:hover:bg-gray-700 transition"
+                                    title="Toggle password visibility">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <button type="submit"
-                        class="w-full h-11 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl transition shadow-md flex items-center justify-center space-x-2">
-                        <span>Reset & Save Password</span>
-                        <i data-lucide="check" class="w-4 h-4"></i>
-                    </button>
-                </form>
-            <?php else: ?>
-                <div class="text-center space-y-4 py-4">
-                    <p class="text-xs text-red-600 font-semibold">The password reset link is invalid or has expired.</p>
-                    <a href="<?= url('forgot-password') ?>"
-                        class="inline-block bg-red-600 hover:bg-red-700 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-xs">
-                        Request New Reset Link
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-1.5">Confirm New Password</label>
+                            <div class="relative">
+                                <i data-lucide="shield-check" class="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                                <input type="password" id="custConfPass" name="confirm_password" required
+                                    placeholder="Re-enter new password"
+                                    class="w-full h-12 pl-10 pr-11 bg-gray-50 dark:bg-gray-800/80 border border-gray-300 dark:border-gray-600 rounded-xl text-xs font-medium text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-[#f05a29] focus:bg-white dark:focus:bg-gray-800 focus:ring-4 focus:ring-[#f05a29]/15 transition-all">
+                                <button type="button" onclick="togglePassword('custConfPass', this)"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none p-1 rounded-lg hover:bg-gray-200/50 dark:hover:bg-gray-700 transition"
+                                    title="Toggle password visibility">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full h-12 bg-gradient-to-r from-[#f05a29] to-[#d8481b] hover:from-[#d8481b] hover:to-[#b83812] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-all shadow-lg shadow-[#f05a29]/25 hover:shadow-[#f05a29]/40 flex items-center justify-center space-x-2 active:scale-[0.99] cursor-pointer">
+                            <span>Reset & Save Password</span>
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                        </button>
+                    </form>
+                <?php else: ?>
+                    <div class="text-center space-y-4 py-4">
+                        <p class="text-xs text-red-600 font-bold">The password reset link is invalid or has expired.</p>
+                        <a href="<?= url('forgot-password') ?>"
+                            class="inline-block bg-gradient-to-r from-[#f05a29] to-[#d8481b] text-white font-bold text-xs py-2.5 px-5 rounded-xl transition-all shadow-md hover:shadow-[#f05a29]/40">
+                            Request New Reset Link
+                        </a>
+                    </div>
+                <?php endif; ?>
+
+                <div class="pt-4 border-t border-gray-100 dark:border-gray-800 text-center text-xs text-gray-600 dark:text-gray-400">
+                    <a href="<?= url('login') ?>"
+                        class="font-bold text-[#f05a29] dark:text-orange-400 hover:underline inline-flex items-center justify-center space-x-1.5 transition-colors">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                        <span>Back to Customer Login</span>
                     </a>
                 </div>
-            <?php endif; ?>
 
-            <div class="pt-4 border-t border-gray-100 text-center text-xs text-gray-600">
-                <a href="<?= url('login') ?>"
-                    class="font-semibold text-red-600 hover:underline inline-flex items-center justify-center space-x-1">
-                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-                    <span>Back to Customer Login</span>
-                </a>
             </div>
 
         </div>

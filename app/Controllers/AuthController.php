@@ -293,7 +293,7 @@ class AuthController extends Controller {
             }
         }
 
-        return $this->render('storefront/auth/login', [
+        return $this->render('web/login', [
             'error' => $error,
             'returnUrl' => $returnUrl
         ]);
@@ -374,7 +374,7 @@ class AuthController extends Controller {
             }
         }
 
-        return $this->render('storefront/auth/signup', [
+        return $this->render('web/signup', [
             'error' => $error
         ]);
     }
@@ -395,7 +395,7 @@ class AuthController extends Controller {
 
     public function customerForgotPassword(): string {
         $session = new \App\Core\Session();
-        return $this->render('storefront/auth/forgot_password', [
+        return $this->render('web/forgot_password', [
             'error' => $session->getFlash('error'),
             'success' => $session->getFlash('success'),
             'reset_link' => $session->getFlash('reset_link')
@@ -474,7 +474,7 @@ class AuthController extends Controller {
             }
         }
 
-        return $this->render('storefront/auth/reset_password', [
+        return $this->render('web/reset_password', [
             'token' => $token,
             'tokenValid' => $tokenValid,
             'error' => $error
