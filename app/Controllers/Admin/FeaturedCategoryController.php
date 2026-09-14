@@ -21,20 +21,30 @@ class FeaturedCategoryController extends Controller {
         if (!Auth::check()) $this->redirect(url('admin/login'));
 
         $categories = $this->categoryModel->getAll();
+        $subcategories = $this->subcategoryModel->getAll();
         $subcategoriesGrouped = [];
 
         foreach ($categories as $cat) {
             $subcategoriesGrouped[$cat['id']] = $this->subcategoryModel->getByCategory($cat['id']);
         }
 
-        // Fetch regular categories for dropdown link selector
+        // Fetch regular categories & subcategories for admin link/source selector
         $db = \App\Core\Database::getInstance();
-        $regCategories = $db->query("SELECT id, name, slug FROM categories WHERE status = 'active' ORDER BY name ASC")->fetchAll() ?: [];
+        $regCategories = $db->query("SELECT id, name, slug, COALESCE(NULLIF(image, ''), NULLIF(custom_icon, '')) AS image FROM categories WHERE (status = 'active' OR status = 'enabled') AND (parent_id IS NULL OR parent_id = 0 OR parent_id = '') ORDER BY name ASC")->fetchAll() ?: [];
+        $regSubcategories = $db->query("
+            SELECT s.id, s.name, s.slug, COALESCE(NULLIF(s.image, ''), NULLIF(c.image, '')) AS image, COALESCE(NULLIF(c.slug, ''), 'jewellery') AS parent_slug
+            FROM subcategories s
+            LEFT JOIN categories c ON (s.category_id = c.id OR s.category_id = c.slug)
+            WHERE (s.status = 'active' OR s.status = 'enabled')
+            ORDER BY s.name ASC
+        ")->fetchAll() ?: [];
 
         return $this->render('admin/featured_categories/index', [
             'categories' => $categories,
+            'subcategories' => $subcategories,
             'subcategoriesGrouped' => $subcategoriesGrouped,
-            'regCategories' => $regCategories
+            'regCategories' => $regCategories,
+            'regSubcategories' => $regSubcategories
         ]);
     }
 
@@ -49,22 +59,27 @@ class FeaturedCategoryController extends Controller {
         if (!Auth::check()) $this->redirect(url('admin/login'));
 
         $name = trim($this->request->input('name', ''));
+        $linkUrl = trim($this->request->input('link_url', ''));
         $sortOrder = (int)$this->request->input('sort_order', 0);
         $isActive = $this->request->input('is_active') ? 1 : 0;
 
         if (empty($name)) {
-            $this->setFlash('error', 'Category name is required.');
+            $this->setFlash('error', 'Category label name is required.');
             $this->redirect(url('admin/featured-categories'));
             return;
         }
 
+        $imagePath = $this->handleImageUpload('image_file', 'image_url');
+
         $this->categoryModel->createCategory([
             'name' => $name,
+            'image' => $imagePath,
+            'link_url' => $linkUrl ?: '/catalog',
             'sort_order' => $sortOrder,
             'is_active' => $isActive
         ]);
 
-        $this->setFlash('success', 'Featured category tab created successfully.');
+        $this->setFlash('success', 'Main category tile created successfully.');
         $this->redirect(url('admin/featured-categories'));
     }
 
@@ -73,23 +88,35 @@ class FeaturedCategoryController extends Controller {
         if (!Auth::check()) $this->redirect(url('admin/login'));
 
         $catId = (int)$id;
-        $name = trim($this->request->input('name', ''));
-        $sortOrder = (int)$this->request->input('sort_order', 0);
-        $isActive = $this->request->input('is_active') ? 1 : 0;
-
-        if (empty($name)) {
-            $this->setFlash('error', 'Category name is required.');
+        $category = $this->categoryModel->findById($catId);
+        if (!$category) {
+            $this->setFlash('error', 'Main category tile not found.');
             $this->redirect(url('admin/featured-categories'));
             return;
         }
 
+        $name = trim($this->request->input('name', ''));
+        $linkUrl = trim($this->request->input('link_url', ''));
+        $sortOrder = (int)$this->request->input('sort_order', 0);
+        $isActive = $this->request->input('is_active') ? 1 : 0;
+
+        if (empty($name)) {
+            $this->setFlash('error', 'Category label name is required.');
+            $this->redirect(url('admin/featured-categories'));
+            return;
+        }
+
+        $imagePath = $this->handleImageUpload('image_file', 'image_url') ?: ($category['image'] ?? '');
+
         $this->categoryModel->updateCategory($catId, [
             'name' => $name,
+            'image' => $imagePath,
+            'link_url' => $linkUrl ?: ($category['link_url'] ?? '/catalog'),
             'sort_order' => $sortOrder,
             'is_active' => $isActive
         ]);
 
-        $this->setFlash('success', 'Featured category tab updated successfully.');
+        $this->setFlash('success', 'Main category tile updated successfully.');
         $this->redirect(url('admin/featured-categories'));
     }
 
@@ -112,10 +139,15 @@ class FeaturedCategoryController extends Controller {
         $sortOrder = (int)$this->request->input('sort_order', 0);
         $isActive = $this->request->input('is_active') ? 1 : 0;
 
-        if (empty($name) || !$featuredCategoryId) {
-            $this->setFlash('error', 'Category tab and subcategory name are required.');
+        if (empty($name)) {
+            $this->setFlash('error', 'Subcategory name is required.');
             $this->redirect(url('admin/featured-categories'));
             return;
+        }
+
+        if (!$featuredCategoryId) {
+            $allCats = $this->categoryModel->getAll();
+            $featuredCategoryId = !empty($allCats) ? (int)$allCats[0]['id'] : 1;
         }
 
         $imagePath = $this->handleImageUpload('image_file', 'image_url');
@@ -129,7 +161,7 @@ class FeaturedCategoryController extends Controller {
             'is_active' => $isActive
         ]);
 
-        $this->setFlash('success', 'Featured subcategory card created successfully.');
+        $this->setFlash('success', 'Subcategory icon item created successfully.');
         $this->redirect(url('admin/featured-categories'));
     }
 
@@ -140,7 +172,7 @@ class FeaturedCategoryController extends Controller {
         $subId = (int)$id;
         $subcat = $this->subcategoryModel->findById($subId);
         if (!$subcat) {
-            $this->setFlash('error', 'Subcategory card not found.');
+            $this->setFlash('error', 'Subcategory item not found.');
             $this->redirect(url('admin/featured-categories'));
             return;
         }
@@ -155,14 +187,14 @@ class FeaturedCategoryController extends Controller {
 
         $this->subcategoryModel->updateSubcategory($subId, [
             'featured_category_id' => $featuredCategoryId ?: $subcat['featured_category_id'],
-            'name' => $name,
+            'name' => $name ?: $subcat['name'],
             'image' => $imagePath,
             'link_url' => $linkUrl ?: '/catalog',
             'sort_order' => $sortOrder,
             'is_active' => $isActive
         ]);
 
-        $this->setFlash('success', 'Featured subcategory card updated.');
+        $this->setFlash('success', 'Subcategory icon item updated.');
         $this->redirect(url('admin/featured-categories'));
     }
 

@@ -513,500 +513,245 @@ usort($dealsRowSections, fn($a, $b) => $a['sort_order'] <=> $b['sort_order']);
 <?php endforeach; ?>
 <?php endif; ?>
 
-<!-- Featured Categories Section (EverfulWholesale UI Architecture) -->
-<?php if (!empty($featuredCategories)): ?>
-<div class="featured-categories-section">
-  
-<!-- Section Title Row -->
-  <div class="feat-cats-header">
-    <div>
-      <h2 class="featured-cats-heading">Featured Categories</h2>
-      <p class="featured-cats-subtext">Curated wholesale product categories &bull; Direct factory pricing</p>
-    </div>
-  </div>
-
-  <!-- Horizontal Scrollable Pill Tabs Row (Clean Swipeable Tabs) -->
-  <div class="feat-tabs-wrapper">
-    <div id="featTabsContainer" class="feat-tabs-container">
-      <?php foreach ($featuredCategories as $index => $cat): ?>
-        <button type="button" 
-                class="feat-tab-btn <?= $index === 0 ? 'active' : '' ?>" 
-                data-cat-id="<?= $cat['id'] ?>"
-                data-cat-name="<?= htmlspecialchars($cat['name']) ?>"
-                data-cat-slug="<?= htmlspecialchars($cat['slug']) ?>"
-                onclick="switchFeatCategoryTab(this)">
-          <?= htmlspecialchars($cat['name']) ?>
-        </button>
-      <?php endforeach; ?>
-    </div>
-  </div>
-
-  <!-- Subcategories Single-Row Carousel Container (4 Cards View) -->
-  <div id="featSubcategoriesGrid" class="feat-subcat-grid">
-    <!-- Grid Content Populated dynamically by JS -->
-  </div>
-
-  <!-- Subcategories Bottom Navigation Controls (Borderless Floating Arrows) -->
-  <div class="feat-subcat-bottom-controls">
-    <button type="button" class="feat-subcat-nav-btn prev" onclick="scrollFeatCards(-1)" aria-label="Previous Categories" title="Scroll Left">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <button type="button" class="feat-subcat-nav-btn next" onclick="scrollFeatCards(1)" aria-label="Next Categories" title="Scroll Right">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0F172A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-    </button>
-  </div>
-
-</div>
-
-<!-- Embedded CSS for Redesigned Featured Categories Section -->
+<!-- Section 1 — Main Category Grid (Orange/Blue Diagonal Split Tiles) -->
+<?php if (!empty($mainCategoryTiles)): ?>
 <style>
-.featured-categories-section {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 20px;
-  padding: 24px 20px;
-  margin-bottom: 24px;
-  box-shadow: none !important;
+:root {
+  --tile-brand-orange: #f05a29; /* Site exact brand orange shade */
+  --tile-dark-blue: #1e3a8a;    /* Professional medium-dark navy blue */
 }
 
-.feat-cats-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.featured-cats-heading {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-  font-size: 22px !important;
-  font-weight: 600 !important;
-  line-height: 1.25 !important;
-  letter-spacing: -0.01em !important;
-  color: #0F172A !important;
-  margin: 0 !important;
-}
-
-.featured-cats-subtext {
-  font-size: 13px !important;
-  color: #64748B !important;
-  margin: 4px 0 0 0 !important;
-  font-weight: 400 !important;
-}
-
-/* Subcategories Bottom Carousel Navigation Controls */
-.feat-subcat-bottom-controls {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 16px !important;
-  margin-top: 14px !important;
-}
-
-.feat-subcat-nav-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  color: #0F172A !important;
-  cursor: pointer !important;
-  padding: 4px !important;
-  transition: opacity 0.2s ease !important;
-}
-
-.feat-subcat-nav-btn:active {
-  opacity: 0.6 !important;
-}
-
-/* Scrollable Pill Tabs Wrapper */
-.feat-tabs-wrapper {
+.jumia-main-cat-grid-wrapper {
   position: relative;
-  display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.feat-tabs-container {
-  display: flex !important;
-  gap: 8px !important;
-  overflow-x: auto !important;
-  scroll-behavior: smooth !important;
-  scrollbar-width: none !important;
-  padding: 4px 0 !important;
-  -webkit-overflow-scrolling: touch !important;
-  width: 100% !important;
-  flex: 1 !important;
-  min-width: 0 !important;
-}
-
-.feat-tabs-container::-webkit-scrollbar {
-  display: none !important;
-}
-
-.feat-tab-btn {
-  flex-shrink: 0 !important;
-  white-space: nowrap !important;
-  width: auto !important;
-  min-width: max-content !important;
-  padding: 8px 18px !important;
-  border-radius: 9999px !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  font-family: 'Inter', system-ui, sans-serif !important;
-  cursor: pointer !important;
-  border: 1px solid #E2E8F0 !important;
-  background: #FFFFFF !important;
-  color: #475569 !important;
-  transition: all 0.2s ease !important;
-  box-shadow: none !important;
-}
-
-.feat-tab-btn:hover:not(.active) {
-  background: #F1F5F9 !important;
-  color: #0F172A !important;
-  border-color: #CBD5E1 !important;
-}
-
-.feat-tab-btn.active {
-  background: #f05a29 !important;
-  color: #FFFFFF !important;
-  border-color: #f05a29 !important;
-  font-weight: 700 !important;
-  box-shadow: none !important;
-}
-
-/* Subcategories Container: Single Row Horizontal Carousel showing 4 Cards at a time */
-.feat-subcat-grid {
-  display: flex;
-  gap: 16px;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  padding: 4px 0;
-  transition: opacity 0.25s ease;
-}
-
-.feat-subcat-grid::-webkit-scrollbar {
-  display: none;
-}
-
-/* Amazon-Style Category Card (Desktop Default: 5 Cards visible per row) */
-.feat-subcat-card {
-  flex: 0 0 calc((100% - 64px) / 5);
-  min-width: calc((100% - 64px) / 5);
-  display: flex;
-  flex-direction: column;
-  background: #FFFFFF;
-  border-radius: 12px;
-  border: 1px solid #E2E8F0;
-  padding: 12px;
-  text-decoration: none;
-  transition: border-color 0.2s ease, transform 0.2s ease;
-  box-shadow: none !important;
+  width: calc(100% + 28px);
+  margin: 16px -14px 20px -14px;
+  padding: 0 14px;
   box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+@media (min-width: 768px) {
+  .jumia-main-cat-grid-wrapper {
+    width: calc(100% + 48px);
+    margin: 20px -24px 24px -24px;
+    padding: 0 24px;
+  }
 }
 
-.feat-subcat-card:hover {
-  border-color: #f05a29;
-  transform: translateY(-2px);
+.jumia-main-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+@media (min-width: 640px) {
+  .jumia-main-cat-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+}
+@media (min-width: 1024px) {
+  .jumia-main-cat-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+  }
 }
 
-/* Amazon Inner Image Frame */
-.feat-subcat-img-box {
+.jumia-cat-tile {
+  display: block;
+  position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 8px;
-  background: #F8FAFC;
+  aspect-ratio: 0.82;
+  border-radius: 10px;
+  overflow: hidden;
+  text-decoration: none;
+  background: #f1f5f9;
+  padding: 0;
+  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.jumia-cat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.14);
+}
+
+.jumia-cat-tile-img-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 10px;
-  padding: 5px;
-  box-sizing: border-box;
-  border: 1px solid #F1F5F9;
 }
-
-.feat-subcat-img {
+.jumia-cat-tile-img-box img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 6px;
+  display: block;
   transition: transform 0.3s ease;
 }
-
-.feat-subcat-card:hover .feat-subcat-img {
-  transform: scale(1.04);
+.jumia-cat-tile:hover .jumia-cat-tile-img-box img {
+  transform: scale(1.05);
 }
 
-/* Amazon-Style Card Info */
-.feat-subcat-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  text-align: left;
+.jumia-cat-tile-badge {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  background: #ffffff;
+  border-radius: 9999px;
+  padding: 3px 6px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
 }
-
-.feat-subcat-title {
-  font-size: 13px;
+.jumia-cat-tile-badge span {
+  display: block;
+  font-size: 11px;
   font-weight: 700;
-  color: #0F172A;
-  line-height: 1.35;
-  font-family: 'Inter', system-ui, sans-serif;
-  margin: 0;
+  color: var(--tile-brand-orange, #f05a29);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.2;
 }
-
-.feat-subcat-link {
-  font-size: 11.5px;
-  font-weight: 600;
-  color: #f05a29;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-}
-
-.feat-subcat-card:hover .feat-subcat-link {
-  text-decoration: underline;
-}
-
-/* Responsive Cards per Row Breakpoints */
-@media (max-width: 1280px) {
-  /* Laptop screens: 4 Cards per row */
-  .feat-subcat-card {
-    flex: 0 0 calc((100% - 48px) / 4);
-    min-width: calc((100% - 48px) / 4);
-    padding: 12px;
+@media (min-width: 640px) {
+  .jumia-cat-tile-badge {
+    bottom: 8px;
+    padding: 4px 8px;
   }
-}
-
-@media (max-width: 1024px) {
-  /* Tablet screens: 3 Cards per row */
-  .feat-subcat-card {
-    flex: 0 0 calc((100% - 32px) / 3);
-    min-width: calc((100% - 32px) / 3);
-    padding: 11px;
-  }
-}
-
-@media (max-width: 768px) {
-  /* Compact Section Container & Spacing */
-  .featured-categories-section {
-    padding: 16px 12px !important;
-    border-radius: 16px !important;
-    margin-bottom: 20px !important;
-  }
-
-  .feat-cats-header {
-    margin-bottom: 12px !important;
-  }
-
-  .featured-cats-heading {
-    font-size: 18px !important;
-    line-height: 1.2 !important;
-  }
-
-  .featured-cats-subtext {
-    font-size: 11.5px !important;
-    margin-top: 2px !important;
-  }
-
-  /* Compact Pill Tabs Wrapper */
-  .feat-tabs-wrapper {
-    margin-bottom: 12px !important;
-  }
-
-  /* Compact Category Tab Pills (Fit 3-4 on screen) */
-  .feat-tabs-container {
-    gap: 6px !important;
-    padding: 2px 0 !important;
-  }
-
-  .feat-tab-btn {
-    padding: 5px 12px !important;
-    font-size: 12.5px !important;
-    font-weight: 500 !important;
-    border-radius: 9999px !important;
-  }
-
-  .feat-tab-btn.active {
-    font-weight: 600 !important;
-  }
-
-  /* Subcategory Grid & Cards */
-  .feat-subcat-grid {
-    gap: 10px !important;
-  }
-
-  .feat-subcat-card {
-    flex: 0 0 calc((100% - 10px) / 2) !important;
-    min-width: calc((100% - 10px) / 2) !important;
-    padding: 8px !important;
-    border-radius: 10px !important;
-  }
-
-  .feat-subcat-img-box {
-    margin-bottom: 6px !important;
-    padding: 3px !important;
-    border-radius: 8px !important;
-  }
-
-  .feat-subcat-info {
-    gap: 2px !important;
-  }
-
-  /* Proportional Medium-Weight Card Labels */
-  .feat-subcat-title {
-    font-size: 12.5px !important;
-    font-weight: 500 !important;
-    line-height: 1.3 !important;
-    color: #0F172A !important;
-  }
-
-  .feat-subcat-link {
-    font-size: 10.5px !important;
-    font-weight: 500 !important;
+  .jumia-cat-tile-badge span {
+    font-size: 13px;
   }
 }
 </style>
 
-<script>
-const featuredCategoriesData = <?= json_encode($featuredCategories, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>;
-const BASE_URL = '<?= url("") ?>';
-
-function getFullAssetUrl(path) {
-  if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('//') || path.startsWith('data:')) return path;
-  return BASE_URL + '/' + path.replace(/^\//, '');
-}
-
-function renderSubcategoriesForCategory(catId) {
-  const grid = document.getElementById('featSubcategoriesGrid');
-  if (!grid) return;
-
-  const category = featuredCategoriesData.find(c => parseInt(c.id) === parseInt(catId)) || featuredCategoriesData[0];
-  if (!category) return;
-
-  grid.style.opacity = '0';
-
-  setTimeout(() => {
-    let html = '';
-
-    const fallbackSvg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='1.5'><rect x='3' y='3' width='18' height='18' rx='4' fill='%23f1f5f9'/><path d='M8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3z'/><path d='M21 15l-5-5L5 21'/></svg>";
-
-    // Card #1: View All [Category Name] (Amazon Style)
-    const viewAllUrl = '<?= url("category") ?>/' + (category.slug || encodeURIComponent(category.name.toLowerCase()));
-    const catRawImg = category.main_category_image || category.image || (category.subcategories && category.subcategories.length > 0 ? category.subcategories[0].image : null);
-    const catImgUrl = catRawImg ? getFullAssetUrl(catRawImg) : fallbackSvg;
-
-    html += `
-      <a href="${viewAllUrl}" class="feat-subcat-card">
-        <div class="feat-subcat-img-box">
-          <img src="${catImgUrl}" alt="${escapeHtml(category.name)}" class="feat-subcat-img" loading="lazy" onerror="this.onerror=null; this.src='${fallbackSvg}';">
+<div class="jumia-main-cat-grid-wrapper">
+  <div class="jumia-main-cat-grid">
+    <?php foreach ($mainCategoryTiles as $tile): ?>
+      <?php
+        $tileImg = !empty($tile['image']) ? asset($tile['image']) : asset('assets/images/placeholder.jpg');
+        $tileLink = !empty($tile['link_url']) ? (str_starts_with($tile['link_url'], 'http') ? $tile['link_url'] : url(ltrim($tile['link_url'], '/'))) : url('category/' . ($tile['slug'] ?? ''));
+      ?>
+      <a href="<?= $tileLink ?>" class="jumia-cat-tile">
+        <div class="jumia-cat-tile-img-box">
+          <img src="<?= $tileImg ?>" alt="<?= htmlspecialchars($tile['name']) ?>" loading="lazy">
         </div>
-        <div class="feat-subcat-info">
-          <h3 class="feat-subcat-title">All ${escapeHtml(category.name)}</h3>
+        <div class="jumia-cat-tile-badge">
+          <span><?= htmlspecialchars($tile['name']) ?></span>
         </div>
       </a>
-    `;
+    <?php endforeach; ?>
+  </div>
+</div>
+<?php endif; ?>
 
-    if (category.subcategories && category.subcategories.length > 0) {
-      category.subcategories.forEach(sub => {
-        const targetUrl = sub.link_url.startsWith('/') ? '<?= url("") ?>' + sub.link_url.replace(/^\//, '') : sub.link_url;
-        const imgUrl = sub.image ? getFullAssetUrl(sub.image) : fallbackSvg;
 
-        html += `
-          <a href="${targetUrl}" class="feat-subcat-card">
-            <div class="feat-subcat-img-box">
-              <img src="${imgUrl}" alt="${escapeHtml(sub.name)}" class="feat-subcat-img" loading="lazy" onerror="this.onerror=null; this.src='${fallbackSvg}';">
-            </div>
-            <div class="feat-subcat-info">
-              <h3 class="feat-subcat-title">${escapeHtml(sub.name)}</h3>
-            </div>
-          </a>
-        `;
-      });
-    }
-
-    grid.innerHTML = html;
-    grid.style.opacity = '1';
-    grid.scrollLeft = 0;
-  }, 120);
+<!-- Section 2 — Subcategory Icon Grid (Niche Wala Grid) -->
+<?php if (!empty($subcategoryIcons)): ?>
+<style>
+.jumia-subcat-grid-wrapper {
+  position: relative;
+  width: calc(100% + 28px);
+  margin: 4px -14px 24px -14px;
+  padding: 0 14px;
+  box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
-
-function scrollFeatCards(direction) {
-  const container = document.getElementById('featSubcategoriesGrid');
-  if (!container) return;
-  const amount = container.clientWidth * 0.75 * direction;
-  container.scrollBy({ left: amount, behavior: 'smooth' });
-}
-
-function switchFeatCategoryTab(btn) {
-  const allBtns = document.querySelectorAll('.feat-tab-btn');
-  allBtns.forEach(b => {
-    b.classList.remove('active');
-  });
-
-  btn.classList.add('active');
-
-  if (btn.scrollIntoView) {
-    btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-  }
-
-  const catId = btn.getAttribute('data-cat-id');
-  renderSubcategoriesForCategory(catId);
-  setTimeout(updateFeatTabArrows, 300);
-}
-
-function scrollFeatTabs(amount) {
-  const container = document.getElementById('featTabsContainer');
-  if (container) {
-    container.scrollBy({ left: amount, behavior: 'smooth' });
-    setTimeout(updateFeatTabArrows, 300);
+@media (min-width: 768px) {
+  .jumia-subcat-grid-wrapper {
+    width: calc(100% + 48px);
+    margin: 8px -24px 28px -24px;
+    padding: 0 24px;
   }
 }
 
-function updateFeatTabArrows() {
-  const container = document.getElementById('featTabsContainer');
-  const leftBtn = document.querySelector('.tab-scroll-btn.scroll-left');
-  const rightBtn = document.querySelector('.tab-scroll-btn.scroll-right');
-  if (!container) return;
-
-  const scrollLeft = container.scrollLeft;
-  const maxScroll = container.scrollWidth - container.clientWidth;
-
-  if (leftBtn) {
-    leftBtn.style.display = 'flex';
-    leftBtn.style.opacity = scrollLeft > 10 ? '1' : '0.3';
-    leftBtn.style.pointerEvents = scrollLeft > 10 ? 'auto' : 'none';
-  }
-  if (rightBtn) {
-    rightBtn.style.display = 'flex';
-    rightBtn.style.opacity = scrollLeft < maxScroll - 10 ? '1' : '0.3';
-    rightBtn.style.pointerEvents = scrollLeft < maxScroll - 10 ? 'auto' : 'none';
+.jumia-subcat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 8px;
+}
+@media (min-width: 640px) {
+  .jumia-subcat-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px 12px;
   }
 }
 
-function escapeHtml(str) {
-  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+.jumia-subcat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s ease;
+}
+.jumia-subcat-item:hover {
+  transform: translateY(-2px);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  if (featuredCategoriesData && featuredCategoriesData.length > 0) {
-    renderSubcategoriesForCategory(featuredCategoriesData[0].id);
+.jumia-subcat-img-box {
+  width: 100%;
+  aspect-ratio: 1/1;
+  background: #f4f4f4;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  box-sizing: border-box;
+  margin-bottom: 5px;
+}
+.jumia-subcat-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.jumia-subcat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #282828;
+  text-align: center;
+  line-height: 1.25;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
+}
+@media (min-width: 640px) {
+  .jumia-subcat-label {
+    font-size: 13px;
   }
-  const container = document.getElementById('featTabsContainer');
-  if (container) {
-    container.addEventListener('scroll', updateFeatTabArrows);
-    window.addEventListener('resize', updateFeatTabArrows);
-    updateFeatTabArrows();
-  }
-});
-</script>
+}
+</style>
+
+<div class="jumia-subcat-grid-wrapper">
+  <div class="jumia-subcat-grid">
+    <?php foreach ($subcategoryIcons as $subIcon): ?>
+      <?php
+        $subImg = !empty($subIcon['image']) ? asset($subIcon['image']) : asset('assets/images/placeholder.jpg');
+        $subLink = !empty($subIcon['link_url']) ? (str_starts_with($subIcon['link_url'], 'http') ? $subIcon['link_url'] : url(ltrim($subIcon['link_url'], '/'))) : url('category/' . ($subIcon['slug'] ?? ''));
+      ?>
+      <a href="<?= $subLink ?>" class="jumia-subcat-item">
+        <div class="jumia-subcat-img-box">
+          <img src="<?= $subImg ?>" alt="<?= htmlspecialchars($subIcon['name']) ?>" loading="lazy">
+        </div>
+        <p class="jumia-subcat-label"><?= htmlspecialchars($subIcon['name']) ?></p>
+      </a>
+    <?php endforeach; ?>
+  </div>
+</div>
 <?php endif; ?>
 
 <?php if (!empty($collectionCards)): ?>

@@ -16,7 +16,23 @@ class FeaturedCategory extends Model
     public function getActive(): array
     {
         $stmt = $this->db->query("SELECT * FROM featured_categories WHERE is_active = 1 ORDER BY sort_order ASC, id ASC");
-        return $stmt->fetchAll() ?: [];
+        $items = $stmt->fetchAll() ?: [];
+
+        if (empty($items)) {
+            $stmt2 = $this->db->query("
+                SELECT id, name, slug, 
+                       COALESCE(NULLIF(image, ''), NULLIF(custom_icon, '')) AS image, 
+                       CONCAT('/category/', slug) AS link_url, 
+                       sort_order, 
+                       1 AS is_active
+                FROM categories
+                WHERE (status = 'active' OR status = 'enabled') AND (parent_id IS NULL OR parent_id = 0 OR parent_id = '')
+                ORDER BY sort_order ASC, name ASC
+            ");
+            $items = $stmt2->fetchAll() ?: [];
+        }
+
+        return $items;
     }
 
     public function getActiveWithSubcategories(): array
@@ -144,12 +160,14 @@ class FeaturedCategory extends Model
     {
         $slug = $this->generateUniqueSlug($data['name']);
         $stmt = $this->db->prepare("
-            INSERT INTO featured_categories (name, slug, sort_order, is_active)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO featured_categories (name, slug, image, link_url, sort_order, is_active)
+            VALUES (?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $data['name'],
             $slug,
+            $data['image'] ?? null,
+            $data['link_url'] ?? ('/category/' . $slug),
             (int) ($data['sort_order'] ?? 0),
             isset($data['is_active']) ? (int) $data['is_active'] : 1
         ]);
@@ -162,6 +180,8 @@ class FeaturedCategory extends Model
         $params = [
             $data['name'],
             $slug,
+            $data['image'] ?? null,
+            $data['link_url'] ?? ('/category/' . $slug),
             (int) ($data['sort_order'] ?? 0),
             isset($data['is_active']) ? (int) $data['is_active'] : 1,
             $id
@@ -169,7 +189,7 @@ class FeaturedCategory extends Model
 
         $stmt = $this->db->prepare("
             UPDATE featured_categories 
-            SET name = ?, slug = ?, sort_order = ?, is_active = ?
+            SET name = ?, slug = ?, image = ?, link_url = ?, sort_order = ?, is_active = ?
             WHERE id = ?
         ");
         return $stmt->execute($params);

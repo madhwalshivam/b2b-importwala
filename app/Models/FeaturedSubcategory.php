@@ -7,6 +7,35 @@ class FeaturedSubcategory extends Model
 {
     protected string $table = 'featured_subcategories';
 
+    public function getAll(): array
+    {
+        $stmt = $this->db->query("SELECT * FROM featured_subcategories ORDER BY sort_order ASC, id ASC");
+        return $stmt->fetchAll() ?: [];
+    }
+
+    public function getActive(): array
+    {
+        $stmt = $this->db->query("SELECT * FROM featured_subcategories WHERE is_active = 1 ORDER BY sort_order ASC, id ASC");
+        $items = $stmt->fetchAll() ?: [];
+
+        if (empty($items)) {
+            $stmt2 = $this->db->query("
+                SELECT s.id, s.name, s.slug, 
+                       COALESCE(NULLIF(s.image, ''), NULLIF(c.image, '')) AS image, 
+                       CONCAT('/category/', COALESCE(NULLIF(c.slug, ''), 'jewellery'), '/', s.slug) AS link_url, 
+                       s.sort_order, 
+                       1 AS is_active
+                FROM subcategories s
+                LEFT JOIN categories c ON (s.category_id = c.id OR s.category_id = c.slug)
+                WHERE (s.status = 'active' OR s.status = 'enabled')
+                ORDER BY s.sort_order ASC, s.name ASC
+            ");
+            $items = $stmt2->fetchAll() ?: [];
+        }
+
+        return $items;
+    }
+
     public function getByCategory(int $categoryId): array
     {
         $stmt = $this->db->prepare("

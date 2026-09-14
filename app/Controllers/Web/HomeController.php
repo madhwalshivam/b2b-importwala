@@ -33,6 +33,11 @@ class HomeController extends BaseController
         $newArrivals = $this->productRepo->getNewArrivals(12);
         $bestSellers = $this->productRepo->getBestSellers(12);
         $featuredCategories = $this->featuredCategoryModel->getActiveWithSubcategories();
+        $mainCategoryTiles = $this->featuredCategoryModel->getActive();
+        
+        $featuredSubcategoryModel = new \App\Models\FeaturedSubcategory();
+        $subcategoryIcons = $featuredSubcategoryModel->getActive();
+
         $collectionCards = $this->collectionCardModel->getActiveWithProducts(6);
         $testimonials = $this->testimonialModel->getFeatured(6);
 
@@ -61,6 +66,8 @@ class HomeController extends BaseController
             'homepageSections'   => $homepageSections,
             'topDealsData'       => $topDealsData,
             'featuredCategories' => $featuredCategories,
+            'mainCategoryTiles'  => $mainCategoryTiles,
+            'subcategoryIcons'   => $subcategoryIcons,
             'heroBanners'        => $heroBanners,
             'collectionCards'    => $collectionCards,
             'testimonials'       => $testimonials,
