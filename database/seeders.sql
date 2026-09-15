@@ -73,7 +73,7 @@ SELECT 3, id FROM `permissions` WHERE key_code IN ('dashboard.view', 'orders.vie
 -- 3. Default Super Admin Employee (Password: admin123)
 -- bcrypt hash for 'admin123'
 INSERT INTO `admin_users` (`id`, `role_id`, `name`, `email`, `phone`, `username`, `password`, `photo`, `status`) VALUES
-(1, 1, 'Jass Rughwani', 'mudsorinfo@gmail.com', '9217714452', 'admin', '$2y$10$e.w2pPmsYn5j3xU4jCjUa.6n5g9bX.8K7P0s3P1w2pPmsYn5j3xU4', '/assets/images/avatar.png', 'active');
+(1, 1, 'Jass Rughwani', 'mudsorinfo@gmail.com', '9540317079', 'admin', '$2y$10$e.w2pPmsYn5j3xU4jCjUa.6n5g9bX.8K7P0s3P1w2pPmsYn5j3xU4', '/assets/images/avatar.png', 'active');
 
 -- 4. Brands (Electric Scooter Manufacturers)
 INSERT INTO `brands` (`id`, `name`, `slug`, `logo`, `banner`, `description`, `is_featured`, `sort_order`, `status`) VALUES
@@ -172,7 +172,7 @@ INSERT INTO `reviews` (`id`, `product_id`, `customer_name`, `rating`, `title`, `
 INSERT INTO `cms_pages` (`id`, `title`, `slug`, `content`, `meta_title`, `meta_description`) VALUES
 (1, 'About Mudsor', 'about-us', '<h2>Welcome to Mudsor</h2><p>Mudsor (Rughwani Enterprises) is India’s premier manufacturer and distributor of specialized electric scooter accessories. Built with a passion for innovation and durability, our products are engineered specifically for modern Indian EVs including Ola Electric, Ather Energy, TVS iQube, Bajaj Chetak, Hero Vida, and more.</p>', 'About Mudsor - Electric Scooter Accessories Leader', 'Learn about Mudsor premium EV accessories engineered for Ola, Ather, TVS, and Chetak scooters.'),
 
-(2, 'Contact Us', 'contact-us', '<h2>Get In Touch</h2><p><strong>Mudsor (Rughwani Enterprises)</strong><br>Owner: Jass Rughwani<br>Address: Floor 3rd, M-192, Block M, Pocket N, Sector 3, Bawana Industrial Area, New Delhi - 110039<br>Email: mudsorinfo@gmail.com<br>Phone: +91 9217714452<br>GSTIN: 07FLOPR6641L1Z8</p>', 'Contact Mudsor Customer Support', 'Contact Mudsor for order support, dealership inquiries, and compatibility help.'),
+(2, 'Contact Us', 'contact-us', '<h2>Get In Touch</h2><p><strong>Mudsor (Rughwani Enterprises)</strong><br>Owner: Jass Rughwani<br>Address: 476, Basement A1, Niti Khand-2, Indirapuram, Ghaziabad, UP - 201014<br>Email: mudsorinfo@gmail.com<br>Phone: +91 95403 17079<br>GSTIN: 07FLOPR6641L1Z8</p>', 'Contact Mudsor Customer Support', 'Contact Mudsor for order support, dealership inquiries, and compatibility help.'),
 
 (3, 'Privacy Policy', 'privacy-policy', '<h2>Privacy Policy</h2><p>Your privacy is important to us. Mudsor collects personal data strictly to process orders and deliver products efficiently. We never sell customer information to third parties.</p>', 'Privacy Policy - Mudsor', 'Mudsor official privacy policy.'),
 
@@ -189,9 +189,9 @@ INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('owner_name', 'Jass Rughwani'),
 ('company_legal_name', 'Rughwani Enterprises'),
 ('contact_email', 'mudsorinfo@gmail.com'),
-('contact_phone', '+91 9217714452'),
+('contact_phone', '+91 95403 17079'),
 ('gstin', '07FLOPR6641L1Z8'),
-('address', 'Floor 3rd, M-192, Block M, Pocket N, Sector 3, Bawana Industrial Area, New Delhi - 110039'),
+('address', '476, Basement A1, Niti Khand-2, Indirapuram, Ghaziabad, UP - 201014'),
 ('currency_symbol', '₹'),
 ('primary_color', '#dc2626'),
 ('secondary_color', '#1e293b'),

@@ -24,7 +24,7 @@ $delivStart = (new DateTime())->modify('+7 days')->format('d M Y');
 $delivEnd = (new DateTime())->modify('+10 days')->format('d M Y');
 
 // WhatsApp
-$waNumber = preg_replace('/[^0-9]/', '', $whatsappNumber ?? '919217714452');
+$waNumber = preg_replace('/[^0-9]/', '', $whatsappNumber ?? '919540317079');
 
 // Specifications strictly from admin panel DB
 $specs = $specifications ?? [];

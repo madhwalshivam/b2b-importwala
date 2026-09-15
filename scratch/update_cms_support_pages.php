@@ -18,7 +18,7 @@ $pages = [
         'title' => 'Contact Support',
         'meta_title' => 'Contact Support - ImportWale Wholesale',
         'meta_description' => 'Get in touch with ImportWale B2B customer support for order assistance, shipping queries, and custom quotes.',
-        'content' => '<h2>Contact Support</h2><p>Email: support@importwale.com | Phone: +91 9217714452 | Hours: Mon-Sat 10 AM - 7 PM IST</p>'
+        'content' => '<h2>Contact Support</h2><p>Email: support@importwale.com | Phone: +91 95403 17079 | Hours: Mon-Sat 10 AM - 7 PM IST</p>'
     ],
     [
         'slug' => 'shipping-policy',

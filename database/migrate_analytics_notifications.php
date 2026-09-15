@@ -53,7 +53,7 @@ try {
     // Insert default notification seed settings if not existing
     $stmt = $db->prepare("INSERT IGNORE INTO site_settings (setting_key, setting_value) VALUES (?, ?)");
     $stmt->execute(['notification_email', 'mudsorinfo@gmail.com']);
-    $stmt->execute(['notification_whatsapp', '9217714452']);
+    $stmt->execute(['notification_whatsapp', '9540317079']);
     $stmt->execute(['whatsapp_api_token', '']);
     $stmt->execute(['whatsapp_phone_number_id', '']);
 

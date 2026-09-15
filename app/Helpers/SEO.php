@@ -40,7 +40,7 @@ class SEO {
             "logo" => url('assets/images/mudsor-logo.png'),
             "contactPoint" => [
                 "@type" => "ContactPoint",
-                "telephone" => "+91 9217714452",
+                "telephone" => "+91 95403 17079",
                 "contactType" => "customer service",
                 "email" => "mudsorinfo@gmail.com"
             ]

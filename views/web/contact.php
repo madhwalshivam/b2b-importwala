@@ -57,7 +57,7 @@ ob_start();
         </div>
         <div>
           <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #9ca3af; display: block;">Phone & WhatsApp</span>
-          <a href="https://wa.me/919217714452" target="_blank" style="font-size: 14px; font-weight: 700; color: #10b981; text-decoration: none;">+91 92177 14452</a>
+          <a href="https://wa.me/919540317079" target="_blank" style="font-size: 14px; font-weight: 700; color: #10b981; text-decoration: none;">+91 95403 17079</a>
         </div>
       </div>
 
@@ -78,7 +78,7 @@ ob_start();
         <div>
           <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #9ca3af; display: block;">Corporate Headquarters</span>
           <span style="font-size: 13px; font-weight: 600; color: #374151; line-height: 1.4; display: block;">
-            Sector 3, Bawana Industrial Area, New Delhi - 110039, India
+            476, Basement A1, Niti Khand-2, Indirapuram, Ghaziabad, UP - 201014
           </span>
         </div>
       </div>

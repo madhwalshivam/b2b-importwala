@@ -158,7 +158,7 @@ $allPolicies = [
               <h3 class="policy-address-heading">Registered Corporate Address &amp; Legal Entity</h3>
               <p class="policy-address-company">Importwale Wholesale Inc.</p>
               <p class="policy-address-text">
-                476 A1, Niti Khand-2, Indirapuram, Ghaziabad, Uttar Pradesh 201014, India
+                476, Basement A1, Niti Khand-2, Indirapuram, Ghaziabad, UP - 201014
               </p>
               <p class="policy-address-support">
                 Official Support: <a href="mailto:support@importwale.com" style="color:#f05a29; font-weight:600; text-decoration:none;">support@importwale.com</a>

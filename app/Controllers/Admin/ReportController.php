@@ -271,7 +271,7 @@ class ReportController extends Controller {
             'brand'      => $settings['site_name'] ?? 'ImportWale',
             'legal_name' => $settings['company_legal_name'] ?? 'Rughwani Enterprises',
             'gstin'      => $settings['gstin'] ?? '07FLOPR6641L1Z8',
-            'phone'      => $settings['contact_phone'] ?? '+91 9217714452',
+            'phone'      => $settings['contact_phone'] ?? '+91 95403 17079',
             'email'      => $settings['contact_email'] ?? 'info@importwale.com',
             'owner'      => $settings['owner_name'] ?? 'Jass Rughwani',
         ];

@@ -976,7 +976,7 @@ $isBlog = str_contains($currentUri, 'blog');
     <div class="hidden md:block bg-gray-100 border-b border-gray-900 text-xs text-gray-600 py-1.5 px-4">
         <div class="container mx-auto flex justify-between items-center">
             <!-- Left: Phone Customer Support (Direct Call Link) -->
-            <a href="tel:+919217714452"
+            <a href="tel:+919540317079"
                 class="flex items-center space-x-1.5 font-semibold text-gray-900 hover:text-theme-primary transition">
                 <i data-lucide="phone-call" class="w-3.5 h-3.5 text-theme-primary shrink-0"></i>
                 <span>Call Us</span>
@@ -1865,7 +1865,7 @@ $isBlog = str_contains($currentUri, 'blog');
             </div>
 
             <!-- Support -->
-            <a href="tel:+919217714452" @click="mobileMenu = false"
+            <a href="tel:+919540317079" @click="mobileMenu = false"
                 class="flex items-center space-x-3 px-4 py-3 text-sm font-semibold text-gray-800 hover:text-theme-primary hover:bg-red-50/60 transition min-h-[44px]">
                 <i data-lucide="headphones" class="w-4 h-4 text-theme-primary shrink-0"></i>
                 <span>Call Support</span>

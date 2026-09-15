@@ -64,7 +64,7 @@ include __DIR__ . '/../layouts/header.php';
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1.5">Support Phone Number</label>
                     <input type="text" name="contact_phone"
-                        value="<?= htmlspecialchars($settings['contact_phone'] ?? '+91 9217714452') ?>"
+                        value="<?= htmlspecialchars($settings['contact_phone'] ?? '+91 95403 17079') ?>"
                         class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-red-600 focus:bg-white transition">
                 </div>
 
@@ -148,7 +148,7 @@ include __DIR__ . '/../layouts/header.php';
                 ['key' => 'social_youtube', 'show_key' => 'show_social_youtube', 'label' => 'YouTube', 'placeholder' => 'https://youtube.com/@yourchannel'],
                 ['key' => 'social_facebook', 'show_key' => 'show_social_facebook', 'label' => 'Facebook', 'placeholder' => 'https://facebook.com/yourpage'],
                 ['key' => 'social_twitter', 'show_key' => 'show_social_twitter', 'label' => 'Twitter / X', 'placeholder' => 'https://x.com/yourhandle'],
-                ['key' => 'social_whatsapp', 'show_key' => 'show_social_whatsapp', 'label' => 'WhatsApp', 'placeholder' => 'https://wa.me/919217714452'],
+                ['key' => 'social_whatsapp', 'show_key' => 'show_social_whatsapp', 'label' => 'WhatsApp', 'placeholder' => 'https://wa.me/919540317079'],
                 ['key' => 'social_linkedin', 'show_key' => 'show_social_linkedin', 'label' => 'LinkedIn', 'placeholder' => 'https://linkedin.com/company/yourcompany'],
             ];
             ?>
@@ -194,11 +194,11 @@ include __DIR__ . '/../layouts/header.php';
                         <label class="block font-semibold text-slate-700 mb-1.5">WhatsApp Business Phone Number <span
                                 class="text-red-600">*</span></label>
                         <input type="text" name="whatsapp_business_number"
-                            value="<?= htmlspecialchars($settings['whatsapp_business_number'] ?? '919217714452') ?>"
-                            required placeholder="e.g. 919217714452 (country code + number without spaces or +)"
+                            value="<?= htmlspecialchars($settings['whatsapp_business_number'] ?? '919540317079') ?>"
+                            required placeholder="e.g. 919540317079 (country code + number without spaces or +)"
                             class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-mono font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 focus:bg-white transition">
                         <p class="text-[10px] text-slate-400 mt-1">Format: Country code + phone number without + or
-                            spaces (e.g., 919217714452).</p>
+                            spaces (e.g., 919540317079).</p>
                     </div>
 
                     <div>

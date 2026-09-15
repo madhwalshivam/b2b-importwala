@@ -6,7 +6,7 @@ require_once __DIR__ . '/../app/Core/Database.php';
 $db = App\Core\Database::getInstance();
 
 // 1. Update contact_phone in settings
-$db->exec("UPDATE settings SET setting_value = '+91 9217714452' WHERE setting_key = 'contact_phone'");
+$db->exec("UPDATE settings SET setting_value = '+91 9540317079' WHERE setting_key = 'contact_phone'");
 
 // 2. Define pages data
 $pages = [
@@ -84,7 +84,7 @@ $pages = [
 <div class="mt-8 p-6 bg-red-50 rounded-2xl border border-red-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
     <div>
         <h4 class="font-semibold text-gray-900">Need help regarding Terms?</h4>
-        <p class="text-xs text-gray-600 mt-1">Email: <a href="mailto:support@mudsor.com" class="text-red-600 font-semibold">support@mudsor.com</a> | Phone: <a href="tel:+919217714452" class="text-red-600 font-semibold">+91 9217714452</a></p>
+        <p class="text-xs text-gray-600 mt-1">Email: <a href="mailto:support@mudsor.com" class="text-red-600 font-semibold">support@mudsor.com</a> | Phone: <a href="tel:+919540317079" class="text-red-600 font-semibold">+91 9540317079</a></p>
     </div>
     <a href="http://www.mudsor.com" class="px-5 py-2.5 bg-red-600 text-white font-semibold text-xs rounded-xl hover:bg-red-700 transition shrink-0">Visit Homepage</a>
 </div>'
@@ -156,7 +156,7 @@ $pages = [
 
 <div class="mt-8 p-6 bg-red-50 rounded-2xl border border-red-100">
     <h4 class="font-semibold text-gray-900 text-sm">Privacy Support Contact</h4>
-    <p class="text-xs text-gray-600 mt-1">Email: <a href="mailto:support@mudsor.com" class="text-red-600 font-semibold">support@mudsor.com</a> | Phone: <a href="tel:+919217714452" class="text-red-600 font-semibold">+91 9217714452</a></p>
+    <p class="text-xs text-gray-600 mt-1">Email: <a href="mailto:support@mudsor.com" class="text-red-600 font-semibold">support@mudsor.com</a> | Phone: <a href="tel:+919540317079" class="text-red-600 font-semibold">+91 9540317079</a></p>
 </div>'
     ],
     [
@@ -216,7 +216,7 @@ $pages = [
     <div class="mt-3 flex flex-wrap gap-4 text-xs font-semibold">
         <span class="text-gray-800">Website: <a href="http://www.mudsor.com" class="text-red-600">www.mudsor.com</a></span>
         <span class="text-gray-800">Email: <a href="mailto:support@mudsor.com" class="text-red-600">support@mudsor.com</a></span>
-        <span class="text-gray-800">Phone: <a href="tel:+919217714452" class="text-red-600">+91 9217714452</a></span>
+        <span class="text-gray-800">Phone: <a href="tel:+919540317079" class="text-red-600">+91 9540317079</a></span>
     </div>
 </div>'
     ],
@@ -277,7 +277,7 @@ $pages = [
     <div class="mt-3 flex flex-wrap gap-4 text-xs font-semibold">
         <span class="text-gray-800">Website: <a href="http://www.mudsor.com" class="text-red-600">www.mudsor.com</a></span>
         <span class="text-gray-800">Email: <a href="mailto:support@mudsor.com" class="text-red-600">support@mudsor.com</a></span>
-        <span class="text-gray-800">Phone: <a href="tel:+919217714452" class="text-red-600">+91 9217714452</a></span>
+        <span class="text-gray-800">Phone: <a href="tel:+919540317079" class="text-red-600">+91 9540317079</a></span>
     </div>
 </div>'
     ],
@@ -324,7 +324,7 @@ $pages = [
     <div class="mt-3 flex flex-wrap gap-4 text-xs font-semibold">
         <span class="text-gray-800">Website: <a href="http://www.mudsor.com" class="text-red-600">www.mudsor.com</a></span>
         <span class="text-gray-800">Email: <a href="mailto:support@mudsor.com" class="text-red-600">support@mudsor.com</a></span>
-        <span class="text-gray-800">Phone: <a href="tel:+919217714452" class="text-red-600">+91 9217714452</a></span>
+        <span class="text-gray-800">Phone: <a href="tel:+919540317079" class="text-red-600">+91 9540317079</a></span>
     </div>
 </div>'
     ],
@@ -379,8 +379,8 @@ $pages = [
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-medium">
             <p><strong>Website:</strong> <a href="http://www.mudsor.com" class="text-red-600">www.mudsor.com</a></p>
             <p><strong>Email:</strong> <a href="mailto:support@mudsor.com" class="text-red-600">support@mudsor.com</a></p>
-            <p><strong>Phone:</strong> <a href="tel:+919217714452" class="text-red-600">+91 9217714452</a></p>
-            <p class="sm:col-span-2"><strong>Address:</strong> 3rd Floor, M-192, Block M, Pocket N, Sector 3, Bawana Industrial Area, New Delhi, Delhi – 110039</p>
+            <p><strong>Phone:</strong> <a href="tel:+919540317079" class="text-red-600">+91 9540317079</a></p>
+            <p class="sm:col-span-2"><strong>Address:</strong> 476, Basement A1, Niti Khand-2, Indirapuram, Ghaziabad, UP - 201014</p>
         </div>
     </div>
 </div>'
@@ -397,7 +397,7 @@ $pages = [
         <h3 class="text-base font-semibold text-gray-900 border-b border-gray-900 pb-2">Customer Support</h3>
         <p class="text-xs text-gray-600"><strong>Website:</strong> <a href="http://www.mudsor.com" class="text-red-600 font-semibold">www.mudsor.com</a></p>
         <p class="text-xs text-gray-600"><strong>Email:</strong> <a href="mailto:support@mudsor.com" class="text-red-600 font-semibold">support@mudsor.com</a></p>
-        <p class="text-xs text-gray-600"><strong>Phone:</strong> <a href="tel:+919217714452" class="text-red-600 font-semibold">+91 9217714452</a></p>
+        <p class="text-xs text-gray-600"><strong>Phone:</strong> <a href="tel:+919540317079" class="text-red-600 font-semibold">+91 9540317079</a></p>
         <div class="pt-2 border-t border-gray-900 text-xs">
             <p class="font-semibold text-gray-900 mb-1">Customer Support Hours</p>
             <p class="text-gray-600">Monday – Saturday: 10:00 AM – 7:00 PM (IST)</p>

@@ -128,7 +128,7 @@ class NotificationService {
      */
     public static function trigger(string $eventType, array $payload): void {
         $toEmail = self::getSetting('notification_email', 'mudsorinfo@gmail.com');
-        $toWhatsApp = self::getSetting('notification_whatsapp', '9217714452');
+        $toWhatsApp = self::getSetting('notification_whatsapp', '9540317079');
 
         $userName = $payload['user_name'] ?? 'Guest User';
         $userEmail = $payload['user_email'] ?? 'N/A';

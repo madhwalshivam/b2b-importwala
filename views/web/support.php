@@ -71,7 +71,7 @@ ob_start();
     </span>
   </a>
 
-  <a href="https://wa.me/919217714452?text=Hi%20ImportWale%2C%20I%20have%20a%20support%20query" target="_blank" rel="noopener" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 24px; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; display: flex; flex-direction: column; gap: 10px;"
+  <a href="https://wa.me/919540317079?text=Hi%20ImportWale%2C%20I%20have%20a%20support%20query" target="_blank" rel="noopener" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 24px; text-decoration: none; color: inherit; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; display: flex; flex-direction: column; gap: 10px;"
      onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px -5px rgba(0,0,0,0.05)'; this.style.borderColor='#10b981';"
      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='#e5e7eb';">
     <div style="width: 44px; height: 44px; background: #ecfdf5; color: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
@@ -213,8 +213,8 @@ ob_start();
     <a href="<?= url('contact-us') ?>" style="background: #f05a29; color: #ffffff; font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 10px; text-decoration: none; transition: background 0.2s;">
       Submit Support Ticket
     </a>
-    <a href="tel:+919217714452" style="background: #ffffff; color: #111827; border: 1px solid #d1d5db; font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-      📞 Call +91 92177 14452
+    <a href="tel:+919540317079" style="background: #ffffff; color: #111827; border: 1px solid #d1d5db; font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 10px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+      📞 Call +91 95403 17079
     </a>
   </div>
 </div>

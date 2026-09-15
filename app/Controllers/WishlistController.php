@@ -139,7 +139,7 @@ class WishlistController extends Controller {
         $products = $stmt->fetchAll() ?: [];
 
         // WhatsApp Configuration
-        $whatsappNumber = preg_replace('/[^0-9]/', '', $settingModel->get('whatsapp_business_number') ?? '919217714452');
+        $whatsappNumber = preg_replace('/[^0-9]/', '', $settingModel->get('whatsapp_business_number') ?? '919540317079');
         $whatsappTemplate = $settingModel->get('whatsapp_wishlist_template') ?? "Hi, I am interested in wholesale pricing for the following wishlist items:\n\n{product_list}\n\nPlease provide a bulk quotation and delivery timeline.";
 
         // Build product list text

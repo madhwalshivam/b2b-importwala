@@ -93,7 +93,7 @@ class ProductDetailController extends BaseController
 
         // 6. WhatsApp Number & Template Settings
         $settingModel = new Setting();
-        $whatsappNumber = preg_replace('/[^0-9]/', '', $settingModel->get('whatsapp_business_number') ?? '919217714452');
+        $whatsappNumber = preg_replace('/[^0-9]/', '', $settingModel->get('whatsapp_business_number') ?? '919540317079');
 
         // 7. Fetch Tiered Volume Pricing (Product level + Variant level)
         $db = \App\Core\Database::getInstance();

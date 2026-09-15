@@ -11,9 +11,9 @@ return [
         'name' => 'Mudsor',
         'legal_name' => 'Rughwani Enterprises',
         'owner' => 'Sunny',
-        'phone' => '9217714452',
+        'phone' => '9540317079',
         'email' => 'mudsorinfo@gmail.com',
         'gstin' => '07FLOPR6641L1Z8',
-        'address' => 'Floor 3rd, M-192, Block M, Pocket N, Sector 3, Bawana Industrial Area, New Delhi - 110039'
+        'address' => '476, Basement A1, Niti Khand-2, Indirapuram, Ghaziabad, UP - 201014'
     ]
 ];

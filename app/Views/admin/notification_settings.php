@@ -57,7 +57,7 @@ include __DIR__ . '/layouts/header.php';
                     value="<?= htmlspecialchars($notification_whatsapp) ?>"
                     class="w-full h-11 px-4 bg-white border border-gray-900 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-gray-900">
                 <p class="text-[11px] text-gray-500 font-medium">10-digit mobile number for instant WhatsApp alerts
-                    (default: 9217714452).</p>
+                    (default: 9540317079).</p>
             </div>
 
             <!-- Meta WhatsApp Cloud API Token (Optional) -->
