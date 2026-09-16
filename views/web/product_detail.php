@@ -54,6 +54,23 @@ if (empty($variantsList)) {
 $variants = $variantsList;
 $varCount = count($variants);
 
+$isDoubleMode = ($product['variation_mode'] ?? '') === 'double';
+$groupedColors = [];
+if ($isDoubleMode) {
+    foreach ($variants as $vi => $v) {
+        $parts = explode(' - ', $v['attribute_value'] ?? '');
+        $colorName = trim($parts[0] ?? $v['attribute_value']);
+        
+        if (!isset($groupedColors[$colorName])) {
+            $groupedColors[$colorName] = [
+                'name' => $colorName,
+                'image' => !empty($v['image_url']) ? asset($v['image_url']) : $mainImage,
+            ];
+        }
+    }
+}
+$optionsCount = $isDoubleMode ? count($groupedColors) : $varCount;
+
 $variantsJsonData = array_map(function ($v) use ($mainImage, $prodTiers, $varTiersMap) {
     $vId = (int) $v['id'];
     $vTiers = !empty($varTiersMap[$vId]) ? $varTiersMap[$vId] : $prodTiers;
@@ -335,70 +352,110 @@ ob_start();
                 <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-3">
                     <div class="flex items-center justify-between border-b border-gray-100 pb-2">
                         <h3 class="text-[11px] sm:text-xs font-bold text-gray-900 uppercase tracking-wide" style="font-size: 11.5px !important; font-weight: 700 !important; margin: 0;">Select Product Variants</h3>
-                        <span class="text-[10px] sm:text-[11px] text-gray-500 font-medium"><?= count($variants) ?> Options</span>
+                        <span class="text-[10px] sm:text-[11px] text-gray-500 font-medium"><?= $optionsCount ?> Options</span>
                     </div>
 
+                    <?php if ($isDoubleMode && !empty($groupedColors)): ?>
+                        <!-- 1. Color Selector -->
+                        <div class="space-y-2">
+                            <div class="text-[11px] font-bold text-gray-700 uppercase">Select Color</div>
+                            <div class="flex flex-wrap gap-2">
+                                <?php $colorIdx = 0; foreach ($groupedColors as $colorName => $colorData): ?>
+                                    <button type="button" 
+                                        class="color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border <?= $colorIdx === 0 ? 'border-[#f05a29] bg-orange-50 text-[#f05a29] ring-1 ring-orange-200 shadow-xs' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300' ?> transition-all text-xs font-semibold cursor-pointer select-none"
+                                        data-color="<?= htmlspecialchars($colorName) ?>"
+                                        onclick="selectVariantColor('<?= htmlspecialchars(addslashes($colorName)) ?>')">
+                                        <div class="w-5 h-5 rounded-md overflow-hidden shrink-0 border border-gray-200 bg-white">
+                                            <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-contain p-0.5">
+                                        </div>
+                                        <span><?= htmlspecialchars($colorName) ?></span>
+                                    </button>
+                                <?php $colorIdx++; endforeach; ?>
+                            </div>
+                        </div>
+                        <div class="border-t border-gray-100 my-1"></div>
+                        <div class="text-[11px] font-bold text-gray-700 uppercase pt-1">Select Size</div>
+                    <?php endif; ?>
+
                     <!-- Scrollable Container with Individual Card Borders for Multi-Products -->
-                    <div class="space-y-2.5 max-h-[300px] overflow-y-auto pr-1 scroll-smooth" id="variantsList">
-                        <?php foreach ($variants as $vi => $v):
+                    <div class="<?= $isDoubleMode ? 'flex flex-wrap gap-2' : 'space-y-2.5 max-h-[300px] overflow-y-auto pr-1 scroll-smooth' ?>" id="variantsList">
+                        <?php 
+                        $firstColor = $isDoubleMode && !empty($groupedColors) ? array_key_first($groupedColors) : null;
+                        
+                        foreach ($variants as $vi => $v):
                             $vWholesale = (float) $v['wholesale_price'];
                             $vOnePiece = (float) $v['one_piece_price'];
                             $vStock = (int) $v['stock_quantity'];
                             $vName = htmlspecialchars($v['attribute_value'] ?? 'Variant ' . ($vi + 1));
+                            
+                            $rowColor = '';
+                            if ($isDoubleMode) {
+                                $parts = explode(' - ', $v['attribute_value'] ?? '');
+                                $rowColor = trim($parts[0] ?? '');
+                                $vName = isset($parts[1]) ? htmlspecialchars(trim(implode(' - ', array_slice($parts, 1)))) : $vName;
+                            }
+                            
                             $vCode = htmlspecialchars($v['variant_code'] ?? '');
                             $vDim = htmlspecialchars($v['dimensions'] ?? '');
                             $vImg = !empty($v['image_url']) ? asset($v['image_url']) : $mainImage;
                             $vWeight = htmlspecialchars($v['weight'] ?? '');
-                            $isActive = ($vi === 0);
+                            
+                            $isActive = !$isDoubleMode && ($vi === 0);
+                            $isHidden = $isDoubleMode && ($rowColor !== $firstColor);
                             ?>
-                            <div class="variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 <?= $isActive ? 'border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs' : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs' ?>"
-                                data-variant-idx="<?= $vi ?>" data-wholesale="<?= $vWholesale ?>"
-                                data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
-                                data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)">
-
-                                <div class="flex items-center gap-2.5 sm:gap-3">
-                                    <!-- Left: Image Thumbnail -->
-                                    <div
-                                        class="variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border <?= $isActive ? 'border-[#f05a29]' : 'border-gray-200' ?> overflow-hidden shrink-0 bg-white shadow-2xs transition-all">
-                                        <img src="<?= htmlspecialchars($vImg) ?>" alt="<?= $vName ?>"
-                                            class="w-full h-full object-cover">
-                                    </div>
-
-                                    <!-- Middle: Variant Name (Line 1) + Price & Details (Line 2) -->
-                                    <div class="min-w-0 flex-1">
-                                        <div class="text-[11.5px] sm:text-xs font-bold text-gray-900 leading-snug break-words">
-                                            <?= $vName ?>
+                            <?php if ($isDoubleMode): ?>
+                                <!-- Compact Size Chip -->
+                                <div class="variant-row px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-xs font-semibold select-none <?= $isActive ? 'border-2 border-[#f05a29] bg-orange-50 text-[#f05a29] shadow-xs' : 'border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-2xs' ?>"
+                                    data-variant-idx="<?= $vi ?>" 
+                                    data-color="<?= htmlspecialchars($rowColor) ?>"
+                                    data-wholesale="<?= $vWholesale ?>"
+                                    data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
+                                    data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)"
+                                    style="<?= $isHidden ? 'display: none;' : '' ?>">
+                                    <?= $vName ?>
+                                    <span id="vQtyVal_<?= $vi ?>" class="hidden">0</span>
+                                </div>
+                            <?php else: ?>
+                                <!-- Standard List Row -->
+                                <div class="variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 <?= $isActive ? 'border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs' : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs' ?>"
+                                    data-variant-idx="<?= $vi ?>" 
+                                    data-color="<?= htmlspecialchars($rowColor) ?>"
+                                    data-wholesale="<?= $vWholesale ?>"
+                                    data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
+                                    data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)">
+    
+                                    <div class="flex items-center gap-2.5 sm:gap-3">
+                                        <!-- Left: Image Thumbnail -->
+                                        <div
+                                            class="variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border <?= $isActive ? 'border-[#f05a29]' : 'border-gray-200' ?> overflow-hidden shrink-0 bg-white shadow-2xs transition-all">
+                                            <img src="<?= htmlspecialchars($vImg) ?>" alt="<?= $vName ?>"
+                                                class="w-full h-full object-contain p-1">
                                         </div>
-                                        <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                            <div class="text-xs sm:text-sm font-extrabold text-[#f05a29] variant-price-display shrink-0"
-                                                data-wholesale="<?= number_format($vWholesale, 2) ?>"
-                                                data-onepiece="<?= number_format($vOnePiece, 2) ?>">
-                                                ₹<?= number_format($vWholesale, 2) ?> <span class="text-[9px] sm:text-[10px] text-gray-400 font-normal">/piece</span>
+    
+                                        <!-- Middle: Variant Name (Line 1) + Price & Details (Line 2) -->
+                                        <div class="min-w-0 flex-1">
+                                            <div class="text-[11.5px] sm:text-xs font-bold text-gray-900 leading-snug break-words">
+                                                <?= $vName ?>
                                             </div>
-                                            <?php if ($vWeight || $vDim): ?>
-                                                <span class="text-gray-300 text-[10px]">&bull;</span>
-                                                <span class="text-[10px] sm:text-[11px] text-gray-400">
-                                                    <?php if ($vWeight): ?>Wt: <?= $vWeight ?><?php endif; ?>
-                                                    <?php if ($vWeight && $vDim): ?> &bull; <?php endif; ?>
-                                                    <?php if ($vDim): ?>Fit: <?= $vDim ?><?php endif; ?>
-                                                </span>
-                                            <?php endif; ?>
-                                        </div>
-                                    </div>
-
-                                    <!-- Right: Quantity Stepper (- 0 +) -->
-                                    <div class="shrink-0 pl-0.5">
-                                        <div class="flex items-center border border-gray-300 rounded-lg bg-gray-50 overflow-hidden text-xs font-semibold select-none shadow-2xs"
-                                            onclick="event.stopPropagation()">
-                                            <button type="button" onclick="updateVariantQty(<?= $vi ?>, -1)"
-                                                class="w-6 h-7 sm:w-7 sm:h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 active:bg-gray-300 transition cursor-pointer border-0 bg-transparent text-sm font-bold">-</button>
-                                            <span id="vQtyVal_<?= $vi ?>" class="w-5 sm:w-6 text-center text-gray-900 font-bold text-xs">0</span>
-                                            <button type="button" onclick="updateVariantQty(<?= $vi ?>, 1)"
-                                                class="w-6 h-7 sm:w-7 sm:h-7 flex items-center justify-center text-gray-600 hover:bg-gray-200 active:bg-gray-300 transition cursor-pointer border-0 bg-transparent text-sm font-bold">+</button>
+                                            <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                                <div class="text-xs sm:text-sm font-extrabold text-[#f05a29] variant-price-display shrink-0"
+                                                    data-wholesale="<?= number_format($vWholesale, 2) ?>"
+                                                    data-onepiece="<?= number_format($vOnePiece, 2) ?>">
+                                                    ₹<?= number_format($vWholesale, 2) ?> <span class="text-[9px] sm:text-[10px] text-gray-400 font-normal">/piece</span>
+                                                </div>
+                                                <?php if ($vWeight || $vDim): ?>
+                                                    <span class="text-gray-300 text-[10px]">&bull;</span>
+                                                    <span class="text-[10px] sm:text-[11px] text-gray-400">
+                                                        <?php if ($vWeight): ?>Wt: <?= $vWeight ?><?php endif; ?>
+                                                        <?php if ($vWeight && $vDim): ?> &bull; <?php endif; ?>
+                                                        <?php if ($vDim): ?>Fit: <?= $vDim ?><?php endif; ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -1091,13 +1148,23 @@ ob_start();
         // 1. Update Variant Row Active Styles & Borders
         document.querySelectorAll('.variant-row').forEach((row, i) => {
             const isOos = VARIANTS_LIST[i].stock <= 0;
+            const isChip = row.classList.contains('px-3') && row.classList.contains('py-2'); // detect chip mode
             const imgBox = row.querySelector('.variant-img-box');
+            
             if (i === idx) {
-                row.className = `variant-row flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs ${isOos ? 'opacity-50 grayscale' : ''}`;
-                if (imgBox) imgBox.className = 'variant-img-box w-12 h-12 rounded-lg border border-[#f05a29] overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
+                if (isChip) {
+                    row.className = `variant-row px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-xs font-semibold select-none border-2 border-[#f05a29] bg-orange-50 text-[#f05a29] shadow-xs ${isOos ? 'opacity-50' : ''}`;
+                } else {
+                    row.className = `variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs ${isOos ? 'opacity-50 grayscale' : ''}`;
+                }
+                if (imgBox) imgBox.className = 'variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border border-[#f05a29] overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
             } else {
-                row.className = `variant-row flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs ${isOos ? 'opacity-50 grayscale' : ''}`;
-                if (imgBox) imgBox.className = 'variant-img-box w-12 h-12 rounded-lg border border-gray-200 overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
+                if (isChip) {
+                    row.className = `variant-row px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-xs font-semibold select-none border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-2xs ${isOos ? 'opacity-50' : ''}`;
+                } else {
+                    row.className = `variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs ${isOos ? 'opacity-50 grayscale' : ''}`;
+                }
+                if (imgBox) imgBox.className = 'variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border border-gray-200 overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
             }
         });
 
@@ -1181,6 +1248,13 @@ ob_start();
             });
             bottomRow.classList.add('bg-orange-50/40', 'border-l-4', 'border-l-[#f05a29]');
         }
+
+        // 8. Sync Main Add to Cart Stepper
+        const span = document.getElementById('vQtyVal_' + idx);
+        currentAtcQty = span ? (parseInt(span.textContent) || 0) : 0;
+        if (typeof updateAtcStepperUI === 'function') {
+            updateAtcStepperUI();
+        }
     }
 
     function toggleVariantRow(el) {
@@ -1245,8 +1319,20 @@ ob_start();
             const foundIdx = VARIANTS_LIST.findIndex(v => v.code && v.code.toLowerCase() === urlVariantCode.toLowerCase());
             if (foundIdx !== -1) {
                 selectAmazonVariant(foundIdx);
+                // Also select the color if double mode
+                const row = document.querySelector(`.variant-row[data-variant-idx="${foundIdx}"]`);
+                if (row && row.dataset.color) {
+                    currentColorSelection = row.dataset.color; // so it doesn't trigger clear logic on initial load
+                    selectVariantColor(row.dataset.color);
+                }
                 return;
             }
+        }
+
+        const firstColorBtn = document.querySelector('.color-btn');
+        if (firstColorBtn) {
+            currentColorSelection = ''; // force trigger
+            selectVariantColor(firstColorBtn.dataset.color);
         }
 
         checkDetailWishlistStatus();
@@ -1274,6 +1360,55 @@ ob_start();
             }, { passive: true });
         }
     });
+
+    let currentColorSelection = '';
+    
+    function selectVariantColor(colorName) {
+        if (currentColorSelection === colorName) return;
+
+        // 1. Clear quantities of all CURRENTLY visible sizes before hiding them
+        const rows = document.querySelectorAll('.variant-row');
+        rows.forEach(r => {
+            if (currentColorSelection && r.dataset.color === currentColorSelection) {
+                const vi = r.dataset.variantIdx;
+                const span = document.getElementById('vQtyVal_' + vi);
+                if (span && parseInt(span.textContent) > 0) {
+                    span.textContent = 0;
+                    if (cartSyncDebounceTimers[vi]) clearTimeout(cartSyncDebounceTimers[vi]);
+                    cartSyncDebounceTimers[vi] = setTimeout(() => {
+                        syncVariantToCart(vi, 0);
+                    }, 300);
+                }
+            }
+        });
+
+        currentColorSelection = colorName;
+
+        // 2. Update Color Buttons UI
+        document.querySelectorAll('.color-btn').forEach(btn => {
+            if (btn.dataset.color === colorName) {
+                btn.className = 'color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#f05a29] bg-orange-50 text-[#f05a29] ring-1 ring-orange-200 shadow-xs transition-all text-xs font-semibold cursor-pointer select-none';
+            } else {
+                btn.className = 'color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 hover:border-gray-300 transition-all text-xs font-semibold cursor-pointer select-none';
+            }
+        });
+
+        // 3. Show/Hide Size Rows
+        let firstShownIdx = null;
+        rows.forEach(r => {
+            if (r.dataset.color === colorName) {
+                r.style.display = 'block';
+                if (firstShownIdx === null) firstShownIdx = r.dataset.variantIdx;
+            } else {
+                r.style.display = 'none';
+            }
+        });
+        
+        // 4. Auto select first variant of the new color
+        if (firstShownIdx !== null) {
+            selectAmazonVariant(firstShownIdx);
+        }
+    }
 
     // ========================================================
     // CART & WISHLIST DETAIL FUNCTIONS
@@ -1497,9 +1632,21 @@ ob_start();
 
         const prodItems = items.filter(i => parseInt(i.product_id) === currentProductId);
         if (prodItems.length > 0) {
-            let totalQty = 0;
-            prodItems.forEach(i => { totalQty += (parseInt(i.quantity) || 0); });
-            currentAtcQty = totalQty;
+            if (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST && VARIANTS_LIST.length > 0) {
+                // Multi-variant product: track qty for the CURRENTLY selected variant
+                const selectedV = VARIANTS_LIST[selectedVariantIndex];
+                if (selectedV) {
+                    const match = prodItems.find(i => parseInt(i.variant_id) === parseInt(selectedV.id));
+                    currentAtcQty = match ? (parseInt(match.quantity) || 0) : 0;
+                } else {
+                    currentAtcQty = 0;
+                }
+            } else {
+                // Single product: sum all (usually just 1 item)
+                let totalQty = 0;
+                prodItems.forEach(i => { totalQty += (parseInt(i.quantity) || 0); });
+                currentAtcQty = totalQty;
+            }
         } else {
             currentAtcQty = 0;
         }
@@ -1532,6 +1679,12 @@ ob_start();
 
         const payload = new URLSearchParams();
         payload.append('product_id', pId);
+        if (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST && VARIANTS_LIST.length > 0) {
+            const selectedV = VARIANTS_LIST[selectedVariantIndex];
+            if (selectedV && selectedV.id) {
+                payload.append('variant_id', selectedV.id);
+            }
+        }
         payload.append('quantity', qty);
         payload.append('set_exact_qty', '1');
         payload.append('pricing_mode', currentMode);

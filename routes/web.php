@@ -329,6 +329,11 @@ $router->post('/admin/products/variants/delete/{variantId}', 'Admin\ProductContr
 $router->post('/admin/products/{id}/specs/save', 'Admin\ProductController@saveSpecs', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/specs/delete/{specId}', 'Admin\ProductController@deleteSpec', [AdminMiddleware::class, CsrfMiddleware::class]);
 
+// Multi-Attribute Variation Builder AJAX Endpoints
+$router->get('/admin/products/variation-attributes', 'Admin\ProductController@getVariationAttributes', [AdminMiddleware::class]);
+$router->post('/admin/products/{productId}/variants/generate-combos', 'Admin\ProductController@generateVariantCombos', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/{id}/nested-variations/save', 'Admin\ProductController@saveNestedVariations', [AdminMiddleware::class]);
+
 
 
 // Bulk Product Import Routes

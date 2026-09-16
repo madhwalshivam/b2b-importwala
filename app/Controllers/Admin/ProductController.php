@@ -11,6 +11,7 @@ use App\Models\Factory;
 use App\Models\ScooterModel;
 use App\Helpers\Paginator;
 use App\Services\CloudflareR2;
+use App\Services\VariationService;
 
 class ProductController extends Controller
 {
@@ -329,7 +330,8 @@ class ProductController extends Controller
         // Auto-index visual feature embedding vector
         try {
             (new \App\Services\VisualSearchService())->indexProduct($productId);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // Flush Cache
         try {
@@ -402,11 +404,18 @@ class ProductController extends Controller
         $variantModel = new \App\Models\ProductVariant();
         $variants = $variantModel->getByProduct($id, false);
 
+        // Build variation matrix for single vs double variation builder
+        $variationService = new VariationService();
+        $variationMatrix = $variationService->getNestedVariantMatrix($id);
+
+        $varAttrModel = new \App\Models\VariationAttribute();
+        $allVarAttributes = $varAttrModel->getAll();
+
         $specModel = new \App\Models\ProductSpecification();
         $specifications = $specModel->getByProduct($id);
 
         $filterService = new \App\Services\FilterAttributeService();
-        $filterAttributes = $filterService->getAttributesForAdmin((int)($product['category_id'] ?? 0));
+        $filterAttributes = $filterService->getAttributesForAdmin((int) ($product['category_id'] ?? 0));
         $productFilterValues = $filterService->getProductAttributeValues($id);
 
         $factoryModel = new Factory();
@@ -425,6 +434,8 @@ class ProductController extends Controller
             'galleryImages' => $galleryImages,
             'frequentlyBought' => $frequentlyBought,
             'variants' => $variants,
+            'variationMatrix' => $variationMatrix,
+            'allVarAttributes' => $allVarAttributes,
             'specifications' => $specifications,
             'filterAttributes' => $filterAttributes,
             'productFilterValues' => $productFilterValues
@@ -647,7 +658,8 @@ class ProductController extends Controller
         // Auto-index visual feature embedding vector
         try {
             (new \App\Services\VisualSearchService())->indexProduct($id);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
 
         // Flush Cache
         try {
@@ -922,6 +934,9 @@ class ProductController extends Controller
 
     /**
      * AJAX Save / Create Variant
+     * Supports two modes:
+     *   1. Legacy (flat): attribute_label + attribute_value fields
+     *   2. Multi-attribute: attributes_json = [{name, value, type?, swatch?}, ...]
      */
     public function saveVariant(int $id): void
     {
@@ -944,25 +959,60 @@ class ProductController extends Controller
             }
         }
 
+        // Decode multi-attribute payload if present
+        $attributesJson = trim($this->request->input('attributes_json', ''));
+        $attributes = [];
+        if (!empty($attributesJson)) {
+            $decoded = json_decode($attributesJson, true);
+            if (is_array($decoded) && !empty($decoded)) {
+                $attributes = $decoded;
+            }
+        }
+
+        // If no multi-attribute payload, fall back to legacy flat fields
+        if (empty($attributes)) {
+            $attrLabel = trim($this->request->input('attribute_label', 'Variant'));
+            $attrValue = trim($this->request->input('attribute_value', ''));
+            if (!empty($attrValue)) {
+                $attributes = [
+                    [
+                        'name' => $attrLabel,
+                        'value' => $attrValue,
+                        'type' => strtolower($attrLabel) === 'color' ? 'swatch' : 'button',
+                    ]
+                ];
+            }
+        }
+
+        // Build flat backward-compat fields from first attribute
+        $firstAttr = $attributes[0] ?? [];
+        $attrLabel = trim($firstAttr['name'] ?? $firstAttr['attribute_name'] ?? 'Variant');
+        $attrValue = trim($firstAttr['value'] ?? $firstAttr['attribute_value'] ?? '');
+
+        if (empty($attrValue) && empty($attributes)) {
+            echo json_encode(['success' => false, 'message' => 'At least one attribute value is required']);
+            exit;
+        }
+
         $data = [
             'product_id' => $id,
             'variant_code' => trim($this->request->input('variant_code', '')),
+            'sku' => trim($this->request->input('variant_code', '')),
             'image_url' => $imageUrl,
-            'attribute_label' => trim($this->request->input('attribute_label', 'Variant')),
-            'attribute_value' => trim($this->request->input('attribute_value', '')),
+            'attribute_label' => $attrLabel ?: 'Variant',
+            'attribute_value' => $attrValue ?: 'Default',
             'weight' => trim($this->request->input('weight', '')),
             'dimensions' => trim($this->request->input('dimensions', '')),
             'stock_quantity' => (int) $this->request->input('stock_quantity', 0),
             'wholesale_price' => (float) $this->request->input('wholesale_price', 0),
             'one_piece_price' => (float) $this->request->input('one_piece_price', 0),
+            'gst_percent' => $this->request->input('gst_percent') !== null && $this->request->input('gst_percent') !== ''
+                ? (float) $this->request->input('gst_percent') : null,
+            'hsn_code' => trim($this->request->input('hsn_code', '')),
             'sort_order' => (int) $this->request->input('sort_order', 0),
-            'is_active' => (int) $this->request->input('is_active', 1)
+            'is_active' => (int) $this->request->input('is_active', 1),
+            'attributes' => $attributes,
         ];
-
-        if (empty($data['attribute_value'])) {
-            echo json_encode(['success' => false, 'message' => 'Attribute value is required']);
-            exit;
-        }
 
         try {
             if ($variantId > 0) {
@@ -972,6 +1022,110 @@ class ProductController extends Controller
                 $newId = $variantModel->createVariant($data);
                 echo json_encode(['success' => true, 'message' => 'Variant created successfully', 'variant_id' => $newId]);
             }
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    /**
+     * AJAX: Return all global variation attributes for admin picker
+     */
+    public function getVariationAttributes(): void
+    {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+        $varAttrModel = new \App\Models\VariationAttribute();
+        $attrs = $varAttrModel->getAll();
+        echo json_encode(['success' => true, 'attributes' => $attrs]);
+        exit;
+    }
+
+    /**
+     * AJAX: Generate cartesian product of attribute groups and return combo definitions.
+     * POST body: {groups: [{name: 'Color', values: ['Red','Blue']}, {name:'Size', values:['S','M']}]}
+     */
+    public function generateVariantCombos(int $productId): void
+    {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $rawBody = file_get_contents('php://input');
+        $payload = json_decode($rawBody, true);
+        $groups = $payload['groups'] ?? [];
+
+        if (empty($groups)) {
+            echo json_encode(['success' => false, 'message' => 'No attribute groups provided']);
+            exit;
+        }
+
+        $service = new VariationService();
+        $combinations = $service->generateCartesianCombinations($groups);
+
+        // For each combo, check if a variant already exists so we can pre-fill its prices/stock
+        $variantModel = new \App\Models\ProductVariant();
+        $enriched = [];
+        foreach ($combinations as $combo) {
+            // Resolve value IDs
+            $attrValueIds = [];
+            foreach ($combo as $attr) {
+                $avId = $service->resolveOrCreateAttributeValue(
+                    $attr['name'],
+                    $attr['value'],
+                    strtolower($attr['name']) === 'color' ? 'swatch' : 'button'
+                );
+                $attrValueIds[] = $avId;
+            }
+            $existing = $variantModel->getVariantByAttributeCombo($productId, $attrValueIds);
+            $enriched[] = [
+                'attributes' => $combo,
+                'exists' => (bool) $existing,
+                'variant_id' => $existing ? (int) $existing['id'] : null,
+                'sku' => $existing ? ($existing['sku'] ?? $existing['variant_code'] ?? '') : '',
+                'wholesale_price' => $existing ? (float) $existing['wholesale_price'] : 0,
+                'one_piece_price' => $existing ? (float) $existing['one_piece_price'] : 0,
+                'stock_quantity' => $existing ? (int) $existing['stock_quantity'] : 0,
+                'image_url' => $existing ? ($existing['image_url'] ?? '') : '',
+            ];
+        }
+
+        echo json_encode(['success' => true, 'combinations' => $enriched]);
+        exit;
+    }
+
+    /**
+     * AJAX Save Single or Double Nested Variations
+     */
+    public function saveNestedVariations(int $id): void
+    {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $rawBody = file_get_contents('php://input');
+        $payload = json_decode($rawBody, true);
+        if (!$payload && !empty($_POST)) {
+            $payload = $_POST;
+        }
+
+        $mode = trim($payload['variation_mode'] ?? 'none');
+        $colors = $payload['colors'] ?? [];
+        if (is_string($colors)) {
+            $colors = json_decode($colors, true) ?: [];
+        }
+
+        try {
+            $vService = new VariationService();
+            $vService->saveNestedVariations($id, $mode, (array) $colors);
+            echo json_encode(['success' => true, 'message' => 'Nested variations saved successfully']);
         } catch (\Throwable $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }

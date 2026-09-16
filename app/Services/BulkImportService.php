@@ -57,12 +57,12 @@ class BulkImportService
         'Additional Image 3',                                                  // 26
         'Additional Image 4',                                                  // 27
         'Product Video URL',                                                   // 28
-        'Variation Type',                                                      // 29
-        'Variation Value',                                                     // 30
-        'Variation SKU',                                                       // 31
-        'Variation Price',                                                     // 32
-        'Variation Stock',                                                     // 33
-        'Variation Image',                                                     // 34
+        'Variant Color Name',                                                  // 29
+        'Variant Size Name',                                                   // 30
+        'Variant SKU',                                                         // 31
+        'Variant Price',                                                       // 32
+        'Variant Stock',                                                       // 33
+        'Variant Image',                                                       // 34
         'Processing Technology',                                               // 35
         'Processing Technique',                                                // 36
         'Treatment Process',                                                   // 37
@@ -159,12 +159,12 @@ class BulkImportService
             'https://images.importwale.com/products/jwl-brc-001-3.jpg',       // 26: Additional Image 3
             'https://images.importwale.com/products/jwl-brc-001-4.jpg',       // 27: Additional Image 4
             'https://media.importwale.com/videos/jwl-brc-001.mp4',            // 28: Product Video URL
-            'Color',                                                          // 29: Variation Type
-            'Brown Leather - Gold Clasp',                                     // 30: Variation Value
-            'JWL-BRC-001-BRN-GLD',                                            // 31: Variation SKU
-            '145.00',                                                         // 32: Variation Price
-            '500',                                                            // 33: Variation Stock
-            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 34: Variation Image
+            'Brown Leather - Gold Clasp',                                     // 29: Variant Color Name
+            'Large',                                                          // 30: Variant Size Name
+            'JWL-BRC-001-BRN-GLD-L',                                          // 31: Variant SKU
+            '145.00',                                                         // 32: Variant Price
+            '500',                                                            // 33: Variant Stock
+            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 34: Variant Image
             'Vacuum Electroplating',                                          // 35: Processing Technology
             'Hand Weaving',                                                   // 36: Processing Technique
             '',                                                               // 37: Treatment Process
@@ -448,8 +448,8 @@ class BulkImportService
             $pGroup['rows'][] = $rowIndex;
 
             // Variant Level Data (Columns 29..34)
-            $varType  = trim((string)($row[29] ?? ''));
-            $varVal   = trim((string)($row[30] ?? ''));
+            $varColor = trim((string)($row[29] ?? ''));
+            $varSize  = trim((string)($row[30] ?? ''));
             $varSku   = strtoupper(trim((string)($row[31] ?? '')));
             $varPrice = (float)($row[32] ?? 0);
             $varStock = (int)($row[33] ?? $pGroup['available_qty']);
@@ -469,8 +469,8 @@ class BulkImportService
 
             $pGroup['variants'][] = [
                 'row_num'         => $rowIndex,
-                'variation_type'  => !empty($varType) ? $varType : 'Variant',
-                'variation_value' => !empty($varVal) ? $varVal : 'Default',
+                'color_name'      => !empty($varColor) ? $varColor : null,
+                'size_label'      => !empty($varSize) ? $varSize : null,
                 'variant_sku'     => $varSku,
                 'variant_price'   => $varPrice > 0 ? $varPrice : ($pGroup['tier1_price'] > 0 ? $pGroup['tier1_price'] : $pGroup['one_piece_price']),
                 'one_piece_price' => $pGroup['one_piece_price'],
@@ -788,61 +788,100 @@ class BulkImportService
                     }
                 }
 
-                // Sync Variants into `product_variants`
-                foreach ($prod['variants'] as $vData) {
-                    $varSku = $vData['variant_sku'];
-                    $vImgPath = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir) : null;
+                // Sync Variants into product_colors & product_color_sizes (and product_variants legacy fallback)
+                $varMode = !empty($prod['variation_mode']) ? strtolower(trim($prod['variation_mode'])) : 'none';
+                if ($varMode === 'none' && !empty($prod['variants'])) {
+                    // Check if variants specify sizes
+                    $hasSizes = false;
+                    foreach ($prod['variants'] as $v) {
+                        if (!empty($v['size_label'])) { $hasSizes = true; break; }
+                    }
+                    $varMode = $hasSizes ? 'double' : 'single';
+                }
 
-                    $stmtVCheck = $this->db->prepare("SELECT id FROM product_variants WHERE variant_code = ?");
-                    $stmtVCheck->execute([$varSku]);
-                    $vExist = $stmtVCheck->fetch();
+                // Update variation_mode on product
+                $this->db->prepare("UPDATE products SET variation_mode = ? WHERE id = ?")->execute([$varMode, $productId]);
 
-                    if ($vExist) {
-                        $vId = (int)$vExist['id'];
-                        $stmtVUpd = $this->db->prepare("
-                            UPDATE product_variants SET
-                                product_id = :product_id,
-                                attribute_label = :attribute_label,
-                                attribute_value = :attribute_value,
-                                wholesale_price = :wholesale_price,
-                                one_piece_price = :one_piece_price,
-                                stock_quantity = :stock_quantity,
-                                image_url = COALESCE(NULLIF(:image_url, ''), image_url),
-                                is_active = 1,
-                                updated_at = NOW()
-                            WHERE id = :id
-                        ");
-                        $stmtVUpd->execute([
-                            ':product_id'      => $productId,
-                            ':attribute_label' => $vData['variation_type'],
-                            ':attribute_value' => $vData['variation_value'],
-                            ':wholesale_price' => $vData['variant_price'],
-                            ':one_piece_price' => $vData['one_piece_price'],
-                            ':stock_quantity'  => $vData['variant_stock'],
-                            ':image_url'       => $vImgPath,
-                            ':id'              => $vId,
-                        ]);
-                        $updatedVariants++;
-                    } else {
-                        $stmtVIns = $this->db->prepare("
-                            INSERT INTO product_variants (
-                                product_id, variant_code, attribute_label, attribute_value,
-                                wholesale_price, one_piece_price, stock_quantity, image_url, is_active, created_at, updated_at
-                            ) VALUES (
-                                :product_id, :variant_code, :attribute_label, :attribute_value,
-                                :wholesale_price, :one_piece_price, :stock_quantity, :image_url, 1, NOW(), NOW()
-                            )
-                        ");
-                        $stmtVIns->execute([
-                            ':product_id'      => $productId,
-                            ':variant_code'    => $varSku,
-                            ':attribute_label' => $vData['variation_type'],
-                            ':attribute_value' => $vData['variation_value'],
-                            ':wholesale_price' => $vData['variant_price'],
-                            ':one_piece_price' => $vData['one_piece_price'],
-                            ':stock_quantity'  => $vData['variant_stock'],
-                            ':image_url'       => $vImgPath,
-                        ]);
+                if ($varMode === 'single') {
+                    $cStmtCheck = $this->db->prepare("SELECT id FROM product_colors WHERE product_id = ? AND LOWER(color_name) = LOWER(?)");
+                    $cStmtUpd   = $this->db->prepare("UPDATE product_colors SET sku = :sku, price = :price, stock_qty = :stock, swatch_hex_or_image = COALESCE(NULLIF(:swatch,''), swatch_hex_or_image) WHERE id = :id");
+                    $cStmtIns   = $this->db->prepare("INSERT INTO product_colors (product_id, color_name, swatch_hex_or_image, sku, price, stock_qty) VALUES (:product_id, :color_name, :swatch, :sku, :price, :stock)");
+
+                    foreach ($prod['variants'] as $vData) {
+                        $colorName = !empty($vData['color_name']) ? $vData['color_name'] : 'Default';
+                        $swatchHex = $vData['variant_image'] ?? null;
+                        $varSku    = $vData['variant_sku'];
+                        $varPrice  = $vData['variant_price'];
+                        $varStock  = $vData['variant_stock'];
+
+                        $cStmtCheck->execute([$productId, $colorName]);
+                        $cExist = $cStmtCheck->fetch();
+
+                        if ($cExist) {
+                            $cStmtUpd->execute([
+                                ':sku'    => $varSku,
+                                ':price'  => $varPrice,
+                                ':stock'  => $varStock,
+                                ':swatch' => $swatchHex,
+                                ':id'     => (int)$cExist['id'],
+                            ]);
+                        } else {
+                            $cStmtIns->execute([
+                                ':product_id' => $productId,
+                                ':color_name' => $colorName,
+                                ':swatch'     => $swatchHex,
+                                ':sku'        => $varSku,
+                                ':price'      => $varPrice,
+                                ':stock'      => $varStock,
+                            ]);
+                        }
+                        $createdVariants++;
+                    }
+                } elseif ($varMode === 'double') {
+                    $cStmtCheck = $this->db->prepare("SELECT id FROM product_colors WHERE product_id = ? AND LOWER(color_name) = LOWER(?)");
+                    $cStmtIns   = $this->db->prepare("INSERT INTO product_colors (product_id, color_name, swatch_hex_or_image) VALUES (?, ?, ?)");
+
+                    $sStmtCheck = $this->db->prepare("SELECT id FROM product_color_sizes WHERE color_id = ? AND LOWER(size_label) = LOWER(?)");
+                    $sStmtUpd   = $this->db->prepare("UPDATE product_color_sizes SET sku = :sku, price = :price, stock_qty = :stock WHERE id = :id");
+                    $sStmtIns   = $this->db->prepare("INSERT INTO product_color_sizes (color_id, size_label, sku, price, stock_qty) VALUES (:color_id, :size_label, :sku, :price, :stock)");
+
+                    foreach ($prod['variants'] as $vData) {
+                        $colorName = !empty($vData['color_name']) ? $vData['color_name'] : 'Default';
+                        $sizeLabel = !empty($vData['size_label']) ? $vData['size_label'] : 'Standard';
+                        $swatchHex = $vData['variant_image'] ?? null;
+                        $varSku    = $vData['variant_sku'];
+                        $varPrice  = $vData['variant_price'];
+                        $varStock  = $vData['variant_stock'];
+
+                        $cStmtCheck->execute([$productId, $colorName]);
+                        $cExist = $cStmtCheck->fetch();
+
+                        if ($cExist) {
+                            $colorId = (int)$cExist['id'];
+                        } else {
+                            $cStmtIns->execute([$productId, $colorName, $swatchHex]);
+                            $colorId = (int)$this->db->lastInsertId();
+                        }
+
+                        $sStmtCheck->execute([$colorId, $sizeLabel]);
+                        $sExist = $sStmtCheck->fetch();
+
+                        if ($sExist) {
+                            $sStmtUpd->execute([
+                                ':sku'   => $varSku,
+                                ':price' => $varPrice,
+                                ':stock' => $varStock,
+                                ':id'    => (int)$sExist['id'],
+                            ]);
+                        } else {
+                            $sStmtIns->execute([
+                                ':color_id'   => $colorId,
+                                ':size_label' => $sizeLabel,
+                                ':sku'        => $varSku,
+                                ':price'      => $varPrice,
+                                ':stock'      => $varStock,
+                            ]);
+                        }
                         $createdVariants++;
                     }
                 }

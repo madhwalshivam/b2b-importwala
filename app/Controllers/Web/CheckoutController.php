@@ -116,7 +116,7 @@ class CheckoutController extends BaseController
         $orderId = (int)$db->lastInsertId();
 
         // Insert Order Items
-        $itemStmt = $db->prepare("INSERT INTO order_items (order_id, product_id, variation_id, product_name, sku, price, tax_percent, tax_amount, quantity, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $itemStmt = $db->prepare("INSERT INTO order_items (order_id, product_id, variation_id, variant_id, variant_label, product_name, sku, price, tax_percent, tax_amount, quantity, total_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
         foreach ($cartInfo['items'] as $item) {
             $iTax = $item['item_total'] * 0.18;
@@ -124,6 +124,8 @@ class CheckoutController extends BaseController
                 $orderId,
                 $item['product_id'],
                 $item['variant_id'],
+                $item['variant_id'],
+                $item['variant_title'] ?: null,
                 $item['name'] . ($item['variant_title'] ? ' (' . $item['variant_title'] . ')' : ''),
                 $item['sku'],
                 $item['unit_price'],

@@ -87,6 +87,73 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
         toastMsg: '',
         showToast: false,
         csrfToken: '<?= csrf_token() ?>',
+        variationMatrix: <?= json_encode($variationMatrix ?? ['variation_mode' => 'none', 'colors' => []]) ?>,
+        selectedColorId: null,
+        selectedSizeId: null,
+        selectedVariantId: null,
+        activePrice: <?= (float)$effectivePrice ?>,
+        activeStock: <?= (int)($product['stock'] ?? 0) ?>,
+        activeSku: '<?= htmlspecialchars($product['sku'] ?? '') ?>',
+        availableSizes: [],
+
+        init() {
+            if (!this.variationMatrix || !this.variationMatrix.colors || this.variationMatrix.colors.length === 0) return;
+            const firstColor = this.variationMatrix.colors.find(c => (c.stock_qty > 0) || (c.sizes && c.sizes.some(s => s.stock_qty > 0))) || this.variationMatrix.colors[0];
+            if (firstColor) {
+                this.selectColor(firstColor.id);
+            }
+        },
+
+        selectColor(colorId) {
+            this.selectedColorId = colorId;
+            const color = (this.variationMatrix.colors || []).find(c => c.id == colorId);
+            if (!color) return;
+
+            if (this.variationMatrix.variation_mode === 'single') {
+                this.selectedVariantId = color.id;
+                if (color.price) this.activePrice = color.price;
+                if (color.stock_qty !== null) {
+                    this.activeStock = color.stock_qty;
+                    this.stock = color.stock_qty;
+                }
+                if (color.sku) this.activeSku = color.sku;
+            } else if (this.variationMatrix.variation_mode === 'double') {
+                this.availableSizes = color.sizes || [];
+                let prevSizeLabel = '';
+                if (this.selectedSizeId) {
+                    const oldSize = (this.variationMatrix.colors || []).flatMap(c => c.sizes || []).find(s => s.id == this.selectedSizeId);
+                    if (oldSize) prevSizeLabel = oldSize.size_label;
+                }
+                const matchSize = this.availableSizes.find(s => s.size_label === prevSizeLabel) || this.availableSizes.find(s => s.stock_qty > 0) || this.availableSizes[0];
+                if (matchSize) {
+                    this.selectSize(matchSize.id);
+                } else {
+                    this.selectedSizeId = null;
+                }
+            }
+        },
+
+        selectSize(sizeId) {
+            this.selectedSizeId = sizeId;
+            const size = (this.availableSizes || []).find(s => s.id == sizeId);
+            if (!size) return;
+            this.selectedVariantId = size.id;
+            if (size.price) this.activePrice = size.price;
+            if (size.stock_qty !== null) {
+                this.activeStock = size.stock_qty;
+                this.stock = size.stock_qty;
+            }
+            if (size.sku) this.activeSku = size.sku;
+        },
+
+        formatPrice(val) {
+            return new Intl.NumberFormat('en-IN', {
+                style: 'currency',
+                currency: 'INR',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(val);
+        },
 
         triggerToast(msg) {
             this.toastMsg = msg;
@@ -105,6 +172,9 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                 const formData = new FormData();
                 formData.append('_csrf_token', this.csrfToken);
                 formData.append('product_id', '<?= $product['id'] ?>');
+                if (this.selectedVariantId) {
+                    formData.append('variant_id', this.selectedVariantId);
+                }
                 formData.append('quantity', 1);
 
                 const res = await fetch('<?= url('cart/add') ?>', {
@@ -297,12 +367,12 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                     <div class="flex flex-col gap-0.5">
                         <div class="flex items-baseline gap-2 flex-wrap">
                             <span
-                                class="text-2xl font-semibold text-gray-900 tracking-tight"><?= format_price($effectivePrice) ?></span>
+                                class="text-2xl font-semibold text-gray-900 tracking-tight" x-text="formatPrice(activePrice)"><?= format_price($effectivePrice) ?></span>
                             <?php if ($hasDiscount): ?>
-                                <span
+                                <span x-show="activePrice == <?= (float)$effectivePrice ?>"
                                     class="text-sm text-gray-400 line-through font-light"><?= format_price($regularPrice) ?></span>
                                 <?php if ($discountPct > 0): ?>
-                                    <span
+                                    <span x-show="activePrice == <?= (float)$effectivePrice ?>"
                                         class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100"><?= $discountPct ?>%
                                         OFF</span>
                                 <?php endif; ?>
@@ -335,6 +405,60 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                         <?php endif; ?>
                     </button>
                 </div>
+
+                <!-- 2.5 VARIATION SELECTOR (Single vs Double Nested Mode) -->
+                <?php if (!empty($variationMatrix['colors'])): ?>
+                    <div class="space-y-4 py-3 border-t border-b border-gray-100 my-1">
+                        <!-- COLOR SELECTOR (Available in single & double modes) -->
+                        <div class="space-y-1.5">
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-semibold text-gray-700 uppercase tracking-wider">Color:</span>
+                                <span class="text-gray-900 font-bold" x-text="(variationMatrix.colors.find(c => c.id == selectedColorId)?.color_name) || ''"></span>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2.5 items-center">
+                                <template x-for="color in variationMatrix.colors" :key="color.id">
+                                    <button type="button"
+                                        @click="selectColor(color.id)"
+                                        :class="{
+                                            'ring-2 ring-red-600 ring-offset-2 scale-105': selectedColorId == color.id,
+                                            'opacity-40 cursor-not-allowed': variationMatrix.variation_mode === 'single' ? (color.stock_qty <= 0) : (!color.sizes || !color.sizes.some(s => s.stock_qty > 0))
+                                        }"
+                                        class="w-8 h-8 rounded-full border border-gray-300 shadow-2xs transition-all relative flex items-center justify-center cursor-pointer group"
+                                        :title="color.color_name"
+                                        :style="(color.swatch_hex_or_image && (color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/'))) ? 'background-image: url(' + color.swatch_hex_or_image + '); background-size: cover; background-position: center;' : 'background-color: ' + (color.swatch_hex_or_image || '#f05a29')">
+                                        <span x-show="selectedColorId == color.id" class="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- SIZE SELECTOR (Available in double mode only) -->
+                        <template x-if="variationMatrix.variation_mode === 'double'">
+                            <div class="space-y-1.5 pt-1">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="font-semibold text-gray-700 uppercase tracking-wider">Size:</span>
+                                    <span class="text-gray-900 font-bold" x-text="(availableSizes.find(s => s.id == selectedSizeId)?.size_label) || ''"></span>
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 items-center">
+                                    <template x-for="size in availableSizes" :key="size.id">
+                                        <button type="button"
+                                            @click="selectSize(size.id)"
+                                            :class="{
+                                                'border-red-600 bg-red-50 text-red-700 font-bold shadow-2xs': selectedSizeId == size.id,
+                                                'border-gray-200 text-gray-700 hover:border-gray-300 bg-white': selectedSizeId != size.id,
+                                                'opacity-40 line-through cursor-not-allowed': size.stock_qty <= 0
+                                            }"
+                                            class="px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center space-x-1">
+                                            <span x-text="size.size_label"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                <?php endif; ?>
 
                 <!-- 3. STOCK STATUS -->
                 <?php if ($stockQty > 0 && $stockQty <= 20): ?>
@@ -886,19 +1010,17 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
             class="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-gray-200 shadow-2xl py-2.5 px-4 sm:px-6">
             <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
                 <!-- Left: Blinkit Ticket Stamp Sale Price Badge in Red, Regular MRP Line-Through, and Inclusive of all taxes -->
-                <div class="flex flex-col justify-center min-w-0">
-                    <div class="flex items-center space-x-2 flex-wrap">
-                        <!-- Ticket Stamp Ticket Badge in MUDSOR Red Theme (Blinkit style) -->
-                        <span
-                            class="inline-flex items-center bg-red-600 text-white font-semibold text-sm sm:text-base px-2.5 py-0.5 rounded shadow-xs relative border border-red-700 tracking-tight">
+                <div class="flex flex-col gap-0.5">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg font-bold text-red-600 tracking-tight leading-none" x-text="formatPrice(activePrice)">
                             <?= format_price($effectivePrice) ?>
                         </span>
                         <?php if ($hasDiscount): ?>
-                            <span class="text-xs text-gray-500 line-through font-mono">MRP
+                            <span x-show="activePrice == <?= (float)$effectivePrice ?>" class="text-[11px] text-gray-400 line-through font-medium leading-none">
                                 <?= format_price($regularPrice) ?></span>
                         <?php endif; ?>
                     </div>
-                    <span class="text-[10px] text-gray-500 font-normal block mt-0.5">Inclusive of all taxes</span>
+                    <span class="text-[9px] text-gray-500 font-medium">Inclusive of all taxes</span>
                 </div>
 
                 <!-- Right: Add to Cart Button with Lighter/Clean Font Weight that Transforms into Inline Controller [- 1 +] -->

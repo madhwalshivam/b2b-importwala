@@ -322,11 +322,21 @@ class CartController extends BaseController
         $totalCount = 0;
         $subtotal = 0.0;
 
+        $avModel = new \App\Models\VariationAttributeValue();
+
         foreach ($rows as $r) {
             $qty       = (int)$r['quantity'];
             $unitPrice = (float)($r['unit_price'] ?? $r['price'] ?? 0);
             $itemTotal = $qty * $unitPrice;
             $img       = !empty($r['variant_image']) ? asset($r['variant_image']) : (!empty($r['main_image']) ? asset($r['main_image']) : asset('assets/images/placeholder.jpg'));
+
+            $vLabel = '';
+            if ($r['variant_id']) {
+                $vLabel = $avModel->getLabelForVariant((int)$r['variant_id']);
+            }
+            if (empty($vLabel) && !empty($r['attribute_value'])) {
+                $vLabel = ($r['attribute_label'] ? $r['attribute_label'] . ': ' : '') . $r['attribute_value'];
+            }
 
             $items[] = [
                 'id'            => (int)$r['id'],
@@ -336,7 +346,7 @@ class CartController extends BaseController
                 'slug'          => $r['product_slug'],
                 'sku'           => $r['variant_code'] ?: $r['product_sku'],
                 'image'         => $img,
-                'variant_title' => $r['attribute_value'] ?: '',
+                'variant_title' => $vLabel,
                 'pricing_mode'  => $r['pricing_mode'] ?: 'wholesale',
                 'quantity'      => $qty,
                 'unit_price'    => $unitPrice,

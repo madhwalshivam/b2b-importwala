@@ -556,9 +556,11 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                             <div class="flex items-center space-x-2">
                                 <i data-lucide="sliders" class="w-4 h-4 text-orange-600"></i>
-                                <h3 class="font-bold text-sm text-slate-900">Product Filters & Specifications (28 Standard Filters)</h3>
+                                <h3 class="font-bold text-sm text-slate-900">Product Filters & Specifications (28 Standard
+                                    Filters)</h3>
                             </div>
-                            <span class="text-[11px] text-slate-400 font-medium">Click "+ Add" to add new filter values on the fly</span>
+                            <span class="text-[11px] text-slate-400 font-medium">Click "+ Add" to add new filter values on
+                                the fly</span>
                         </div>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
                             <?php foreach ($filterAttributes as $attr): ?>
@@ -569,13 +571,18 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                 ?>
                                 <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
                                     <div class="flex items-center justify-between">
-                                        <label class="block font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                                        <label
+                                            class="block font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
                                             <span><?= htmlspecialchars($attr['name']) ?></span>
                                             <?php if (!empty($attr['is_admin_only'])): ?>
-                                                <span class="px-1.5 py-0.5 text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 rounded uppercase">ADMIN ONLY</span>
+                                                <span
+                                                    class="px-1.5 py-0.5 text-[9px] font-extrabold bg-amber-100 text-amber-800 border border-amber-300 rounded uppercase">ADMIN
+                                                    ONLY</span>
                                             <?php endif; ?>
                                         </label>
-                                        <button type="button" onclick="showAddOptionPrompt(<?= $attrId ?>, '<?= htmlspecialchars(addslashes($attr['name'])) ?>')" class="text-[11px] text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 cursor-pointer">
+                                        <button type="button"
+                                            onclick="showAddOptionPrompt(<?= $attrId ?>, '<?= htmlspecialchars(addslashes($attr['name'])) ?>')"
+                                            class="text-[11px] text-orange-600 hover:text-orange-700 font-semibold flex items-center gap-1 cursor-pointer">
                                             <i data-lucide="plus" class="w-3 h-3"></i> Add
                                         </button>
                                     </div>
@@ -976,108 +983,481 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         <!-- TAB 7: SPECS & VARIANTS -->
         <!-- ========================================================================= -->
         <div x-show="activeTab === 'specs'" x-cloak class="space-y-5">
-            <!-- PRODUCT VARIANTS TABLE CONTAINER -->
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+
+            <!-- ── SINGLE VS DOUBLE (NESTED) VARIATION BUILDER ───────────────────────────── -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6" x-data="{
+                    mode: '<?= $variationMatrix['variation_mode'] ?? 'none' ?>',
+                    colors: <?= htmlspecialchars(json_encode($variationMatrix['colors'] ?? [], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>,
+                    saving: false,
+                    saveMsg: '',
+
+                    init() {
+                        if (!this.colors) this.colors = [];
+                    },
+
+                    setMode(m) {
+                        this.mode = m;
+                        if (m === 'single' && this.colors.length === 0) {
+                            this.addColor();
+                        } else if (m === 'double' && this.colors.length === 0) {
+                            this.addColor();
+                        }
+                    },
+
+                    addColor() {
+                        this.colors.push({
+                            id: null,
+                            color_name: 'Color ' + (this.colors.length + 1),
+                            swatch_hex_or_image: '#f05a29',
+                            sku: '',
+                            price: '',
+                            stock_qty: 100,
+                            sizes: [
+                                { id: null, size_label: 'S', sku: '', price: 499, stock_qty: 10, gst_percent: '', hsn_code: '' },
+                                { id: null, size_label: 'M', sku: '', price: 499, stock_qty: 10, gst_percent: '', hsn_code: '' }
+                            ]
+                        });
+                    },
+
+                    removeColor(idx) {
+                        if (confirm('Delete this Color variation and all its nested sizes?')) {
+                            this.colors.splice(idx, 1);
+                        }
+                    },
+
+                    addSize(colorIdx, label = '') {
+                        if (!this.colors[colorIdx].sizes) {
+                            this.colors[colorIdx].sizes = [];
+                        }
+                        this.colors[colorIdx].sizes.push({
+                            id: null,
+                            size_label: label || 'Size ' + (this.colors[colorIdx].sizes.length + 1),
+                            sku: '',
+                            price: 499,
+                            stock_qty: 10,
+                            gst_percent: '',
+                            hsn_code: ''
+                        });
+                    },
+
+                    removeSize(colorIdx, sizeIdx) {
+                        this.colors[colorIdx].sizes.splice(sizeIdx, 1);
+                    },
+
+                    async saveVariations() {
+                        this.saving = true;
+                        this.saveMsg = '';
+                        try {
+                            const res = await fetch('<?= url('admin/products/' . $product['id'] . '/nested-variations/save') ?>', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest'
+                                },
+                                body: JSON.stringify({
+                                    variation_mode: this.mode,
+                                    colors: this.colors
+                                })
+                            });
+                            const data = await res.json();
+                            if (data.success) {
+                                this.saveMsg = 'Variations saved successfully!';
+                                setTimeout(() => { this.saveMsg = ''; }, 3000);
+                            } else {
+                                alert(data.message || 'Failed to save variations.');
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert('Network error while saving variations.');
+                        } finally {
+                            this.saving = false;
+                        }
+                    }
+                 }">
+
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
                     <div>
                         <div class="flex items-center space-x-2">
                             <span
-                                class="px-2.5 py-0.5 text-[10px] font-bold uppercase bg-slate-100 text-slate-800 rounded-md border border-slate-200">
-                                Multi-Variant System
+                                class="px-2.5 py-0.5 text-[10px] font-bold uppercase bg-orange-50 text-[#f05a29] rounded-md border border-orange-200">
+                                Nested Variation Builder
                             </span>
                             <span class="text-xs font-semibold text-slate-400">•</span>
-                            <span id="variantCountText"
-                                class="text-xs font-semibold text-slate-500"><?= count($variants ?? []) ?> Variants
-                                Configured</span>
+                            <span class="text-xs font-semibold text-slate-500"
+                                x-text="mode === 'none' ? 'No Variations' : (mode === 'single' ? colors.length + ' Color Variations' : colors.length + ' Colors with Nested Sizes')"></span>
                         </div>
-                        <h3 class="text-base font-bold text-slate-900 mt-1">Product Variants &amp; Dual Pricing</h3>
-                        <p class="text-xs text-slate-500 mt-0.5">Manage attributes, stock, wholesale, and one-piece
-                            pricing per variant.</p>
+                        <h3 class="text-base font-bold text-slate-900 mt-1">Product Variation Setup</h3>
+                        <p class="text-xs text-slate-500 mt-0.5">Choose between Single (Color only) or Double (Color +
+                            Nested Sizes) mode.</p>
                     </div>
-                    <button type="button" id="btnOpenVariantModal" data-action="add-variant"
-                        onclick="window.openVariantModal(); return false;"
-                        class="px-4 py-2 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
-                        <i data-lucide="plus-circle" class="w-4 h-4 pointer-events-none"></i> <span
-                            class="pointer-events-none">Add Variant</span>
+
+                    <button type="button" @click="saveVariations()" :disabled="saving"
+                        class="px-5 py-2.5 bg-[#f05a29] hover:bg-[#d94e21] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center space-x-2 disabled:opacity-50 cursor-pointer shrink-0">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                        <span x-text="saving ? 'Saving...' : 'Save All Variations'"></span>
                     </button>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr
-                                class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                                <th class="py-3 px-4">Code</th>
-                                <th class="py-3 px-4">Attribute &amp; Value</th>
-                                <th class="py-3 px-4 text-center">Stock</th>
-                                <th class="py-3 px-4 text-right">Wholesale Price (₹)</th>
-                                <th class="py-3 px-4 text-right">One-Piece Price (₹)</th>
-                                <th class="py-3 px-4 text-center">Status</th>
-                                <th class="py-3 px-4 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="variantsTableBody" class="divide-y divide-slate-100 text-slate-700">
-                            <?php if (empty($variants)): ?>
-                                <tr id="noVariantsRow">
-                                    <td colspan="7" class="py-8 text-center text-slate-400">
-                                        No variants configured yet. Click "Add Variant" above to add color/size variations.
-                                    </td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach ($variants as $v): ?>
-                                    <tr class="hover:bg-slate-50 transition variant-row" data-variant-id="<?= $v['id'] ?>">
-                                        <td class="py-3 px-4 font-mono font-bold text-slate-900 v-code">
-                                            <?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?>
-                                        </td>
-                                        <td class="py-3 px-4">
-                                            <div class="font-bold text-slate-900 v-val">
-                                                <?= htmlspecialchars($v['attribute_value']) ?>
-                                            </div>
-                                            <div class="text-[10px] text-slate-400 v-lbl">
-                                                <?= htmlspecialchars($v['attribute_label']) ?>
-                                                <?= !empty($v['weight']) ? '&bull; ' . htmlspecialchars($v['weight']) : '' ?>
-                                            </div>
-                                        </td>
-                                        <td class="py-3 px-4 text-center font-bold text-slate-900 v-stock">
-                                            <?= $v['stock_quantity'] ?>
-                                        </td>
-                                        <td class="py-3 px-4 text-right font-bold text-slate-900 v-wprice">
-                                            ₹<?= number_format((float) $v['wholesale_price'], 2) ?></td>
-                                        <td class="py-3 px-4 text-right font-bold text-emerald-600 v-oprice">
-                                            ₹<?= number_format((float) $v['one_piece_price'], 2) ?></td>
-                                        <td class="py-3 px-4 text-center v-status">
-                                            <span
-                                                class="px-2 py-0.5 text-[10px] font-bold rounded-full border <?= $v['is_active'] ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' ?>">
-                                                <?= $v['is_active'] ? 'Active' : 'Disabled' ?>
-                                            </span>
-                                        </td>
-                                        <td class="py-3 px-4 text-right space-x-1 whitespace-nowrap">
-                                            <button type="button" data-action="edit-variant"
-                                                data-variant="<?= htmlspecialchars(json_encode($v, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>"
-                                                onclick="window.openEditVariantFromBtn(this); return false;"
-                                                class="p-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition border border-slate-200 cursor-pointer"
-                                                title="Edit Variant">
-                                                <i data-lucide="edit-3" class="w-3.5 h-3.5 pointer-events-none"></i>
-                                            </button>
-                                            <button type="button" data-action="delete-variant" data-variant-id="<?= $v['id'] ?>"
-                                                onclick="window.confirmDeleteVariant(<?= $v['id'] ?>, this); return false;"
-                                                class="p-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg transition border border-rose-200 cursor-pointer"
-                                                title="Delete Variant">
-                                                <i data-lucide="trash-2" class="w-3.5 h-3.5 pointer-events-none"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
+                <div x-show="saveMsg" x-transition
+                    class="p-3 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold">
+                    <span x-text="saveMsg"></span>
                 </div>
+
+                <!-- 1. VARIATION MODE TOGGLE -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Select Variation Mode
+                        *</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <!-- Mode None -->
+                        <div @click="setMode('none')"
+                            :class="mode === 'none' ? 'border-[#f05a29] bg-orange-50/40 ring-1 ring-[#f05a29]' : 'border-slate-200 bg-white hover:border-slate-300'"
+                            class="p-4 rounded-xl border cursor-pointer transition space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-xs text-slate-900">1. No Variation</span>
+                                <input type="radio" name="var_mode_radio" value="none" x-model="mode"
+                                    class="text-[#f05a29]">
+                            </div>
+                            <p class="text-[11px] text-slate-500">Simple product. Single price and stock for the whole
+                                item.</p>
+                        </div>
+
+                        <!-- Mode Single -->
+                        <div @click="setMode('single')"
+                            :class="mode === 'single' ? 'border-[#f05a29] bg-orange-50/40 ring-1 ring-[#f05a29]' : 'border-slate-200 bg-white hover:border-slate-300'"
+                            class="p-4 rounded-xl border cursor-pointer transition space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-xs text-slate-900">2. Single Variation</span>
+                                <input type="radio" name="var_mode_radio" value="single" x-model="mode"
+                                    class="text-[#f05a29]">
+                            </div>
+                            <p class="text-[11px] text-slate-500">Color only. Each color has its own price, stock, and
+                                SKU.</p>
+                        </div>
+
+                        <!-- Mode Double -->
+                        <div @click="setMode('double')"
+                            :class="mode === 'double' ? 'border-[#f05a29] bg-orange-50/40 ring-1 ring-[#f05a29]' : 'border-slate-200 bg-white hover:border-slate-300'"
+                            class="p-4 rounded-xl border cursor-pointer transition space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-xs text-slate-900">3. Double (Nested)</span>
+                                <input type="radio" name="var_mode_radio" value="double" x-model="mode"
+                                    class="text-[#f05a29]">
+                            </div>
+                            <p class="text-[11px] text-slate-500">Color + Sizes under each color. Independent size list
+                                per color.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MODE = SINGLE CONTAINER -->
+                <template x-if="mode === 'single'">
+                    <div class="space-y-4 pt-2">
+                        <div class="flex items-center justify-between">
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Color Variations
+                                (Single Level)</h4>
+                            <button type="button" @click="addColor()"
+                                class="px-3 py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-lg transition flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Color
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr
+                                        class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                        <th class="py-3 px-3">Color Name</th>
+                                        <th class="py-3 px-3">Image URL</th>
+                                        <th class="py-3 px-3">SKU</th>
+                                        <th class="py-3 px-3">Price (₹)</th>
+                                        <th class="py-3 px-3">Stock Qty</th>
+                                        <th class="py-3 px-3 text-right">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <template x-for="(color, cIdx) in colors" :key="cIdx">
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="py-2.5 px-3">
+                                                <div class="flex items-center gap-3">
+                                                    <template x-if="color.swatch_hex_or_image">
+                                                        <span
+                                                            class="w-6 h-6 rounded-full border border-slate-300 shadow-xs flex items-center justify-center shrink-0 bg-cover bg-center"
+                                                            :style="'background-image: url(' + (color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/') ? '' : '/') + color.swatch_hex_or_image + ')'"></span>
+                                                    </template>
+                                                    <template x-if="!color.swatch_hex_or_image">
+                                                        <span
+                                                            class="w-6 h-6 rounded-full border border-slate-300 shadow-xs flex items-center justify-center shrink-0 bg-slate-100"><i
+                                                                data-lucide="image"
+                                                                class="w-3 h-3 text-slate-400"></i></span>
+                                                    </template>
+                                                    <input type="text" x-model="color.color_name" placeholder="e.g. Red"
+                                                        class="w-32 h-8 px-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900">
+                                                </div>
+                                            </td>
+                                            <td class="py-2.5 px-3">
+                                                <div class="flex items-center gap-2">
+                                                    <template x-if="color.swatch_hex_or_image">
+                                                        <img :src="(color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/') ? '' : '/') + color.swatch_hex_or_image"
+                                                            class="w-8 h-8 rounded border border-slate-200 object-cover shrink-0">
+                                                    </template>
+                                                    <input type="text" x-model="color.swatch_hex_or_image"
+                                                        placeholder="URL (e.g. /uploads/...)"
+                                                        class="w-48 h-8 px-2 bg-white border border-slate-200 rounded-lg text-[10px] font-mono">
+                                                </div>
+                                            </td>
+                                            <td class="py-2.5 px-3">
+                                                <input type="text" x-model="color.sku" placeholder="SKU-RED"
+                                                    class="w-28 h-8 px-2 border border-slate-200 rounded-lg text-xs font-mono">
+                                            </td>
+                                            <td class="py-2.5 px-3">
+                                                <input type="number" step="0.01" x-model="color.price" placeholder="499"
+                                                    class="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs font-bold">
+                                            </td>
+                                            <td class="py-2.5 px-3">
+                                                <input type="number" x-model="color.stock_qty" placeholder="10"
+                                                    class="w-20 h-8 px-2 border border-slate-200 rounded-lg text-xs font-bold text-center">
+                                            </td>
+                                            <td class="py-2.5 px-3 text-right">
+                                                <button type="button" @click="removeColor(cIdx)"
+                                                    class="px-2.5 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg text-[10px] font-bold border border-rose-200 transition cursor-pointer">
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- 3. MODE = DOUBLE CONTAINER -->
+                <template x-if="mode === 'double'">
+                    <div class="space-y-6 pt-2">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Nested Variation
+                                    Colors &amp; Sizes</h4>
+                                <p class="text-[11px] text-slate-500">Each Color card contains its own independent list
+                                    of Size rows.</p>
+                            </div>
+                            <button type="button" @click="addColor()"
+                                class="px-3.5 py-2 bg-slate-900 hover:bg-black text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                <i data-lucide="plus" class="w-4 h-4"></i> Add Color Card
+                            </button>
+                        </div>
+
+                        <!-- COLOR CARDS LOOP -->
+                        <div class="space-y-5">
+                            <template x-for="(color, cIdx) in colors" :key="cIdx">
+                                <div class="bg-slate-50/70 rounded-2xl border border-slate-200 p-5 space-y-4">
+                                    <!-- Color Card Header -->
+                                    <div
+                                        class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-200 pb-3 gap-3">
+                                        <div class="flex items-center space-x-3">
+                                            <template x-if="color.swatch_hex_or_image">
+                                                <span
+                                                    class="w-6 h-6 rounded-full border border-slate-300 shadow-xs flex items-center justify-center shrink-0 bg-cover bg-center"
+                                                    :style="'background-image: url(' + (color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/') ? '' : '/') + color.swatch_hex_or_image + ')'"></span>
+                                            </template>
+                                            <template x-if="!color.swatch_hex_or_image">
+                                                <span
+                                                    class="w-6 h-6 rounded-full border border-slate-300 shadow-xs flex items-center justify-center shrink-0 bg-slate-100"><i
+                                                        data-lucide="image" class="w-3 h-3 text-slate-400"></i></span>
+                                            </template>
+                                            <div class="flex items-center space-x-2">
+                                                <label class="text-[11px] font-bold text-slate-500 uppercase">Color
+                                                    Name:</label>
+                                                <input type="text" x-model="color.color_name" placeholder="e.g. Red"
+                                                    class="h-9 px-3 bg-white border border-slate-200 rounded-xl font-bold text-slate-900 text-xs">
+                                            </div>
+                                            <div class="flex items-center space-x-1">
+                                                <input type="text" x-model="color.swatch_hex_or_image"
+                                                    placeholder="Image URL (e.g. /uploads/...)"
+                                                    class="w-48 h-8 px-2 bg-white border border-slate-200 rounded-lg text-[10px] font-mono">
+                                            </div>
+                                        </div>
+
+                                        <button type="button" @click="removeColor(cIdx)"
+                                            class="px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold border border-rose-200 transition cursor-pointer self-start sm:self-auto">
+                                            Remove Color
+                                        </button>
+                                    </div>
+
+                                    <!-- Nested Sizes List for this Color -->
+                                    <div class="space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span
+                                                class="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Sizes
+                                                under <span class="text-[#f05a29]"
+                                                    x-text="color.color_name || 'this color'"></span>:</span>
+                                            <div class="flex items-center space-x-1">
+                                                <span class="text-[10px] text-slate-400 font-medium mr-1">Quick
+                                                    Add:</span>
+                                                <button type="button" @click="addSize(cIdx, 'S')"
+                                                    class="px-2 py-0.5 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded text-[10px] font-bold">S</button>
+                                                <button type="button" @click="addSize(cIdx, 'M')"
+                                                    class="px-2 py-0.5 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded text-[10px] font-bold">M</button>
+                                                <button type="button" @click="addSize(cIdx, 'L')"
+                                                    class="px-2 py-0.5 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded text-[10px] font-bold">L</button>
+                                                <button type="button" @click="addSize(cIdx, 'XL')"
+                                                    class="px-2 py-0.5 bg-white border border-slate-200 hover:border-slate-400 text-slate-700 rounded text-[10px] font-bold">XL</button>
+                                                <button type="button" @click="addSize(cIdx)"
+                                                    class="ml-2 px-2.5 py-1 bg-[#f05a29] hover:bg-[#d94e21] text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer">
+                                                    + Add Custom Size
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="overflow-x-auto bg-white rounded-xl border border-slate-200">
+                                            <table class="w-full text-left text-xs border-collapse">
+                                                <thead>
+                                                    <tr
+                                                        class="bg-slate-100/70 border-b border-slate-200 text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                                                        <th class="py-2.5 px-3">Size Label</th>
+                                                        <th class="py-2.5 px-3">SKU Code</th>
+                                                        <th class="py-2.5 px-3">Price (₹)</th>
+                                                        <th class="py-2.5 px-3 text-center">Stock</th>
+                                                        <th class="py-2.5 px-3">GST%</th>
+                                                        <th class="py-2.5 px-3">HSN Code</th>
+                                                        <th class="py-2.5 px-3 text-right">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="divide-y divide-slate-100">
+                                                    <template x-for="(size, sIdx) in (color.sizes || [])" :key="sIdx">
+                                                        <tr class="hover:bg-slate-50 transition">
+                                                            <td class="py-2 px-3">
+                                                                <input type="text" x-model="size.size_label"
+                                                                    placeholder="e.g. M or 42"
+                                                                    class="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-900">
+                                                            </td>
+                                                            <td class="py-2 px-3">
+                                                                <input type="text" x-model="size.sku"
+                                                                    placeholder="SKU-RED-M"
+                                                                    class="w-28 h-8 px-2 border border-slate-200 rounded-lg text-xs font-mono">
+                                                            </td>
+                                                            <td class="py-2 px-3">
+                                                                <input type="number" step="0.01" x-model="size.price"
+                                                                    placeholder="499"
+                                                                    class="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-900">
+                                                            </td>
+                                                            <td class="py-2 px-3 text-center">
+                                                                <input type="number" x-model="size.stock_qty"
+                                                                    placeholder="10"
+                                                                    class="w-20 h-8 px-2 border border-slate-200 rounded-lg text-xs font-bold text-center">
+                                                            </td>
+                                                            <td class="py-2 px-3">
+                                                                <input type="number" step="0.01"
+                                                                    x-model="size.gst_percent" placeholder="18"
+                                                                    class="w-16 h-8 px-2 border border-slate-200 rounded-lg text-xs">
+                                                            </td>
+                                                            <td class="py-2 px-3">
+                                                                <input type="text" x-model="size.hsn_code"
+                                                                    placeholder="8714"
+                                                                    class="w-20 h-8 px-2 border border-slate-200 rounded-lg text-xs font-mono">
+                                                            </td>
+                                                            <td class="py-2 px-3 text-right">
+                                                                <button type="button" @click="removeSize(cIdx, sIdx)"
+                                                                    class="px-2 py-1 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-md text-[10px] font-bold border border-rose-200 transition cursor-pointer">
+                                                                    Del
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                    <template x-if="!color.sizes || color.sizes.length === 0">
+                                                        <tr>
+                                                            <td colspan="7"
+                                                                class="py-4 text-center text-slate-400 text-xs italic">
+                                                                No sizes added under <span
+                                                                    x-text="color.color_name"></span> yet. Click "+ Add
+                                                                Custom Size" or quick presets above.
+                                                            </td>
+                                                        </tr>
+                                                    </template>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
             </div>
 
             <!-- TECHNICAL SPECIFICATIONS TABLE CONTAINER -->
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+
+                <!-- LEGACY STANDARD VARIATIONS (Displayed only in 'none' mode if existing) -->
+                <?php if (!empty($variants)): ?>
+                    <div x-show="mode === 'none'" class="mb-6 border-b border-slate-100 pb-6">
+                        <div
+                            class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <span
+                                        class="px-2.5 py-0.5 text-[10px] font-bold uppercase bg-slate-100 text-slate-500 rounded-md border border-slate-200">
+                                        Legacy Variations
+                                    </span>
+                                </div>
+                                <h3 class="text-base font-bold text-slate-900 mt-1">Standard Cartesian Variations</h3>
+                                <p class="text-[11px] text-amber-600 mt-0.5 font-medium">These variations were created
+                                    before the Nested Builder. They are still active. It is recommended to migrate them.</p>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto border border-slate-200 rounded-xl mt-4">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr
+                                        class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                        <th class="py-3 px-3">Variant SKU</th>
+                                        <th class="py-3 px-3">Attribute</th>
+                                        <th class="py-3 px-3 text-center">Stock</th>
+                                        <th class="py-3 px-3 text-right">Wholesale Price (₹)</th>
+                                        <th class="py-3 px-3 text-right">1-Piece Price (₹)</th>
+                                        <th class="py-3 px-3 text-center">Active</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <?php foreach ($variants as $v): ?>
+                                        <tr class="hover:bg-slate-50 transition">
+                                            <td class="py-3 px-3 font-mono font-bold text-slate-900">
+                                                <?= htmlspecialchars($v['variant_code'] ?: 'N/A') ?></td>
+                                            <td class="py-3 px-3">
+                                                <div class="font-bold text-slate-900">
+                                                    <?= htmlspecialchars($v['attribute_value']) ?></div>
+                                                <div class="text-[10px] text-slate-400">
+                                                    <?= htmlspecialchars($v['attribute_label']) ?></div>
+                                            </td>
+                                            <td class="py-3 px-3 text-center font-bold text-slate-900">
+                                                <?= $v['stock_quantity'] ?></td>
+                                            <td class="py-3 px-3 text-right font-bold text-slate-900">
+                                                <?= number_format((float) $v['wholesale_price'], 2) ?></td>
+                                            <td class="py-3 px-3 text-right font-bold text-emerald-600">
+                                                <?= number_format((float) $v['one_piece_price'], 2) ?></td>
+                                            <td class="py-3 px-3 text-center">
+                                                <?php if (!empty($v['is_active'])): ?>
+                                                    <span
+                                                        class="px-2 py-0.5 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">Yes</span>
+                                                <?php else: ?>
+                                                    <span
+                                                        class="px-2 py-0.5 text-[9px] font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded">No</span>
+                                                <?php endif; ?>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <div
                     class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
+
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Technical Specifications</h3>
                         <p class="text-xs text-slate-500 mt-0.5">Filterable key-value parameters displayed on storefront
@@ -1763,125 +2143,274 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
     window.addTierRow = addTierRow;
 
     // =========================================================================
-    // 1. VARIANTS MODAL POPUP (ADD, EDIT, DELETE)
+    // 1. MULTI-ATTRIBUTE VARIATION BUILDER
     // =========================================================================
-    function openVariantModal() {
-        const modal = document.getElementById('variantModal');
-        if (!modal) return;
 
-        const titleEl = document.getElementById('variantModalTitle');
-        const idEl = document.getElementById('v_variant_id');
-        const labelEl = document.getElementById('v_attribute_label');
-        const valEl = document.getElementById('v_attribute_value');
-        const codeEl = document.getElementById('v_variant_code');
-        const stockEl = document.getElementById('v_stock_quantity');
-        const wPriceEl = document.getElementById('v_wholesale_price');
-        const oPriceEl = document.getElementById('v_one_piece_price');
-        const weightEl = document.getElementById('v_weight');
-        const dimEl = document.getElementById('v_dimensions');
-        const imgEl = document.getElementById('v_image_url');
-        const fileInp = document.getElementById('v_image_file');
-        const activeEl = document.getElementById('v_is_active');
+    // PHP → JS: pass current variation matrix (attributes already configured for this product)
+    const VARIATION_MATRIX = <?= json_encode($variationMatrix ?? ['attributes' => [], 'combinations' => []], JSON_UNESCAPED_UNICODE) ?>;
+    const PRODUCT_DEFAULT_WP = <?= (float) ($product['price'] ?? 0) ?>;
+    const PRODUCT_DEFAULT_OP = <?= (float) ($product['sale_price'] ?: $product['price'] ?? 0) ?>;
 
-        if (titleEl) titleEl.innerText = 'Add Product Variant';
-        if (idEl) idEl.value = '0';
-        if (labelEl) labelEl.value = 'Color / Style';
-        if (valEl) valEl.value = '';
-        if (codeEl) codeEl.value = '';
-        if (stockEl) stockEl.value = '50';
-        if (wPriceEl) wPriceEl.value = '<?= (float) ($product['price'] ?? 0) ?>';
-        if (oPriceEl) oPriceEl.value = '<?= (float) ($product['sale_price'] ?: $product['price'] ?: 0) ?>';
-        if (weightEl) weightEl.value = '';
-        if (dimEl) dimEl.value = '';
-        if (imgEl) imgEl.value = '';
-        if (fileInp) fileInp.value = '';
-        if (activeEl) activeEl.checked = true;
+    // State: current attribute groups being built
+    let attrGroups = []; // [{name, type, values: [{val, swatch}]}]
+    let groupIdxSeq = 0;
 
-        modal.style.display = 'flex';
-        modal.classList.remove('hidden');
+    // Pre-populate from existing matrix on page load
+    (function initFromMatrix() {
+        if (!VARIATION_MATRIX.attributes || !VARIATION_MATRIX.attributes.length) return;
+        VARIATION_MATRIX.attributes.forEach(attr => {
+            const values = (attr.values || []).map(v => ({ val: v.value, swatch: v.swatch_hex_or_image || '' }));
+            addAttributeGroupFromData(attr.name, attr.attribute_type || 'button', values);
+        });
+    })();
+
+    function addAttributeGroup() {
+        addAttributeGroupFromData('', 'button', []);
     }
-    window.openVariantModal = openVariantModal;
 
-    function openEditVariantFromBtn(btn) {
-        const jsonStr = btn.getAttribute('data-variant');
-        if (!jsonStr) return;
+    function addAttributeGroupFromData(name, type, values) {
+        const idx = groupIdxSeq++;
+        attrGroups.push({ idx, name, type, values: [...values] });
+        renderAttrGroups();
+    }
+
+    function removeAttributeGroup(idx) {
+        attrGroups = attrGroups.filter(g => g.idx !== idx);
+        renderAttrGroups();
+    }
+
+    function renderAttrGroups() {
+        const list = document.getElementById('attrGroupsList');
+        if (!list) return;
+        if (attrGroups.length === 0) {
+            list.innerHTML = '';
+            document.getElementById('attrGroupsHint').style.display = '';
+            return;
+        }
+        document.getElementById('attrGroupsHint').style.display = 'none';
+
+        list.innerHTML = attrGroups.map(g => {
+            const isColor = g.name.toLowerCase() === 'color';
+            const valueChips = g.values.map((v, vi) => `
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 border border-slate-200 rounded-md text-xs font-semibold text-slate-700 group">
+                    ${isColor ? `<span style="width:12px;height:12px;border-radius:50%;background:${v.swatch || '#ccc'};border:1px solid #ccc;display:inline-block;"></span>` : ''}
+                    ${escHtml(v.val)}
+                    <button type="button" onclick="removeAttrValue(${g.idx}, ${vi})" class="text-slate-400 hover:text-rose-600 ml-0.5 cursor-pointer font-bold leading-none">×</button>
+                </span>
+            `).join('');
+
+            const swatchInput = isColor ? `
+                <input type="color" id="swatch_${g.idx}" value="#3b82f6" class="w-8 h-8 p-0 border border-slate-200 rounded cursor-pointer" title="Choose color">
+            ` : '';
+
+            return `
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3" data-group-idx="${g.idx}">
+                <div class="flex items-center gap-3">
+                    <div class="flex-1 min-w-0">
+                        <input type="text" value="${escHtml(g.name)}" placeholder="Attribute name (e.g. Color, Size, Material)"
+                            class="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:border-violet-400 transition"
+                            onchange="updateGroupName(${g.idx}, this.value)" oninput="updateGroupName(${g.idx}, this.value)">
+                    </div>
+                    <select onchange="updateGroupType(${g.idx}, this.value)"
+                        class="h-9 px-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none cursor-pointer">
+                        <option value="button" ${g.type === 'button' ? 'selected' : ''}>Button</option>
+                        <option value="swatch" ${g.type === 'swatch' ? 'selected' : ''}>Swatch</option>
+                        <option value="text"   ${g.type === 'text' ? 'selected' : ''}>Text</option>
+                    </select>
+                    <button type="button" onclick="removeAttributeGroup(${g.idx})" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition cursor-pointer" title="Remove attribute">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Values chips row -->
+                <div class="flex flex-wrap gap-1.5 min-h-[28px]" id="chips_${g.idx}">
+                    ${valueChips}
+                </div>
+
+                <!-- Add value -->
+                <div class="flex items-center gap-2">
+                    ${swatchInput}
+                    <input type="text" id="newval_${g.idx}" placeholder="Add value (e.g. Red, S, M, XL) — press Enter or comma"
+                        class="flex-1 h-9 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:border-violet-400 transition"
+                        onkeydown="handleValueKeydown(event, ${g.idx})">
+                    <button type="button" onclick="addAttrValue(${g.idx})" class="px-3 h-9 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-lg transition cursor-pointer">+ Add</button>
+                </div>
+            </div>`;
+        }).join('');
+
+        if (window.lucide) lucide.createIcons();
+    }
+
+    function updateGroupName(idx, val) {
+        const g = attrGroups.find(x => x.idx === idx);
+        if (g) {
+            g.name = val.trim();
+            g.type = val.trim().toLowerCase() === 'color' ? 'swatch' : g.type;
+        }
+    }
+
+    function updateGroupType(idx, val) {
+        const g = attrGroups.find(x => x.idx === idx);
+        if (g) g.type = val;
+    }
+
+    function handleValueKeydown(e, idx) {
+        if (e.key === 'Enter' || e.key === ',') {
+            e.preventDefault();
+            addAttrValue(idx);
+        }
+    }
+
+    function addAttrValue(idx) {
+        const input = document.getElementById(`newval_${idx}`);
+        if (!input) return;
+        const rawVals = input.value.split(',').map(v => v.trim()).filter(Boolean);
+        const g = attrGroups.find(x => x.idx === idx);
+        if (!g || !rawVals.length) return;
+
+        const swatchInput = document.getElementById(`swatch_${idx}`);
+        const swatchVal = swatchInput ? swatchInput.value : '';
+
+        rawVals.forEach(val => {
+            if (!g.values.find(v => v.val.toLowerCase() === val.toLowerCase())) {
+                g.values.push({ val, swatch: swatchVal });
+            }
+        });
+
+        input.value = '';
+        renderAttrGroups();
+    }
+
+    function removeAttrValue(idx, vi) {
+        const g = attrGroups.find(x => x.idx === idx);
+        if (g) {
+            g.values.splice(vi, 1);
+            renderAttrGroups();
+        }
+    }
+    window.addAttributeGroup = addAttributeGroup;
+    window.removeAttributeGroup = removeAttributeGroup;
+    window.updateGroupName = updateGroupName;
+    window.updateGroupType = updateGroupType;
+    window.handleValueKeydown = handleValueKeydown;
+    window.addAttrValue = addAttrValue;
+    window.removeAttrValue = removeAttrValue;
+
+    async function generateVariantCombinations() {
+        const groups = attrGroups
+            .filter(g => g.name && g.values.length > 0)
+            .map(g => ({ name: g.name, values: g.values.map(v => v.val) }));
+
+        if (groups.length === 0) {
+            showToast('Add at least one attribute group with values first.', 'error');
+            return;
+        }
+
+        const btn = document.getElementById('btnGenerateCombos');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin pointer-events-none"></i> Generating...'; }
+
         try {
-            const v = JSON.parse(jsonStr);
-            editVariant(v);
-        } catch (e) {
-            console.error('Error parsing variant JSON:', e);
-            showToast('Error reading variant details', 'error');
+            const res = await fetch(`${BASE_URL}/admin/products/${PRODUCT_ID}/variants/generate-combos`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF_TOKEN },
+                body: JSON.stringify({ groups })
+            });
+            const d = await res.json();
+            if (!d.success) { showToast(d.message || 'Error generating combos', 'error'); return; }
+
+            renderCombosTable(d.combinations);
+            showToast(`${d.combinations.length} combinations generated.`, 'success');
+        } catch (err) {
+            showToast('Network error generating combinations', 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="refresh-cw" class="w-4 h-4 pointer-events-none"></i> Generate Variations'; if (window.lucide) lucide.createIcons(); }
         }
     }
-    window.openEditVariantFromBtn = openEditVariantFromBtn;
+    window.generateVariantCombinations = generateVariantCombinations;
 
-    function editVariant(v) {
-        const modal = document.getElementById('variantModal');
-        if (!modal) return;
+    function renderCombosTable(combos) {
+        const tbody = document.getElementById('combosTableBody');
+        if (!tbody) return;
 
-        const titleEl = document.getElementById('variantModalTitle');
-        const idEl = document.getElementById('v_variant_id');
-        const labelEl = document.getElementById('v_attribute_label');
-        const valEl = document.getElementById('v_attribute_value');
-        const codeEl = document.getElementById('v_variant_code');
-        const stockEl = document.getElementById('v_stock_quantity');
-        const wPriceEl = document.getElementById('v_wholesale_price');
-        const oPriceEl = document.getElementById('v_one_piece_price');
-        const weightEl = document.getElementById('v_weight');
-        const dimEl = document.getElementById('v_dimensions');
-        const imgEl = document.getElementById('v_image_url');
-        const fileInp = document.getElementById('v_image_file');
-        const activeEl = document.getElementById('v_is_active');
+        // Remove the "no combos" placeholder row only
+        const placeholder = document.getElementById('noCombosRow');
+        if (placeholder) placeholder.remove();
 
-        if (titleEl) titleEl.innerText = 'Edit Product Variant';
-        if (idEl) idEl.value = v.id || 0;
-        if (labelEl) labelEl.value = v.attribute_label || 'Variant';
-        if (valEl) valEl.value = v.attribute_value || '';
-        if (codeEl) codeEl.value = v.variant_code || '';
-        if (stockEl) stockEl.value = v.stock_quantity || 0;
-        if (wPriceEl) wPriceEl.value = v.wholesale_price || 0;
-        if (oPriceEl) oPriceEl.value = v.one_piece_price || 0;
-        if (weightEl) weightEl.value = v.weight || '';
-        if (dimEl) dimEl.value = v.dimensions || '';
-        if (imgEl) imgEl.value = v.image_url || '';
-        if (fileInp) fileInp.value = '';
-        if (activeEl) activeEl.checked = parseInt(v.is_active) === 1;
+        // For newly-generated rows, replace only non-existing rows from previous generation
+        // Mark all JS-generated rows with class "js-generated"
+        document.querySelectorAll('#combosTableBody tr.js-generated').forEach(r => r.remove());
 
-        modal.style.display = 'flex';
-        modal.classList.remove('hidden');
+        combos.forEach(combo => {
+            // Label: "Color: Red, Size: M"
+            const label = combo.attributes.map(a => `${a.name}: ${a.value}`).join(', ');
+            const attributesJson = escHtml(JSON.stringify(combo.attributes));
+
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-50 transition variant-row js-generated' + (combo.exists ? '' : ' bg-violet-50/30');
+            if (combo.variant_id) tr.dataset.variantId = combo.variant_id;
+
+            tr.innerHTML = `
+                <td class="py-2.5 px-3">
+                    <span class="text-xs font-semibold text-slate-900">${escHtml(label)}</span>
+                    ${combo.exists ? '<span class="ml-1 px-1.5 py-0.5 text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">Exists</span>' : '<span class="ml-1 px-1.5 py-0.5 text-[9px] font-bold bg-violet-50 text-violet-700 border border-violet-200 rounded">New</span>'}
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="text" class="w-28 h-8 px-2 border border-slate-200 rounded-lg text-xs font-mono bg-white"
+                        value="${escHtml(combo.sku || '')}" placeholder="AUTO" data-field="sku">
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="number" step="0.01" class="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs font-bold bg-white"
+                        value="${combo.wholesale_price || PRODUCT_DEFAULT_WP}" data-field="wholesale_price">
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="number" step="0.01" class="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs font-bold text-emerald-700 bg-white"
+                        value="${combo.one_piece_price || PRODUCT_DEFAULT_OP}" data-field="one_piece_price">
+                </td>
+                <td class="py-2.5 px-3 text-center">
+                    <input type="number" min="0" class="w-20 h-8 px-2 border border-slate-200 rounded-lg text-xs font-bold text-center bg-white"
+                        value="${combo.stock_quantity || 0}" data-field="stock_quantity">
+                </td>
+                <td class="py-2.5 px-3">
+                    <input type="text" class="w-36 h-8 px-2 border border-slate-200 rounded-lg text-xs font-mono bg-white"
+                        value="${escHtml(combo.image_url || '')}" placeholder="Image URL" data-field="image_url">
+                </td>
+                <td class="py-2.5 px-3 text-center">
+                    <input type="checkbox" class="w-4 h-4 text-violet-600 rounded border-slate-300 cursor-pointer" checked data-field="is_active">
+                </td>
+                <td class="py-2.5 px-3 text-right whitespace-nowrap">
+                    <button type="button" onclick="saveComboRow(this, ${combo.variant_id || 0}, ${attributesJson.replace(/&quot;/g, '"')})"
+                        class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-lg transition cursor-pointer">
+                        Save
+                    </button>
+                    ${combo.variant_id ? `<button type="button" onclick="confirmDeleteVariant(${combo.variant_id}, this)"
+                        class="ml-1 px-2.5 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 text-[10px] font-bold rounded-lg transition border border-rose-200 cursor-pointer">Del</button>` : ''}
+                </td>`;
+            tbody.appendChild(tr);
+        });
     }
-    window.editVariant = editVariant;
 
-    function closeVariantModal() {
-        const modal = document.getElementById('variantModal');
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.add('hidden');
-        }
-    }
-    window.closeVariantModal = closeVariantModal;
+    async function saveComboRow(btn, variantId, attributes) {
+        const tr = btn.closest('tr');
+        const get = field => {
+            const el = tr.querySelector(`[data-field="${field}"]`);
+            if (!el) return '';
+            return el.type === 'checkbox' ? (el.checked ? 1 : 0) : el.value;
+        };
 
-    async function submitVariantForm(e) {
-        if (e) e.preventDefault();
         const fd = new FormData();
         fd.append('_token', CSRF_TOKEN);
         fd.append('_csrf_token', CSRF_TOKEN);
-        fd.append('variant_id', document.getElementById('v_variant_id').value);
-        fd.append('attribute_label', document.getElementById('v_attribute_label').value);
-        fd.append('attribute_value', document.getElementById('v_attribute_value').value);
-        fd.append('variant_code', document.getElementById('v_variant_code').value);
-        fd.append('stock_quantity', document.getElementById('v_stock_quantity').value);
-        fd.append('wholesale_price', document.getElementById('v_wholesale_price').value);
-        fd.append('one_piece_price', document.getElementById('v_one_piece_price').value);
-        fd.append('weight', document.getElementById('v_weight').value);
-        fd.append('dimensions', document.getElementById('v_dimensions').value);
-        fd.append('image_url', document.getElementById('v_image_url').value);
-        fd.append('is_active', document.getElementById('v_is_active').checked ? 1 : 0);
+        fd.append('variant_id', variantId);
+        fd.append('variant_code', get('sku'));
+        fd.append('wholesale_price', get('wholesale_price'));
+        fd.append('one_piece_price', get('one_piece_price'));
+        fd.append('stock_quantity', get('stock_quantity'));
+        fd.append('image_url', get('image_url'));
+        fd.append('is_active', get('is_active'));
+        fd.append('attributes_json', JSON.stringify(Array.isArray(attributes) ? attributes : []));
 
-        const fileInp = document.getElementById('v_image_file');
-        if (fileInp && fileInp.files && fileInp.files[0]) {
-            fd.append('variant_image_file', fileInp.files[0]);
-        }
+        btn.disabled = true;
+        btn.textContent = '…';
 
         try {
             const res = await fetch(`${BASE_URL}/admin/products/${PRODUCT_ID}/variants/save`, {
@@ -1891,17 +2420,35 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             });
             const d = await res.json();
             if (d.success) {
-                closeVariantModal();
-                showToast(d.message || 'Variant saved successfully', 'success');
-                setTimeout(() => location.reload(), 300);
+                showToast(d.message || 'Saved!', 'success');
+                if (!variantId && d.variant_id) {
+                    tr.dataset.variantId = d.variant_id;
+                    btn.setAttribute('onclick', `saveComboRow(this, ${d.variant_id}, ${JSON.stringify(attributes)})`);
+                    // Add delete button
+                    const delBtn = document.createElement('button');
+                    delBtn.type = 'button';
+                    delBtn.setAttribute('onclick', `confirmDeleteVariant(${d.variant_id}, this)`);
+                    delBtn.className = 'ml-1 px-2.5 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 text-[10px] font-bold rounded-lg transition border border-rose-200 cursor-pointer';
+                    delBtn.textContent = 'Del';
+                    btn.parentNode.appendChild(delBtn);
+                    // Remove the "New" badge
+                    const newBadge = tr.querySelector('.bg-violet-50');
+                    if (newBadge) newBadge.textContent = 'Saved';
+                }
+                btn.textContent = '✓ Saved';
+                setTimeout(() => { btn.textContent = 'Save'; btn.disabled = false; }, 1500);
             } else {
                 showToast(d.message || 'Error saving variant', 'error');
+                btn.textContent = 'Save';
+                btn.disabled = false;
             }
         } catch (err) {
-            showToast('Network error while saving variant', 'error');
+            showToast('Network error', 'error');
+            btn.textContent = 'Save';
+            btn.disabled = false;
         }
     }
-    window.submitVariantForm = submitVariantForm;
+    window.saveComboRow = saveComboRow;
 
     function confirmDeleteVariant(vid, btn) {
         const tr = btn ? btn.closest('tr') : document.querySelector(`tr[data-variant-id="${vid}"]`);
@@ -1944,6 +2491,11 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         }
     }
     window.confirmDeleteVariant = confirmDeleteVariant;
+
+    function escHtml(str) {
+        if (typeof str !== 'string') return str;
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 
     // =========================================================================
     // 2. SPECIFICATION MODAL POPUP (ADD, EDIT, DELETE)
@@ -2176,30 +2728,30 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             method: 'POST',
             body: formData
         })
-        .then(r => r.json())
-        .then(res => {
-            if (res.success && res.option) {
-                const opt = res.option;
-                const container = document.getElementById('filter-attr-options-' + attributeId);
-                if (!container) return;
+            .then(r => r.json())
+            .then(res => {
+                if (res.success && res.option) {
+                    const opt = res.option;
+                    const container = document.getElementById('filter-attr-options-' + attributeId);
+                    if (!container) return;
 
-                if (container.tagName.toLowerCase() === 'select') {
-                    const newOpt = document.createElement('option');
-                    newOpt.value = opt.id;
-                    newOpt.textContent = opt.value;
-                    newOpt.selected = true;
-                    container.appendChild(newOpt);
+                    if (container.tagName.toLowerCase() === 'select') {
+                        const newOpt = document.createElement('option');
+                        newOpt.value = opt.id;
+                        newOpt.textContent = opt.value;
+                        newOpt.selected = true;
+                        container.appendChild(newOpt);
+                    } else {
+                        const label = document.createElement('label');
+                        label.className = 'flex items-center space-x-2 font-medium text-slate-700 cursor-pointer text-xs';
+                        label.innerHTML = '<input type="checkbox" name="filter_attributes[' + attributeId + '][]" value="' + opt.id + '" checked class="rounded border-slate-300 text-orange-600"> <span>' + escapeHtml(opt.value) + '</span>';
+                        container.appendChild(label);
+                    }
                 } else {
-                    const label = document.createElement('label');
-                    label.className = 'flex items-center space-x-2 font-medium text-slate-700 cursor-pointer text-xs';
-                    label.innerHTML = '<input type="checkbox" name="filter_attributes[' + attributeId + '][]" value="' + opt.id + '" checked class="rounded border-slate-300 text-orange-600"> <span>' + escapeHtml(opt.value) + '</span>';
-                    container.appendChild(label);
+                    alert(res.error || 'Failed to add option');
                 }
-            } else {
-                alert(res.error || 'Failed to add option');
-            }
-        })
-        .catch(err => alert('Error adding option: ' + err.message));
+            })
+            .catch(err => alert('Error adding option: ' + err.message));
     }
     window.showAddOptionPrompt = showAddOptionPrompt;
 </script>

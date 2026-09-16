@@ -143,8 +143,13 @@ class ProductDetailController extends Controller {
         $product['review_count'] = $reviewCount;
         $product['rating_avg']   = $ratingAvg;
 
+        // Variation Matrix for multi-attribute variant selector
+        $pvModel = new \App\Models\ProductVariant();
+        $variationMatrix = $pvModel->getVariantMatrix($pid);
+
         return $this->render('storefront/product', [
             'product'               => $product,
+            'variationMatrix'       => $variationMatrix,
             'compatibleScooters'    => $compatibleScooters,
             'galleryImages'         => $galleryImages,
             'galleryJson'           => $galleryJson,
