@@ -15,35 +15,8 @@
     <link rel="stylesheet" href="<?= asset('assets/css/everful-theme.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/theme.css') ?>">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    },
-                    colors: {
-                        theme: {
-                            primary: '#f05a29',
-                            'primary-dark': '#d8481b',
-                            secondary: '#111827',
-                            accent: '#f05a29',
-                            bg: '#ffffff',
-                            'bg-soft': '#f9fafb',
-                            text: '#111827',
-                            'text-muted': '#6b7280',
-                            success: '#10b981',
-                            warning: '#f59e0b',
-                            danger: '#ef4444',
-                            gold: '#f59e0b'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Compiled Production Tailwind CSS -->
+    <link rel="stylesheet" href="<?= asset('assets/css/tailwind.min.css') ?>">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">

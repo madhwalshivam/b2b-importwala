@@ -11,18 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <!-- Compiled Production Tailwind CSS -->
+    <link rel="stylesheet" href="<?= asset('assets/css/tailwind.min.css') ?>">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 

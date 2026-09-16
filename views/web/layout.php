@@ -19,26 +19,8 @@
   <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>" />
   <meta property="og:description" content="<?= htmlspecialchars($pageDesc) ?>" />
 
-  <!-- Tailwind CSS CDN (required for all utility classes across the site) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#f05a29',
-            'primary-dark': '#d8481b',
-          },
-          fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-          },
-        }
-      },
-      corePlugins: {
-        preflight: false, /* Don't override existing everful-theme.css base styles */
-      }
-    }
-  </script>
+  <!-- Compiled Production Tailwind CSS -->
+  <link rel="stylesheet" href="<?= asset('assets/css/tailwind.min.css') ?>">
 
   <!-- Site Stylesheets -->
   <link rel="stylesheet" href="<?= asset('css/everful-theme.css') ?>?v=<?= time() ?>">

@@ -5,25 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GST Tax Invoice - <?= htmlspecialchars($order['order_number']) ?> | Mudsor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="<?= asset('assets/css/tailwind.min.css') ?>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            red: '#A8111C',
-                            dark: '#6E0D14'
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         @media print {
             body {

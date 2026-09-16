@@ -1,0 +1,13 @@
+{
+  "name": "importwala",
+  "version": "1.0.0",
+  "description": "ImportWale B2B Ecommerce Platform",
+  "main": "public/index.php",
+  "scripts": {
+    "build:css": "tailwindcss -i ./public/assets/css/src/tailwind.css -o ./public/assets/css/tailwind.min.css --minify",
+    "watch:css": "tailwindcss -i ./public/assets/css/src/tailwind.css -o ./public/assets/css/tailwind.min.css --watch"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

@@ -109,39 +109,8 @@ $isBlog = str_contains($currentUri, 'blog');
         }
     </style>
 
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-                    },
-                    colors: {
-                        theme: {
-                            primary: 'var(--color-primary)',
-                            'primary-dark': 'var(--color-primary-dark)',
-                            secondary: 'var(--color-secondary)',
-                            accent: 'var(--color-accent)',
-                            bg: 'var(--bg-body)',
-                            'bg-soft': 'var(--bg-body-soft)',
-                            card: 'var(--bg-card)',
-                            text: 'var(--color-text)',
-                            'text-muted': 'var(--color-text-muted)',
-                            success: 'var(--color-success)',
-                            warning: 'var(--color-warning)',
-                            danger: 'var(--color-danger)',
-                            gold: 'var(--color-highlight-gold)'
-                        }
-                    },
-                    boxShadow: {
-                        'card': '0 4px 12px rgba(0, 0, 0, 0.05)',
-                    }
-                }
-            }
-    </script>
+    <!-- Compiled Production Tailwind CSS -->
+    <link rel="stylesheet" href="<?= asset('assets/css/tailwind.min.css') ?>">
 
     <!-- Icon Libraries (Font Awesome 6 & Material Icons Outlined) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
