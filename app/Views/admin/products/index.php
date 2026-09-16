@@ -9,7 +9,8 @@ include __DIR__ . '/../layouts/header.php';
         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs">
         <div>
             <div class="flex items-center space-x-2">
-                <span
+                
+            <span
                     class="px-2.5 py-0.5 text-[10px] font-semibold uppercase bg-orange-50 text-[#f05a29] rounded-md tracking-wider border border-orange-200">
                     Catalog &amp; Products
                 </span>
