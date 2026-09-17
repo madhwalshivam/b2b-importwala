@@ -611,6 +611,7 @@ class BulkImportService
             }
 
             // Step 2: Commit Products
+            $vService = new \App\Services\VariationService();
             foreach ($productsData as $prod) {
                 if (($prod['status'] ?? '') === 'error') {
                     $skippedProducts++;
@@ -885,6 +886,9 @@ class BulkImportService
                         $createdVariants++;
                     }
                 }
+
+                // Sync to flat variants for legacy frontend support
+                $vService->syncToFlatVariants($productId, $varMode);
             }
 
             $this->db->commit();

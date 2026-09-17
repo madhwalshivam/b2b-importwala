@@ -233,7 +233,7 @@ class VariationService
      * Synchronizes the nested variation tables (product_colors, product_color_sizes)
      * to the flat legacy product_variants table used by the frontend.
      */
-    private function syncToFlatVariants(int $productId, string $mode): void
+    public function syncToFlatVariants(int $productId, string $mode): void
     {
         // 1. Delete old variants for this product
         $this->db->prepare("DELETE FROM `product_variants` WHERE `product_id` = ?")->execute([$productId]);

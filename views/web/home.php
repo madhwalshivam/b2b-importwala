@@ -1636,7 +1636,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                                     <!-- Short Excerpt -->
                                     <p class="line-clamp-2" style="font-size: 13px; color: #6b7280; margin-top: 4px; line-height: 1.5;">
-                                        <?= htmlspecialchars($article['excerpt'] ?: mb_strimwidth(strip_tags($article['content']), 0, 90, '...')) ?>
+                                        <?= htmlspecialchars(htmlspecialchars_decode($article['excerpt'] ?: mb_strimwidth(strip_tags($article['content']), 0, 90, '...'), ENT_QUOTES), ENT_QUOTES, 'UTF-8') ?>
                                     </p>
                                 </div>
                             </a>

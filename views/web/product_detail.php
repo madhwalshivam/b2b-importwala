@@ -1366,22 +1366,6 @@ ob_start();
     function selectVariantColor(colorName) {
         if (currentColorSelection === colorName) return;
 
-        // 1. Clear quantities of all CURRENTLY visible sizes before hiding them
-        const rows = document.querySelectorAll('.variant-row');
-        rows.forEach(r => {
-            if (currentColorSelection && r.dataset.color === currentColorSelection) {
-                const vi = r.dataset.variantIdx;
-                const span = document.getElementById('vQtyVal_' + vi);
-                if (span && parseInt(span.textContent) > 0) {
-                    span.textContent = 0;
-                    if (cartSyncDebounceTimers[vi]) clearTimeout(cartSyncDebounceTimers[vi]);
-                    cartSyncDebounceTimers[vi] = setTimeout(() => {
-                        syncVariantToCart(vi, 0);
-                    }, 300);
-                }
-            }
-        });
-
         currentColorSelection = colorName;
 
         // 2. Update Color Buttons UI

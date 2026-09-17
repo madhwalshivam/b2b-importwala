@@ -9,8 +9,8 @@ include __DIR__ . '/../layouts/header.php';
         class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-5 rounded-2xl border border-gray-200/80 shadow-xs">
         <div>
             <div class="flex items-center space-x-2">
-                
-            <span
+
+                <span
                     class="px-2.5 py-0.5 text-[10px] font-semibold uppercase bg-orange-50 text-[#f05a29] rounded-md tracking-wider border border-orange-200">
                     Catalog &amp; Products
                 </span>
@@ -75,7 +75,8 @@ include __DIR__ . '/../layouts/header.php';
         <div class="overflow-x-auto">
             <table class="w-full text-xs text-left border-collapse min-w-[840px]">
                 <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px] select-none">
+                    <tr
+                        class="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px] select-none">
                         <th class="py-3 px-3 w-8 text-center">
                             <input type="checkbox" id="select-all-chk" onchange="toggleSelectAll(this)"
                                 class="rounded text-[#f05a29] focus:ring-0 w-3.5 h-3.5 cursor-pointer">
@@ -130,10 +131,12 @@ include __DIR__ . '/../layouts/header.php';
                                     </div>
                                 </td>
                                 <td class="py-2.5 px-3 font-mono font-semibold text-indigo-700 text-[11px] whitespace-nowrap">
-                                    <span class="px-1.5 py-0.5 bg-indigo-50 border border-indigo-200/60 rounded text-indigo-700 font-mono font-bold"><?= htmlspecialchars($p['sku']) ?></span>
+                                    <span
+                                        class="px-1.5 py-0.5 bg-indigo-50 border border-indigo-200/60 rounded text-indigo-700 font-mono font-bold"><?= htmlspecialchars($p['sku']) ?></span>
                                 </td>
                                 <td class="py-2.5 px-3 font-semibold text-slate-900 text-[11px]">
-                                    <?= format_price($p['sale_price'] ?: $p['price']) ?></td>
+                                    <?= format_price($p['sale_price'] ?: $p['price']) ?>
+                                </td>
 
                                 <!-- Professional iOS Toggle: New Product -->
                                 <td class="py-2.5 px-3 text-center">
@@ -214,7 +217,7 @@ include __DIR__ . '/../layouts/header.php';
                 fetch('<?= url("admin/products/toggle-flag") ?>', {
                     method: 'POST',
                     body: formData,
-                    headers: { 
+                    headers: {
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
                     }
@@ -281,9 +284,11 @@ include __DIR__ . '/../layouts/header.php';
 <!-- ============================================================ -->
 <!-- BULK IMPORT MODAL & STAGED PREVIEW -->
 <!-- ============================================================ -->
-<div id="bulkImportModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        
+<div id="bulkImportModal"
+    class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div
+        class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+
         <!-- Modal Header -->
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div>
@@ -293,7 +298,8 @@ include __DIR__ . '/../layouts/header.php';
                 </h3>
                 <p class="text-xs text-slate-500 mt-0.5">Upload .xlsx / .csv catalog spreadsheet</p>
             </div>
-            <button onclick="closeBulkImportModal()" type="button" class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition border-0 cursor-pointer">
+            <button onclick="closeBulkImportModal()" type="button"
+                class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition border-0 cursor-pointer">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
@@ -305,22 +311,29 @@ include __DIR__ . '/../layouts/header.php';
             <div id="importStepUpload" class="space-y-5">
                 <form id="bulkUploadForm" onsubmit="handleParseSpreadsheet(event)" class="space-y-4">
                     <!-- Single Spreadsheet File Input -->
-                    <div class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-8 bg-slate-50/50 text-center transition group">
-                        <i data-lucide="file-spreadsheet" class="w-10 h-10 mx-auto text-emerald-600 mb-3 group-hover:scale-110 transition"></i>
-                        <label class="block text-sm font-bold text-slate-800 mb-1 cursor-pointer">Select Spreadsheet (.xlsx / .csv)</label>
+                    <div
+                        class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-8 bg-slate-50/50 text-center transition group">
+                        <i data-lucide="file-spreadsheet"
+                            class="w-10 h-10 mx-auto text-emerald-600 mb-3 group-hover:scale-110 transition"></i>
+                        <label class="block text-sm font-bold text-slate-800 mb-1 cursor-pointer">Select Spreadsheet
+                            (.xlsx / .csv)</label>
                         <p class="text-xs text-slate-400 mb-4">Fixed 55-column v1 catalog spreadsheet schema</p>
-                        <input type="file" id="importSpreadsheetFile" accept=".xlsx, .csv" required class="block w-full max-w-md mx-auto text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
+                        <input type="file" id="importSpreadsheetFile" accept=".xlsx, .csv" required
+                            class="block w-full max-w-md mx-auto text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer">
                     </div>
 
                     <div class="flex items-center justify-between bg-slate-100 p-3.5 rounded-xl">
-                        <label class="flex items-center space-x-2 text-xs font-medium text-slate-700 cursor-pointer select-none">
-                            <input type="checkbox" id="chkAutoCreateCategory" checked class="rounded text-emerald-600 focus:ring-0 w-4 h-4 cursor-pointer">
+                        <label
+                            class="flex items-center space-x-2 text-xs font-medium text-slate-700 cursor-pointer select-none">
+                            <input type="checkbox" id="chkAutoCreateCategory" checked
+                                class="rounded text-emerald-600 focus:ring-0 w-4 h-4 cursor-pointer">
                             <span>Auto-create Category, Subcategory &amp; Brand if missing in database</span>
                         </label>
                     </div>
 
                     <div class="pt-2 flex justify-end">
-                        <button type="submit" id="btnParseSpreadsheet" class="px-6 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-2 cursor-pointer border-0">
+                        <button type="submit" id="btnParseSpreadsheet"
+                            class="px-6 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-2 cursor-pointer border-0">
                             <i data-lucide="scan" class="w-4 h-4"></i>
                             <span>Parse &amp; Validate Catalog</span>
                         </button>
@@ -330,7 +343,9 @@ include __DIR__ . '/../layouts/header.php';
 
             <!-- LOADER -->
             <div id="importStepLoader" class="hidden py-12 text-center space-y-3">
-                <div class="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto"></div>
+                <div
+                    class="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto">
+                </div>
                 <h4 class="text-sm font-bold text-slate-800">Parsing catalog spreadsheet &amp; verifying schema...</h4>
                 <p class="text-xs text-slate-500">Checking product SKUs, variant codes, prices, and categories...</p>
             </div>
@@ -363,15 +378,16 @@ include __DIR__ . '/../layouts/header.php';
 
                 <!-- Products Group Table -->
                 <div class="border border-slate-200 rounded-xl overflow-hidden max-h-[350px] overflow-y-auto">
-                    <table class="w-full text-xs text-left border-collapse min-w-[700px]"                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] font-semibold uppercase sticky top-0 z-10">
-                            <tr>
-                                <th class="py-2.5 px-3">Product SKU</th>
-                                <th class="py-2.5 px-3">Product Name</th>
-                                <th class="py-2.5 px-3">Category</th>
-                                <th class="py-2.5 px-3">Factory Link</th>
-                                <th class="py-2.5 px-3 text-center">Variants</th>
-                                <th class="py-2.5 px-3 text-center">Status</th>
-                            </tr>
+                    <table class="w-full text-xs text-left border-collapse min-w-[700px]" <thead
+                        class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] font-semibold uppercase sticky top-0 z-10">
+                        <tr>
+                            <th class="py-2.5 px-3">Product SKU</th>
+                            <th class="py-2.5 px-3">Product Name</th>
+                            <th class="py-2.5 px-3">Category</th>
+                            <th class="py-2.5 px-3">Factory Link</th>
+                            <th class="py-2.5 px-3 text-center">Variants</th>
+                            <th class="py-2.5 px-3 text-center">Status</th>
+                        </tr>
                         </thead>
                         <tbody id="previewTableBody" class="divide-y divide-slate-100 bg-white">
                             <!-- Populated dynamically -->
@@ -381,10 +397,12 @@ include __DIR__ . '/../layouts/header.php';
 
                 <!-- Preview Actions Footer -->
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <button onclick="resetImportModal()" type="button" class="px-4 h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition cursor-pointer border-0">
+                    <button onclick="resetImportModal()" type="button"
+                        class="px-4 h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition cursor-pointer border-0">
                         Back / Re-upload
                     </button>
-                    <button id="btnCommitImport" onclick="executeCommitImport()" type="button" class="px-6 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-2 cursor-pointer border-0">
+                    <button id="btnCommitImport" onclick="executeCommitImport()" type="button"
+                        class="px-6 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-2 cursor-pointer border-0">
                         <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                         <span>Confirm &amp; Import Products</span>
                     </button>
@@ -393,7 +411,8 @@ include __DIR__ . '/../layouts/header.php';
 
             <!-- STEP 3: RESULT SUMMARY -->
             <div id="importStepResult" class="hidden text-center py-6 space-y-4">
-                <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                <div
+                    class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
                     <i data-lucide="check-check" class="w-8 h-8"></i>
                 </div>
                 <h3 class="text-lg font-extrabold text-slate-900">Import Operation Completed!</h3>
@@ -417,18 +436,22 @@ include __DIR__ . '/../layouts/header.php';
                     </div>
                 </div>
 
-                <div id="resErrorNotice" class="hidden max-w-lg mx-auto bg-amber-50 border border-amber-200 p-3 rounded-xl text-left text-xs text-amber-800 flex items-center justify-between">
+                <div id="resErrorNotice"
+                    class="hidden max-w-lg mx-auto bg-amber-50 border border-amber-200 p-3 rounded-xl text-left text-xs text-amber-800 flex items-center justify-between">
                     <div>
                         <strong class="font-bold block">Some rows were skipped due to validation errors.</strong>
-                        <span class="text-[11px] text-amber-700">You can download the error CSV report below for correction.</span>
+                        <span class="text-[11px] text-amber-700">You can download the error CSV report below for
+                            correction.</span>
                     </div>
-                    <a href="<?= url('admin/products/import/errors-csv') ?>" target="_blank" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs transition shrink-0 ml-3">
+                    <a href="<?= url('admin/products/import/errors-csv') ?>" target="_blank"
+                        class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs transition shrink-0 ml-3">
                         Download Error CSV
                     </a>
                 </div>
 
                 <div class="pt-4">
-                    <button onclick="window.location.reload()" type="button" class="px-6 h-10 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer border-0">
+                    <button onclick="window.location.reload()" type="button"
+                        class="px-6 h-10 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer border-0">
                         Done &amp; Refresh Products
                     </button>
                 </div>
@@ -483,7 +506,7 @@ include __DIR__ . '/../layouts/header.php';
             const resp = await fetch('<?= url('admin/products/import/parse') ?>', {
                 method: 'POST',
                 body: formData,
-                headers: { 
+                headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
                 }
@@ -599,7 +622,7 @@ include __DIR__ . '/../layouts/header.php';
             const resp = await fetch('<?= url('admin/products/import/commit') ?>', {
                 method: 'POST',
                 body: formData,
-                headers: { 
+                headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
                 }

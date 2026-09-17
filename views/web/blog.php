@@ -5,48 +5,33 @@ ob_start();
 
 <div style="margin-top: 24px; margin-bottom: 32px;">
 
-  <!-- Journal Header Section (Light Theme with Navbar Gap) -->
-  <div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
-    <span style="color: #f05a29; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-      ImportWale Journal
-    </span>
-    <h1 style="font-size: 32px; font-weight: 800; color: #111827; margin: 0 0 8px 0; letter-spacing: -0.5px;">
-      B2B Wholesale News &amp; Market Insights
-    </h1>
-    <p style="font-size: 14px; color: #6b7280; margin: 0; max-width: 700px; line-height: 1.5;">
-      Expert guides, market trends, product comparisons, and sourcing tips for wholesale buyers.
-    </p>
-  </div>
-
-  <!-- Filter Strip & Search Bar -->
-  <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb;">
-    <!-- Category Tabs -->
-    <div style="display: flex; align-items: center; gap: 8px; overflow-x: auto; max-width: 100%;">
-      <a href="<?= url('blog' . (!empty($searchQuery) ? '?q=' . urlencode($searchQuery) : '')) ?>" 
-         style="padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.2s; <?= empty($activeCategory) ? 'background: #f05a29; color: #fff;' : 'background: #f3f4f6; color: #374151;' ?>">
-        All Articles
-      </a>
-      <?php if (!empty($categories)): ?>
-        <?php foreach ($categories as $cat): ?>
-          <a href="<?= url('blog?cat=' . $cat['slug'] . (!empty($searchQuery) ? '&q=' . urlencode($searchQuery) : '')) ?>" 
-             style="padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; transition: all 0.2s; <?= ($activeCategory === $cat['slug']) ? 'background: #f05a29; color: #fff;' : 'background: #f3f4f6; color: #374151;' ?>">
-            <?= htmlspecialchars($cat['name']) ?>
-          </a>
-        <?php endforeach; ?>
-      <?php endif; ?>
+  <!-- Journal Header & Search Section -->
+  <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb;">
+    
+    <!-- Header Titles -->
+    <div style="flex: 1; min-width: 300px;">
+      <span style="color: #f05a29; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+        ImportWale Journal
+      </span>
+      <h1 style="font-size: 32px; font-weight: 800; color: #111827; margin: 0 0 8px 0; letter-spacing: -0.5px;">
+        B2B Wholesale News &amp; Market Insights
+      </h1>
+      <p style="font-size: 14px; color: #6b7280; margin: 0; max-width: 700px; line-height: 1.5;">
+        Expert guides, market trends, product comparisons, and sourcing tips for wholesale buyers.
+      </p>
     </div>
 
-    <!-- Search Input -->
-    <form action="<?= url('blog') ?>" method="GET" style="position: relative; display: flex; align-items: center; width: 280px; max-width: 100%;">
-      <?php if (!empty($activeCategory)): ?>
-        <input type="hidden" name="cat" value="<?= htmlspecialchars($activeCategory) ?>">
-      <?php endif; ?>
-      <input type="text" name="q" value="<?= htmlspecialchars($searchQuery) ?>" placeholder="Search journal..." 
-             style="width: 100%; padding: 9px 14px; padding-right: 36px; background: #fff; border: 1px solid #d1d5db; border-radius: 10px; font-size: 13px; color: #111827; outline: none;">
-      <button type="submit" style="position: absolute; right: 10px; background: none; border: none; cursor: pointer; color: #6b7280; display: flex; align-items: center; justify-content: center;">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-      </button>
-    </form>
+    <!-- Search Bar -->
+    <div style="flex-shrink: 0; width: 100%; max-width: 300px;">
+      <form action="<?= url('blog') ?>" method="GET" style="position: relative; display: flex; align-items: center; width: 100%;">
+        <input type="text" name="q" value="<?= htmlspecialchars($searchQuery) ?>" placeholder="Search journal..." 
+               style="width: 100%; padding: 10px 16px; padding-right: 40px; background: #fff; border: 1px solid #d1d5db; border-radius: 12px; font-size: 14px; color: #111827; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+        <button type="submit" style="position: absolute; right: 12px; background: none; border: none; cursor: pointer; color: #6b7280; display: flex; align-items: center; justify-content: center;">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        </button>
+      </form>
+    </div>
+
   </div>
 
   <!-- 3-Column Articles Grid -->
@@ -88,7 +73,7 @@ ob_start();
 
             <!-- Post Excerpt -->
             <p style="font-size: 13px; color: #6b7280; margin: 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-              <?= htmlspecialchars($p['excerpt'] ?: mb_strimwidth(strip_tags($p['content']), 0, 110, '...')) ?>
+              <?= htmlspecialchars(htmlspecialchars_decode($p['excerpt'] ?: mb_strimwidth(strip_tags($p['content']), 0, 110, '...'), ENT_QUOTES), ENT_QUOTES, 'UTF-8') ?>
             </p>
           </div>
 
