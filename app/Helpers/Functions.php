@@ -1,12 +1,28 @@
 <?php
 
+if (!function_exists('e')) {
+    /**
+     * Escape HTML entities safely without double-encoding existing entities
+     */
+    function e(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        $str = (string) $value;
+        // Decode pre-existing entities first to avoid double encoding like &amp;#039;
+        $decoded = html_entity_decode($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        return htmlspecialchars($decoded, ENT_QUOTES, 'UTF-8');
+    }
+}
+
 if (!function_exists('sanitize_input')) {
     function sanitize_input(mixed $data): mixed
     {
         if (is_array($data)) {
             return array_map('sanitize_input', $data);
         }
-        return htmlspecialchars(trim((string) $data), ENT_QUOTES, 'UTF-8');
+        return is_string($data) ? trim($data) : $data;
     }
 }
 

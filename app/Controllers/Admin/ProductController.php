@@ -601,6 +601,30 @@ class ProductController extends Controller
         $this->productModel->syncProductCategories($id, $categoryIds);
         $this->productModel->syncProductBrands($id, $brandIds);
 
+        // ── Save Nested Variations if submitted via master form ────────────────────
+        if (!empty($_POST['nested_colors_json'])) {
+            try {
+                $variationMode  = trim($_POST['variation_mode'] ?? 'none');
+                $colorsRaw      = $_POST['nested_colors_json'];
+                $colors         = is_string($colorsRaw) ? (json_decode($colorsRaw, true) ?: []) : (array) $colorsRaw;
+                (new VariationService())->saveNestedVariations($id, $variationMode, $colors);
+            } catch (\Throwable $e) {
+                // Log silently — don't block the product save
+                error_log('Variation save error for product ' . $id . ': ' . $e->getMessage());
+            }
+        }
+
+        // ── Save Specifications if submitted via master form ───────────────────────
+        if (!empty($_POST['specs_json'])) {
+            try {
+                $specsRaw = json_decode($_POST['specs_json'], true) ?: [];
+                $specModel = new \App\Models\ProductSpecification();
+                $specModel->saveSpecifications($id, $specsRaw);
+            } catch (\Throwable $e) {
+                error_log('Spec save error for product ' . $id . ': ' . $e->getMessage());
+            }
+        }
+
         // Save Product Filter Attributes
         if (isset($_POST['filter_attributes']) && is_array($_POST['filter_attributes'])) {
             (new \App\Services\FilterAttributeService())->saveProductAttributeValues($id, $_POST['filter_attributes']);

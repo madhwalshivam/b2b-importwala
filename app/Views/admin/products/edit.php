@@ -49,7 +49,13 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
 
     <!-- MAIN FORM WRAPPER -->
     <form action="<?= url('admin/products/update/' . $product['id']) ?>" method="POST" enctype="multipart/form-data"
-        class="space-y-4" id="unified-product-form" @input="isFormDirty = true" @change="isFormDirty = true">
+        class="space-y-4" id="unified-product-form" @input="isFormDirty = true" @change="isFormDirty = true"
+        onsubmit="window.__syncVariationsToForm(this)">
+
+        <!-- Hidden fields for variation & spec data — populated by JS before submission -->
+        <input type="hidden" name="variation_mode" id="hidden_variation_mode" value="">
+        <input type="hidden" name="nested_colors_json" id="hidden_colors_json" value="">
+        <input type="hidden" name="specs_json" id="hidden_specs_json" value="">
 
         <!-- UNIFIED ZERO-GAP STICKY TOP HEADER (NAVBAR + TABS + SAVE BUTTON) -->
         <div class="sticky top-0 z-40 !mt-0 -mx-6 px-6 py-2.5 sticky-header-solid border-b border-slate-200/90 shadow-2xs mb-4"
@@ -188,7 +194,7 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                     <div class="sm:col-span-2">
                         <label class="block font-bold text-slate-700 uppercase mb-1">Product Name <span
                                 class="text-rose-500">*</span></label>
-                        <input type="text" name="name" required value="<?= htmlspecialchars($productNameClean) ?>"
+                        <input type="text" name="name" required value="<?= e($product['name'] ?? '') ?>"
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 focus:bg-white font-semibold text-slate-900 transition">
                     </div>
 
@@ -985,21 +991,17 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         <div x-show="activeTab === 'specs'" x-cloak class="space-y-5">
 
             <!-- ── SINGLE VS DOUBLE (NESTED) VARIATION BUILDER ───────────────────────────── -->
-            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6" x-data="{
-                    mode: '<?= $variationMatrix['variation_mode'] ?? 'none' ?>',
-                    colors: <?= htmlspecialchars(json_encode($variationMatrix['colors'] ?? [], JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') ?>,
+            <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('variationBuilder', () => ({
+                    mode: <?= json_encode($variationMatrix['variation_mode'] ?? 'none', JSON_UNESCAPED_UNICODE) ?>,
+                    colors: <?= json_encode($variationMatrix['colors'] ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>,
                     saving: false,
                     saveMsg: '',
 
-                    init() {
-                        if (!this.colors) this.colors = [];
-                    },
-
                     setMode(m) {
                         this.mode = m;
-                        if (m === 'single' && this.colors.length === 0) {
-                            this.addColor();
-                        } else if (m === 'double' && this.colors.length === 0) {
+                        if ((m === 'single' || m === 'double') && this.colors.length === 0) {
                             this.addColor();
                         }
                     },
@@ -1025,13 +1027,13 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         }
                     },
 
-                    addSize(colorIdx, label = '') {
+                    addSize(colorIdx, label) {
                         if (!this.colors[colorIdx].sizes) {
                             this.colors[colorIdx].sizes = [];
                         }
                         this.colors[colorIdx].sizes.push({
                             id: null,
-                            size_label: label || 'Size ' + (this.colors[colorIdx].sizes.length + 1),
+                            size_label: label || ('Size ' + (this.colors[colorIdx].sizes.length + 1)),
                             sku: '',
                             price: 499,
                             stock_qty: 10,
@@ -1061,8 +1063,8 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             });
                             const data = await res.json();
                             if (data.success) {
-                                this.saveMsg = 'Variations saved successfully!';
-                                setTimeout(() => { this.saveMsg = ''; }, 3000);
+                                this.saveMsg = 'Variations saved! Refreshing...';
+                                setTimeout(() => { window.location.reload(); }, 800);
                             } else {
                                 alert(data.message || 'Failed to save variations.');
                             }
@@ -1072,8 +1074,16 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         } finally {
                             this.saving = false;
                         }
+                    },
+
+                    init() {
+                        if (!this.colors) this.colors = [];
+                        window.__varApp = this;
                     }
-                 }">
+                }));
+            });
+            </script>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6" x-data="variationBuilder">
 
                 <div
                     class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-3">
@@ -2620,6 +2630,48 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
         }
     }
     window.submitSpecForm = submitSpecForm;
+
+    /**
+     * Called by the main product form's onsubmit.
+     * Reads Alpine.js variation state + DOM specs, writes them into hidden inputs.
+     */
+    window.__syncVariationsToForm = function(form) {
+        // 1. Sync variation mode + colors from Alpine component
+        try {
+            const varApp = window.__varApp;
+            if (varApp) {
+                document.getElementById('hidden_variation_mode').value = varApp.mode || 'none';
+                document.getElementById('hidden_colors_json').value = JSON.stringify(varApp.colors || []);
+            }
+        } catch (e) {
+            console.warn('Could not sync variation data:', e);
+        }
+
+        // 2. Sync specs from DOM table rows
+        try {
+            const tbody = document.getElementById('specsTableBody');
+            const specs = [];
+            if (tbody) {
+                tbody.querySelectorAll('tr[data-spec-id]').forEach(function(tr) {
+                    const id = parseInt(tr.getAttribute('data-spec-id')) || 0;
+                    const keyCell = tr.querySelector('.spec-key-cell');
+                    const valCell = tr.querySelector('.spec-value-cell');
+                    if (keyCell && valCell) {
+                        specs.push({
+                            id: id,
+                            spec_key: keyCell.textContent.trim(),
+                            spec_value: valCell.textContent.trim()
+                        });
+                    }
+                });
+            }
+            document.getElementById('hidden_specs_json').value = JSON.stringify(specs);
+        } catch (e) {
+            console.warn('Could not sync spec data:', e);
+        }
+        // Allow normal form submission to proceed
+        return true;
+    };
 
     function confirmDeleteSpec(specId, btn) {
         const tr = btn ? btn.closest('tr') : document.querySelector(`tr[data-spec-id="${specId}"]`);

@@ -1,0 +1,3 @@
+Creating size with payload: {"color_id":2,"size_label":"Standard","sku":"TESTSKU","price":999.99,"stock_qty":50,"gst_percent":null,"hsn_code":null,"display_order":1}
+Creating size with payload: {"color_id":3332,"size_label":"M","sku":null,"price":15.5,"stock_qty":0,"gst_percent":null,"hsn_code":null,"display_order":1}
+Creating size with payload: {"color_id":3333,"size_label":"L","sku":null,"price":99.9,"stock_qty":0,"gst_percent":null,"hsn_code":null,"display_order":1}

@@ -57,40 +57,41 @@ class BulkImportService
         'Additional Image 3',                                                  // 26
         'Additional Image 4',                                                  // 27
         'Product Video URL',                                                   // 28
-        'Variant Color Name',                                                  // 29
-        'Variant Size Name',                                                   // 30
-        'Variant SKU',                                                         // 31
-        'Variant Price',                                                       // 32
-        'Variant Stock',                                                       // 33
-        'Variant Image',                                                       // 34
-        'Processing Technology',                                               // 35
+        'Group For',                                                           // 29 (NEW: group variant rows under parent SKU)
+        'Variant Color Name',                                                  // 30
+        'Variant Size Name',                                                   // 31
+        'Variant SKU',                                                         // 32
+        'Variant Price',                                                       // 33
+        'Variant Stock',                                                       // 34
+        'Variant Image',                                                       // 35
+        'Processing Technology',                                               // 36
         'Processing Technique',                                                // 36
         'Treatment Process',                                                   // 37
-        'Style',                                                               // 38
-        'Suitable For Gift Giving Occasion',                                   // 39
-        'Item Number',                                                         // 40
-        'Main Downstream Platform',                                            // 41
-        'Color',                                                               // 42
-        'Popular Elements',                                                    // 43
-        'Style Classification',                                                // 44
-        'Kind',                                                                // 45
-        'Product Type',                                                        // 46
-        'Chain Style',                                                         // 47
-        'Pendant Material',                                                    // 48
-        'Trendy Element',                                                      // 49
-        'Closure Type',                                                        // 50
-        'Manufacturer ID',                                                     // 51 (PRIVATE 1)
-        'Manufacturer Name',                                                   // 52 (PRIVATE 2)
-        'Manufacturer Contact Person',                                         // 53 (PRIVATE 3)
-        'Manufacturer Phone',                                                  // 54 (PRIVATE 4)
-        'Manufacturer WhatsApp',                                               // 55 (PRIVATE 5)
-        'Manufacturer Email',                                                  // 56 (PRIVATE 6)
-        'Manufacturer Store URL',                                              // 57 (PRIVATE 7)
-        'Source Platform',                                                     // 58 (PRIVATE 8)
-        'Source Product ID',                                                   // 59 (PRIVATE 9)
-        'Source Product URL',                                                  // 60 (PRIVATE 10)
-        'Import Date',                                                         // 61 (PRIVATE 11)
-        'Status',                                                              // 62 (PRIVATE 12)
+        'Style',                                                               // 39
+        'Suitable For Gift Giving Occasion',                                   // 40
+        'Item Number',                                                         // 41
+        'Main Downstream Platform',                                            // 42
+        'Color',                                                               // 43
+        'Popular Elements',                                                    // 44
+        'Style Classification',                                                // 45
+        'Kind',                                                                // 46
+        'Product Type',                                                        // 47
+        'Chain Style',                                                         // 48
+        'Pendant Material',                                                    // 49
+        'Trendy Element',                                                      // 50
+        'Closure Type',                                                        // 51
+        'Manufacturer ID',                                                     // 52 (PRIVATE 1)
+        'Manufacturer Name',                                                   // 53 (PRIVATE 2)
+        'Manufacturer Contact Person',                                         // 54 (PRIVATE 3)
+        'Manufacturer Phone',                                                  // 55 (PRIVATE 4)
+        'Manufacturer WhatsApp',                                               // 56 (PRIVATE 5)
+        'Manufacturer Email',                                                  // 57 (PRIVATE 6)
+        'Manufacturer Store URL',                                              // 58 (PRIVATE 7)
+        'Source Platform',                                                     // 59 (PRIVATE 8)
+        'Source Product ID',                                                   // 60 (PRIVATE 9)
+        'Source Product URL',                                                  // 61 (PRIVATE 10)
+        'Import Date',                                                         // 62 (PRIVATE 11)
+        'Status',                                                              // 63 (PRIVATE 12)
     ];
 
     public function __construct()
@@ -159,40 +160,41 @@ class BulkImportService
             'https://images.importwale.com/products/jwl-brc-001-3.jpg',       // 26: Additional Image 3
             'https://images.importwale.com/products/jwl-brc-001-4.jpg',       // 27: Additional Image 4
             'https://media.importwale.com/videos/jwl-brc-001.mp4',            // 28: Product Video URL
-            'Brown Leather - Gold Clasp',                                     // 29: Variant Color Name
-            'Large',                                                          // 30: Variant Size Name
-            'JWL-BRC-001-BRN-GLD-L',                                          // 31: Variant SKU
-            '145.00',                                                         // 32: Variant Price
-            '500',                                                            // 33: Variant Stock
-            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 34: Variant Image
-            'Vacuum Electroplating',                                          // 35: Processing Technology
-            'Hand Weaving',                                                   // 36: Processing Technique
-            '',                                                               // 37: Treatment Process
-            'Vintage / Punk',                                                 // 38: Style
-            "Birthday, Father's Day",                                         // 39: Gift Occasion
-            'JWL-2026-BRC01',                                                 // 40: Item Number
-            'Amazon, Flipkart, Meesho',                                       // 41: Main Downstream Platform
-            'Brown / Tiger Eye',                                              // 42: Color
-            'Geometry, Leather Weave',                                        // 43: Popular Elements
-            'Fashion Commuter',                                               // 44: Style Classification
-            "Men's",                                                          // 45: Kind
-            'Leather Bracelet',                                               // 46: Product Type
-            'Braided Rope Chain',                                             // 47: Chain Style
-            'N/A',                                                            // 48: Pendant Material
-            'Retro Braided Leather',                                          // 49: Trendy Element
-            'Magnetic Clasp',                                                 // 50: Closure Type
-            'FCT-001',                                                        // 51: Manufacturer ID (Private)
-            'Yiwu Fashion Jewelry Manufactory',                               // 52: Manufacturer Name (Private)
-            'Mr. Chen',                                                       // 53: Manufacturer Contact Person (Private)
-            '+86 138 0000 1111',                                              // 54: Phone (Private)
-            '+86 138 0000 1111',                                              // 55: WhatsApp (Private)
-            'chen@yiwujewelry.cn',                                            // 56: Email (Private)
-            'https://shop12345.1688.com',                                     // 57: Store URL (Private)
-            '1688',                                                           // 58: Source Platform (Private)
-            '685412985412',                                                   // 59: Source Product ID (Private)
-            'https://detail.1688.com/offer/685412985412.html',                // 60: Source Product URL (Private)
-            date('Y-m-d H:i:s'),                                              // 61: Import Date (Private)
-            'Active',                                                         // 62: Status (Private)
+            '',                                                               // 29: Group For (leave blank for standalone product)
+            'Brown Leather - Gold Clasp',                                     // 30: Variant Color Name
+            'Large',                                                          // 31: Variant Size Name
+            'JWL-BRC-001-BRN-GLD-L',                                          // 32: Variant SKU
+            '145.00',                                                         // 33: Variant Price
+            '500',                                                            // 34: Variant Stock
+            'https://images.importwale.com/products/jwl-brc-001-brn-gld.jpg', // 35: Variant Image
+            'Vacuum Electroplating',                                          // 36: Processing Technology
+            'Hand Weaving',                                                   // 37: Processing Technique
+            '',                                                               // 38: Treatment Process
+            'Vintage / Punk',                                                 // 39: Style
+            "Birthday, Father's Day",                                         // 40: Gift Occasion
+            'JWL-2026-BRC01',                                                 // 41: Item Number
+            'Amazon, Flipkart, Meesho',                                       // 42: Main Downstream Platform
+            'Brown / Tiger Eye',                                              // 43: Color
+            'Geometry, Leather Weave',                                        // 44: Popular Elements
+            'Fashion Commuter',                                               // 45: Style Classification
+            "Men's",                                                          // 46: Kind
+            'Leather Bracelet',                                               // 47: Product Type
+            'Braided Rope Chain',                                             // 48: Chain Style
+            'N/A',                                                            // 49: Pendant Material
+            'Retro Braided Leather',                                          // 50: Trendy Element
+            'Magnetic Clasp',                                                 // 51: Closure Type
+            'FCT-001',                                                        // 52: Manufacturer ID (Private)
+            'Yiwu Fashion Jewelry Manufactory',                               // 53: Manufacturer Name (Private)
+            'Mr. Chen',                                                       // 54: Manufacturer Contact Person (Private)
+            '+86 138 0000 1111',                                              // 55: Phone (Private)
+            '+86 138 0000 1111',                                              // 56: WhatsApp (Private)
+            'chen@yiwujewelry.cn',                                            // 57: Email (Private)
+            'https://shop12345.1688.com',                                     // 58: Store URL (Private)
+            '1688',                                                           // 59: Source Platform (Private)
+            '685412985412',                                                   // 60: Source Product ID (Private)
+            'https://detail.1688.com/offer/685412985412.html',                // 61: Source Product URL (Private)
+            date('Y-m-d H:i:s'),                                              // 62: Import Date (Private)
+            'Active',                                                         // 63: Status (Private)
         ];
 
         foreach ($sampleRow1 as $cIdx => $val) {
@@ -277,29 +279,56 @@ class BulkImportService
                 continue;
             }
 
-            // Extract fields based on 60-column schema
+            // Extract fields based on 64-column schema (including new 'Group For' at index 29)
             $productName   = trim((string)($row[0] ?? ''));
-            $productSku    = strtoupper(trim((string)($row[1] ?? '')));
+            $productSku    = strtoupper(trim((string)($row[1] ?? '')));  // Actual SKU — never overwritten
+            $groupFor      = strtoupper(trim((string)($row[29] ?? ''))); // Group For col
 
-            // Forward-fill product level fields if productSku is empty but previous product group exists
-            if (empty($productSku) && $currentProductGroup !== null) {
-                $productSku = $currentProductGroup;
-            }
-
-            if (!empty($productSku)) {
+            // $groupKey is used for grouping rows only — NOT stored as the product SKU
+            if (!empty($groupFor)) {
+                // Row belongs to a named group — use Group For as the key
+                $groupKey = $groupFor;
+                $currentProductGroup = $groupFor;
+                // If this row also has a real SKU, register it as the canonical SKU for the group
+                if (!empty($productSku)) {
+                    // Will be stored as product_sku on first occurrence below
+                }
+            } elseif (!empty($productSku)) {
+                // Standalone row or first row of a product — use real SKU as group key
+                $groupKey = $productSku;
                 $currentProductGroup = $productSku;
-            }
-
-            if (empty($productSku)) {
+            } elseif ($currentProductGroup !== null) {
+                // Continuation row (empty SKU) — forward-fill from last group
+                $groupKey = $currentProductGroup;
+                // Also forward-fill $productSku for storage
+                if (empty($productSku)) {
+                    $productSku = $groupedProducts[$groupKey]['product_sku'] ?? $groupKey;
+                }
+            } else {
                 $parsedRows[] = [
                     'row_num' => $rowIndex,
                     'status'  => 'error',
-                    'error'   => "Row {$rowIndex}: Missing required 'Product SKU'.",
+                    'error'   => "Row {$rowIndex}: Missing required 'Product SKU' or 'Group For'.",
                     'data'    => $row
                 ];
                 $rowIndex++;
                 continue;
             }
+
+            if (empty($groupKey)) {
+                $parsedRows[] = [
+                    'row_num' => $rowIndex,
+                    'status'  => 'error',
+                    'error'   => "Row {$rowIndex}: Missing required 'Product SKU' or 'Group For'.",
+                    'data'    => $row
+                ];
+                $rowIndex++;
+                continue;
+            }
+
+            // Use $groupKey to look up/create the product group
+            $productSku = $productSku ?: ($groupedProducts[$groupKey]['product_sku'] ?? $groupKey);
+
 
             // Group additional images from columns 24..27
             $addImgs = array_filter([
@@ -309,9 +338,9 @@ class BulkImportService
                 trim((string)($row[27] ?? '')),
             ]);
 
-            // Manufacturer Auto-Linking Logic (Section 2) — private cols shifted to 51+
-            $mfgIdCode = strtoupper(trim((string)($row[51] ?? '')));
-            $mfgName   = trim((string)($row[52] ?? ''));
+            // Manufacturer Auto-Linking Logic — private cols now shifted to 52+ (Group For added at 29)
+            $mfgIdCode = strtoupper(trim((string)($row[52] ?? '')));
+            $mfgName   = trim((string)($row[53] ?? ''));
 
             $factoryLinkStatus = 'unassigned'; // 'existing', 'new', 'unassigned'
             $factoryCode       = null;
@@ -343,12 +372,12 @@ class BulkImportService
                     $stagedNewFactoryData = [
                         'factory_code'    => $targetCode,
                         'name'            => $targetName,
-                        'contact_person'  => trim((string)($row[53] ?? '')) ?: null,
-                        'phone'           => trim((string)($row[54] ?? '')) ?: null,
-                        'whatsapp'        => trim((string)($row[55] ?? '')) ?: null,
-                        'email'           => trim((string)($row[56] ?? '')) ?: null,
-                        'store_url'       => trim((string)($row[57] ?? '')) ?: null,
-                        'source_platform' => trim((string)($row[58] ?? '')) ?: null,
+                        'contact_person'  => trim((string)($row[54] ?? '')) ?: null,
+                        'phone'           => trim((string)($row[55] ?? '')) ?: null,
+                        'whatsapp'        => trim((string)($row[56] ?? '')) ?: null,
+                        'email'           => trim((string)($row[57] ?? '')) ?: null,
+                        'store_url'       => trim((string)($row[58] ?? '')) ?: null,
+                        'source_platform' => trim((string)($row[59] ?? '')) ?: null,
                         'status'          => 'active',
                         'notes'           => 'Auto-created via Bulk Product Sheet Importer.',
                     ];
@@ -365,9 +394,9 @@ class BulkImportService
                 }
             }
 
-            if (!isset($groupedProducts[$productSku])) {
-                $groupedProducts[$productSku] = [
-                    'product_sku'             => $productSku,
+            if (!isset($groupedProducts[$groupKey])) {
+                $groupedProducts[$groupKey] = [
+                    'product_sku'             => $productSku,  // ← Real SKU from col 1, NOT the group key
                     'name'                    => $productName,
                     'category'                => trim((string)($row[2] ?? '')),
                     'subcategory'             => trim((string)($row[3] ?? '')),
@@ -393,23 +422,24 @@ class BulkImportService
                     'main_image'              => trim((string)($row[23] ?? '')),
                     'additional_images'       => implode(',', $addImgs),
                     'video_url'               => trim((string)($row[28] ?? '')),
-                    'processing_technology'   => trim((string)($row[35] ?? '')),
-                    'processing_technique'    => trim((string)($row[36] ?? '')),
-                    'treatment_process'       => trim((string)($row[37] ?? '')),
-                    'style'                   => trim((string)($row[38] ?? '')),
-                    'gift_occasion'           => trim((string)($row[39] ?? '')),
-                    'item_number'             => trim((string)($row[40] ?? '')),
-                    'downstream_platform'     => trim((string)($row[41] ?? '')),
-                    'color'                   => trim((string)($row[42] ?? '')),
-                    'popular_elements'        => trim((string)($row[43] ?? '')),
-                    'style_classification'    => trim((string)($row[44] ?? '')),
-                    'kind'                    => trim((string)($row[45] ?? '')),
-                    'product_type'            => trim((string)($row[46] ?? '')),
-                    'chain_style'             => trim((string)($row[47] ?? '')),
-                    'pendant_material'        => trim((string)($row[48] ?? '')),
-                    'trendy_element'          => trim((string)($row[49] ?? '')),
-                    'closure_type'            => trim((string)($row[50] ?? '')),
-                    // Private Manufacturer Fields (Columns 51..62)
+                    // Cols 36-51 shifted by 1 due to 'Group For' col at index 29
+                    'processing_technology'   => trim((string)($row[36] ?? '')),
+                    'processing_technique'    => trim((string)($row[37] ?? '')),
+                    'treatment_process'       => trim((string)($row[38] ?? '')),
+                    'style'                   => trim((string)($row[39] ?? '')),
+                    'gift_occasion'           => trim((string)($row[40] ?? '')),
+                    'item_number'             => trim((string)($row[41] ?? '')),
+                    'downstream_platform'     => trim((string)($row[42] ?? '')),
+                    'color'                   => trim((string)($row[43] ?? '')),
+                    'popular_elements'        => trim((string)($row[44] ?? '')),
+                    'style_classification'    => trim((string)($row[45] ?? '')),
+                    'kind'                    => trim((string)($row[46] ?? '')),
+                    'product_type'            => trim((string)($row[47] ?? '')),
+                    'chain_style'             => trim((string)($row[48] ?? '')),
+                    'pendant_material'        => trim((string)($row[49] ?? '')),
+                    'trendy_element'          => trim((string)($row[50] ?? '')),
+                    'closure_type'            => trim((string)($row[51] ?? '')),
+                    // Private Manufacturer Fields (Columns 52..63)
                     'factory_id'                  => $factoryId,
                     'factory_code'                => $factoryCode,
                     'factory_name'                => $factoryName,
@@ -417,16 +447,16 @@ class BulkImportService
                     'factory_badge'               => $factoryBadge,
                     'manufacturer_id_code'        => $mfgIdCode,
                     'manufacturer_name'           => $mfgName,
-                    'manufacturer_contact_person' => trim((string)($row[53] ?? '')),
-                    'manufacturer_phone'          => trim((string)($row[54] ?? '')),
-                    'manufacturer_whatsapp'       => trim((string)($row[55] ?? '')),
-                    'manufacturer_email'          => trim((string)($row[56] ?? '')),
-                    'manufacturer_store_url'      => trim((string)($row[57] ?? '')),
-                    'source_platform'             => trim((string)($row[58] ?? '')),
-                    'source_product_id'           => trim((string)($row[59] ?? '')),
-                    'source_product_url'          => trim((string)($row[60] ?? '')),
-                    'import_date'                 => !empty(trim((string)($row[61] ?? ''))) ? trim((string)$row[61]) : date('Y-m-d H:i:s'),
-                    'admin_status'                => !empty(trim((string)($row[62] ?? ''))) ? trim((string)$row[62]) : 'Active',
+                    'manufacturer_contact_person' => trim((string)($row[54] ?? '')),
+                    'manufacturer_phone'          => trim((string)($row[55] ?? '')),
+                    'manufacturer_whatsapp'       => trim((string)($row[56] ?? '')),
+                    'manufacturer_email'          => trim((string)($row[57] ?? '')),
+                    'manufacturer_store_url'      => trim((string)($row[58] ?? '')),
+                    'source_platform'             => trim((string)($row[59] ?? '')),
+                    'source_product_id'           => trim((string)($row[60] ?? '')),
+                    'source_product_url'          => trim((string)($row[61] ?? '')),
+                    'import_date'                 => !empty(trim((string)($row[62] ?? ''))) ? trim((string)$row[62]) : date('Y-m-d H:i:s'),
+                    'admin_status'                => !empty(trim((string)($row[63] ?? ''))) ? trim((string)$row[63]) : 'Active',
                     'moq'                         => 1,
                     'available_qty'               => 100,
                     'variants'                    => [],
@@ -436,24 +466,29 @@ class BulkImportService
                 ];
             } else {
                 // Forward fill product level attributes if subsequent row has non-empty fields
-                if (empty($groupedProducts[$productSku]['name']) && !empty($productName)) {
-                    $groupedProducts[$productSku]['name'] = $productName;
+                if (empty($groupedProducts[$groupKey]['name']) && !empty($productName)) {
+                    $groupedProducts[$groupKey]['name'] = $productName;
                 }
-                if (empty($groupedProducts[$productSku]['main_image']) && !empty($row[23])) {
-                    $groupedProducts[$productSku]['main_image'] = trim((string)$row[23]);
+                if (empty($groupedProducts[$groupKey]['main_image']) && !empty($row[23])) {
+                    $groupedProducts[$groupKey]['main_image'] = trim((string)$row[23]);
+                }
+                // Forward fill real SKU if first row had empty SKU but later row has it
+                if (empty($groupedProducts[$groupKey]['product_sku']) && !empty($productSku)) {
+                    $groupedProducts[$groupKey]['product_sku'] = $productSku;
                 }
             }
 
-            $pGroup = &$groupedProducts[$productSku];
+            $pGroup = &$groupedProducts[$groupKey];
             $pGroup['rows'][] = $rowIndex;
 
-            // Variant Level Data (Columns 29..34)
-            $varColor = trim((string)($row[29] ?? ''));
-            $varSize  = trim((string)($row[30] ?? ''));
-            $varSku   = strtoupper(trim((string)($row[31] ?? '')));
-            $varPrice = (float)($row[32] ?? 0);
-            $varStock = (int)($row[33] ?? $pGroup['available_qty']);
-            $varImg   = trim((string)($row[34] ?? ''));
+
+            // Variant Level Data (Columns 30..35, shifted by 1 due to 'Group For' at col 29)
+            $varColor = trim((string)($row[30] ?? ''));
+            $varSize  = trim((string)($row[31] ?? ''));
+            $varSku   = strtoupper(trim((string)($row[32] ?? '')));
+            $varPrice = (float)($row[33] ?? 0);
+            $varStock = (int)($row[34] ?? $pGroup['available_qty']);
+            $varImg   = trim((string)($row[35] ?? ''));
 
             // Default variant SKU to product SKU if empty
             if (empty($varSku)) {

@@ -73,7 +73,7 @@ class VariationService
 
             // Existing colors map
             $existingColors = $this->colorModel->getByProduct($productId, false);
-            $existingColorIds = array_column($existingColors, 'id');
+            $existingColorIds = array_map('intval', array_column($existingColors, 'id'));
             $keptColorIds = [];
 
             foreach ($colorsData as $cIdx => $cData) {
@@ -113,7 +113,7 @@ class VariationService
                 // If mode === 'double', handle nested sizes under this color
                 if ($mode === 'double') {
                     $existingSizes = $this->sizeModel->getByColor($colorId);
-                    $existingSizeIds = array_column($existingSizes, 'id');
+                    $existingSizeIds = array_map('intval', array_column($existingSizes, 'id'));
                     $keptSizeIds = [];
 
                     $sizesList = $cData['sizes'] ?? [];
@@ -137,9 +137,11 @@ class VariationService
                         ];
 
                         if ($sizeId && in_array($sizeId, $existingSizeIds, true)) {
+                            file_put_contents('scratch/debug_log.txt', "Updating size $sizeId with payload: " . json_encode($sizePayload) . "\n", FILE_APPEND);
                             $this->sizeModel->updateSize($sizeId, $sizePayload);
                             $keptSizeIds[] = $sizeId;
                         } else {
+                            file_put_contents('scratch/debug_log.txt', "Creating size with payload: " . json_encode($sizePayload) . "\n", FILE_APPEND);
                             $newSizeId = $this->sizeModel->createSize($sizePayload);
                             $keptSizeIds[] = $newSizeId;
                         }

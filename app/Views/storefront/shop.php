@@ -207,7 +207,7 @@ include __DIR__ . '/layouts/header.php';
                                     <a href="<?= url('product/' . $pSlug) ?>"
                                         class="w-full h-full flex items-center justify-center">
                                         <img src="<?= asset($prod['main_image']) ?>"
-                                            alt="<?= htmlspecialchars($prod['name']) ?>"
+                                            alt="<?= e($prod['name']) ?>"
                                             class="w-full h-full object-contain max-h-[82%] group-hover:scale-105 transition-transform duration-300"
                                             onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'">
                                     </a>
@@ -233,7 +233,7 @@ include __DIR__ . '/layouts/header.php';
                                         <h3
                                             class="text-xs font-semibold text-gray-900 group-hover:text-red-600 transition line-clamp-2 leading-snug">
                                             <a href="<?= url('product/' . $pSlug) ?>"
-                                                class="hover:text-red-600 transition"><?= htmlspecialchars($prod['name']) ?></a>
+                                                class="hover:text-red-600 transition"><?= e($prod['name']) ?></a>
                                         </h3>
                                     </div>
 

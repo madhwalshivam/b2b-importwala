@@ -14,6 +14,27 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
         $stmt = $this->getReadDb()->prepare("SELECT * FROM `products` WHERE `slug` = :slug AND `status` = 'active' LIMIT 1");
         $stmt->execute(['slug' => $slug]);
         $product = $stmt->fetch();
+        
+        if (!$product) {
+            $decodedSlug = rawurldecode($slug);
+            if ($decodedSlug !== $slug) {
+                $stmt->execute(['slug' => $decodedSlug]);
+                $product = $stmt->fetch();
+            }
+        }
+
+        if (!$product && (str_contains($slug, 'group') || str_contains($slug, 'GROUP'))) {
+            $prefix = preg_replace('/-?group-?\s*\d+$/i', '', rawurldecode($slug));
+            if (!empty($prefix)) {
+                $stmtLike = $this->getReadDb()->prepare("SELECT * FROM `products` WHERE (`slug` LIKE :prefix OR `slug` LIKE :prefix2) AND `status` = 'active' LIMIT 1");
+                $stmtLike->execute([
+                    'prefix'  => trim($prefix) . '%',
+                    'prefix2' => slugify(trim($prefix)) . '%'
+                ]);
+                $product = $stmtLike->fetch();
+            }
+        }
+
         if (!$product) {
             return null;
         }

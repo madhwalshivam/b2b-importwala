@@ -23,10 +23,10 @@ class Request {
     public function getBody(): array {
         $data = [];
         $sanitize = function($val) {
-            if (function_exists('sanitize_input')) {
-                return \sanitize_input($val);
+            if (is_array($val)) {
+                return array_map($sanitize, $val);
             }
-            return is_string($val) ? htmlspecialchars(trim($val), ENT_QUOTES, 'UTF-8') : $val;
+            return is_string($val) ? trim($val) : $val;
         };
 
         if ($this->getMethod() === 'GET') {

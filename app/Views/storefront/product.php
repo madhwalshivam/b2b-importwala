@@ -73,7 +73,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
             <span>/</span>
             <a href="<?= url('shop') ?>" class="hover:text-red-600 transition">Shop</a>
             <span>/</span>
-            <span class="text-gray-900 font-medium truncate max-w-xs"><?= htmlspecialchars($productNameClean) ?></span>
+            <span class="text-gray-900 font-medium truncate max-w-xs"><?= e($product['name'] ?? '') ?></span>
         </nav>
     </div>
 </div>
@@ -153,6 +153,18 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             }).format(val);
+        },
+
+        getSizePrice(size) {
+            if (!size || size.price === null || size.price === undefined || size.price === '') return '';
+            const p = Number(size.price);
+            return (!isNaN(p) && p > 0) ? this.formatPrice(p) : '';
+        },
+
+        getColorPrice(color) {
+            if (!color || color.price === null || color.price === undefined || color.price === '') return '';
+            const p = Number(color.price);
+            return (!isNaN(p) && p > 0) ? this.formatPrice(p) : '';
         },
 
         triggerToast(msg) {
@@ -358,7 +370,7 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
 
                 <!-- 1. PRODUCT TITLE -->
                 <h1 class="text-base sm:text-lg lg:text-xl font-normal text-gray-800 leading-snug tracking-tight">
-                    <?= htmlspecialchars($productNameClean) ?>
+                    <?= e($product['name'] ?? '') ?>
                 </h1>
 
                 <!-- 2. PRICE (left) + RATING (right) inline — Blinkit style -->
@@ -416,18 +428,24 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                 <span class="text-gray-900 font-bold" x-text="(variationMatrix.colors.find(c => c.id == selectedColorId)?.color_name) || ''"></span>
                             </div>
 
-                            <div class="flex flex-wrap gap-2.5 items-center">
+                            <div class="flex flex-wrap gap-2 items-center">
                                 <template x-for="color in variationMatrix.colors" :key="color.id">
                                     <button type="button"
                                         @click="selectColor(color.id)"
                                         :class="{
-                                            'ring-2 ring-red-600 ring-offset-2 scale-105': selectedColorId == color.id,
-                                            'opacity-40 cursor-not-allowed': variationMatrix.variation_mode === 'single' ? (color.stock_qty <= 0) : (!color.sizes || !color.sizes.some(s => s.stock_qty > 0))
+                                            'border-red-600 bg-red-50 text-red-700 font-bold shadow-2xs': selectedColorId == color.id,
+                                            'border-gray-200 text-gray-700 hover:border-gray-300 bg-white': selectedColorId != color.id,
+                                            'opacity-40 line-through cursor-not-allowed': variationMatrix.variation_mode === 'single' ? (color.stock_qty <= 0) : (!color.sizes || !color.sizes.some(s => s.stock_qty > 0))
                                         }"
-                                        class="w-8 h-8 rounded-full border border-gray-300 shadow-2xs transition-all relative flex items-center justify-center cursor-pointer group"
-                                        :title="color.color_name"
-                                        :style="(color.swatch_hex_or_image && (color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/'))) ? 'background-image: url(' + color.swatch_hex_or_image + '); background-size: cover; background-position: center;' : 'background-color: ' + (color.swatch_hex_or_image || '#f05a29')">
-                                        <span x-show="selectedColorId == color.id" class="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
+                                        class="px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5">
+                                        <template x-if="color.swatch_hex_or_image && (color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/'))">
+                                            <img :src="color.swatch_hex_or_image" class="w-4 h-4 rounded-md object-cover shrink-0" alt="">
+                                        </template>
+                                        <template x-if="color.swatch_hex_or_image && color.swatch_hex_or_image.startsWith('#')">
+                                            <span class="w-3.5 h-3.5 rounded-full border border-gray-300 shrink-0" :style="'background-color: ' + color.swatch_hex_or_image"></span>
+                                        </template>
+                                        <span x-text="color.color_name"></span>
+                                        <span x-show="getColorPrice(color)" class="text-[11px] font-bold" :class="selectedColorId == color.id ? 'text-red-700' : 'text-slate-600'" x-text="'(' + getColorPrice(color) + ')'"></span>
                                     </button>
                                 </template>
                             </div>
@@ -438,7 +456,10 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                             <div class="space-y-1.5 pt-1">
                                 <div class="flex items-center justify-between text-xs">
                                     <span class="font-semibold text-gray-700 uppercase tracking-wider">Size:</span>
-                                    <span class="text-gray-900 font-bold" x-text="(availableSizes.find(s => s.id == selectedSizeId)?.size_label) || ''"></span>
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="text-gray-900 font-bold" x-text="(availableSizes.find(s => s.id == selectedSizeId)?.size_label) || ''"></span>
+                                        <span x-show="getSizePrice(availableSizes.find(s => s.id == selectedSizeId))" class="text-red-600 font-bold" x-text="'(' + getSizePrice(availableSizes.find(s => s.id == selectedSizeId)) + ')'"></span>
+                                    </div>
                                 </div>
 
                                 <div class="flex flex-wrap gap-2 items-center">
@@ -450,8 +471,9 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                                                 'border-gray-200 text-gray-700 hover:border-gray-300 bg-white': selectedSizeId != size.id,
                                                 'opacity-40 line-through cursor-not-allowed': size.stock_qty <= 0
                                             }"
-                                            class="px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center space-x-1">
+                                            class="px-3.5 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5">
                                             <span x-text="size.size_label"></span>
+                                            <span x-show="getSizePrice(size)" class="text-[11px] font-bold" :class="selectedSizeId == size.id ? 'text-red-700' : 'text-slate-600'" x-text="'(' + getSizePrice(size) + ')'"></span>
                                         </button>
                                     </template>
                                 </div>

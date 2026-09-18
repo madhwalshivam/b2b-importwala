@@ -103,7 +103,7 @@ include __DIR__ . '/../layouts/header.php';
                             <?php
                             $pImgs = get_product_images($p);
                             $imgSrc = !empty($pImgs[0]) ? $pImgs[0] : asset('assets/images/placeholder.jpg');
-                            $catName = !empty($p['category_name']) ? htmlspecialchars_decode($p['category_name']) : ('Cat ID: ' . $p['category_id']);
+                            $catName = !empty($p['category_name']) ? $p['category_name'] : ('Cat ID: ' . $p['category_id']);
                             $isBestSeller = !empty($p['is_best_seller']);
                             $isNew = !empty($p['is_new']) || !empty($p['is_new_arrival']);
                             $isFreeShipping = !isset($p['is_free_shipping']) || !empty($p['is_free_shipping']);
@@ -124,10 +124,10 @@ include __DIR__ . '/../layouts/header.php';
                                     </div>
                                     <div>
                                         <h4 class="font-semibold text-slate-900 line-clamp-1 text-[11px] leading-snug">
-                                            <?= htmlspecialchars(htmlspecialchars_decode($p['name'])) ?>
+                                            <?= e($p['name']) ?>
                                         </h4>
                                         <span class="text-[9.5px] text-gray-500 font-medium block">
-                                            Cat: <?= htmlspecialchars($catName) ?></span>
+                                            Cat: <?= e($catName) ?></span>
                                     </div>
                                 </td>
                                 <td class="py-2.5 px-3 font-mono font-semibold text-indigo-700 text-[11px] whitespace-nowrap">

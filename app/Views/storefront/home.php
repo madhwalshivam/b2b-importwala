@@ -561,13 +561,13 @@ usort($sfDealsRowSections, fn($a, $b) => $a['sort_order'] <=> $b['sort_order']);
 
                                                     <?php $pSlug = !empty($prod['slug']) ? trim($prod['slug']) : (int)$prod['id']; ?>
                                                     <a href="<?= url('product/' . $pSlug) ?>" class="block relative aspect-square bg-transparent rounded-lg overflow-hidden mb-2.5 sm:mb-3 flex items-center justify-center p-1.5 pt-7 sm:pt-8 transition">
-                                                        <img src="<?= asset($prod['main_image']) ?>" alt="<?= htmlspecialchars($prod['name']) ?>" class="w-full h-full object-contain max-h-[82%] group-hover:scale-105 transition-transform duration-300" loading="lazy">
+                                                        <img src="<?= asset($prod['main_image']) ?>" alt="<?= e($prod['name']) ?>" class="w-full h-full object-contain max-h-[82%] group-hover:scale-105 transition-transform duration-300" loading="lazy">
                                                     </a>
 
                                                     <div class="flex-1 flex flex-col justify-between space-y-2">
                                                         <div>
                                                             <h4 class="text-xs font-semibold text-gray-900 dark:text-white group-hover:text-red-600 transition line-clamp-2 leading-snug">
-                                                                <a href="<?= url('product/' . $pSlug) ?>" class="hover:text-red-600 transition"><?= htmlspecialchars($prod['name']) ?></a>
+                                                                <a href="<?= url('product/' . $pSlug) ?>" class="hover:text-red-600 transition"><?= e($prod['name']) ?></a>
                                                             </h4>
                                                         </div>
 

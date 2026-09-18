@@ -13,22 +13,22 @@ class SEO {
         $ogType = !empty($options['type']) ? $options['type'] : (!empty($options['article']) ? 'article' : 'website');
 
         $html = "<!-- Primary Meta Tags -->\n";
-        $html .= "<title>" . htmlspecialchars($title) . "</title>\n";
-        $html .= '<meta name="description" content="' . htmlspecialchars($description) . "\">\n";
+        $html .= "<title>" . e($title) . "</title>\n";
+        $html .= '<meta name="description" content="' . e($description) . "\">\n";
         $html .= '<link rel="canonical" href="' . htmlspecialchars($canonical) . "\">\n\n";
 
         $html .= "<!-- Open Graph / Facebook -->\n";
         $html .= '<meta property="og:type" content="' . htmlspecialchars($ogType) . '">' . "\n";
         $html .= '<meta property="og:url" content="' . htmlspecialchars($url) . "\">\n";
-        $html .= '<meta property="og:title" content="' . htmlspecialchars($title) . "\">\n";
-        $html .= '<meta property="og:description" content="' . htmlspecialchars($description) . "\">\n";
+        $html .= '<meta property="og:title" content="' . e($title) . "\">\n";
+        $html .= '<meta property="og:description" content="' . e($description) . "\">\n";
         $html .= '<meta property="og:image" content="' . htmlspecialchars($image) . "\">\n\n";
 
         $html .= "<!-- Twitter -->\n";
         $html .= '<meta property="twitter:card" content="summary_large_image">' . "\n";
         $html .= '<meta property="twitter:url" content="' . htmlspecialchars($url) . "\">\n";
-        $html .= '<meta property="twitter:title" content="' . htmlspecialchars($title) . "\">\n";
-        $html .= '<meta property="twitter:description" content="' . htmlspecialchars($description) . "\">\n";
+        $html .= '<meta property="twitter:title" content="' . e($title) . "\">\n";
+        $html .= '<meta property="twitter:description" content="' . e($description) . "\">\n";
         $html .= '<meta property="twitter:image" content="' . htmlspecialchars($image) . "\">\n\n";
 
         // Organization Schema

@@ -1379,6 +1379,7 @@ ob_start();
 
         // 3. Show/Hide Size Rows
         let firstShownIdx = null;
+        const rows = document.querySelectorAll('.variant-row');
         rows.forEach(r => {
             if (r.dataset.color === colorName) {
                 r.style.display = 'block';
