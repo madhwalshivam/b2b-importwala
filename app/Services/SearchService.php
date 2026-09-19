@@ -47,24 +47,53 @@ class SearchService extends BaseService
         $db = Database::getReadConnection();
         $where = ["p.`status` = 'active'"];
         $params = [];
+        $scoreParams = [];
+        $relevanceSql = "0";
 
         if (!empty($query)) {
-            $words = array_filter(explode(' ', preg_replace('/\s+/', ' ', trim($query))));
+            $words = array_filter(explode(' ', preg_replace('/\s+/', ' ', trim(strtolower($query)))));
             $whereWords = [];
+            $scoreExprs = [];
+
             foreach ($words as $idx => $w) {
-                $k1 = "qw1_" . $idx;
-                $k2 = "qw2_" . $idx;
-                $k3 = "qw3_" . $idx;
-                $k4 = "qw4_" . $idx;
-                $whereWords[] = "(p.`name` LIKE :{$k1} OR p.`sku` LIKE :{$k2} OR p.`description` LIKE :{$k3} OR p.`tags` LIKE :{$k4})";
-                $st = '%' . $w . '%';
-                $params[$k1] = $st;
-                $params[$k2] = $st;
-                $params[$k3] = $st;
-                $params[$k4] = $st;
+                $s_exact = "s_exact_" . $idx;
+                $s_name  = "s_name_" . $idx;
+                $s_sku   = "s_sku_" . $idx;
+                $s_desc  = "s_desc_" . $idx;
+                $s_tags  = "s_tags_" . $idx;
+
+                $w_name  = "w_name_" . $idx;
+                $w_sku   = "w_sku_" . $idx;
+                $w_desc  = "w_desc_" . $idx;
+                $w_tags  = "w_tags_" . $idx;
+
+                $scoreParams[$s_exact] = '[[:<:]]' . preg_quote($w, '/') . '[[:>:]]';
+                $scoreParams[$s_name]  = '%' . $w . '%';
+                $scoreParams[$s_sku]   = '%' . $w . '%';
+                $scoreParams[$s_desc]  = '[[:<:]]' . preg_quote($w, '/') . '[[:>:]]';
+                $scoreParams[$s_tags]  = '%' . $w . '%';
+
+                $params[$w_name]  = '%' . $w . '%';
+                $params[$w_sku]   = '%' . $w . '%';
+                $params[$w_desc]  = '[[:<:]]' . preg_quote($w, '/') . '[[:>:]]';
+                $params[$w_tags]  = '%' . $w . '%';
+
+                $scoreExprs[] = "
+                    (CASE WHEN LOWER(p.`name`) REGEXP :{$s_exact} THEN 100 ELSE 0 END) +
+                    (CASE WHEN LOWER(p.`name`) LIKE :{$s_name} THEN 40 ELSE 0 END) +
+                    (CASE WHEN p.`tags` IS NOT NULL AND LOWER(p.`tags`) LIKE :{$s_tags} THEN 30 ELSE 0 END) +
+                    (CASE WHEN LOWER(p.`sku`) LIKE :{$s_sku} THEN 25 ELSE 0 END) +
+                    (CASE WHEN LOWER(p.`description`) REGEXP :{$s_desc} THEN 10 ELSE 0 END)
+                ";
+
+                $whereWords[] = "(LOWER(p.`name`) LIKE :{$w_name} OR LOWER(p.`sku`) LIKE :{$w_sku} OR (p.`tags` IS NOT NULL AND LOWER(p.`tags`) LIKE :{$w_tags}) OR LOWER(p.`description`) REGEXP :{$w_desc})";
             }
+
             if (!empty($whereWords)) {
                 $where[] = "(" . implode(" AND ", $whereWords) . ")";
+            }
+            if (!empty($scoreExprs)) {
+                $relevanceSql = "(" . implode(" + ", $scoreExprs) . ")";
             }
         }
 
@@ -196,7 +225,7 @@ class SearchService extends BaseService
             'price_desc', 'price_high_low' => 'ORDER BY COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) DESC, p.`id` DESC',
             'newest'     => 'ORDER BY p.`id` DESC',
             'popular'    => 'ORDER BY p.`sales_count` DESC, p.`id` DESC',
-            default      => 'ORDER BY p.`sales_count` DESC, p.`id` DESC',
+            default      => (!empty($query) ? 'ORDER BY relevance_score DESC, p.`is_featured` DESC, p.`sales_count` DESC, p.`id` DESC' : 'ORDER BY p.`sales_count` DESC, p.`id` DESC'),
         };
 
         $whereSql = implode(" AND ", $where);
@@ -206,10 +235,10 @@ class SearchService extends BaseService
         $countStmt->execute($params);
         $total = (int)($countStmt->fetch()['total'] ?? 0);
 
-        // Fetch products
-        $sql = "SELECT p.*, c.name as category_name FROM `products` p LEFT JOIN `categories` c ON p.category_id = c.id WHERE {$whereSql} {$sortClause} LIMIT {$limit} OFFSET {$offset}";
+        // Fetch products with relevance score
+        $sql = "SELECT p.*, c.name as category_name, ({$relevanceSql}) as relevance_score FROM `products` p LEFT JOIN `categories` c ON p.category_id = c.id WHERE {$whereSql} {$sortClause} LIMIT {$limit} OFFSET {$offset}";
         $stmt = $db->prepare($sql);
-        $stmt->execute($params);
+        $stmt->execute(array_merge($scoreParams, $params));
         $items = $stmt->fetchAll();
 
         return [

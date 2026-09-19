@@ -36,6 +36,17 @@ ini_set('error_log', $logDir . '/error.log');
 set_exception_handler(function (\Throwable $e) {
     error_log("[" . date('Y-m-d H:i:s') . "] Uncaught Exception: " . $e->getMessage() . " in " . $e->getFile() . ":" . $e->getLine() . "\n" . $e->getTraceAsString());
     
+    if (isset($_GET['debug']) && $_GET['debug'] === '1') {
+        http_response_code(500);
+        echo "<div style='font-family:monospace; padding:30px; background:#fff0f0; border:1px solid #f5c6cb; color:#721c24; margin:20px; border-radius:8px;'>";
+        echo "<h2 style='margin-top:0;'>Live Server Debug Exception:</h2>";
+        echo "<p><strong>Message:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
+        echo "<p><strong>File:</strong> " . htmlspecialchars($e->getFile()) . " (Line " . $e->getLine() . ")</p>";
+        echo "<h3>Trace:</h3><pre style='background:#fff; padding:15px; border-radius:4px; overflow:auto;'>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+        echo "</div>";
+        exit;
+    }
+
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         header('Content-Type: application/json', true, 500);
         echo json_encode(['status' => 'error', 'message' => 'An unexpected server error occurred. Please try again.']);
@@ -44,7 +55,7 @@ set_exception_handler(function (\Throwable $e) {
         if (APP_ENV === 'development') {
             echo "<h1>Application Error</h1><p>" . htmlspecialchars($e->getMessage()) . "</p><pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
         } else {
-            echo '<div style="font-family:sans-serif; text-align:center; padding:60px; color:#333;"><h2 style="font-size:24px; font-weight:bold;">Something went wrong</h2><p style="color:#666;">We are experiencing a brief system issue. Please refresh or return to the homepage.</p><a href="/importwala/" style="display:inline-block; margin-top:15px; padding:10px 20px; background:#A8111C; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold;">Return to Homepage</a></div>';
+            echo '<div style="font-family:sans-serif; text-align:center; padding:60px; color:#333;"><h2 style="font-size:24px; font-weight:bold;">Something went wrong</h2><p style="color:#666;">We are experiencing a brief system issue. Please refresh or return to the homepage.</p><a href="/" style="display:inline-block; margin-top:15px; padding:10px 20px; background:#f05a29; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold;">Return to Homepage</a></div>';
         }
     }
     exit;

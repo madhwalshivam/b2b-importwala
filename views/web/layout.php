@@ -249,7 +249,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       <!-- Search Bar with Camera & Voice Search -->
       <form action="<?= url('catalog') ?>" method="GET" class="search-bar-wrapper">
         <input type="text" name="q" id="headerSearchInput" class="search-input"
-          placeholder="Search 50,000+ wholesale items by name, SKU, or keyword..."
+          placeholder="Search 50,000+ wholesale items..."
           value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
 
         <!-- Voice Search Microphone Icon Button + Tooltip -->
@@ -957,7 +957,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           btn.setAttribute('title', 'Search by Voice (Click to Speak)');
         }
         if (input) {
-          input.placeholder = "Search 50,000+ wholesale items by name, SKU, or keyword...";
+          input.placeholder = "Search 50,000+ wholesale items...";
         }
         if (input && input.value.trim() !== '') {
           setTimeout(function () {
@@ -973,7 +973,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           btn.setAttribute('title', 'Search by Voice (Click to Speak)');
         }
         if (input) {
-          input.placeholder = "Search 50,000+ wholesale items by name, SKU, or keyword...";
+          input.placeholder = "Search 50,000+ wholesale items...";
         }
         if (event.error === 'no-speech') {
           alert("No speech was detected. Please click the microphone icon again.");

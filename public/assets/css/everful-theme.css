@@ -231,24 +231,32 @@ a {
 
 /* Search Bar & Camera Tooltip */
 .search-bar-wrapper {
+  box-sizing: border-box !important;
   flex: 1;
+  min-width: 0;
   max-width: 560px;
+  height: 44px;
   display: flex;
   align-items: center;
   background: #F4F4F5;
   border-radius: var(--radius-full);
-  padding: 2px 3px 2px 14px;
+  padding: 4px 6px 4px 16px;
   position: relative;
+  overflow: hidden;
 }
 
 .search-input {
   flex: 1;
+  min-width: 0 !important;
   border: none;
   background: transparent;
-  padding: 6px 10px;
+  padding: 6px 8px;
   font-size: 13.5px;
   outline: none;
   color: #333;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .camera-search-trigger {
@@ -341,21 +349,24 @@ a {
 }
 
 .search-submit-btn {
-  background: #27272A;
-  color: var(--white);
-  border: none;
-  width: 34px;
-  height: 34px;
+  background: transparent !important;
+  color: #71717A !important;
+  border: none !important;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 0.2s;
+  flex-shrink: 0;
+  margin-left: 2px;
+  transition: all 0.2s ease;
 }
 
 .search-submit-btn:hover {
-  background: var(--primary-color);
+  background: rgba(0, 0, 0, 0.06) !important;
+  color: #111827 !important;
 }
 
 .header-right-group {
@@ -1679,10 +1690,45 @@ a {
   }
 
   .search-bar-wrapper {
-    order: 3;
+    order: 3 !important;
+    flex: 0 0 100% !important;
     width: 100% !important;
     max-width: 100% !important;
-    margin-top: 2px;
+    box-sizing: border-box !important;
+    margin-top: 6px !important;
+    padding: 4px 6px 4px 12px !important;
+    height: 42px !important;
+    background: #F4F4F5 !important;
+    border-radius: 9999px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  .search-input {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    font-size: 12.5px !important;
+    padding: 6px 4px !important;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    color: #333 !important;
+  }
+
+  .search-submit-btn {
+    background: transparent !important;
+    color: #71717A !important;
+    width: 32px !important;
+    height: 32px !important;
+    flex-shrink: 0 !important;
+    margin-right: 2px !important;
+    padding: 4px !important;
+  }
+
+  .voice-search-trigger,
+  .camera-search-trigger {
+    flex-shrink: 0 !important;
+    padding: 2px 3px !important;
   }
 
   #rfqOpenBtn {

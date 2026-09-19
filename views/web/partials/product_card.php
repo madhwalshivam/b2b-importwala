@@ -80,6 +80,7 @@ if ($userCartProductIds === null) {
         $userCartProductIds = array_map('intval', $st->fetchAll(\PDO::FETCH_COLUMN) ?: []);
     }
 }
+$isInCart       = in_array((int)($product['id'] ?? 0), $userCartProductIds);
 $mainImage      = $sliderImages[0] ?? asset('assets/images/placeholder.jpg');
 $totalImages    = count($sliderImages);
 $displayThumbs  = array_slice($sliderImages, 0, 5);
