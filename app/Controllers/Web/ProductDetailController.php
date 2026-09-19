@@ -32,7 +32,7 @@ class ProductDetailController extends BaseController
         $selectedVariantCode = $variantCode ?: ($_GET['variant'] ?? null);
         $product = $this->productRepo->findBySlug($slug);
         if (!$product && is_numeric($slug)) {
-            $product = $this->productRepo->find((int) $slug);
+            $product = $this->productRepo->findById((int) $slug);
         }
 
         if (!$product || ($product['status'] ?? 'active') !== 'active') {

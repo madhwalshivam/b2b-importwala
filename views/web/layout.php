@@ -17,7 +17,10 @@
     <meta property="og:url" content="<?= htmlspecialchars($pageCanonical) ?>" />
   <?php endif; ?>
   <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>" />
-  <meta property="og:description" content="<?= htmlspecialchars($pageDesc) ?>" />
+  <!-- Favicon Icons -->
+  <link rel="icon" type="image/png" href="<?= asset('assets/images/favicon.png') ?>?v=<?= time() ?>">
+  <link rel="shortcut icon" href="<?= asset('assets/images/favicon.ico') ?>?v=<?= time() ?>">
+  <link rel="apple-touch-icon" href="<?= asset('assets/images/favicon.png') ?>?v=<?= time() ?>">
 
   <!-- Compiled Production Tailwind CSS -->
   <link rel="stylesheet" href="<?= asset('assets/css/tailwind.min.css') ?>">
@@ -756,7 +759,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
-      <span>Request Quote</span>
+      <span>Get Price</span>
     </button>
 
     <!-- Item 5: Me / Account -->

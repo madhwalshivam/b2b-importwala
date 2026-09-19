@@ -11,6 +11,11 @@
     </script>
     <title>ImportWala Admin Panel</title>
 
+    <!-- Favicon Icons -->
+    <link rel="icon" type="image/png" href="<?= asset('assets/images/favicon.png') ?>?v=<?= time() ?>">
+    <link rel="shortcut icon" href="<?= asset('assets/images/favicon.ico') ?>?v=<?= time() ?>">
+    <link rel="apple-touch-icon" href="<?= asset('assets/images/favicon.png') ?>?v=<?= time() ?>">
+
     <!-- Central Theme Design Tokens & Fonts -->
     <link rel="stylesheet" href="<?= asset('assets/css/everful-theme.css') ?>">
     <link rel="stylesheet" href="<?= asset('css/theme.css') ?>">

@@ -3,10 +3,10 @@ include __DIR__ . '/layouts/header.php';
 ?>
 
 <!-- FACTORIES LISTING PAGE HEADER -->
-<div class="bg-theme-bg border-b border-gray-200/80 py-10 font-sans">
+<div class="bg-theme-bg border-b border-gray-200/80 py-8 sm:py-10 font-sans">
     <div class="container mx-auto px-4 text-center space-y-2">
         <span
-            class="inline-block px-3 py-1 bg-red-100 text-red-700 font-semibold text-[10px] uppercase rounded-full tracking-wider">
+            class="inline-block px-3 py-1 bg-orange-100 text-[#f05a29] font-semibold text-[10px] uppercase rounded-full tracking-wider">
             Verified Global Manufacturers &amp; Suppliers
         </span>
         <h1 class="text-2xl lg:text-3xl font-semibold text-gray-900 tracking-tight">Factory Direct Catalogs</h1>
@@ -17,7 +17,7 @@ include __DIR__ . '/layouts/header.php';
 </div>
 
 <!-- FACTORIES GRID CONTAINER -->
-<main class="py-12 bg-theme-bg font-sans min-h-[50vh]">
+<main class="py-8 sm:py-12 bg-theme-bg font-sans min-h-[50vh]">
     <div class="container mx-auto px-4">
 
         <?php if (empty($factories)): ?>
@@ -37,37 +37,38 @@ include __DIR__ . '/layouts/header.php';
                 </a>
             </div>
         <?php else: ?>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
                 <?php foreach ($factories as $f): ?>
-                    <?php $targetUrl = url('factory/' . $f['factory_code']); ?>
+                    <?php
+                    $targetUrl = url('factories/' . $f['slug']);
+                    $firstChar = mb_strtoupper(mb_substr(trim($f['name']), 0, 1, 'UTF-8'));
+                    ?>
                     <a href="<?= $targetUrl ?>"
-                        class="bg-white rounded-2xl p-6 border border-gray-200 hover:border-theme-primary transition-all duration-200 flex flex-col justify-between group shadow-xs hover:shadow-md space-y-4">
+                        class="bg-white rounded-2xl p-5 border border-gray-200 hover:border-[#f05a29] transition-all duration-200 flex flex-col justify-between group shadow-xs space-y-3 h-full no-underline">
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
-                                <span class="font-mono font-bold text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-md border border-gray-200">
-                                    <?= htmlspecialchars($f['factory_code']) ?>
-                                </span>
+                                <?php if (!empty($f['logo_url'])): ?>
+                                    <img src="<?= htmlspecialchars(asset($f['logo_url'])) ?>" alt="<?= htmlspecialchars($f['name']) ?>" class="w-9 h-9 rounded-full object-cover border border-gray-200">
+                                <?php else: ?>
+                                    <div class="w-9 h-9 rounded-full bg-orange-100 text-[#f05a29] font-bold flex items-center justify-center text-sm border border-orange-200">
+                                        <?= htmlspecialchars($firstChar) ?>
+                                    </div>
+                                <?php endif; ?>
                                 <span class="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 uppercase">
-                                    Verified Supplier
+                                    Verified
                                 </span>
                             </div>
-                            <h3 class="text-sm font-bold text-gray-900 group-hover:text-theme-primary transition leading-snug">
+                            <h3 class="text-sm font-bold text-gray-900 group-hover:text-[#f05a29] transition leading-snug line-clamp-2">
                                 <?= htmlspecialchars($f['name']) ?>
                             </h3>
-                            <?php if (!empty($f['source_platform'])): ?>
-                                <div class="text-[11px] text-gray-500 font-medium flex items-center gap-1">
-                                    <i data-lucide="globe" class="w-3.5 h-3.5 text-gray-400"></i>
-                                    <span>Source: <?= htmlspecialchars($f['source_platform']) ?></span>
-                                </div>
-                            <?php endif; ?>
                         </div>
 
                         <div class="pt-3 border-t border-gray-100 flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-700">
+                            <span class="text-xs font-semibold text-gray-600">
                                 <?= (int)($f['product_count'] ?? 0) ?> Products
                             </span>
-                            <span class="text-xs font-semibold text-theme-primary group-hover:translate-x-1 transition flex items-center space-x-1">
-                                <span>View Catalog</span>
+                            <span class="text-xs font-semibold text-[#f05a29] group-hover:translate-x-1 transition flex items-center space-x-1">
+                                <span>Explore Catalog</span>
                                 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                             </span>
                         </div>

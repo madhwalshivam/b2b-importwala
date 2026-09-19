@@ -60,33 +60,61 @@ if ($isDoubleMode) {
     foreach ($variants as $vi => $v) {
         $parts = explode(' - ', $v['attribute_value'] ?? '');
         $colorName = trim($parts[0] ?? $v['attribute_value']);
-        
+        if (strtolower($colorName) === 'default' || $colorName === '') {
+            continue;
+        }
+        $vWs = (float) $v['wholesale_price'];
+        $vStock = (int) $v['stock_quantity'];
+
         if (!isset($groupedColors[$colorName])) {
             $groupedColors[$colorName] = [
-                'name' => $colorName,
-                'image' => !empty($v['image_url']) ? asset($v['image_url']) : $mainImage,
+                'name'      => $colorName,
+                'image'     => !empty($v['image_url']) ? asset($v['image_url']) : $mainImage,
+                'min_price' => $vWs,
+                'max_price' => $vWs,
+                'size_count'=> 1,
+                'all_oos'   => ($vStock <= 0),
             ];
+        } else {
+            if ($vWs > 0 && ($groupedColors[$colorName]['min_price'] == 0 || $vWs < $groupedColors[$colorName]['min_price'])) {
+                $groupedColors[$colorName]['min_price'] = $vWs;
+            }
+            if ($vWs > $groupedColors[$colorName]['max_price']) {
+                $groupedColors[$colorName]['max_price'] = $vWs;
+            }
+            $groupedColors[$colorName]['size_count']++;
+            if ($vStock > 0) $groupedColors[$colorName]['all_oos'] = false;
         }
     }
 }
 $optionsCount = $isDoubleMode ? count($groupedColors) : $varCount;
 
-$variantsJsonData = array_map(function ($v) use ($mainImage, $prodTiers, $varTiersMap) {
+$variantsJsonData = array_map(function ($v) use ($mainImage, $prodTiers, $varTiersMap, $isDoubleMode) {
     $vId = (int) $v['id'];
     $vTiers = !empty($varTiersMap[$vId]) ? $varTiersMap[$vId] : $prodTiers;
+    // Split color / size for double-mode
+    $colorKey = '';
+    $sizeKey  = $v['attribute_value'] ?? '';
+    if ($isDoubleMode) {
+        $parts    = explode(' - ', $v['attribute_value'] ?? '');
+        $colorKey = trim($parts[0] ?? '');
+        $sizeKey  = isset($parts[1]) ? trim(implode(' - ', array_slice($parts, 1))) : trim($parts[0] ?? '');
+    }
     return [
-        'id' => $vId,
-        'code' => $v['variant_code'] ?? '',
-        'label' => $v['attribute_label'] ?? 'Color',
-        'value' => $v['attribute_value'] ?? '',
-        'stock' => (int) $v['stock_quantity'],
+        'id'              => $vId,
+        'code'            => $v['variant_code'] ?? '',
+        'label'           => $v['attribute_label'] ?? 'Color',
+        'value'           => $v['attribute_value'] ?? '',
+        'color'           => $colorKey,
+        'size'            => $sizeKey,
+        'stock'           => (int) $v['stock_quantity'],
         'wholesale_price' => (float) $v['wholesale_price'],
         'one_piece_price' => (float) $v['one_piece_price'],
-        'image' => !empty($v['image_url']) ? asset($v['image_url']) : $mainImage,
-        'weight' => $v['weight'] ?? '',
-        'dimensions' => $v['dimensions'] ?? '',
-        'is_active' => (int) ($v['is_active'] ?? 1),
-        'tiers' => $vTiers
+        'image'           => !empty($v['image_url']) ? asset($v['image_url']) : $mainImage,
+        'weight'          => $v['weight'] ?? '',
+        'dimensions'      => $v['dimensions'] ?? '',
+        'is_active'       => (int) ($v['is_active'] ?? 1),
+        'tiers'           => $vTiers
     ];
 }, $variants ?? []);
 
@@ -225,11 +253,16 @@ ob_start();
                     </div>
 
                     <!-- Single Price Display (One-Piece Mode) -->
-                    <div id="singlePriceRow" class="pt-0.5 hidden">
+                    <div id="singlePriceRow" class="pt-0.5 space-y-2 hidden">
                         <div
-                            class="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#f05a29] flex items-baseline gap-0.5 whitespace-nowrap">
+                            class="text-lg sm:text-xl lg:text-2xl font-bold text-[#f05a29] flex items-baseline gap-0.5 whitespace-nowrap">
                             <span>₹</span><span id="priceDisplay"><?= number_format($onePieceStartPrice, 2) ?></span>
                             <span class="text-xs lg:text-sm text-gray-500 font-normal ml-1">/ piece</span>
+                        </div>
+                        <div
+                            class="text-[11px] lg:text-xs text-gray-500 bg-amber-50/80 border border-amber-200/80 px-3 py-1.5 rounded-lg flex items-center gap-1">
+                            <span>This is the <strong class="text-gray-800">Product price</strong> only. Procurement,
+                                taxes, duties & are charged separately.</span>
                         </div>
                     </div>
 
@@ -250,15 +283,13 @@ ob_start();
                                 $tPrice = (float) $t['unit_price'];
                                 $rangeLabel = $tMax ? "{$tMin}-{$tMax} piece" : "≥ {$tMin} piece";
                                 ?>
-                                <div class="tier-card p-2.5 lg:p-3 rounded-xl border transition-all text-center min-w-[105px] lg:min-w-[120px] shrink-0 <?= $tIdx === 0 ? 'border-[#f05a29] bg-orange-50/40 shadow-2xs' : 'border-gray-200 bg-white hover:border-gray-300' ?>"
+                                <div class="tier-card px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg border border-gray-200 bg-white hover:border-gray-300 transition-all text-center min-w-[85px] sm:min-w-[95px] shrink-0"
                                     data-tier-idx="<?= $tIdx ?>">
-                                    <div
-                                        class="text-sm sm:text-base lg:text-lg font-bold <?= $tIdx === 0 ? 'text-[#f05a29]' : 'text-gray-900' ?>">
+                                    <div class="text-xs sm:text-[13px] font-bold text-gray-900 leading-tight">
                                         ₹<?= number_format($tPrice, 0) ?> <span
-                                            class="text-[10px] lg:text-xs font-normal text-gray-500">/ piece</span>
+                                            class="text-[9.5px] sm:text-[10px] font-normal text-gray-400">/ piece</span>
                                     </div>
-                                    <div
-                                        class="text-[11px] lg:text-xs <?= $tIdx === 0 ? 'text-gray-800 font-semibold' : 'text-gray-500 font-medium' ?> mt-0.5">
+                                    <div class="text-[10px] sm:text-[11px] text-gray-500 font-medium mt-0.5">
                                         <?= $rangeLabel ?>
                                     </div>
                                 </div>
@@ -327,137 +358,188 @@ ob_start();
                 </a>
             </div>
 
-            <!-- Custom Scrollbar Style for Variants List -->
+            <!-- Custom Scrollbar Style for Variants & Color Cards List -->
             <style>
-                #variantsList::-webkit-scrollbar {
+                #variantsList::-webkit-scrollbar,
+                #colorCardsGrid::-webkit-scrollbar {
                     width: 4px;
                 }
 
-                #variantsList::-webkit-scrollbar-track {
+                #variantsList::-webkit-scrollbar-track,
+                #colorCardsGrid::-webkit-scrollbar-track {
                     background: transparent;
                 }
 
-                #variantsList::-webkit-scrollbar-thumb {
+                #variantsList::-webkit-scrollbar-thumb,
+                #colorCardsGrid::-webkit-scrollbar-thumb {
                     background: #CBD5E1;
                     border-radius: 4px;
                 }
 
-                #variantsList::-webkit-scrollbar-thumb:hover {
+                #variantsList::-webkit-scrollbar-thumb:hover,
+                #colorCardsGrid::-webkit-scrollbar-thumb:hover {
                     background: #94A3B8;
                 }
             </style>
 
-            <!-- Variant List (Expandable Color/Size Multi-Product Card Items) -->
+            <!-- Variant Selector (Two-Step: Color Cards + Size Chips for double-mode) -->
             <?php if (!empty($variants)): ?>
-                <div class="bg-white border border-gray-200 rounded-2xl p-4 shadow-2xs space-y-3">
-                    <div class="flex items-center justify-between border-b border-gray-100 pb-2">
-                        <h3 class="text-[11px] sm:text-xs font-bold text-gray-900 uppercase tracking-wide" style="font-size: 11.5px !important; font-weight: 700 !important; margin: 0;">Select Product Variants</h3>
-                        <span class="text-[10px] sm:text-[11px] text-gray-500 font-medium"><?= $optionsCount ?> Options</span>
-                    </div>
+                <div class="bg-white border border-gray-200 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3" id="variantSelectorBox">
 
                     <?php if ($isDoubleMode && !empty($groupedColors)): ?>
-                        <!-- 1. Color Selector -->
-                        <div class="space-y-2">
-                            <div class="text-[11px] font-bold text-gray-700 uppercase">Select Color</div>
-                            <div class="flex flex-wrap gap-2">
-                                <?php $colorIdx = 0; foreach ($groupedColors as $colorName => $colorData): ?>
-                                    <button type="button" 
-                                        class="color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border <?= $colorIdx === 0 ? 'border-[#f05a29] bg-orange-50 text-[#f05a29] ring-1 ring-orange-200 shadow-xs' : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300' ?> transition-all text-xs font-semibold cursor-pointer select-none"
-                                        data-color="<?= htmlspecialchars($colorName) ?>"
-                                        onclick="selectVariantColor('<?= htmlspecialchars(addslashes($colorName)) ?>')">
-                                        <div class="w-5 h-5 rounded-md overflow-hidden shrink-0 border border-gray-200 bg-white">
-                                            <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-contain p-0.5">
-                                        </div>
-                                        <span><?= htmlspecialchars($colorName) ?></span>
-                                    </button>
-                                <?php $colorIdx++; endforeach; ?>
+                        <!-- ===== STEP 1: COLOR CARDS ===== -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10.5px] font-bold text-gray-500 uppercase tracking-widest">Select Color</span>
+                                <span class="text-[10px] text-gray-400 font-medium"><?= count($groupedColors) ?> color<?= count($groupedColors) > 1 ? 's' : '' ?></span>
+                            </div>
+                            <!-- Natural flow container (scrollable only if > 9 colors) -->
+                            <div class="<?= count($groupedColors) > 9 ? 'max-h-[380px] overflow-y-auto pr-1 scroll-smooth' : '' ?>" id="colorCardsGrid">
+                                <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+                                    <?php foreach ($groupedColors as $colorName => $colorData):
+                                        $cOos = $colorData['all_oos'];
+                                        $cMin = $colorData['min_price'];
+                                        $cMax = $colorData['max_price'];
+                                        $cSizes = $colorData['size_count'];
+                                        $priceLabel = $cMin > 0 ? 'From ₹' . number_format($cMin, 2) : '';
+                                    ?>
+                                        <button type="button"
+                                            class="color-card relative flex flex-col p-1 sm:p-1.5 rounded-xl border border-gray-200 bg-white transition-all duration-150 cursor-pointer select-none text-left group<?= $cOos ? ' opacity-50 grayscale cursor-not-allowed' : ' hover:border-gray-400' ?>"
+                                            data-color="<?= htmlspecialchars($colorName) ?>"
+                                            data-color-image="<?= htmlspecialchars($colorData['image']) ?>"
+                                            onclick="<?= $cOos ? 'void(0)' : "selectColorCard('" . htmlspecialchars(addslashes($colorName)) . "')" ?>"
+                                            <?= $cOos ? 'disabled aria-disabled="true"' : '' ?>>
+
+                                            <!-- Card Image (Aspect 1:1, max 96px desktop / 78px mobile, cover) -->
+                                            <div class="w-full aspect-square max-h-[78px] sm:max-h-[96px] bg-gray-50 rounded-md overflow-hidden flex items-center justify-center">
+                                                <img src="<?= htmlspecialchars($colorData['image']) ?>"
+                                                    alt="<?= htmlspecialchars($colorName) ?>"
+                                                    class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105">
+                                            </div>
+
+                                            <!-- Card Body (Compact & clean) -->
+                                            <div class="mt-1 flex flex-col gap-0.5 min-w-0">
+                                                <div class="text-[11px] sm:text-[12px] font-medium text-gray-900 truncate leading-tight"><?= htmlspecialchars($colorName) ?></div>
+                                                <?php if ($priceLabel): ?>
+                                                    <div class="text-[10px] sm:text-[11px] text-[#f05a29] font-semibold truncate"><?= $priceLabel ?></div>
+                                                <?php endif; ?>
+                                                <div class="text-[9.5px] sm:text-[10px] text-gray-400 font-normal truncate">
+                                                    <?php if ($cOos): ?>
+                                                        <span class="text-red-500 font-semibold">Out of stock</span>
+                                                    <?php else: ?>
+                                                        <?= $cSizes ?> size<?= $cSizes > 1 ? 's' : '' ?>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+
+                                            <!-- Small checkmark corner badge (16px) -->
+                                            <div class="color-card-check absolute top-1 right-1 w-4 h-4 rounded-full bg-[#f05a29] text-white items-center justify-center hidden shadow-2xs pointer-events-none">
+                                                <svg class="w-2.5 h-2.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                            </div>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
                             </div>
                         </div>
-                        <div class="border-t border-gray-100 my-1"></div>
-                        <div class="text-[11px] font-bold text-gray-700 uppercase pt-1">Select Size</div>
+
+                        <!-- ===== STEP 2: SIZE CHIPS ===== -->
+                        <div id="sizeChipsSection">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[10.5px] font-bold text-gray-500 uppercase tracking-widest">Select Size</span>
+                            </div>
+
+                            <!-- Placeholder shown when no color selected -->
+                            <div id="sizePlaceholder" class="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-gray-200 bg-gray-50 text-[11px] text-gray-400 font-medium">
+                                <svg class="w-3.5 h-3.5 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>
+                                Select a color to see sizes
+                            </div>
+
+                            <!-- Actual size chips (hidden until color selected) -->
+                            <div id="sizeChipsContainer" class="hidden flex-wrap gap-1.5 sm:gap-2" style="display:none;">
+                                <?php
+                                foreach ($variants as $vi => $v):
+                                    $vWholesale = (float) $v['wholesale_price'];
+                                    $vOnePiece  = (float) $v['one_piece_price'];
+                                    $vStock     = (int) $v['stock_quantity'];
+                                    $vIsOos     = ($vStock <= 0);
+                                    $parts      = explode(' - ', $v['attribute_value'] ?? '');
+                                    $rowColor   = trim($parts[0] ?? '');
+                                    $sizeName   = isset($parts[1]) ? htmlspecialchars(trim(implode(' - ', array_slice($parts, 1)))) : htmlspecialchars($v['attribute_value']);
+                                    $vImg       = !empty($v['image_url']) ? asset($v['image_url']) : $mainImage;
+                                ?>
+                                    <button type="button"
+                                        class="size-chip relative inline-flex flex-col items-center justify-center px-3 min-h-[32px] sm:min-h-[34px] py-1 rounded-lg border border-gray-200 bg-white transition-all duration-150 select-none text-center<?= $vIsOos ? ' opacity-50 cursor-not-allowed' : ' cursor-pointer hover:border-gray-400' ?>"
+                                        data-variant-idx="<?= $vi ?>"
+                                        data-color="<?= htmlspecialchars($rowColor) ?>"
+                                        data-wholesale="<?= $vWholesale ?>"
+                                        data-onepiece="<?= $vOnePiece ?>"
+                                        data-img="<?= htmlspecialchars($vImg) ?>"
+                                        style="display:none;"
+                                        onclick="<?= $vIsOos ? 'void(0)' : "selectAmazonVariant($vi)" ?>">
+                                        <span class="text-[11.5px] sm:text-xs font-semibold text-gray-800 leading-tight<?= $vIsOos ? ' line-through text-gray-400' : '' ?>"><?= $sizeName ?></span>
+                                        <span class="text-[10px] text-[#f05a29] font-medium mt-0.5">₹<?= number_format($vWholesale, 2) ?></span>
+                                        <span id="vQtyVal_<?= $vi ?>" class="hidden">0</span>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+
+                    <?php else: ?>
+                        <!-- ===== SINGLE-MODE: Card grid matching color cards UI ===== -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10.5px] font-bold text-gray-500 uppercase tracking-widest">Select Variant</span>
+                                <span class="text-[10px] text-gray-400 font-medium"><?= $varCount ?> Option<?= $varCount > 1 ? 's' : '' ?></span>
+                            </div>
+                            <div class="<?= $varCount > 9 ? 'max-h-[380px] overflow-y-auto pr-1 scroll-smooth' : '' ?>" id="singleCardsGrid">
+                                <div class="grid grid-cols-3 gap-1.5 sm:gap-2" id="variantsList">
+                                    <?php foreach ($variants as $vi => $v):
+                                        $vWholesale = (float) $v['wholesale_price'];
+                                        $vOnePiece  = (float) $v['one_piece_price'];
+                                        $vStock     = (int) $v['stock_quantity'];
+                                        $vIsOos     = ($vStock <= 0);
+                                        $vName      = htmlspecialchars($v['attribute_value'] ?? 'Variant ' . ($vi + 1));
+                                        $vImg       = !empty($v['image_url']) ? asset($v['image_url']) : $mainImage;
+                                    ?>
+                                        <button type="button"
+                                            class="variant-row relative flex flex-col p-1 sm:p-1.5 rounded-xl border border-gray-200 bg-white transition-all duration-150 cursor-pointer select-none text-left group<?= $vIsOos ? ' opacity-50 grayscale cursor-not-allowed' : ' hover:border-gray-400' ?>"
+                                            data-variant-idx="<?= $vi ?>"
+                                            data-wholesale="<?= $vWholesale ?>"
+                                            data-onepiece="<?= $vOnePiece ?>"
+                                            data-name="<?= $vName ?>"
+                                            data-img="<?= htmlspecialchars($vImg) ?>"
+                                            onclick="<?= $vIsOos ? 'void(0)' : "selectAmazonVariant($vi)" ?>"
+                                            <?= $vIsOos ? 'disabled aria-disabled="true"' : '' ?>>
+
+                                            <!-- Card Image (Aspect 1:1, max 96px desktop / 78px mobile, cover) -->
+                                            <div class="w-full aspect-square max-h-[78px] sm:max-h-[96px] bg-gray-50 rounded-md overflow-hidden flex items-center justify-center">
+                                                <img src="<?= htmlspecialchars($vImg) ?>"
+                                                    alt="<?= $vName ?>"
+                                                    class="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105">
+                                            </div>
+
+                                            <!-- Card Body (Compact & clean) -->
+                                            <div class="mt-1 flex flex-col gap-0.5 min-w-0">
+                                                <div class="text-[11px] sm:text-[12px] font-medium text-gray-900 truncate leading-tight"><?= $vName ?></div>
+                                                <div class="text-[10px] sm:text-[11px] text-[#f05a29] font-semibold truncate">₹<?= number_format($vWholesale, 2) ?></div>
+                                                <div class="text-[9.5px] sm:text-[10px] text-gray-400 font-normal truncate">
+                                                    <?php if ($vIsOos): ?>
+                                                        <span class="text-red-500 font-semibold">Out of stock</span>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+
+                                            <!-- Small checkmark corner badge (16px) -->
+                                            <div class="variant-check absolute top-1 right-1 w-4 h-4 rounded-full bg-[#f05a29] text-white items-center justify-center hidden shadow-2xs pointer-events-none">
+                                                <svg class="w-2.5 h-2.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                            </div>
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
                     <?php endif; ?>
 
-                    <!-- Scrollable Container with Individual Card Borders for Multi-Products -->
-                    <div class="<?= $isDoubleMode ? 'flex flex-wrap gap-2' : 'space-y-2.5 max-h-[300px] overflow-y-auto pr-1 scroll-smooth' ?>" id="variantsList">
-                        <?php 
-                        $firstColor = $isDoubleMode && !empty($groupedColors) ? array_key_first($groupedColors) : null;
-                        
-                        foreach ($variants as $vi => $v):
-                            $vWholesale = (float) $v['wholesale_price'];
-                            $vOnePiece = (float) $v['one_piece_price'];
-                            $vStock = (int) $v['stock_quantity'];
-                            $vName = htmlspecialchars($v['attribute_value'] ?? 'Variant ' . ($vi + 1));
-                            
-                            $rowColor = '';
-                            if ($isDoubleMode) {
-                                $parts = explode(' - ', $v['attribute_value'] ?? '');
-                                $rowColor = trim($parts[0] ?? '');
-                                $vName = isset($parts[1]) ? htmlspecialchars(trim(implode(' - ', array_slice($parts, 1)))) : $vName;
-                            }
-                            
-                            $vCode = htmlspecialchars($v['variant_code'] ?? '');
-                            $vDim = htmlspecialchars($v['dimensions'] ?? '');
-                            $vImg = !empty($v['image_url']) ? asset($v['image_url']) : $mainImage;
-                            $vWeight = htmlspecialchars($v['weight'] ?? '');
-                            
-                            $isActive = !$isDoubleMode && ($vi === 0);
-                            $isHidden = $isDoubleMode && ($rowColor !== $firstColor);
-                            ?>
-                            <?php if ($isDoubleMode): ?>
-                                <!-- Compact Size Chip -->
-                                <div class="variant-row px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-xs font-semibold select-none <?= $isActive ? 'border-2 border-[#f05a29] bg-orange-50 text-[#f05a29] shadow-xs' : 'border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-2xs' ?>"
-                                    data-variant-idx="<?= $vi ?>" 
-                                    data-color="<?= htmlspecialchars($rowColor) ?>"
-                                    data-wholesale="<?= $vWholesale ?>"
-                                    data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
-                                    data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)"
-                                    style="<?= $isHidden ? 'display: none;' : '' ?>">
-                                    <?= $vName ?>
-                                    <span id="vQtyVal_<?= $vi ?>" class="hidden">0</span>
-                                </div>
-                            <?php else: ?>
-                                <!-- Standard List Row -->
-                                <div class="variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 <?= $isActive ? 'border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs' : 'border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs' ?>"
-                                    data-variant-idx="<?= $vi ?>" 
-                                    data-color="<?= htmlspecialchars($rowColor) ?>"
-                                    data-wholesale="<?= $vWholesale ?>"
-                                    data-onepiece="<?= $vOnePiece ?>" data-name="<?= $vName ?>"
-                                    data-img="<?= htmlspecialchars($vImg) ?>" onclick="selectAmazonVariant(<?= $vi ?>)">
-    
-                                    <div class="flex items-center gap-2.5 sm:gap-3">
-                                        <!-- Left: Image Thumbnail -->
-                                        <div
-                                            class="variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border <?= $isActive ? 'border-[#f05a29]' : 'border-gray-200' ?> overflow-hidden shrink-0 bg-white shadow-2xs transition-all">
-                                            <img src="<?= htmlspecialchars($vImg) ?>" alt="<?= $vName ?>"
-                                                class="w-full h-full object-contain p-1">
-                                        </div>
-    
-                                        <!-- Middle: Variant Name (Line 1) + Price & Details (Line 2) -->
-                                        <div class="min-w-0 flex-1">
-                                            <div class="text-[11.5px] sm:text-xs font-bold text-gray-900 leading-snug break-words">
-                                                <?= $vName ?>
-                                            </div>
-                                            <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                                <div class="text-xs sm:text-sm font-extrabold text-[#f05a29] variant-price-display shrink-0"
-                                                    data-wholesale="<?= number_format($vWholesale, 2) ?>"
-                                                    data-onepiece="<?= number_format($vOnePiece, 2) ?>">
-                                                    ₹<?= number_format($vWholesale, 2) ?> <span class="text-[9px] sm:text-[10px] text-gray-400 font-normal">/piece</span>
-                                                </div>
-                                                <?php if ($vWeight || $vDim): ?>
-                                                    <span class="text-gray-300 text-[10px]">&bull;</span>
-                                                    <span class="text-[10px] sm:text-[11px] text-gray-400">
-                                                        <?php if ($vWeight): ?>Wt: <?= $vWeight ?><?php endif; ?>
-                                                        <?php if ($vWeight && $vDim): ?> &bull; <?php endif; ?>
-                                                        <?php if ($vDim): ?>Fit: <?= $vDim ?><?php endif; ?>
-                                                    </span>
-                                                <?php endif; ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </div>
                 </div>
             <?php endif; ?>
 
@@ -935,14 +1017,13 @@ ob_start();
             const max = t.max_qty ? parseInt(t.max_qty) : null;
             const price = parseFloat(t.unit_price);
             const label = max ? `${min}-${max} piece` : `≥ ${min} piece`;
-            const isActive = (i === 0);
 
             html += `
-                <div class="tier-card p-2.5 rounded-xl border transition-all text-center min-w-[105px] shrink-0 ${isActive ? 'border-[#f05a29] bg-orange-50/40 shadow-2xs' : 'border-gray-200 bg-white hover:border-gray-300'}" data-tier-idx="${i}">
-                    <div class="text-sm sm:text-base font-semibold ${isActive ? 'text-[#f05a29]' : 'text-gray-900'}">
-                        ₹${formatNumNoDec(price)} <span class="text-[10px] font-normal text-gray-500">/ piece</span>
+                <div class="tier-card px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg border border-gray-200 bg-white hover:border-gray-300 transition-all text-center min-w-[85px] sm:min-w-[95px] shrink-0" data-tier-idx="${i}">
+                    <div class="text-xs sm:text-[13px] font-bold text-gray-900 leading-tight">
+                        ₹${formatNumNoDec(price)} <span class="text-[9.5px] sm:text-[10px] font-normal text-gray-400">/ piece</span>
                     </div>
-                    <div class="text-[11px] ${isActive ? 'text-gray-800 font-semibold' : 'text-gray-500 font-medium'} mt-0.5">${label}</div>
+                    <div class="text-[10px] sm:text-[11px] text-gray-500 font-medium mt-0.5">${label}</div>
                 </div>
             `;
         });
@@ -1123,12 +1204,18 @@ ob_start();
             main_image: mainImg,
             gallery: (typeof GALLERY_IMAGES !== 'undefined' && GALLERY_IMAGES) ? GALLERY_IMAGES : [mainImg],
             pricingMode: activeMode,
-            selectedVariantIndex: (typeof selectedVariantIndex !== 'undefined') ? selectedVariantIndex : 0,
+            selectedVariantIndex: (typeof selectedVariantIndex !== 'undefined') ? selectedVariantIndex : null,
             variants: vars
         };
     };
 
     function openRfqWithProducts() {
+        // Partial selection guard (double-mode: color chosen but no size yet)
+        if (<?= $isDoubleMode ? 'true' : 'false' ?> && currentColorSelection && selectedVariantIndex === null) {
+            showPartialSelectionHint('Size');
+            return;
+        }
+        // No variant required — null means main product (variant_id = null)
         const prodData = window.rfqGetProductContextFromPage();
         if (typeof openRfqModal === 'function') {
             openRfqModal(prodData);
@@ -1138,35 +1225,69 @@ ob_start();
     }
 
     const VARIANTS_LIST = <?= json_encode($variantsJsonData) ?>;
-    let selectedVariantIndex = 0;
+    let selectedVariantIndex = null; // null = no variant selected yet
 
     function selectAmazonVariant(idx) {
         if (!VARIANTS_LIST || !VARIANTS_LIST[idx]) return;
+
+        // Deselect: clicking the already-selected variant clears size selection, keeps color active
+        if (selectedVariantIndex === idx) {
+            if (<?= $isDoubleMode ? 'true' : 'false' ?> && currentColorSelection) {
+                // Save color before restore (restore clears it)
+                const savedColor = VARIANTS_LIST[idx].color || '';
+                selectedVariantIndex = null;
+                restoreMainProductState(); // resets price/image/color/size-chips
+                // Re-activate color: apply card style + re-show this color's chips
+                currentColorSelection = savedColor;
+                _applyColorCardStyle(currentColorSelection);
+                const sizeContainer = document.getElementById('sizeChipsContainer');
+                const sizePlaceholder = document.getElementById('sizePlaceholder');
+                if (sizeContainer) { sizeContainer.style.display = 'flex'; sizeContainer.style.flexWrap = 'wrap'; sizeContainer.style.gap = '8px'; }
+                if (sizePlaceholder) sizePlaceholder.style.display = 'none';
+                document.querySelectorAll('.size-chip').forEach(chip => {
+                    chip.style.display = (chip.dataset.color === currentColorSelection) ? 'inline-flex' : 'none';
+                });
+            } else {
+                restoreMainProductState();
+            }
+            return;
+        }
+
         selectedVariantIndex = idx;
         const v = VARIANTS_LIST[idx];
 
-        // 1. Update Variant Row Active Styles & Borders
-        document.querySelectorAll('.variant-row').forEach((row, i) => {
-            const isOos = VARIANTS_LIST[i].stock <= 0;
-            const isChip = row.classList.contains('px-3') && row.classList.contains('py-2'); // detect chip mode
-            const imgBox = row.querySelector('.variant-img-box');
-            
-            if (i === idx) {
-                if (isChip) {
-                    row.className = `variant-row px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-xs font-semibold select-none border-2 border-[#f05a29] bg-orange-50 text-[#f05a29] shadow-xs ${isOos ? 'opacity-50' : ''}`;
+        // 1. Update Size Chip styles (double-mode) OR variant-row styles (single-mode)
+        if (<?= $isDoubleMode ? 'true' : 'false' ?>) {
+            document.querySelectorAll('.size-chip').forEach(chip => {
+                const chipIdx = parseInt(chip.dataset.variantIdx);
+                const chipV = VARIANTS_LIST[chipIdx];
+                const isOos = chipV && chipV.stock <= 0;
+                if (chipIdx === idx) {
+                    chip.className = `size-chip relative inline-flex flex-col items-center justify-center px-3 min-h-[32px] sm:min-h-[34px] py-1 rounded-lg border-2 border-[#f05a29] bg-orange-50/40 transition-all duration-150 select-none text-center cursor-pointer`;
+                    const lbl = chip.querySelector('span:not(.hidden)');
+                    if (lbl) { lbl.className = 'text-[11.5px] sm:text-xs font-bold text-[#f05a29] leading-tight'; }
+                    const priceLbl = chip.querySelectorAll('span:not(.hidden)')[1];
+                    if (priceLbl) priceLbl.className = 'text-[10px] text-[#f05a29] font-semibold mt-0.5';
                 } else {
-                    row.className = `variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 border-2 border-[#f05a29] bg-orange-50/30 ring-2 ring-orange-100/50 shadow-xs ${isOos ? 'opacity-50 grayscale' : ''}`;
+                    chip.className = `size-chip relative inline-flex flex-col items-center justify-center px-3 min-h-[32px] sm:min-h-[34px] py-1 rounded-lg border border-gray-200 bg-white transition-all duration-150 select-none text-center ${isOos ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400'}`;
+                    const spans = chip.querySelectorAll('span:not(.hidden)');
+                    if (spans[0]) spans[0].className = `text-[11.5px] sm:text-xs font-semibold text-gray-800 leading-tight${isOos ? ' line-through text-gray-400' : ''}`;
+                    if (spans[1]) spans[1].className = 'text-[10px] text-[#f05a29] font-medium mt-0.5';
                 }
-                if (imgBox) imgBox.className = 'variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border border-[#f05a29] overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
-            } else {
-                if (isChip) {
-                    row.className = `variant-row px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-xs font-semibold select-none border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-2xs ${isOos ? 'opacity-50' : ''}`;
+            });
+        } else {
+            document.querySelectorAll('.variant-row').forEach((row, i) => {
+                const isOos = VARIANTS_LIST[i] && VARIANTS_LIST[i].stock <= 0;
+                const check = row.querySelector('.variant-check');
+                if (i === idx) {
+                    row.className = `variant-row relative flex flex-col p-1 sm:p-1.5 rounded-xl border-2 border-[#f05a29] bg-orange-50/20 transition-all duration-150 cursor-pointer select-none text-left group ${isOos ? 'opacity-50 grayscale cursor-not-allowed' : ''}`;
+                    if (check) { check.classList.remove('hidden'); check.style.display = 'flex'; }
                 } else {
-                    row.className = `variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs ${isOos ? 'opacity-50 grayscale' : ''}`;
+                    row.className = `variant-row relative flex flex-col p-1 sm:p-1.5 rounded-xl border border-gray-200 bg-white transition-all duration-150 cursor-pointer select-none text-left group ${isOos ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-gray-400'}`;
+                    if (check) { check.classList.add('hidden'); check.style.display = ''; }
                 }
-                if (imgBox) imgBox.className = 'variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border border-gray-200 overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
-            }
-        });
+            });
+        }
 
         // Update Amazon Swatch buttons if present
         document.querySelectorAll('.amazon-swatch-btn').forEach((btn, i) => {
@@ -1288,14 +1409,143 @@ ob_start();
         const waText = encodeURIComponent(`Hi, I am interested in variant: ${name} of product: ${PRODUCT_NAME}`);
         document.getElementById('vModalWaBtn').href = `https://wa.me/${WHATSAPP_NUMBER}?text=${waText}`;
         const modal = document.getElementById('variantQuickViewModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
     }
 
     function closeVariantQuickView() {
         const modal = document.getElementById('variantQuickViewModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    // Helper: apply color-card active style for a given color name
+    function _applyColorCardStyle(colorName) {
+        document.querySelectorAll('.color-card').forEach(card => {
+            const check = card.querySelector('.color-card-check');
+            if (card.dataset.color === colorName) {
+                card.classList.add('border-2', 'border-[#f05a29]', 'bg-orange-50/20');
+                card.classList.remove('border-gray-200');
+                if (check) { check.classList.remove('hidden'); check.style.display = 'flex'; }
+            } else {
+                card.classList.remove('border-2', 'border-[#f05a29]', 'bg-orange-50/20');
+                card.classList.add('border-gray-200');
+                if (check) { check.classList.add('hidden'); check.style.display = ''; }
+            }
+        });
+    }
+
+    // Helper: reset all size-chip styles to unselected
+    function _resetSizeChipStyles() {
+        document.querySelectorAll('.size-chip').forEach(chip => {
+            const chipIdx = parseInt(chip.dataset.variantIdx);
+            const chipV = VARIANTS_LIST && VARIANTS_LIST[chipIdx];
+            const isOos = chipV && chipV.stock <= 0;
+            chip.className = `size-chip relative inline-flex flex-col items-center justify-center px-3 min-h-[32px] sm:min-h-[34px] py-1 rounded-lg border border-gray-200 bg-white transition-all duration-150 select-none text-center ${isOos ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-gray-400'}`;
+            const spans = chip.querySelectorAll('span:not(.hidden)');
+            if (spans[0]) spans[0].className = `text-[11.5px] sm:text-xs font-semibold text-gray-800 leading-tight${isOos ? ' line-through text-gray-400' : ''}`;
+            if (spans[1]) spans[1].className = 'text-[10px] text-[#f05a29] font-medium mt-0.5';
+        });
+    }
+
+    // Restore main product state when no variant is selected (deselected or page load)
+    function restoreMainProductState() {
+        selectedVariantIndex = null;
+
+        // Reset color card styles (double-mode)
+        currentColorSelection = '';
+        document.querySelectorAll('.color-card').forEach(card => {
+            card.classList.remove('border-2', 'border-[#f05a29]', 'bg-orange-50/20');
+            card.classList.add('border-gray-200');
+            const check = card.querySelector('.color-card-check');
+            if (check) { check.classList.add('hidden'); check.style.display = ''; }
+        });
+
+        // Hide size chips section, show placeholder
+        const sizeContainer = document.getElementById('sizeChipsContainer');
+        const sizePlaceholder = document.getElementById('sizePlaceholder');
+        if (sizeContainer) sizeContainer.style.display = 'none';
+        if (sizePlaceholder) sizePlaceholder.style.display = '';
+
+        // Reset size chip styles
+        _resetSizeChipStyles();
+
+        // Also reset .variant-row for single-mode products
+        document.querySelectorAll('.variant-row').forEach((row, i) => {
+            const isOos = VARIANTS_LIST[i] && VARIANTS_LIST[i].stock <= 0;
+            row.className = `variant-row relative flex flex-col p-1 sm:p-1.5 rounded-xl border border-gray-200 bg-white transition-all duration-150 cursor-pointer select-none text-left group ${isOos ? 'opacity-50 grayscale cursor-not-allowed' : 'hover:border-gray-400'}`;
+            const check = row.querySelector('.variant-check');
+            if (check) { check.classList.add('hidden'); check.style.display = ''; }
+        });
+
+        // Restore main product image
+        const mainImg = document.getElementById('mainProductImage');
+        if (mainImg) mainImg.src = <?= json_encode($mainImage) ?>;
+        const fixedImg = document.getElementById('desktopFixedBarImg');
+        if (fixedImg) fixedImg.src = <?= json_encode($mainImage) ?>;
+
+        // Restore main product price display
+        const priceEl = document.getElementById('priceDisplay');
+        if (priceEl) priceEl.textContent = formatNum(currentMode === 'wholesale' ? WS_START : OP_START);
+        const fixedPrice = document.getElementById('desktopFixedBarPrice');
+        if (fixedPrice) fixedPrice.innerHTML = `₹${formatNum(currentMode === 'wholesale' ? WS_START : OP_START)} <span class="text-[10px] text-gray-400 font-normal">/ piece</span>`;
+
+        // Restore main product title badge and SKU
+        const titleEl = document.getElementById('selectedVariantTitle');
+        if (titleEl) titleEl.textContent = <?= json_encode($product['name'] ?? '') ?>;
+        const codeBadge = document.getElementById('selectedVariantCodeBadge');
+        if (codeBadge) codeBadge.textContent = <?= json_encode($product['sku'] ?? '') ?>;
+
+        // Restore main stock badge
+        const mainStockBadge = document.getElementById('activeStockBadge');
+        const stockQty = <?= (int)($product['stock_quantity'] ?? 0) ?>;
+        if (mainStockBadge) {
+            mainStockBadge.textContent = stockQty > 0 ? 'In Stock' : 'Out of Stock';
+            mainStockBadge.className = stockQty > 0 ? 'font-semibold text-emerald-600' : 'font-semibold text-red-500';
+        }
+        const stockBadge = document.getElementById('variantStockStatusText');
+        if (stockBadge) {
+            stockBadge.textContent = stockQty > 0 ? 'In stock' : 'Out of Stock';
+            stockBadge.className = stockQty > 0 ? 'text-[11px] font-semibold text-emerald-600' : 'text-[11px] font-semibold text-red-500';
+        }
+
+        // Restore product-level tiers
+        const prodTiers = <?= json_encode($prodTiers) ?>;
+        renderVariantTiers(prodTiers);
+
+        // Restore URL to base product URL
+        window.history.replaceState(null, '', <?= json_encode($canonicalUrl) ?>);
+
+        // Clear all variant active styling
+        document.querySelectorAll('.variant-row').forEach(r => {
+            const isChip = r.classList.contains('px-3') && r.classList.contains('py-2');
+            const isOos = (() => {
+                const idx = parseInt(r.dataset.variantIdx);
+                return VARIANTS_LIST && VARIANTS_LIST[idx] && VARIANTS_LIST[idx].stock <= 0;
+            })();
+            if (isChip) {
+                r.className = `variant-row px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 text-xs font-semibold select-none border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:shadow-2xs ${isOos ? 'opacity-50' : ''}`;
+            } else {
+                r.className = `variant-row p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all duration-200 border border-gray-200 bg-white hover:border-gray-300 hover:shadow-2xs ${isOos ? 'opacity-50 grayscale' : ''}`;
+                const imgBox = r.querySelector('.variant-img-box');
+                if (imgBox) imgBox.className = 'variant-img-box w-11 h-11 sm:w-12 sm:h-12 rounded-lg border border-gray-200 overflow-hidden shrink-0 bg-white shadow-2xs transition-all';
+            }
+        });
+        document.querySelectorAll('.amazon-swatch-btn').forEach(btn => {
+            btn.className = `amazon-swatch-btn relative flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-gray-200 hover:border-gray-400 bg-white transition-all cursor-pointer focus:outline-none select-none`;
+        });
+
+        // Sync ATC stepper with main product cart state
+        if (typeof window.syncProductDetailCartState === 'function') {
+            window.syncProductDetailCartState();
+        } else {
+            currentAtcQty = 0;
+            if (typeof updateAtcStepperUI === 'function') updateAtcStepperUI();
+        }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -1320,20 +1570,18 @@ ob_start();
             if (foundIdx !== -1) {
                 selectAmazonVariant(foundIdx);
                 // Also select the color if double mode
-                const row = document.querySelector(`.variant-row[data-variant-idx="${foundIdx}"]`);
-                if (row && row.dataset.color) {
-                    currentColorSelection = row.dataset.color; // so it doesn't trigger clear logic on initial load
-                    selectVariantColor(row.dataset.color);
+                const chip = document.querySelector(`.size-chip[data-variant-idx="${foundIdx}"]`);
+                const row  = document.querySelector(`.variant-row[data-variant-idx="${foundIdx}"]`);
+                const colorEl = chip || row;
+                if (colorEl && colorEl.dataset.color) {
+                    selectColorCard(colorEl.dataset.color);
                 }
-                return;
             }
+            // Note: intentionally NOT auto-selecting first color/variant when no URL code present
         }
 
-        const firstColorBtn = document.querySelector('.color-btn');
-        if (firstColorBtn) {
-            currentColorSelection = ''; // force trigger
-            selectVariantColor(firstColorBtn.dataset.color);
-        }
+        // Double-mode: on page load, no color or size is pre-selected — all options visible
+        // (No auto-selection of first color or first size — user must choose explicitly)
 
         checkDetailWishlistStatus();
 
@@ -1362,38 +1610,74 @@ ob_start();
     });
 
     let currentColorSelection = '';
-    
-    function selectVariantColor(colorName) {
-        if (currentColorSelection === colorName) return;
+
+    // Show a short inline partial-selection hint (e.g. "Please select a Size")
+    function showPartialSelectionHint(missingGroupLabel) {
+        let hintEl = document.getElementById('partialSelectionHint');
+        if (!hintEl) {
+            hintEl = document.createElement('div');
+            hintEl.id = 'partialSelectionHint';
+            hintEl.style.cssText = 'display:none; margin-top:8px; padding:8px 12px; background:#fff7ed; border:1.5px solid #f05a29; border-radius:10px; color:#c0390d; font-size:12px; font-weight:600; text-align:center;';
+            const variantSelectorBox = document.getElementById('variantSelectorBox');
+            if (variantSelectorBox) variantSelectorBox.insertAdjacentElement('afterend', hintEl);
+            else document.body.appendChild(hintEl);
+        }
+        hintEl.textContent = `Please select a ${missingGroupLabel}`;
+        hintEl.style.display = 'block';
+        const sizeSection = document.getElementById('sizeChipsSection');
+        if (sizeSection) {
+            sizeSection.style.transition = 'box-shadow 0.2s';
+            sizeSection.style.boxShadow = '0 0 0 2px #f05a29';
+            setTimeout(() => { sizeSection.style.boxShadow = ''; }, 1800);
+            sizeSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        setTimeout(() => { if (hintEl) hintEl.style.display = 'none'; }, 3000);
+    }
+
+    // Two-step color card selector (replaces old selectVariantColor)
+    function selectColorCard(colorName) {
+        // Toggle: clicking already-selected color deselects everything
+        if (currentColorSelection === colorName) {
+            restoreMainProductState(); // resets color, size, image, price
+            return;
+        }
 
         currentColorSelection = colorName;
+        selectedVariantIndex = null;
 
-        // 2. Update Color Buttons UI
-        document.querySelectorAll('.color-btn').forEach(btn => {
-            if (btn.dataset.color === colorName) {
-                btn.className = 'color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#f05a29] bg-orange-50 text-[#f05a29] ring-1 ring-orange-200 shadow-xs transition-all text-xs font-semibold cursor-pointer select-none';
-            } else {
-                btn.className = 'color-btn flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-700 hover:border-gray-300 transition-all text-xs font-semibold cursor-pointer select-none';
-            }
-        });
+        // 1. Update color card styles
+        _applyColorCardStyle(colorName);
 
-        // 3. Show/Hide Size Rows
-        let firstShownIdx = null;
-        const rows = document.querySelectorAll('.variant-row');
-        rows.forEach(r => {
-            if (r.dataset.color === colorName) {
-                r.style.display = 'block';
-                if (firstShownIdx === null) firstShownIdx = r.dataset.variantIdx;
-            } else {
-                r.style.display = 'none';
-            }
-        });
-        
-        // 4. Auto select first variant of the new color
-        if (firstShownIdx !== null) {
-            selectAmazonVariant(firstShownIdx);
+        // 2. Switch main gallery image to this color's representative image
+        const selectedCard = document.querySelector(`.color-card[data-color="${CSS.escape(colorName)}"]`);
+        const colorImage = selectedCard ? selectedCard.dataset.colorImage : null;
+        if (colorImage) {
+            const mainImg = document.getElementById('mainProductImage');
+            if (mainImg) { mainImg.style.opacity = '0.7'; mainImg.src = colorImage; mainImg.style.opacity = '1'; }
+            const fixedImg = document.getElementById('desktopFixedBarImg');
+            if (fixedImg) fixedImg.src = colorImage;
         }
+
+        // 3. Show size chips for this color, hide others
+        const sizeContainer = document.getElementById('sizeChipsContainer');
+        const sizePlaceholder = document.getElementById('sizePlaceholder');
+        if (sizeContainer) {
+            sizeContainer.style.display = 'flex';
+            sizeContainer.style.flexWrap = 'wrap';
+            sizeContainer.style.gap = '8px';
+        }
+        if (sizePlaceholder) sizePlaceholder.style.display = 'none';
+
+        document.querySelectorAll('.size-chip').forEach(chip => {
+            chip.style.display = (chip.dataset.color === colorName) ? 'inline-flex' : 'none';
+        });
+
+        // 4. Clear any previously selected size
+        _resetSizeChipStyles();
     }
+
+    // Legacy alias kept for deep-link handler compatibility
+    function selectVariantColor(colorName) { selectColorCard(colorName); }
 
     // ========================================================
     // CART & WISHLIST DETAIL FUNCTIONS
@@ -1512,6 +1796,12 @@ ob_start();
     let currentAtcQty = 0;
 
     function handleAddToCartClick(source) {
+        // Partial selection guard (double-mode: color chosen but no size yet)
+        if (<?= $isDoubleMode ? 'true' : 'false' ?> && currentColorSelection && selectedVariantIndex === null) {
+            showPartialSelectionHint('Size');
+            return;
+        }
+        // No variant required — null means main product (variant_id = null)
         currentAtcQty = 1;
         updateAtcStepperUI();
         addToCartFromDetail(currentAtcQty);
@@ -1606,7 +1896,15 @@ ob_start();
         }
     }
 
+    window.lastCartItems = [];
+
     window.syncProductDetailCartState = function(items, cartCount) {
+        if (items && Array.isArray(items)) {
+            window.lastCartItems = items;
+        } else if ((!items || !Array.isArray(items)) && window.lastCartItems && Array.isArray(window.lastCartItems)) {
+            items = window.lastCartItems;
+        }
+
         const currentProductId = <?= (int) $product['id'] ?>;
 
         if (!items || !Array.isArray(items)) {
@@ -1617,20 +1915,22 @@ ob_start();
 
         const prodItems = items.filter(i => parseInt(i.product_id) === currentProductId);
         if (prodItems.length > 0) {
-            if (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST && VARIANTS_LIST.length > 0) {
-                // Multi-variant product: track qty for the CURRENTLY selected variant
+            if (typeof selectedVariantIndex !== 'undefined' && selectedVariantIndex !== null && typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST && VARIANTS_LIST[selectedVariantIndex]) {
+                // Specific variant is currently selected: track qty for this variant
                 const selectedV = VARIANTS_LIST[selectedVariantIndex];
-                if (selectedV) {
-                    const match = prodItems.find(i => parseInt(i.variant_id) === parseInt(selectedV.id));
-                    currentAtcQty = match ? (parseInt(match.quantity) || 0) : 0;
-                } else {
-                    currentAtcQty = 0;
-                }
+                const match = prodItems.find(i => parseInt(i.variant_id) === parseInt(selectedV.id));
+                currentAtcQty = match ? (parseInt(match.quantity) || 0) : 0;
             } else {
-                // Single product: sum all (usually just 1 item)
-                let totalQty = 0;
-                prodItems.forEach(i => { totalQty += (parseInt(i.quantity) || 0); });
-                currentAtcQty = totalQty;
+                // Main product (no specific variant card selected)
+                const mainMatch = prodItems.find(i => !i.variant_id || parseInt(i.variant_id) === 0 || i.variant_id === null || i.variant_id === 'null');
+                if (mainMatch) {
+                    currentAtcQty = parseInt(mainMatch.quantity) || 0;
+                } else {
+                    // Fallback: sum all items if no variant_id match (e.g. simple product without variants)
+                    let totalQty = 0;
+                    prodItems.forEach(i => { totalQty += (parseInt(i.quantity) || 0); });
+                    currentAtcQty = totalQty;
+                }
             }
         } else {
             currentAtcQty = 0;
@@ -1719,6 +2019,7 @@ ob_start();
     }
 
     async function buyNowFromDetail() {
+        // No variant required — null selectedVariantIndex means main product (variant_id = null)
         if (typeof showComingSoonModal === 'function') {
             showComingSoonModal();
         } else {

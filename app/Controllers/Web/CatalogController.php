@@ -398,20 +398,108 @@ class CatalogController extends BaseController
     }
 
     /**
-     * Storefront Public Directory for All Factories (/factory or /factories)
+    /**
+     * Normalize factory name for grouping (trim, lowercase, remove punctuation differences, collapse spaces)
+     */
+    private function normalizeFactoryName(string $name): string
+    {
+        $name = mb_strtolower(trim($name), 'UTF-8');
+        $name = preg_replace('/[^\p{L}\p{N}\s]/u', '', $name);
+        $name = preg_replace('/\s+/', ' ', $name);
+        return trim($name);
+    }
+
+    /**
+     * Generate URL slug from factory name
+     */
+    private function slugifyFactoryName(string $name): string
+    {
+        $norm = $this->normalizeFactoryName($name);
+        $slug = preg_replace('/[^a-z0-9]+/', '-', strtolower($norm));
+        return trim($slug, '-');
+    }
+
+    /**
+     * Storefront Public Directory for All Factories (/factories)
+     * Groups factories by normalized name into single cards.
      */
     public function factoriesDirectory(): void
     {
         $db = Database::getReadConnection();
         $stmt = $db->query("
-            SELECT f.*, COUNT(DISTINCT p.id) as product_count
+            SELECT f.id, f.name, f.factory_code, f.status,
+                   p.id as product_id, p.name as product_name, p.main_image as product_image,
+                   c.name as category_name
             FROM factories f
             LEFT JOIN products p ON f.id = p.factory_id AND p.status = 'active'
+            LEFT JOIN categories c ON p.category_id = c.id
             WHERE f.status = 'active'
-            GROUP BY f.id
-            ORDER BY f.name ASC
+            ORDER BY f.name ASC, p.id DESC
         ");
-        $factories = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        $groupedMap = [];
+        foreach ($rows as $r) {
+            $rawName = trim($r['name'] ?? '');
+            if (empty($rawName)) continue;
+            $normKey = $this->normalizeFactoryName($rawName);
+
+            if (!isset($groupedMap[$normKey])) {
+                $groupedMap[$normKey] = [
+                    'name' => $rawName,
+                    'slug' => $this->slugifyFactoryName($rawName),
+                    'logo_url' => null,
+                    'factory_ids' => [],
+                    'product_ids' => [],
+                    'categories' => [],
+                    'preview_images' => [],
+                ];
+            }
+
+            if (!in_array((int)$r['id'], $groupedMap[$normKey]['factory_ids'], true)) {
+                $groupedMap[$normKey]['factory_ids'][] = (int)$r['id'];
+            }
+
+            if (!empty($r['product_id'])) {
+                $pId = (int)$r['product_id'];
+                if (!in_array($pId, $groupedMap[$normKey]['product_ids'], true)) {
+                    $groupedMap[$normKey]['product_ids'][] = $pId;
+
+                    if (!empty($r['product_image']) && count($groupedMap[$normKey]['preview_images']) < 3) {
+                        if (!in_array($r['product_image'], $groupedMap[$normKey]['preview_images'], true)) {
+                            $groupedMap[$normKey]['preview_images'][] = $r['product_image'];
+                        }
+                    }
+                }
+            }
+
+            if (!empty($r['category_name']) && count($groupedMap[$normKey]['categories']) < 3) {
+                if (!in_array($r['category_name'], $groupedMap[$normKey]['categories'], true)) {
+                    $groupedMap[$normKey]['categories'][] = $r['category_name'];
+                }
+            }
+        }
+
+        $factories = [];
+        foreach ($groupedMap as $key => $g) {
+            $factories[] = [
+                'name' => $g['name'],
+                'slug' => $g['slug'],
+                'logo_url' => $g['logo_url'],
+                'factory_ids' => $g['factory_ids'],
+                'product_count' => count($g['product_ids']),
+                'categories' => array_values($g['categories']),
+                'preview_images' => array_values($g['preview_images']),
+            ];
+        }
+
+        // Sort default: Most products first, then A-Z name
+        usort($factories, function($a, $b) {
+            if ($b['product_count'] !== $a['product_count']) {
+                return $b['product_count'] <=> $a['product_count'];
+            }
+            return strcasecmp($a['name'], $b['name']);
+        });
 
         $this->renderView('web/factories', [
             'factories' => $factories,
@@ -422,9 +510,62 @@ class CatalogController extends BaseController
     }
 
     /**
-     * Storefront Public View for Factory Catalog (/factory/{code})
+     * Storefront Public View for Factory Catalog by Slug (/factories/{slug})
      */
-    public function factory(?string $code = null): void
+    public function factoryBySlug(string $slug): void
+    {
+        $slug = strtolower(trim($slug));
+        if (empty($slug)) {
+            header('Location: ' . url('factories'), true, 301);
+            exit;
+        }
+
+        $db = Database::getReadConnection();
+        $stmt = $db->query("SELECT id, name, factory_code FROM factories WHERE status = 'active'");
+        $allFactories = $stmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
+        $matchedIds = [];
+        $matchedName = '';
+
+        foreach ($allFactories as $f) {
+            $fSlug = $this->slugifyFactoryName($f['name']);
+            if ($fSlug === $slug) {
+                $matchedIds[] = (int)$f['id'];
+                if (empty($matchedName) || strlen($f['name']) > strlen($matchedName)) {
+                    $matchedName = $f['name'];
+                }
+            }
+        }
+
+        // Legacy code/ID fallback lookup if slug didn't match group
+        if (empty($matchedIds)) {
+            $stmtLegacy = $db->prepare("SELECT id, name FROM factories WHERE (factory_code = ? OR id = ?) AND status = 'active' LIMIT 1");
+            $stmtLegacy->execute([$slug, (int)$slug]);
+            $leg = $stmtLegacy->fetch(\PDO::FETCH_ASSOC);
+            if ($leg) {
+                $targetSlug = $this->slugifyFactoryName($leg['name']);
+                header('Location: ' . url('factories/' . $targetSlug), true, 301);
+                exit;
+            }
+        }
+
+        if (empty($matchedIds)) {
+            header('Location: ' . url('factories'), true, 302);
+            exit;
+        }
+
+        $this->renderCatalogPage([
+            'factory_ids' => $matchedIds,
+            'seo_title' => htmlspecialchars($matchedName) . ' - Direct Wholesale Factory Catalog | ImportWale',
+            'seo_description' => 'Browse direct wholesale products from ' . $matchedName . ' on ImportWale.',
+            'canonical_url' => url('factories/' . $slug),
+        ]);
+    }
+
+    /**
+     * Legacy route redirect (/factory/{code}) -> 301 redirect to /factories/{slug}
+     */
+    public function factoryCodeRedirect(?string $code = null): void
     {
         if (empty($code)) {
             header('Location: ' . url('factories'), true, 301);
@@ -432,21 +573,18 @@ class CatalogController extends BaseController
         }
 
         $db = Database::getReadConnection();
-        $stmt = $db->prepare("SELECT * FROM factories WHERE factory_code = ? OR id = ? LIMIT 1");
-        $stmt->execute([$code, (int) $code]);
+        $stmt = $db->prepare("SELECT id, name FROM factories WHERE factory_code = ? OR id = ? LIMIT 1");
+        $stmt->execute([$code, (int)$code]);
         $factory = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        if (!$factory) {
-            header('Location: ' . url('factories'), true, 302);
+        if ($factory) {
+            $slug = $this->slugifyFactoryName($factory['name']);
+            header('Location: ' . url('factories/' . $slug), true, 301);
             exit;
         }
 
-        $this->renderCatalogPage([
-            'factory_id' => (int) $factory['id'],
-            'seo_title' => htmlspecialchars($factory['name']) . ' (' . $factory['factory_code'] . ') - Wholesale Catalog | ImportWale',
-            'seo_description' => 'Browse direct wholesale products from ' . $factory['name'] . ' [' . $factory['factory_code'] . '] on ImportWale.',
-            'canonical_url' => url('factory/' . $factory['factory_code']),
-        ]);
+        header('Location: ' . url('factories'), true, 302);
+        exit;
     }
 
     /**
@@ -461,6 +599,7 @@ class CatalogController extends BaseController
         $sectionId = (int) ($options['section_id'] ?? $_GET['section_id'] ?? $_GET['section'] ?? 0);
         $brandId = (int) ($options['brand_id'] ?? $_GET['brand_id'] ?? 0);
         $factoryId = (int) ($options['factory_id'] ?? $_GET['factory_id'] ?? 0);
+        $factoryIds = $options['factory_ids'] ?? [];
 
         $activeSection = $options['active_section'] ?? null;
         if (!$activeSection && $sectionId > 0) {
@@ -511,6 +650,7 @@ class CatalogController extends BaseController
             'section_id' => $sectionId,
             'brand_id' => $brandId,
             'factory_id' => $factoryId,
+            'factory_ids' => $factoryIds,
             'similar_to' => $similarToId,
             'min_price' => $minPrice,
             'max_price' => $maxPrice,

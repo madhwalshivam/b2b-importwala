@@ -84,6 +84,11 @@ $isBlog = str_contains($currentUri, 'blog');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?= SEO::renderMeta($seoOptions ?? []) ?>
 
+    <!-- Favicon Icons -->
+    <link rel="icon" type="image/png" href="<?= asset('assets/images/favicon.png') ?>?v=<?= time() ?>">
+    <link rel="shortcut icon" href="<?= asset('assets/images/favicon.ico') ?>?v=<?= time() ?>">
+    <link rel="apple-touch-icon" href="<?= asset('assets/images/favicon.png') ?>?v=<?= time() ?>">
+
     <!-- Central Theme Design Tokens & Fonts (load first for CSS vars) -->
     <link rel="stylesheet" href="<?= asset('css/theme.css') ?>?v=<?= time() ?>">
 

@@ -82,7 +82,12 @@ class SearchService extends BaseService
             $params['brand_id'] = (int)$filters['brand_id'];
         }
 
-        if (!empty($filters['factory_id'])) {
+        if (!empty($filters['factory_ids']) && is_array($filters['factory_ids'])) {
+            $ids = array_map('intval', array_filter($filters['factory_ids']));
+            if (!empty($ids)) {
+                $where[] = "p.`factory_id` IN (" . implode(',', $ids) . ")";
+            }
+        } elseif (!empty($filters['factory_id'])) {
             $where[] = "p.`factory_id` = :factory_id";
             $params['factory_id'] = (int)$filters['factory_id'];
         }

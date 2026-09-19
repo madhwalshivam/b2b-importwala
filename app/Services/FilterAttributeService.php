@@ -21,6 +21,47 @@ class FilterAttributeService
      * Get active filter attributes relevant for a given category (storefront).
      * Admin-only filters are EXCLUDED.
      */
+    /**
+     * Attribute names that should NOT appear in the buyer-facing shop filters.
+     * Add/remove names here to control which filters are visible on the storefront.
+     */
+    private const EXCLUDED_FILTER_NAMES = [
+        'Country of Origin',
+        'Variety',
+        'Processing Technology',
+        'Processing Technique',
+        'Treatment Process',
+        'Style',
+        'Style Classification',
+        'Suitable For Gift Giving Occasion',
+        'Color',
+        'Popular Elements',
+        'Kind',
+        'Product Type',
+        'Chain Style',
+        'Pendant Material',
+        'Trendy Element',
+        'Closure Type',
+        'Brand Name',
+        'Stone Shape',
+        'Certification Available',
+        'Certificate Type',
+        'Currency',
+        'Price Negotiable',
+        'OEM Available',
+        'ODM Available',
+        'Customization Available',
+        'Sample Available',
+        'Production Lead Time',
+        'Production Capacity',
+        'Packaging Details',
+        'Size',
+        'Weight',
+        'Item Number',
+        'Main Downstream Platform',
+        'Jewellery Type',
+    ];
+
     public function getAttributesForCategory(?int $categoryId = null): array
     {
         // Auto-sync specifications to filter attributes if product_filter_attribute_values is empty
@@ -57,7 +98,14 @@ class FilterAttributeService
         }
 
         $attributes = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        $hydrated = $this->hydrateOptions($attributes);
+
+        // Exclude storefront-hidden attributes (case-insensitive match on name)
+        $excludedLower = array_map('strtolower', self::EXCLUDED_FILTER_NAMES);
+        $attributes = array_filter($attributes, function ($attr) use ($excludedLower) {
+            return !in_array(strtolower(trim($attr['name'])), $excludedLower, true);
+        });
+
+        $hydrated = $this->hydrateOptions(array_values($attributes));
 
         // Return only attributes that have options populated
         return array_values(array_filter($hydrated, fn($a) => !empty($a['options'])));

@@ -80,6 +80,15 @@
                             </td>
                         </tr>
                     <?php else: ?>
+                        <?php
+                        $mergedMap = [];
+                        foreach ($factories as $fItem) {
+                            $norm = mb_strtolower(trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $fItem['name'])));
+                            $norm = preg_replace('/\s+/', ' ', $norm);
+                            if (!isset($mergedMap[$norm])) $mergedMap[$norm] = [];
+                            $mergedMap[$norm][] = $fItem['factory_code'];
+                        }
+                        ?>
                         <?php foreach ($factories as $f): ?>
                             <tr class="hover:bg-slate-50/80 transition group">
                                 <td class="py-3.5 px-4 whitespace-nowrap">
@@ -91,6 +100,19 @@
                                     <a href="<?= url('admin/factories/show/' . $f['id']) ?>" class="font-bold text-slate-900 hover:text-[#f05a29] transition block text-xs">
                                         <?= htmlspecialchars($f['name']) ?>
                                     </a>
+                                    <?php
+                                    $norm = mb_strtolower(trim(preg_replace('/[^\p{L}\p{N}\s]/u', '', $f['name'])));
+                                    $norm = preg_replace('/\s+/', ' ', $norm);
+                                    $siblingCodes = array_diff($mergedMap[$norm] ?? [], [$f['factory_code']]);
+                                    ?>
+                                    <?php if (!empty($siblingCodes)): ?>
+                                        <div class="mt-1">
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md" title="Merged under single card on buyer website /factories">
+                                                <i data-lucide="layers" class="w-3 h-3 text-amber-600"></i>
+                                                <span>Buyer Group: Merged with <?= htmlspecialchars(implode(', ', $siblingCodes)) ?></span>
+                                            </span>
+                                        </div>
+                                    <?php endif; ?>
                                     <?php if (!empty($f['store_url'])): ?>
                                         <a href="<?= htmlspecialchars($f['store_url']) ?>" target="_blank" class="text-[11px] text-slate-400 hover:text-[#f05a29] truncate max-w-[220px] inline-flex items-center gap-1 mt-0.5 whitespace-nowrap">
                                             <i data-lucide="external-link" class="w-3 h-3"></i>

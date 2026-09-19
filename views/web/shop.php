@@ -215,19 +215,16 @@ ob_start();
     <!-- ============================================================
          LEFT SIDEBAR FILTERS (SINGLE SIDEBAR SCROLL + VIEWPORT FIT)
          ============================================================ -->
-    <aside id="shopSidebar" style="width: 250px; flex-shrink: 0; display: <?= $sidebarOpenByDefault ? 'block' : 'none' ?>; background: #ffffff; padding: 4px 10px 12px 0; position: sticky; top: 80px; max-height: calc(100vh - 95px); overflow-y: auto; overscroll-behavior: contain;">
+    <aside id="shopSidebar" style="width: 250px; flex-shrink: 0; display: <?= $sidebarOpenByDefault ? 'block' : 'none' ?>; background: #ffffff; padding: 8px 12px 12px 4px; position: sticky; top: 80px; max-height: calc(100vh - 95px); overflow-y: auto; overscroll-behavior: contain;">
       
       <!-- Sidebar Header -->
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;">
-        <span style="font-size: 13.5px; font-weight: 700; color: #0f172a;">
-          <?= $activeFilterCount ?> filter<?= $activeFilterCount !== 1 ? 's' : '' ?> applied
-        </span>
-        <?php if ($activeFilterCount > 0): ?>
-          <a href="<?= htmlspecialchars($baseUrl) ?>" style="font-size: 12.5px; font-weight: 600; color: #1e293b; text-decoration: underline;">
-            Clear All
-          </a>
-        <?php endif; ?>
+      <?php if ($activeFilterCount > 0): ?>
+      <div style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;">
+        <a href="<?= htmlspecialchars($baseUrl) ?>" style="font-size: 12.5px; font-weight: 600; color: #1e293b; text-decoration: underline;">
+          Clear All
+        </a>
       </div>
+      <?php endif; ?>
 
       <!-- FILTER FORM -->
       <form id="shopFilterForm" action="<?= htmlspecialchars($baseUrl) ?>" method="GET">
@@ -241,7 +238,7 @@ ob_start();
         <!-- ACCORDION 1: CATEGORIES -->
         <div class="shop-accordion-item" style="border-bottom: 1px solid #f1f5f9; padding: 10px 0;">
           <button type="button" class="shop-accordion-header" onclick="toggleAccordion(this)" style="width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; text-align: left; padding: 0; cursor: pointer;">
-            <span style="font-size: 13.5px; font-weight: 700; color: #0f172a;">Categories</span>
+            <span style="font-size: 13px; font-weight: 500; color: #374151;">Categories</span>
             <svg class="accordion-arrow" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transform: rotate(180deg); transition: transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
           </button>
           
@@ -278,7 +275,7 @@ ob_start();
                   }
                   ?>
                   <div style="display: flex; flex-direction: column;">
-                    <label style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 13px; color: <?= ($isCatChecked || $hasActiveSub) ? '#f05a29' : '#334155' ?>; font-weight: <?= ($isCatChecked || $hasActiveSub) ? '700' : '500' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
+                    <label style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 13px; color: <?= ($isCatChecked || $hasActiveSub) ? '#f05a29' : '#334155' ?>; font-weight: <?= ($isCatChecked || $hasActiveSub) ? '500' : '400' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
                       <span style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0;">
                         <input type="radio" name="category_id" value="<?= $cat['id'] ?>" <?= $isCatChecked ? 'checked' : '' ?> onchange="window.location.href='<?= category_url($cat) ?>'" style="accent-color: #f05a29; margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
                         <span style="flex: 1; min-width: 0; word-break: break-word; line-height: 1.35;" onclick="window.location.href='<?= category_url($cat) ?>'"><?= htmlspecialchars($cat['name']) ?></span>
@@ -293,7 +290,7 @@ ob_start();
                           $isSubActive = ($activeSubId === $subId || (isset($activeSubcategory['id']) && (int)$activeSubcategory['id'] === $subId));
                           $subUrl = subcategory_url($cat, $sub);
                           ?>
-                          <label onclick="window.location.href='<?= $subUrl ?>'" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; color: <?= $isSubActive ? '#f05a29' : '#64748b' ?>; font-weight: <?= $isSubActive ? '700' : '400' ?>; cursor: pointer; padding: 2px 0;">
+                          <label onclick="window.location.href='<?= $subUrl ?>'" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; color: <?= $isSubActive ? '#f05a29' : '#64748b' ?>; font-weight: <?= $isSubActive ? '500' : '400' ?>; cursor: pointer; padding: 2px 0;">
                             <span style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
                               <span style="width: 5px; height: 5px; border-radius: 50%; background: <?= $isSubActive ? '#f05a29' : '#cbd5e1' ?>; flex-shrink: 0;"></span>
                               <a href="<?= $subUrl ?>" onclick="event.stopPropagation();" style="color: inherit; text-decoration: none; flex: 1; min-width: 0; word-break: break-word;" onmouseover="this.style.color='#f05a29'" onmouseout="this.style.color='<?= $isSubActive ? '#f05a29' : '#64748b' ?>'"><?= htmlspecialchars($sub['name']) ?></a>
@@ -309,39 +306,10 @@ ob_start();
           </div>
         </div>
 
-        <!-- ACCORDION 2: MIN MOQ -->
-        <div class="shop-accordion-item" style="border-bottom: 1px solid #f1f5f9; padding: 10px 0;">
-          <button type="button" class="shop-accordion-header" onclick="toggleAccordion(this)" style="width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; text-align: left; padding: 0; cursor: pointer;">
-            <span style="font-size: 13.5px; font-weight: 700; color: #0f172a;">Min MOQ</span>
-            <svg class="accordion-arrow" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transform: rotate(180deg); transition: transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-
-          <div class="shop-accordion-content" style="margin-top: 10px;">
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-              <?php
-              $moqOptions = [
-                ['label' => 'No MOQ', 'min' => '', 'max' => '1'],
-                ['label' => '2–5 pcs', 'min' => '2', 'max' => '5'],
-                ['label' => '6–10 pcs', 'min' => '6', 'max' => '10'],
-                ['label' => '10–25 pcs', 'min' => '10', 'max' => '25'],
-                ['label' => '25+ pcs', 'min' => '25', 'max' => ''],
-              ];
-              foreach ($moqOptions as $mo):
-                $isMoqSelected = ($currentMinMoq == $mo['min'] && $currentMaxMoq == $mo['max']);
-              ?>
-                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: <?= $isMoqSelected ? '#f05a29' : '#334155' ?>; font-weight: <?= $isMoqSelected ? '600' : '400' ?>; cursor: pointer; padding: 3px 0;">
-                  <input type="checkbox" <?= $isMoqSelected ? 'checked' : '' ?> onclick="setMoqValues('<?= $mo['min'] ?>', '<?= $mo['max'] ?>', this)" style="accent-color: #f05a29; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
-                  <span><?= $mo['label'] ?></span>
-                </label>
-              <?php endforeach; ?>
-            </div>
-          </div>
-        </div>
-
         <!-- ACCORDION 3: WHOLESALE PRICE -->
         <div class="shop-accordion-item" style="border-bottom: 1px solid #f1f5f9; padding: 10px 0;">
           <button type="button" class="shop-accordion-header" onclick="toggleAccordion(this)" style="width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; text-align: left; padding: 0; cursor: pointer;">
-            <span style="font-size: 13.5px; font-weight: 700; color: #0f172a;">Wholesale price (₹)</span>
+            <span style="font-size: 13px; font-weight: 500; color: #374151;">Wholesale price (₹)</span>
             <svg class="accordion-arrow" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transform: rotate(180deg); transition: transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
           </button>
 
@@ -365,7 +333,7 @@ ob_start();
               foreach ($priceOptions as $po):
                 $isPriceSelected = ($currentMinPrice == $po['min'] && $currentMaxPrice == $po['max']);
               ?>
-                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: <?= $isPriceSelected ? '#f05a29' : '#334155' ?>; font-weight: <?= $isPriceSelected ? '600' : '400' ?>; cursor: pointer; padding: 3px 0;">
+                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: <?= $isPriceSelected ? '#f05a29' : '#334155' ?>; font-weight: <?= $isPriceSelected ? '500' : '400' ?>; cursor: pointer; padding: 3px 0;">
                   <input type="checkbox" <?= $isPriceSelected ? 'checked' : '' ?> onclick="setPriceValues('<?= $po['min'] ?>', '<?= $po['max'] ?>', this)" style="accent-color: #f05a29; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
                   <span><?= $po['label'] ?></span>
                 </label>
@@ -408,7 +376,7 @@ ob_start();
             ?>
             <div class="shop-accordion-item" style="border-bottom: 1px solid #f1f5f9; padding: 10px 0;">
               <button type="button" class="shop-accordion-header" onclick="toggleAccordion(this)" style="width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: none; text-align: left; padding: 0; cursor: pointer;">
-                <span style="font-size: 13.5px; font-weight: 700; color: #0f172a;"><?= htmlspecialchars($attr['name']) ?></span>
+                <span style="font-size: 13px; font-weight: 500; color: #374151;"><?= htmlspecialchars($attr['name']) ?></span>
                 <svg class="accordion-arrow" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="transform: rotate(180deg); transition: transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
               </button>
 
@@ -421,12 +389,9 @@ ob_start();
                     $isChecked = $item['isChecked'];
                     $liveCount = $item['liveCount'];
                     ?>
-                    <label style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 13px; color: <?= $isChecked ? '#f05a29' : '#334155' ?>; font-weight: <?= $isChecked ? '600' : '400' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
-                      <span style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0;">
-                        <input type="checkbox" name="attr[<?= $attrId ?>][]" value="<?= $optId ?>" <?= $isChecked ? 'checked' : '' ?> onchange="this.form.submit()" style="accent-color: #f05a29; margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
-                        <span style="flex: 1; min-width: 0; word-break: break-word; line-height: 1.35;"><?= htmlspecialchars($opt['value']) ?></span>
-                      </span>
-                      <span style="flex-shrink: 0; font-size: 11px; color: #94a3b8; font-weight: 500; background: #f8fafc; padding: 1px 6px; border-radius: 9999px; border: 1px solid #e2e8f0; margin-left: 4px; display: inline-block; min-width: 18px; text-align: center; margin-top: 1px;"><?= $liveCount ?></span>
+                    <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: <?= $isChecked ? '#f05a29' : '#334155' ?>; font-weight: <?= $isChecked ? '500' : '400' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
+                      <input type="checkbox" name="attr[<?= $attrId ?>][]" value="<?= $optId ?>" <?= $isChecked ? 'checked' : '' ?> onchange="this.form.submit()" style="accent-color: #f05a29; margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
+                      <span style="flex: 1; min-width: 0; word-break: break-word; line-height: 1.35;"><?= htmlspecialchars($opt['value']) ?></span>
                     </label>
                   <?php endforeach; ?>
                 </div>
