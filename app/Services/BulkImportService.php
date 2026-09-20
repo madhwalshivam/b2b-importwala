@@ -694,7 +694,7 @@ class BulkImportService
                             sale_price = :sale_price,
                             moq = :moq,
                             stock = :stock,
-                            main_image = COALESCE(NULLIF(:main_image, ''), main_image),
+                            main_image = COALESCE(:main_image, main_image),
                             manufacturer_id_code = :manufacturer_id_code,
                             manufacturer_name = :manufacturer_name,
                             manufacturer_contact_person = :manufacturer_contact_person,
@@ -725,7 +725,7 @@ class BulkImportService
                         ':sale_price'                  => $prod['one_piece_price'],
                         ':moq'                         => $prod['moq'],
                         ':stock'                       => $prod['available_qty'],
-                        ':main_image'                  => $mainImagePath,
+                        ':main_image'                  => !empty($mainImagePath) ? $mainImagePath : null,
                         ':manufacturer_id_code'        => $prod['manufacturer_id_code'] ?: null,
                         ':manufacturer_name'           => $prod['manufacturer_name'] ?: null,
                         ':manufacturer_contact_person' => $prod['manufacturer_contact_person'] ?: null,
@@ -840,7 +840,7 @@ class BulkImportService
 
                 if ($varMode === 'single') {
                     $cStmtCheck = $this->db->prepare("SELECT id FROM product_colors WHERE product_id = ? AND LOWER(color_name) = LOWER(?)");
-                    $cStmtUpd   = $this->db->prepare("UPDATE product_colors SET sku = :sku, price = :price, stock_qty = :stock, swatch_hex_or_image = COALESCE(NULLIF(:swatch,''), swatch_hex_or_image) WHERE id = :id");
+                    $cStmtUpd   = $this->db->prepare("UPDATE product_colors SET sku = :sku, price = :price, stock_qty = :stock, swatch_hex_or_image = COALESCE(:swatch, swatch_hex_or_image) WHERE id = :id");
                     $cStmtIns   = $this->db->prepare("INSERT INTO product_colors (product_id, color_name, swatch_hex_or_image, sku, price, stock_qty) VALUES (:product_id, :color_name, :swatch, :sku, :price, :stock)");
 
                     foreach ($prod['variants'] as $vData) {
@@ -858,7 +858,7 @@ class BulkImportService
                                 ':sku'    => $varSku,
                                 ':price'  => $varPrice,
                                 ':stock'  => $varStock,
-                                ':swatch' => $swatchHex,
+                                ':swatch' => !empty($swatchHex) ? $swatchHex : null,
                                 ':id'     => (int)$cExist['id'],
                             ]);
                         } else {

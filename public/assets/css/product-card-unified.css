@@ -119,98 +119,195 @@
   height: 7px !important;
 }
 
-/* Overlay Action Icons (Wishlist - Bottom Right Blurred Circle) */
-.ef-icon-btn {
-  position: absolute !important;
-  z-index: 10 !important;
+/* Overlay Action Icons (Wishlist Top-Right & Cart Bottom-Right) */
+.product-card .icon-btn,
+.product-card .ef-icon-btn,
+.everful-card .ef-icon-btn,
+.robu-product-card .robu-wishlist-btn,
+.robu-product-card .robu-cart-btn,
+.ef-icon-btn,
+.icon-btn,
+.robu-wishlist-btn,
+.robu-cart-btn {
   width: 28px !important;
   height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  max-width: 28px !important;
+  max-height: 28px !important;
+  padding: 0 !important;
+  margin: 0 !important;
   border-radius: 50% !important;
-  background: rgba(255, 255, 255, 0.85) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1) !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  cursor: pointer !important;
-  color: #1e293b !important;
-  transition: all 0.18s ease !important;
-  padding: 0 !important;
+  position: absolute !important;
+  z-index: 10 !important;
+  border: none !important;
   outline: none !important;
+  cursor: pointer !important;
+  color: #000000 !important;
+  transition: transform 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
+  -webkit-tap-highlight-color: transparent !important;
 }
 
-.ef-icon-btn svg {
-  width: 16px !important;
-  height: 16px !important;
-  stroke: #334155 !important;
+/* Expanded Touch Target (Minimum 40x40px tap area for mobile) */
+.product-card .icon-btn::after,
+.product-card .ef-icon-btn::after,
+.everful-card .ef-icon-btn::after,
+.robu-product-card .robu-wishlist-btn::after,
+.robu-product-card .robu-cart-btn::after,
+.ef-icon-btn::after,
+.icon-btn::after,
+.robu-wishlist-btn::after,
+.robu-cart-btn::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -6px !important;
+  left: -6px !important;
+  right: -6px !important;
+  bottom: -6px !important;
+  z-index: 1 !important;
+}
+
+/* Inner Icon (SVG / Font-icon) Sizing & Color */
+.product-card .icon-btn svg,
+.product-card .ef-icon-btn svg,
+.everful-card .ef-icon-btn svg,
+.robu-product-card .robu-wishlist-btn svg,
+.robu-product-card .robu-cart-btn svg,
+.robu-wishlist-btn i,
+.robu-cart-btn i,
+.ef-icon-btn svg,
+.icon-btn svg {
+  width: 15px !important;
+  height: 15px !important;
+  min-width: 15px !important;
+  min-height: 15px !important;
+  max-width: 15px !important;
+  max-height: 15px !important;
+  stroke: #000000 !important;
   stroke-width: 1.8px !important;
-  color: #334155 !important;
+  color: #000000 !important;
+  flex-shrink: 0 !important;
+  display: block !important;
 }
 
-.ef-wishlist-btn {
-  top: 8px !important;
+/* Wishlist Heart Button Position: Top-Right (6px offset) */
+.product-card .wishlist-btn,
+.product-card .ef-wishlist-btn,
+.everful-card .ef-wishlist-btn,
+.robu-product-card .robu-wishlist-btn,
+.ef-wishlist-btn,
+.wishlist-btn,
+.robu-wishlist-btn {
+  top: 6px !important;
+  right: 6px !important;
   bottom: auto !important;
-  right: 8px !important;
-  color: #334155 !important;
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+  left: auto !important;
+  color: #000000 !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
 }
 
-.ef-wishlist-btn:hover {
+.product-card .wishlist-btn:hover,
+.product-card .ef-wishlist-btn:hover,
+.everful-card .ef-wishlist-btn:hover,
+.robu-wishlist-btn:hover,
+.ef-wishlist-btn:hover,
+.wishlist-btn:hover {
+  background: #ffffff !important;
+  transform: scale(1.08) !important;
+}
+
+.product-card .wishlist-btn.active,
+.product-card .ef-wishlist-btn.active,
+.everful-card .ef-wishlist-btn.active,
+.robu-wishlist-btn.active,
+.ef-wishlist-btn.active,
+.wishlist-btn.active {
   background: rgba(255, 255, 255, 0.95) !important;
-  transform: scale(1.1) !important;
 }
 
-.ef-wishlist-btn.active {
-  color: #f05a29 !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  border-color: #f05a29 !important;
-  transform: scale(1.1) !important;
+.product-card .wishlist-btn.active svg,
+.product-card .ef-wishlist-btn.active svg,
+.everful-card .ef-wishlist-btn.active svg,
+.robu-product-card .robu-wishlist-btn.active svg,
+.ef-wishlist-btn.active .ef-heart-icon,
+.wishlist-btn.active svg {
+  fill: #e11d48 !important;
+  stroke: #e11d48 !important;
+  color: #e11d48 !important;
 }
 
-.ef-wishlist-btn.active .ef-heart-icon {
-  fill: #f05a29 !important;
-  stroke: #f05a29 !important;
-}
-
-.ef-cart-btn {
-  bottom: 8px !important;
+/* Cart Bag Button Position: Bottom-Right (6px offset) */
+.product-card .cart-btn,
+.product-card .ef-cart-btn,
+.everful-card .ef-cart-btn,
+.robu-product-card .robu-cart-btn,
+.ef-cart-btn,
+.cart-btn,
+.robu-cart-btn {
+  bottom: 6px !important;
+  right: 6px !important;
   top: auto !important;
-  right: 8px !important;
-  color: #334155 !important;
-  background: rgba(255, 255, 255, 0.88) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.7) !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+  left: auto !important;
+  color: #000000 !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
 }
 
-.ef-cart-btn:hover {
-  background: #f05a29 !important;
+.product-card .cart-btn:hover,
+.product-card .ef-cart-btn:hover,
+.everful-card .ef-cart-btn:hover,
+.robu-cart-btn:hover,
+.ef-cart-btn:hover,
+.cart-btn:hover {
+  background: #000000 !important;
   color: #ffffff !important;
-  border-color: #f05a29 !important;
-  transform: scale(1.1) !important;
+  transform: scale(1.08) !important;
 }
 
-.ef-cart-btn:hover svg {
+.product-card .cart-btn:hover svg,
+.product-card .ef-cart-btn:hover svg,
+.everful-card .ef-cart-btn:hover svg,
+.robu-cart-btn:hover svg,
+.ef-cart-btn:hover svg,
+.cart-btn:hover svg {
   stroke: #ffffff !important;
+  color: #ffffff !important;
 }
 
+.product-card .cart-btn.in-cart,
+.product-card .cart-btn.added,
+.product-card .ef-cart-btn.in-cart,
+.product-card .ef-cart-btn.added,
+.everful-card .ef-cart-btn.in-cart,
+.everful-card .ef-cart-btn.added,
 .ef-cart-btn.in-cart,
-.ef-cart-btn.added {
+.ef-cart-btn.added,
+.cart-btn.in-cart,
+.cart-btn.added {
   background: #10b981 !important;
   color: #ffffff !important;
-  border-color: #10b981 !important;
 }
 
+.product-card .cart-btn.in-cart svg,
+.product-card .cart-btn.added svg,
+.product-card .ef-cart-btn.in-cart svg,
+.product-card .ef-cart-btn.added svg,
+.everful-card .ef-cart-btn.in-cart svg,
+.everful-card .ef-cart-btn.added svg,
 .ef-cart-btn.in-cart svg,
-.ef-cart-btn.added svg {
+.ef-cart-btn.added svg,
+.cart-btn.in-cart svg,
+.cart-btn.added svg {
   stroke: #ffffff !important;
+  color: #ffffff !important;
 }
 
 /* Multi-Image Thumbnails Below Cover Photo */
@@ -464,5 +561,42 @@
     height: 28px !important;
     font-size: 11.5px !important;
     margin-top: 4px !important;
+  }
+}
+
+/* Desktop Responsive Sizing for Overlay Icons (Max 32px circle, 16px icon) */
+@media (min-width: 768px) {
+  .product-card .icon-btn,
+  .product-card .ef-icon-btn,
+  .everful-card .ef-icon-btn,
+  .robu-product-card .robu-wishlist-btn,
+  .robu-product-card .robu-cart-btn,
+  .ef-icon-btn,
+  .icon-btn,
+  .robu-wishlist-btn,
+  .robu-cart-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+  }
+
+  .product-card .icon-btn svg,
+  .product-card .ef-icon-btn svg,
+  .everful-card .ef-icon-btn svg,
+  .robu-product-card .robu-wishlist-btn svg,
+  .robu-product-card .robu-cart-btn svg,
+  .robu-wishlist-btn i,
+  .robu-cart-btn i,
+  .ef-icon-btn svg,
+  .icon-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    min-height: 16px !important;
+    max-width: 16px !important;
+    max-height: 16px !important;
   }
 }

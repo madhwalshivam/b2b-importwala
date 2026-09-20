@@ -1024,9 +1024,10 @@ html:not(.dark) .robu-cart-btn {
 }
 
 html:not(.dark) .robu-wishlist-btn {
-  background-color: rgba(255, 255, 255, 0.95) !important;
+  background-color: rgba(255, 255, 255, 0.92) !important;
   border: none !important;
-  color: #6B7280;
+  color: #000000 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
 }
 
 .robu-wishlist-btn {
@@ -1036,8 +1037,8 @@ html:not(.dark) .robu-wishlist-btn {
 
 .robu-wishlist-btn:hover {
   border: none !important;
-  color: var(--color-primary, #A8111C) !important;
-  background-color: #FFF5F5 !important;
+  color: #e11d48 !important;
+  background-color: #ffffff !important;
 }
 
 /* ==========================================================================

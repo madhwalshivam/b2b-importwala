@@ -86,7 +86,7 @@ $totalImages    = count($sliderImages);
 $displayThumbs  = array_slice($sliderImages, 0, 5);
 ?>
 
-<div class="everful-card" id="<?= $cardId ?>" data-product-id="<?= $product['id'] ?? 0 ?>">
+<div class="everful-card product-card" id="<?= $cardId ?>" data-product-id="<?= $product['id'] ?? 0 ?>">
   
   <!-- Main Cover Photo Stage -->
   <div class="ef-img-stage">
@@ -111,20 +111,20 @@ $displayThumbs  = array_slice($sliderImages, 0, 5);
 
     <!-- Top-Right: Wishlist Heart Icon -->
     <button type="button" 
-            class="ef-icon-btn ef-wishlist-btn <?= $isInWishlist ? 'active' : '' ?>" 
+            class="ef-icon-btn ef-wishlist-btn icon-btn wishlist-btn <?= $isInWishlist ? 'active' : '' ?>" 
             onclick="toggleCardWishlist(<?= $product['id'] ?? 0 ?>, this)" 
             title="<?= $isInWishlist ? 'Remove from Wishlist' : 'Add to Wishlist' ?>">
-      <svg class="ef-heart-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="<?= $isInWishlist ? 'fill:#f05a29; stroke:#f05a29;' : '' ?>">
+      <svg class="ef-heart-icon" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="<?= $isInWishlist ? 'fill:#e11d48; stroke:#e11d48;' : '' ?>">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
       </svg>
     </button>
 
     <!-- Bottom-Right: Quick Add to Cart Circular Icon Button -->
     <button type="button" 
-            class="ef-icon-btn ef-cart-btn <?= $isInCart ? 'added in-cart' : '' ?>" 
+            class="ef-icon-btn ef-cart-btn icon-btn cart-btn <?= $isInCart ? 'added in-cart' : '' ?>" 
             onclick="quickAddToCartCard(<?= $product['id'] ?? 0 ?>, 1, this)" 
             title="<?= $isInCart ? 'In Cart (Click to open Cart)' : 'Add to Cart' ?>">
-      <svg class="ef-cart-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="ef-cart-icon" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <?php if ($isInCart): ?>
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
         <?php else: ?>

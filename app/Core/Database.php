@@ -57,20 +57,27 @@ class Database
             self::$config = require __DIR__ . '/../../config/database.php';
         }
 
-        $connConfig = self::$config['connections']['mysql'];
-        $hosts = $connConfig[$type]['host'] ?? ['127.0.0.1'];
-        // Pick host (round-robin or random for read replicas)
-        $host = $hosts[array_rand($hosts)];
-        $port = $connConfig['port'] ?? 3306;
-        $dbname = $connConfig['dbname'] ?? 'ecommerce';
-        $user = $connConfig['username'] ?? 'root';
-        $pass = $connConfig['password'] ?? '';
-        $charset = $connConfig['charset'] ?? 'utf8mb4';
+        $connConfig = self::$config['connections']['mysql'] ?? [];
+        $hosts = $connConfig[$type]['host'] ?? (self::$config['host'] ?? '127.0.0.1');
+        if (is_array($hosts)) {
+            $host = $hosts[array_rand($hosts)];
+        } else {
+            $host = $hosts;
+        }
+
+        $port    = $connConfig['port'] ?? (self::$config['port'] ?? 3306);
+        $dbname  = $connConfig['dbname'] ?? (self::$config['dbname'] ?? 'ecommerce');
+        $user    = $connConfig['username'] ?? (self::$config['username'] ?? 'root');
+        $pass    = $connConfig['password'] ?? (self::$config['password'] ?? '');
+        $charset = $connConfig['charset'] ?? (self::$config['charset'] ?? 'utf8mb4');
+        $options = $connConfig['options'] ?? (self::$config['options'] ?? []);
 
         $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
 
         try {
-            return new PDO($dsn, $user, $pass, $connConfig['options'] ?? []);
+            $pdo = new PDO($dsn, $user, $pass, $options);
+            $pdo->exec("SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci");
+            return $pdo;
         } catch (PDOException $e) {
             // Fallback to write host if read replica connection fails
             if ($type === 'read') {
