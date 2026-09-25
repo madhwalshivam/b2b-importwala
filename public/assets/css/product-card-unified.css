@@ -16,7 +16,8 @@
 .product-grid {
   display: grid !important;
   grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
-  gap: 16px 12px !important;
+  gap: 16px 5px !important;
+  padding: 0 4px !important;
   width: 100% !important;
   box-sizing: border-box !important;
 }
@@ -24,8 +25,8 @@
 /* Card Outer Container */
 .everful-card {
   background: #ffffff;
-  border-radius: 14px;
-  overflow: hidden;
+  border-radius: 8px !important;
+  overflow: hidden !important;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -46,11 +47,100 @@
   position: relative !important;
   width: 100% !important;
   aspect-ratio: 1 / 1 !important;
-  border-radius: 12px;
+  border-radius: 8px 8px 0 0 !important;
   overflow: hidden !important;
   background: #f8fafc;
   box-sizing: border-box;
 }
+
+/* ── Horizontal Swipe Slider ── */
+.ef-swipe-track {
+  position: relative !important;
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  overflow-x: scroll !important;
+  overflow-y: hidden !important;
+  scroll-snap-type: x mandatory !important;
+  scroll-behavior: smooth !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  background: #f8fafc !important;
+  cursor: grab !important;
+}
+.ef-swipe-track::-webkit-scrollbar { display: none !important; }
+.ef-swipe-track:active { cursor: grabbing !important; }
+
+.ef-swipe-slide {
+  flex: 0 0 100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  scroll-snap-align: start !important;
+  scroll-snap-stop: always !important;
+  display: block !important;
+  text-decoration: none !important;
+}
+.ef-swipe-slide img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+}
+
+/* Dot Indicators */
+.ef-swipe-dots {
+  position: absolute !important;
+  bottom: 7px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+.ef-swipe-dot {
+  width: 5px !important;
+  height: 5px !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,0.55) !important;
+  transition: all 0.2s ease !important;
+  display: block !important;
+}
+.ef-swipe-dot.active {
+  background: #ffffff !important;
+  width: 14px !important;
+  border-radius: 3px !important;
+}
+
+/* Position dots relative to the card (swipe-track is not position:relative by default in flex) */
+.everful-card {
+  background: #ffffff;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #f1f5f9;
+}
+/* Wrapper so dots sit on top of the slider */
+.ef-swipe-wrap {
+  position: relative !important;
+  width: 100% !important;
+  flex-shrink: 0 !important;
+  overflow: hidden !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
 
 /* Swipeable Image Track & Slides */
 .ef-img-track {
@@ -362,14 +452,19 @@
 
 /* Card Body Content */
 .ef-card-body {
-  padding: 8px 8px 8px !important;
+  padding: 6px 5px 6px !important;
   display: flex !important;
   flex-direction: column !important;
   flex: 1 !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
 }
 
 .ef-title-link {
   text-decoration: none !important;
+  display: block !important;
+  overflow: hidden !important;
+  min-width: 0 !important;
 }
 
 .ef-product-title {
@@ -378,13 +473,24 @@
   font-weight: 500 !important;
   color: #1e293b !important;
   line-height: 1.35 !important;
-  margin: 0 0 6px 0 !important;
-  display: -webkit-box !important;
-  line-clamp: 2 !important;
-  -webkit-line-clamp: 2 !important;
-  -webkit-box-orient: vertical !important;
+  margin: 0 0 2px 0 !important;
+  white-space: nowrap !important;
   overflow: hidden !important;
-  height: 35px !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+  display: block !important;
+}
+
+/* Importerr-style variant count badge */
+.ef-variant-badge {
+  display: inline-block !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+  color: #f05a29 !important;
+  letter-spacing: 0.04em !important;
+  margin-bottom: 3px !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
 }
 
 .ef-badge-new {
@@ -420,9 +526,9 @@
 
 .ef-price-amount {
   font-family: 'Inter', system-ui, sans-serif !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: #0f172a !important;
+  font-size: 14.5px !important;
+  font-weight: 700 !important;
+  color: #f05a29 !important;
 }
 
 .ef-original-price {
@@ -517,50 +623,91 @@
 @media (max-width: 1400px) {
   .product-grid { 
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important; 
-    gap: 14px 10px !important; 
+    gap: 14px 4px !important; 
   }
 }
 
 @media (max-width: 1200px) {
   .product-grid { 
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important; 
-    gap: 14px 10px !important; 
+    gap: 14px 4px !important; 
   }
 }
 
 @media (max-width: 992px) {
   .product-grid { 
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important; 
-    gap: 12px 10px !important; 
+    gap: 12px 4px !important; 
   }
 }
 
 @media (max-width: 768px) {
   .product-grid { 
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
-    gap: 10px 8px !important; 
+    gap: 10px 5px !important; 
+    padding: 0 5px !important;
   }
-  .ef-thumb-row { gap: 4px !important; padding: 6px 6px 2px 6px !important; }
-  .ef-thumb-box { width: 28px !important; height: 28px !important; border-radius: 5px !important; }
-  .ef-product-title { font-size: 12px !important; height: 32px !important; }
-  .ef-price-amount { font-size: 13.5px !important; }
-  .ef-add-to-cart-btn {
-    height: 28px !important;
+  .ef-img-stage,
+  .ef-swipe-wrap,
+  .ef-swipe-track {
+    aspect-ratio: 1 / 0.94 !important;
+  }
+  .ef-card-body {
+    padding: 5px 5px 5px !important;
+  }
+  .ef-variant-badge {
+    font-size: 8.5px !important;
+    margin-bottom: 1px !important;
+    line-height: 1 !important;
+  }
+  .ef-product-title {
     font-size: 11.5px !important;
-    margin-top: 4px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 1px !important;
+  }
+  .ef-price-amount {
+    font-size: 13.5px !important;
+  }
+  .ef-rating-single {
+    padding: 1px 3.5px !important;
+    font-size: 10px !important;
   }
 }
 
 @media (max-width: 480px) {
   .product-grid { 
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important; 
-    gap: 8px 6px !important; 
+    gap: 8px 5px !important; 
+    padding: 0 4px !important;
   }
-  .ef-card-body { padding: 6px 5px 6px !important; }
-  .ef-add-to-cart-btn {
-    height: 28px !important;
-    font-size: 11.5px !important;
-    margin-top: 4px !important;
+  .ef-img-stage,
+  .ef-swipe-wrap,
+  .ef-swipe-track {
+    aspect-ratio: 1 / 0.92 !important;
+  }
+  .ef-card-body {
+    padding: 4px 4px 4px !important;
+  }
+  .ef-variant-badge {
+    font-size: 8px !important;
+    margin-bottom: 1px !important;
+    line-height: 1 !important;
+  }
+  .ef-product-title {
+    font-size: 11px !important;
+    line-height: 1.2 !important;
+    margin-bottom: 1px !important;
+  }
+  .ef-price-amount {
+    font-size: 13px !important;
+  }
+  .ef-rating-single {
+    padding: 0.5px 3px !important;
+    font-size: 9.5px !important;
+  }
+  .ef-rating-single svg {
+    width: 9.5px !important;
+    height: 9.5px !important;
   }
 }
 

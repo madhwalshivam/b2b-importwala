@@ -112,7 +112,7 @@ ob_start();
 <style>
   @media (max-width: 767px) {
     .shop-page-wrapper {
-      padding: 10px 12px !important;
+      padding: 10px 0 !important;
     }
 
     .shop-main-layout {
@@ -157,7 +157,7 @@ ob_start();
   }
 </style>
 <div class="shop-page-wrapper"
-  style="max-width: 1440px; margin: 0 auto; padding: 16px 20px 12px 20px; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+  style="max-width: 1440px; margin: 0 auto; padding: 16px 0 12px 0; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
 
   <!-- ============================================================
        1. TOP CONTROL BAR (TOGGLE BTN + CHIPS + RESULT COUNT + SORT)
@@ -500,8 +500,8 @@ ob_start();
       </div>
 
       <!-- Main Product Cards Grid -->
-      <div id="shopProductGrid" class="product-grid <?= $sidebarOpenByDefault ? 'cols-4' : 'cols-5' ?>"
-        style="display: grid; gap: 16px 12px; width: 100%;">
+      <div id="shopProductGrid" class="product-grid <?= $sidebarOpenByDefault ? 'cols-4' : 'cols-5' ?>">
+
         <?php if (!empty($results['items'])): ?>
           <?php foreach ($results['items'] as $product): ?>
             <?php require __DIR__ . '/partials/product_card.php'; ?>
@@ -732,7 +732,7 @@ ob_start();
     .shop-main-layout.sidebar-is-closed .product-grid,
     .shop-main-layout.sidebar-is-open .product-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 8px 6px !important;
+      gap: 8px 5px !important;
     }
   }
 </style>

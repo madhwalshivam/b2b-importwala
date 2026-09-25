@@ -787,7 +787,14 @@ a {
 
 @media (max-width: 640px) {
   .main-container {
-    padding: 0 8px !important;
+    padding: 0 4px !important;
+  }
+  /* Give padding back to text/header elements inside zero-padding container */
+  .main-container .section-header-title,
+  .main-container .shop-top-bar,
+  .main-container .shop-page-wrapper .shop-top-bar {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
   }
 }
 
@@ -1885,7 +1892,7 @@ a {
   }
 
   .main-container {
-    padding: 0 14px !important;
+    padding: 0 !important;
   }
 }
 
