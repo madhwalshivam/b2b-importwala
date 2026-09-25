@@ -65,10 +65,10 @@ class Database
             $host = $hosts;
         }
 
-        $port    = $connConfig['port'] ?? (self::$config['port'] ?? 3306);
-        $dbname  = $connConfig['dbname'] ?? (self::$config['dbname'] ?? 'ecommerce');
-        $user    = $connConfig['username'] ?? (self::$config['username'] ?? 'root');
-        $pass    = $connConfig['password'] ?? (self::$config['password'] ?? '');
+        $port = $connConfig['port'] ?? (self::$config['port'] ?? 3306);
+        $dbname = $connConfig['dbname'] ?? (self::$config['dbname'] ?? 'ecommerce');
+        $user = $connConfig['username'] ?? (self::$config['username'] ?? 'root');
+        $pass = $connConfig['password'] ?? (self::$config['password'] ?? '');
         $charset = $connConfig['charset'] ?? (self::$config['charset'] ?? 'utf8mb4');
         $options = $connConfig['options'] ?? (self::$config['options'] ?? []);
 
@@ -83,7 +83,7 @@ class Database
             if ($type === 'read') {
                 return self::getWriteConnection();
             }
-            throw new RuntimeException("Database Connection Error ({$type}): " . $e->getMessage(), (int)$e->getCode(), $e);
+            throw new RuntimeException("Database Connection Error ({$type}): " . $e->getMessage(), (int) $e->getCode(), $e);
         }
     }
 }

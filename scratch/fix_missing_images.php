@@ -44,7 +44,6 @@ foreach ($missing as $file => $data) {
             imagefill($im, 0, 0, $bg);
             imagestring($im, 5, 20, 190, $data['name'], $text);
             imagejpeg($im, $filePath, 85);
-            imagedestroy($im);
             echo "GD Image Generated!\n";
         }
     }

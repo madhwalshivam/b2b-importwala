@@ -17,7 +17,6 @@ if (!file_exists($file)) {
         imagefill($im, 0, 0, $bg);
         imagestring($im, 5, 20, 190, "Jewelry Making", $text);
         imagejpeg($im, $file, 85);
-        imagedestroy($im);
         echo "Generated GD viewall-jewelry-making.jpg\n";
     }
 } else {

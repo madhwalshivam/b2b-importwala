@@ -21,7 +21,8 @@ class CacheManager implements CacheInterface
         if (class_exists('\Redis')) {
             try {
                 $redisConfig = require __DIR__ . '/../../../config/redis.php';
-                $client = new \Redis();
+                $redisClass = '\Redis';
+                $client = new $redisClass();
                 $connected = @$client->connect(
                     $redisConfig['cache']['host'],
                     $redisConfig['cache']['port'],
