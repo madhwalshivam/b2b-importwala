@@ -23,13 +23,15 @@ echo "=== BULK PRODUCT IMPORT VERIFICATION TEST ===\n\n";
 
 // Clean up previous test runs
 $db = App\Core\Database::getInstance();
-$stmtClean = $db->prepare("SELECT id FROM products WHERE sku = 'MUD-ER-801'");
+$stmtClean = $db->prepare("SELECT id FROM products WHERE sku = 'JWL-BRC-001'");
 $stmtClean->execute();
 $prevP = $stmtClean->fetch();
 if ($prevP) {
     (new Product())->delete($prevP['id']);
-    $db->prepare("DELETE FROM product_variants WHERE variant_code LIKE 'MUD-ER-801%'")->execute();
 }
+$db->prepare("DELETE FROM product_variants WHERE variant_code LIKE 'JWL-BRC-001%' OR sku LIKE 'JWL-BRC-001%'")->execute();
+$db->prepare("DELETE FROM product_color_sizes WHERE sku LIKE 'JWL-BRC-001%'")->execute();
+$db->prepare("DELETE FROM product_colors WHERE sku LIKE 'JWL-BRC-001%'")->execute();
 
 $service = new BulkImportService();
 
@@ -90,11 +92,11 @@ echo "[PASS] Database commit Pass 1 successful.\n\n";
 echo "Step 4: Verifying Product Specifications in DB...\n";
 $db = App\Core\Database::getInstance();
 $stmtP = $db->prepare("SELECT id FROM products WHERE sku = ?");
-$stmtP->execute(['MUD-ER-801']);
+$stmtP->execute(['JWL-BRC-001']);
 $prodDb = $stmtP->fetch();
 
 if (!$prodDb) {
-    echo "[FAIL] Product 'MUD-ER-801' not found in DB after commit!\n";
+    echo "[FAIL] Product 'JWL-BRC-001' not found in DB after commit!\n";
     exit(1);
 }
 

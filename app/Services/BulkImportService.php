@@ -268,8 +268,36 @@ class BulkImportService
         }
 
         $stagedNewFactories = [];
-        $currentProductGroup = null;
-        $groupedProducts = [];
+        $currentGroupKey     = null;
+        $lastProductGroupFor = '';
+        $lastProductSku      = '';
+        $lastProductName     = '';
+        $lastVariantColor    = '';
+        $lastVariantImage    = '';
+        $lastVariantPrice    = 0.0;
+        $groupedProducts     = [];
+
+        // Build header column lookup map (case-insensitive)
+        $headerMap = [];
+        if (isset($headerRow) && is_array($headerRow)) {
+            foreach ($headerRow as $cIdx => $hName) {
+                $norm = strtolower(trim((string)$hName));
+                if ($norm !== '') {
+                    $headerMap[$norm] = $cIdx;
+                }
+            }
+        }
+
+        $getValue = function (array $row, array $aliases, int $defaultIndex) use ($headerMap): string {
+            foreach ($aliases as $alias) {
+                $norm = strtolower(trim($alias));
+                if (isset($headerMap[$norm])) {
+                    $idx = $headerMap[$norm];
+                    return trim((string)($row[$idx] ?? ''));
+                }
+            }
+            return trim((string)($row[$defaultIndex] ?? ''));
+        };
 
         foreach ($rows as $rowMap) {
             $row = array_values($rowMap);
@@ -279,56 +307,95 @@ class BulkImportService
                 continue;
             }
 
-            // Extract fields based on 64-column schema (including new 'Group For' at index 29)
-            $productName   = trim((string)($row[0] ?? ''));
-            $productSku    = strtoupper(trim((string)($row[1] ?? '')));  // Actual SKU — never overwritten
-            $groupFor      = strtoupper(trim((string)($row[29] ?? ''))); // Group For col
+            // Extract raw key fields from current row
+            $rawProductName = $getValue($row, ['product name', 'name'], 0);
+            $rawProductSku  = strtoupper($getValue($row, ['product sku', 'sku', 'parent sku', 'product_sku'], 1));
+            $rawGroupFor    = strtoupper($getValue($row, ['group for', 'group for variant', 'group for variants', 'variant group', 'group_for'], 29));
+            $rawVarColor    = $getValue($row, ['variant color name', 'variant color', 'color name', 'variant_color'], 30);
+            $rawVarSize     = $getValue($row, ['variant size name', 'variant size', 'size name', 'variant_size'], 31);
+            $rawVarSku      = strtoupper($getValue($row, ['variant sku', 'vsku'], 32));
+            $rawVarPriceVal = (float)($getValue($row, ['variant price', 'vprice'], 33) ?: 0);
+            $rawVarStockVal = $getValue($row, ['variant stock', 'vstock'], 34);
+            $rawVarImg      = $getValue($row, ['variant image', 'vimage'], 35);
 
-            // $groupKey is used for grouping rows only — NOT stored as the product SKU
-            if (!empty($groupFor)) {
-                // Row belongs to a named group — use Group For as the key
-                $groupKey = $groupFor;
-                $currentProductGroup = $groupFor;
-                // If this row also has a real SKU, register it as the canonical SKU for the group
-                if (!empty($productSku)) {
-                    // Will be stored as product_sku on first occurrence below
+            // Determine if a NEW Product Group is starting or if this row is a CONTINUATION of active group
+            $isNewGroup = false;
+
+            if ($currentGroupKey === null) {
+                $isNewGroup = true;
+            } elseif (!empty($rawGroupFor) && $rawGroupFor !== $lastProductGroupFor) {
+                $isNewGroup = true;
+            } elseif (!empty($rawProductSku) && $rawProductSku !== $lastProductSku) {
+                $isNewGroup = true;
+            } elseif (!empty($rawProductName) && $rawProductName !== $lastProductName && empty($rawProductSku) && empty($rawGroupFor)) {
+                $isNewGroup = true;
+            }
+
+            if ($isNewGroup) {
+                // Determine new group key
+                if (!empty($rawGroupFor)) {
+                    $groupKey = $rawGroupFor;
+                } elseif (!empty($rawProductSku)) {
+                    $groupKey = $rawProductSku;
+                } elseif (!empty($rawProductName)) {
+                    $groupKey = strtoupper($this->slugify($rawProductName));
+                } else {
+                    $groupKey = 'PROD_ROW_' . $rowIndex;
                 }
-            } elseif (!empty($productSku)) {
-                // Standalone row or first row of a product — use real SKU as group key
-                $groupKey = $productSku;
-                $currentProductGroup = $productSku;
-            } elseif ($currentProductGroup !== null) {
-                // Continuation row (empty SKU) — forward-fill from last group
-                $groupKey = $currentProductGroup;
-                // Also forward-fill $productSku for storage
-                if (empty($productSku)) {
-                    $productSku = $groupedProducts[$groupKey]['product_sku'] ?? $groupKey;
-                }
+
+                $currentGroupKey     = $groupKey;
+                $lastProductGroupFor = $rawGroupFor;
+                $lastProductSku      = !empty($rawProductSku) ? $rawProductSku : $groupKey;
+                $lastProductName     = $rawProductName;
+
+                // Reset variant forward-fill trackers for new product group
+                $lastVariantColor = $rawVarColor;
+                $lastVariantImage = $rawVarImg;
+                $lastVariantPrice = $rawVarPriceVal;
             } else {
-                $parsedRows[] = [
-                    'row_num' => $rowIndex,
-                    'status'  => 'error',
-                    'error'   => "Row {$rowIndex}: Missing required 'Product SKU' or 'Group For'.",
-                    'data'    => $row
-                ];
-                $rowIndex++;
-                continue;
+                // Continuation row of active product group
+                $groupKey = $currentGroupKey;
+
+                // Update last-seen product level identifiers if non-blank on this row
+                if (!empty($rawGroupFor)) {
+                    $lastProductGroupFor = $rawGroupFor;
+                }
+                if (!empty($rawProductSku)) {
+                    $lastProductSku = $rawProductSku;
+                }
+                if (!empty($rawProductName)) {
+                    $lastProductName = $rawProductName;
+                }
             }
 
-            if (empty($groupKey)) {
-                $parsedRows[] = [
-                    'row_num' => $rowIndex,
-                    'status'  => 'error',
-                    'error'   => "Row {$rowIndex}: Missing required 'Product SKU' or 'Group For'.",
-                    'data'    => $row
-                ];
-                $rowIndex++;
-                continue;
+            $productSku  = !empty($rawProductSku) ? $rawProductSku : $lastProductSku;
+            $productName = !empty($rawProductName) ? $rawProductName : $lastProductName;
+            $groupFor    = !empty($rawGroupFor) ? $rawGroupFor : $lastProductGroupFor;
+
+            // Handle Variant Color forward-filling within the product group
+            if (!empty($rawVarColor)) {
+                $lastVariantColor = $rawVarColor;
+                if (!empty($rawVarImg)) {
+                    $lastVariantImage = $rawVarImg;
+                }
+                if ($rawVarPriceVal > 0) {
+                    $lastVariantPrice = $rawVarPriceVal;
+                }
+            }
+            $varColor = !empty($rawVarColor) ? $rawVarColor : $lastVariantColor;
+
+            // Handle Variant Image & Price forward-filling
+            if (!empty($rawVarImg)) {
+                $varImg = $rawVarImg;
+            } else {
+                $varImg = $lastVariantImage;
             }
 
-            // Use $groupKey to look up/create the product group
-            $productSku = $productSku ?: ($groupedProducts[$groupKey]['product_sku'] ?? $groupKey);
-
+            if ($rawVarPriceVal > 0) {
+                $varPrice = $rawVarPriceVal;
+            } else {
+                $varPrice = $lastVariantPrice;
+            }
 
             // Group additional images from columns 24..27
             $addImgs = array_filter([
@@ -338,34 +405,29 @@ class BulkImportService
                 trim((string)($row[27] ?? '')),
             ]);
 
-            // Manufacturer Auto-Linking Logic — private cols now shifted to 52+ (Group For added at 29)
+            // Manufacturer Auto-Linking Logic — private cols shifted to 52+
             $mfgIdCode = strtoupper(trim((string)($row[52] ?? '')));
             $mfgName   = trim((string)($row[53] ?? ''));
 
-            $factoryLinkStatus = 'unassigned'; // 'existing', 'new', 'unassigned'
+            $factoryLinkStatus = 'unassigned';
             $factoryCode       = null;
             $factoryName       = null;
             $factoryBadge      = 'Unassigned';
             $factoryId         = null;
 
             if (!empty($mfgIdCode)) {
-                // Rule a): Check if Manufacturer ID matches an existing Factory in DB
                 if (isset($factoryCache[$mfgIdCode])) {
                     $factoryId         = (int)$factoryCache[$mfgIdCode]['id'];
                     $factoryCode       = $factoryCache[$mfgIdCode]['factory_code'];
                     $factoryName       = $factoryCache[$mfgIdCode]['name'];
                     $factoryLinkStatus = 'existing';
                     $factoryBadge      = "Existing [{$factoryCode}] {$factoryName}";
-                }
-                // Rule d): Staged new factory from earlier row in same sheet
-                elseif (isset($stagedNewFactories[$mfgIdCode])) {
+                } elseif (isset($stagedNewFactories[$mfgIdCode])) {
                     $factoryCode       = $stagedNewFactories[$mfgIdCode]['factory_code'];
                     $factoryName       = $stagedNewFactories[$mfgIdCode]['name'];
                     $factoryLinkStatus = 'new';
                     $factoryBadge      = "New [{$factoryCode}] {$factoryName}";
-                }
-                // Rule b): Auto-create new Factory record
-                else {
+                } else {
                     $targetCode = str_starts_with($mfgIdCode, 'FCT-') ? $mfgIdCode : $this->factoryModel->generateNextCode();
                     $targetName = !empty($mfgName) ? $mfgName : ('Factory ' . $targetCode);
 
@@ -396,7 +458,7 @@ class BulkImportService
 
             if (!isset($groupedProducts[$groupKey])) {
                 $groupedProducts[$groupKey] = [
-                    'product_sku'             => $productSku,  // ← Real SKU from col 1, NOT the group key
+                    'product_sku'             => $productSku,
                     'name'                    => $productName,
                     'category'                => trim((string)($row[2] ?? '')),
                     'subcategory'             => trim((string)($row[3] ?? '')),
@@ -422,7 +484,6 @@ class BulkImportService
                     'main_image'              => trim((string)($row[23] ?? '')),
                     'additional_images'       => implode(',', $addImgs),
                     'video_url'               => trim((string)($row[28] ?? '')),
-                    // Cols 36-51 shifted by 1 due to 'Group For' col at index 29
                     'processing_technology'   => trim((string)($row[36] ?? '')),
                     'processing_technique'    => trim((string)($row[37] ?? '')),
                     'treatment_process'       => trim((string)($row[38] ?? '')),
@@ -439,7 +500,6 @@ class BulkImportService
                     'pendant_material'        => trim((string)($row[49] ?? '')),
                     'trendy_element'          => trim((string)($row[50] ?? '')),
                     'closure_type'            => trim((string)($row[51] ?? '')),
-                    // Private Manufacturer Fields (Columns 52..63)
                     'factory_id'                  => $factoryId,
                     'factory_code'                => $factoryCode,
                     'factory_name'                => $factoryName,
@@ -465,14 +525,16 @@ class BulkImportService
                     'warnings'                    => [],
                 ];
             } else {
-                // Forward fill product level attributes if subsequent row has non-empty fields
+                // Forward-fill product level attributes if initial row had empty fields but subsequent row provides them
                 if (empty($groupedProducts[$groupKey]['name']) && !empty($productName)) {
                     $groupedProducts[$groupKey]['name'] = $productName;
+                }
+                if (empty($groupedProducts[$groupKey]['category']) && !empty($row[2])) {
+                    $groupedProducts[$groupKey]['category'] = trim((string)$row[2]);
                 }
                 if (empty($groupedProducts[$groupKey]['main_image']) && !empty($row[23])) {
                     $groupedProducts[$groupKey]['main_image'] = trim((string)$row[23]);
                 }
-                // Forward fill real SKU if first row had empty SKU but later row has it
                 if (empty($groupedProducts[$groupKey]['product_sku']) && !empty($productSku)) {
                     $groupedProducts[$groupKey]['product_sku'] = $productSku;
                 }
@@ -481,14 +543,9 @@ class BulkImportService
             $pGroup = &$groupedProducts[$groupKey];
             $pGroup['rows'][] = $rowIndex;
 
-
-            // Variant Level Data (Columns 30..35, shifted by 1 due to 'Group For' at col 29)
-            $varColor = trim((string)($row[30] ?? ''));
-            $varSize  = trim((string)($row[31] ?? ''));
-            $varSku   = strtoupper(trim((string)($row[32] ?? '')));
-            $varPrice = (float)($row[33] ?? 0);
-            $varStock = (int)($row[34] ?? $pGroup['available_qty']);
-            $varImg   = trim((string)($row[35] ?? ''));
+            $varSize  = $rawVarSize;
+            $varSku   = $rawVarSku;
+            $varStock = $rawVarStockVal !== '' ? (int)$rawVarStockVal : $pGroup['available_qty'];
 
             // Default variant SKU to product SKU if empty
             if (empty($varSku)) {
