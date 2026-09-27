@@ -328,9 +328,11 @@ class CatalogController extends BaseController
         $db = Database::getReadConnection();
 
         $catStmt = $db->query("
-            SELECT * FROM categories 
-            WHERE (status = 'active' OR status = 'enabled') AND (parent_id IS NULL OR parent_id = 0)
-            ORDER BY sort_order ASC, name ASC
+            SELECT c.*,
+                   (SELECT p.main_image FROM products p WHERE p.category_id = c.id AND p.status = 'active' AND p.main_image IS NOT NULL AND p.main_image != '' LIMIT 1) as sample_image
+            FROM categories c 
+            WHERE (c.status = 'active' OR c.status = 'enabled') AND (c.parent_id IS NULL OR c.parent_id = 0)
+            ORDER BY c.sort_order ASC, c.name ASC
         ");
         $categories = $catStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
@@ -348,7 +350,8 @@ class CatalogController extends BaseController
 
             $subStmt = $db->prepare("
                 SELECT s.*, 
-                       (SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.subcategory_id = s.id AND p.status = 'active') as product_count
+                       (SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.subcategory_id = s.id AND p.status = 'active') as product_count,
+                       (SELECT p.main_image FROM products p WHERE p.subcategory_id = s.id AND p.status = 'active' AND p.main_image IS NOT NULL AND p.main_image != '' LIMIT 1) as sample_image
                 FROM subcategories s
                 WHERE s.category_id = ? AND (s.status = 'active' OR s.status = 'enabled')
                 ORDER BY s.sort_order ASC, s.name ASC
@@ -374,6 +377,9 @@ class CatalogController extends BaseController
                         $dedupSubs[$normKey]['name'] = $s['name'];
                         $dedupSubs[$normKey]['id'] = $s['id'];
                         $dedupSubs[$normKey]['slug'] = $s['slug'];
+                        if (!empty($s['sample_image'])) {
+                            $dedupSubs[$normKey]['sample_image'] = $s['sample_image'];
+                        }
                     }
                 } else {
                     $s['product_count'] = (int) ($s['product_count'] ?? 0);
@@ -387,8 +393,19 @@ class CatalogController extends BaseController
         }
         unset($cat);
 
+        // Fetch sample inspiration products for mobile category browser
+        $inspStmt = $db->query("
+            SELECT p.id, p.name, p.slug, p.main_image, p.price, p.sale_price, p.base_price, p.moq, c.slug as category_slug
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.id
+            WHERE p.status = 'active' AND p.main_image IS NOT NULL AND p.main_image != ''
+            ORDER BY p.id DESC LIMIT 8
+        ");
+        $inspirationProducts = $inspStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+
         $this->renderView('web/categories_directory', [
             'categories' => $categories,
+            'inspirationProducts' => $inspirationProducts,
             'totalCategories' => count($categories),
             'totalSubcategories' => $totalSubcategories,
             'seoTitle' => 'All Wholesale Categories & Subcategories | ImportWale',

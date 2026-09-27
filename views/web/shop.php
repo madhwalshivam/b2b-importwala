@@ -724,15 +724,19 @@ ob_start();
     .shop-main-layout.sidebar-is-closed .product-grid,
     .shop-main-layout.sidebar-is-open .product-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      gap: 12px 8px !important;
+      padding: 8px 6px 16px !important;
+      align-items: stretch !important;
     }
   }
 
   @media (max-width: 480px) {
-
     .shop-main-layout.sidebar-is-closed .product-grid,
     .shop-main-layout.sidebar-is-open .product-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 8px 5px !important;
+      gap: 12px 8px !important;
+      padding: 8px 6px 16px !important;
+      align-items: stretch !important;
     }
   }
 </style>
