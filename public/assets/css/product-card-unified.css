@@ -70,8 +70,14 @@
   background: #f8fafc !important;
   cursor: grab !important;
 }
-.ef-swipe-track::-webkit-scrollbar { display: none !important; }
-.ef-swipe-track:active { cursor: grabbing !important; }
+
+.ef-swipe-track::-webkit-scrollbar {
+  display: none !important;
+}
+
+.ef-swipe-track:active {
+  cursor: grabbing !important;
+}
 
 .ef-swipe-slide {
   flex: 0 0 100% !important;
@@ -82,6 +88,7 @@
   display: block !important;
   text-decoration: none !important;
 }
+
 .ef-swipe-slide img {
   width: 100% !important;
   height: 100% !important;
@@ -104,14 +111,16 @@
   z-index: 10 !important;
   pointer-events: none !important;
 }
+
 .ef-swipe-dot {
   width: 5px !important;
   height: 5px !important;
   border-radius: 50% !important;
-  background: rgba(255,255,255,0.55) !important;
+  background: rgba(255, 255, 255, 0.55) !important;
   transition: all 0.2s ease !important;
   display: block !important;
 }
+
 .ef-swipe-dot.active {
   background: #ffffff !important;
   width: 14px !important;
@@ -132,6 +141,7 @@
   box-sizing: border-box;
   border: 1px solid #f1f5f9;
 }
+
 /* Wrapper so dots sit on top of the slider */
 .ef-swipe-wrap {
   position: relative !important;
@@ -412,9 +422,11 @@
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
+
 .ef-thumb-row::-webkit-scrollbar {
   display: none !important;
 }
+
 .ef-thumb-box {
   width: 38px !important;
   height: 38px !important;
@@ -428,17 +440,20 @@
   transition: all 0.15s ease !important;
   outline: none !important;
 }
+
 .ef-thumb-box img {
   width: 100% !important;
   height: 100% !important;
   object-fit: cover !important;
   display: block !important;
 }
+
 .ef-thumb-box.active,
 .ef-thumb-box:hover {
   border-color: #f05a29 !important;
   box-shadow: 0 0 0 2px rgba(240, 90, 41, 0.25) !important;
 }
+
 .ef-thumb-more {
   display: flex !important;
   align-items: center !important;
@@ -621,23 +636,23 @@
 
 /* Responsive Media Queries */
 @media (max-width: 1400px) {
-  .product-grid { 
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important; 
-    gap: 14px 4px !important; 
+  .product-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    gap: 14px 4px !important;
   }
 }
 
 @media (max-width: 1200px) {
-  .product-grid { 
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important; 
-    gap: 14px 4px !important; 
+  .product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px 4px !important;
   }
 }
 
 @media (max-width: 992px) {
-  .product-grid { 
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important; 
-    gap: 12px 4px !important; 
+  .product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    gap: 12px 4px !important;
   }
 }
 
@@ -655,22 +670,27 @@
   .ef-swipe-track {
     aspect-ratio: 1 / 0.94 !important;
   }
+
   .ef-card-body {
     padding: 5px 5px 5px !important;
   }
+
   .ef-variant-badge {
     font-size: 8.5px !important;
     margin-bottom: 1px !important;
     line-height: 1 !important;
   }
+
   .ef-product-title {
     font-size: 11.5px !important;
     line-height: 1.25 !important;
     margin-bottom: 1px !important;
   }
+
   .ef-price-amount {
     font-size: 13.5px !important;
   }
+
   .ef-rating-single {
     padding: 1px 3.5px !important;
     font-size: 10px !important;
@@ -685,31 +705,38 @@
     padding: 0 4px !important;
     align-items: stretch !important;
   }
+
   .ef-img-stage,
   .ef-swipe-wrap,
   .ef-swipe-track {
     aspect-ratio: 1 / 0.92 !important;
   }
+
   .ef-card-body {
     padding: 4px 4px 4px !important;
   }
+
   .ef-variant-badge {
     font-size: 8px !important;
     margin-bottom: 1px !important;
     line-height: 1 !important;
   }
+
   .ef-product-title {
     font-size: 11px !important;
     line-height: 1.2 !important;
     margin-bottom: 1px !important;
   }
+
   .ef-price-amount {
     font-size: 13px !important;
   }
+
   .ef-rating-single {
     padding: 0.5px 3px !important;
     font-size: 9.5px !important;
   }
+
   .ef-rating-single svg {
     width: 9.5px !important;
     height: 9.5px !important;
@@ -718,6 +745,7 @@
 
 /* Desktop Responsive Sizing for Overlay Icons (Max 32px circle, 16px icon) */
 @media (min-width: 768px) {
+
   .product-card .icon-btn,
   .product-card .ef-icon-btn,
   .everful-card .ef-icon-btn,

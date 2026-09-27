@@ -343,21 +343,7 @@ ob_start();
   </div>
 </div>
 
-<!-- Help Modal for Mobile Categories Page -->
-<div class="mobile-cat-help-modal" id="categoryHelpModal" onclick="closeCategoryHelpModal(event)">
-  <div class="mobile-cat-help-box" onclick="event.stopPropagation()">
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #E5E7EB;">
-      <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0;">Category Navigation</h3>
-      <button type="button" onclick="closeCategoryHelpModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #9CA3AF;">✕</button>
-    </div>
-    <div style="font-size: 13px; color: #4B5563; line-height: 1.5;">
-      <p style="margin-bottom: 8px;"><strong>• Tap any category on the left sidebar</strong> to view its subcategories and recommendations.</p>
-      <p style="margin-bottom: 8px;"><strong>• Tap "For you"</strong> for curated trending items across all factory-direct product lines.</p>
-      <p style="margin: 0;"><strong>• Tap "View all"</strong> inside any category grid to explore the full catalog page.</p>
-    </div>
-    <button type="button" onclick="closeCategoryHelpModal()" style="width: 100%; margin-top: 16px; padding: 10px; background: #F05A29; color: #FFF; border: none; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">Got it</button>
-  </div>
-</div>
+
 
 <!-- Client-side Interactive Scripts -->
 <script>
@@ -408,15 +394,7 @@ function switchMobileCatTab(tabId) {
   }
 }
 
-function openCategoryHelpModal() {
-  const modal = document.getElementById('categoryHelpModal');
-  if (modal) modal.classList.add('active');
-}
 
-function closeCategoryHelpModal(e) {
-  const modal = document.getElementById('categoryHelpModal');
-  if (modal) modal.classList.remove('active');
-}
 </script>
 
 <?php
