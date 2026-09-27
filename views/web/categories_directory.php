@@ -315,27 +315,7 @@ ob_start();
             </div>
           <?php endif; ?>
 
-          <!-- Get Product Inspiration Header & Products -->
-          <?php if (!empty($inspirationProducts)): ?>
-            <h3 class="mobile-inspiration-title">Get product inspiration</h3>
-            <div class="mobile-inspiration-grid">
-              <?php foreach ($inspirationProducts as $ip): ?>
-                <?php $ipUrl = url('product/' . $ip['slug']); ?>
-                <a href="<?= $ipUrl ?>" class="mobile-inspiration-card">
-                  <div class="mobile-inspiration-img-wrap">
-                    <img src="<?= asset($ip['main_image']) ?>" alt="<?= htmlspecialchars($ip['name']) ?>" loading="lazy">
-                  </div>
-                  <div class="mobile-inspiration-name"><?= htmlspecialchars($ip['name']) ?></div>
-                  <div class="mobile-inspiration-price">
-                    ₹<?= number_format($ip['sale_price'] ?? $ip['base_price'] ?? $ip['price'] ?? 0, 2) ?>
-                  </div>
-                  <?php if (!empty($ip['moq'])): ?>
-                    <div class="mobile-inspiration-moq">MOQ: <?= $ip['moq'] ?> pcs</div>
-                  <?php endif; ?>
-                </a>
-              <?php endforeach; ?>
-            </div>
-          <?php endif; ?>
+
         </div>
       <?php endforeach; ?>
 

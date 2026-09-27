@@ -1479,18 +1479,18 @@ a {
   right: 24px;
   background: var(--primary-color);
   color: #FFFFFF;
-  font-size: 14px;
-  font-weight: 700;
-  padding: 12px 22px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 20px;
   border-radius: 9999px;
-  box-shadow: none !important;
+  box-shadow: 0 4px 14px rgba(240, 90, 41, 0.25) !important;
   border: none;
   cursor: pointer;
-  z-index: 999;
+  z-index: 9999;
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: transform 0.2s, background 0.2s, box-shadow 0.2s;
+  transition: all 0.2s ease;
   text-decoration: none;
 }
 
@@ -1498,7 +1498,7 @@ a {
   background: var(--primary-hover);
   color: #FFFFFF;
   transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(240, 90, 41, 0.45);
+  box-shadow: 0 6px 18px rgba(240, 90, 41, 0.35) !important;
 }
 
 /* ==========================================================================
@@ -1575,11 +1575,12 @@ a {
   }
 
   .floating-need-help-btn {
-    bottom: 70px !important;
+    bottom: 72px !important;
     right: 16px !important;
-    padding: 10px 18px !important;
-    font-size: 13px !important;
-    z-index: 999998 !important;
+    padding: 8px 16px !important;
+    font-size: 12px !important;
+    z-index: 99999 !important;
+    box-shadow: 0 3px 10px rgba(240, 90, 41, 0.22) !important;
   }
 }
 

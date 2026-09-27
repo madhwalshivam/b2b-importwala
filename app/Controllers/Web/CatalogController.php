@@ -482,7 +482,7 @@ class CatalogController extends BaseController
                 if (!in_array($pId, $groupedMap[$normKey]['product_ids'], true)) {
                     $groupedMap[$normKey]['product_ids'][] = $pId;
 
-                    if (!empty($r['product_image']) && count($groupedMap[$normKey]['preview_images']) < 3) {
+                    if (!empty($r['product_image']) && count($groupedMap[$normKey]['preview_images']) < 4) {
                         if (!in_array($r['product_image'], $groupedMap[$normKey]['preview_images'], true)) {
                             $groupedMap[$normKey]['preview_images'][] = $r['product_image'];
                         }
