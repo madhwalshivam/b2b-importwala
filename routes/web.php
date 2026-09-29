@@ -322,6 +322,7 @@ $router->post('/admin/products/gallery-upload/{id}', 'Admin\ProductController@ga
 $router->post('/admin/products/gallery-delete/{id}', 'Admin\ProductController@galleryDelete', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/gallery-set-primary/{id}', 'Admin\ProductController@gallerySetPrimary', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/gallery-reorder/{id}', 'Admin\ProductController@galleryReorder', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->post('/admin/products/remirror-images/{id}', 'Admin\ProductController@remirrorImages', [AdminMiddleware::class, CsrfMiddleware::class]);
 
 // Product Variants, Specs & Search AJAX Endpoints
 $router->get('/admin/products/search-api', 'Admin\ProductController@searchApi', [AdminMiddleware::class]);

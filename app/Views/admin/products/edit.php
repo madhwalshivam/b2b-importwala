@@ -761,9 +761,14 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                         <p class="text-[11px] text-slate-500 mt-0.5">Click radio button ★ to choose main product cover
                             photo.</p>
                     </div>
-                    <span id="galleryCountBadge" class="text-xs font-bold bg-slate-900 text-white px-3 py-1 rounded-lg">
-                        <?= count($galleryImages) ?> Images Total
-                    </span>
+                    <div class="flex items-center space-x-2">
+                        <button type="button" onclick="remirrorImages(<?= $product['id'] ?>)" class="text-xs font-bold bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg flex items-center shadow-2xs transition">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5 mr-1"></i> Re-mirror All Images
+                        </button>
+                        <span id="galleryCountBadge" class="text-xs font-bold bg-slate-900 text-white px-3 py-1 rounded-lg">
+                            <?= count($galleryImages) ?> Images Total
+                        </span>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3" id="galleryGrid">
@@ -773,24 +778,35 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             data-id="<?= $img['id'] ?>">
                             <div class="relative aspect-square rounded-lg overflow-hidden border border-slate-200 bg-white">
                                 <img src="<?= asset($imgUrl) ?>" class="w-full h-full object-contain p-1"
-                                    onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'">
+                                    onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'; this.parentElement.nextElementSibling.classList.remove('hidden');">
                                 <?php if ($img['is_primary']): ?>
                                     <span
                                         class="absolute top-1 left-1 bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-2xs cover-badge">COVER</span>
                                 <?php endif; ?>
                             </div>
-                            <div class="flex items-center justify-between text-xs px-0.5 pt-0.5">
-                                <label
-                                    class="flex items-center space-x-1 cursor-pointer font-bold text-[10px] text-slate-800">
-                                    <input type="radio" name="primary_image_id" value="<?= $img['id'] ?>"
-                                        <?= $img['is_primary'] ? 'checked' : '' ?>
-                                        onchange="setPrimaryCover(<?= $img['id'] ?>)"
-                                        class="text-slate-900 focus:ring-slate-900">
-                                    <span>★ Cover</span>
-                                </label>
-                                <button type="button" onclick="confirmGalleryDelete(<?= $img['id'] ?>, this)"
-                                    class="text-rose-600 font-bold hover:text-rose-800 p-0.5 cursor-pointer"
-                                    title="Delete Image">&times;</button>
+                            
+                            <!-- Broken badge (shown if image errors) -->
+                            <div class="hidden absolute top-1 right-1 bg-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-2xs broken-badge z-10 pointer-events-none">BROKEN LINK</div>
+                            
+                            <div class="space-y-1.5 pt-1.5 px-0.5">
+                                <input type="text" readonly value="<?= htmlspecialchars(asset($imgUrl)) ?>" 
+                                       class="w-full h-6 px-1.5 bg-slate-100 border border-slate-200 rounded text-[9px] text-slate-500 font-mono"
+                                       title="Click to copy URL"
+                                       onclick="this.select(); document.execCommand('copy'); alert('Copied to clipboard');">
+                                
+                                <div class="flex items-center justify-between text-xs">
+                                    <label
+                                        class="flex items-center space-x-1 cursor-pointer font-bold text-[10px] text-slate-800">
+                                        <input type="radio" name="primary_image_id" value="<?= $img['id'] ?>"
+                                            <?= $img['is_primary'] ? 'checked' : '' ?>
+                                            onchange="setPrimaryCover(<?= $img['id'] ?>)"
+                                            class="text-slate-900 focus:ring-slate-900">
+                                        <span>★ Cover</span>
+                                    </label>
+                                    <button type="button" onclick="confirmGalleryDelete(<?= $img['id'] ?>, this)"
+                                        class="text-rose-600 font-bold hover:text-rose-800 p-0.5 cursor-pointer flex items-center"
+                                        title="Delete Image"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                                </div>
                             </div>
 
                             <!-- INLINE CONFIRMATION OVERLAY FOR PHOTO DELETE -->
@@ -1208,12 +1224,17 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                             <td class="py-2.5 px-3">
                                                 <div class="flex items-center gap-2">
                                                     <template x-if="color.swatch_hex_or_image">
-                                                        <img :src="(color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/') ? '' : '/') + color.swatch_hex_or_image"
-                                                            class="w-8 h-8 rounded border border-slate-200 object-cover shrink-0">
+                                                        <div class="relative group shrink-0">
+                                                            <img :src="(color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/') ? '' : '/') + color.swatch_hex_or_image"
+                                                                class="w-8 h-8 rounded border border-slate-200 object-cover"
+                                                                onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'; this.nextElementSibling.classList.remove('hidden');">
+                                                            <span class="hidden absolute -top-2 -right-2 bg-rose-600 text-white text-[8px] font-bold px-1 py-0.5 rounded shadow-2xs z-10">BROKEN</span>
+                                                        </div>
                                                     </template>
                                                     <input type="text" x-model="color.swatch_hex_or_image"
                                                         placeholder="URL (e.g. /uploads/...)"
-                                                        class="w-48 h-8 px-2 bg-white border border-slate-200 rounded-lg text-[10px] font-mono">
+                                                        class="w-48 h-8 px-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-mono transition"
+                                                        onclick="this.select(); document.execCommand('copy');">
                                                 </div>
                                             </td>
                                             <td class="py-2.5 px-3">
@@ -1285,7 +1306,16 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                                             <div class="flex items-center space-x-1">
                                                 <input type="text" x-model="color.swatch_hex_or_image"
                                                     placeholder="Image URL (e.g. /uploads/...)"
-                                                    class="w-48 h-8 px-2 bg-white border border-slate-200 rounded-lg text-[10px] font-mono">
+                                                    class="w-48 h-8 px-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-[10px] font-mono transition"
+                                                    onclick="this.select(); document.execCommand('copy');">
+                                                <template x-if="color.swatch_hex_or_image">
+                                                    <div class="relative group ml-2 shrink-0">
+                                                        <img :src="(color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/') ? '' : '/') + color.swatch_hex_or_image"
+                                                            class="hidden w-8 h-8 rounded border border-slate-200 object-cover"
+                                                            onerror="this.src='<?= asset('assets/images/placeholder.jpg') ?>'; this.nextElementSibling.classList.remove('hidden'); this.classList.remove('hidden');">
+                                                        <span class="hidden absolute -top-2 -right-2 bg-rose-600 text-white text-[8px] font-bold px-1 py-0.5 rounded shadow-2xs z-10">BROKEN</span>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </div>
 
@@ -2806,6 +2836,42 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
             .catch(err => alert('Error adding option: ' + err.message));
     }
     window.showAddOptionPrompt = showAddOptionPrompt;
+    function remirrorImages(productId) {
+        if (!confirm('This will attempt to re-download all images from their original source URLs (if still in cache) and upload them to Cloudflare R2 again. Proceed?')) {
+            return;
+        }
+        
+        const btn = event.currentTarget;
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 mr-1 animate-spin"></i> Processing...';
+        btn.disabled = true;
+        
+        fetch('<?= url("admin/products/remirror-images/") ?>' + productId, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': '<?= csrf_token() ?>'
+            }
+        })
+        .then(r => r.json())
+        .then(res => {
+            btn.innerHTML = origHtml;
+            btn.disabled = false;
+            
+            if (res.success) {
+                alert(res.message + (res.errors && res.errors.length > 0 ? '\n\nErrors:\n' + res.errors.join('\n') : ''));
+                window.location.reload();
+            } else {
+                alert('Error: ' + res.message);
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = origHtml;
+            btn.disabled = false;
+            alert('Network error: ' + err.message);
+        });
+    }
+    window.remirrorImages = remirrorImages;
 </script>
 
 <?php

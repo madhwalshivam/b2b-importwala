@@ -1314,4 +1314,81 @@ class ProductController extends Controller
         echo json_encode(['success' => true, 'items' => $items]);
         exit;
     }
+
+    /**
+     * AJAX Remirror all images for a product
+     */
+    public function remirrorImages(int $id): void
+    {
+        header('Content-Type: application/json');
+        if (!Auth::check()) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+            exit;
+        }
+
+        $db = \App\Core\Database::getInstance();
+        $product = $this->productModel->find($id);
+        if (!$product) {
+            echo json_encode(['success' => false, 'message' => 'Product not found']);
+            exit;
+        }
+
+        $mirrorService = new \App\Services\ImageMirrorService();
+        $sku = $product['sku'];
+        
+        $urlsToRemirror = [];
+        
+        if (!empty($product['main_image']) && strpos($product['main_image'], 'r2.dev') !== false) {
+            $urlsToRemirror[] = ['type' => 'main', 'url' => $product['main_image'], 'table' => 'products', 'field' => 'main_image', 'id' => $id];
+        }
+
+        $stmtG = $db->prepare("SELECT id, image_url FROM product_images WHERE product_id = ? AND image_url LIKE '%r2.dev%'");
+        $stmtG->execute([$id]);
+        foreach ($stmtG->fetchAll() as $g) {
+            $urlsToRemirror[] = ['type' => 'gallery', 'url' => $g['image_url'], 'table' => 'product_images', 'field' => 'image_url', 'id' => $g['id']];
+        }
+
+        $stmtV = $db->prepare("SELECT id, variant_image FROM product_variants WHERE product_id = ? AND variant_image LIKE '%r2.dev%'");
+        $stmtV->execute([$id]);
+        foreach ($stmtV->fetchAll() as $v) {
+            $urlsToRemirror[] = ['type' => 'variant', 'url' => $v['variant_image'], 'table' => 'product_variants', 'field' => 'variant_image', 'id' => $v['id']];
+        }
+
+        $successCount = 0;
+        $failCount = 0;
+        $errors = [];
+
+        foreach ($urlsToRemirror as $item) {
+            $r2Url = $item['url'];
+            
+            $stmtM = $db->prepare("SELECT source_url_hash, source_url FROM image_mirror_map WHERE r2_url = ? LIMIT 1");
+            $stmtM->execute([$r2Url]);
+            $map = $stmtM->fetch();
+
+            if ($map && !empty($map['source_url'])) {
+                $db->prepare("DELETE FROM image_mirror_map WHERE source_url_hash = ?")->execute([$map['source_url_hash']]);
+                
+                $result = $mirrorService->mirrorImage($map['source_url'], $sku, $item['type']);
+                if (is_array($result) && $result['success']) {
+                    $newUrl = $result['url'];
+                    $updateQ = "UPDATE {$item['table']} SET {$item['field']} = ? WHERE id = ?";
+                    $db->prepare($updateQ)->execute([$newUrl, $item['id']]);
+                    $successCount++;
+                } else {
+                    $failCount++;
+                    $errors[] = "Failed to remirror {$map['source_url']}: " . ($result['error'] ?? 'Unknown');
+                }
+            } else {
+                $failCount++;
+                $errors[] = "Original source URL not found in cache for {$r2Url}";
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => "Remirrored {$successCount} images. Failed: {$failCount}.",
+            'errors' => $errors
+        ]);
+        exit;
+    }
 }
