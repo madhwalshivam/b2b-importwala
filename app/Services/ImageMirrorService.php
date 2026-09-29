@@ -113,44 +113,53 @@ class ImageMirrorService
         $safeSku = preg_replace('/[^a-zA-Z0-9_-]/', '', strtolower($sku));
         $r2Key = "products/{$safeSku}/{$type}-{$shortHash}.{$ext}";
 
-        // Upload directly using client
+        // Upload directly using client — retry up to 3 times on network errors
         $client = $this->r2->getClient();
         $bucket = $this->r2->getBucketName();
         $r2PublicBase = rtrim($this->r2->getPublicBaseUrl(), '/');
         $cleanKey = ltrim($r2Key, '/');
         $r2Url = $r2PublicBase . '/' . $cleanKey;
-        
-        try {
-            $client->putObject([
-                'Bucket'       => $bucket,
-                'Key'          => $cleanKey,
-                'Body'         => $imgData,
-                'ContentType'  => $mime,
-                'CacheControl' => 'public, max-age=31536000'
-            ]);
-            
-            // Verify upload
-            $client->headObject([
-                'Bucket' => $bucket,
-                'Key'    => $cleanKey
-            ]);
-            
-            // Upload verified, cache it
-            $stmt = $this->db->prepare("INSERT IGNORE INTO image_mirror_map (source_url_hash, source_url, r2_url) VALUES (?, ?, ?)");
-            try {
-                $stmt->execute([$hash, $url, $r2Url]);
-            } catch (\Exception $e) {}
 
-            return ['success' => true, 'url' => $r2Url];
-            
-        } catch (\Aws\Exception\AwsException $e) {
-            $err = "R2 Upload failed for {$url} (SKU: {$sku}). AwsError: " . $e->getAwsErrorCode() . " - " . $e->getMessage();
-            error_log(date('[Y-m-d H:i:s] ') . $err . PHP_EOL, 3, $logFile);
-            return ['success' => false, 'error' => "Upload failed: " . $e->getAwsErrorCode()];
-        } catch (\Exception $e) {
-            $err = "R2 Upload failed for {$url} (SKU: {$sku}). Error: " . $e->getMessage();
-            error_log(date('[Y-m-d H:i:s] ') . $err . PHP_EOL, 3, $logFile);
-            return ['success' => false, 'error' => 'Upload failed'];
+        $maxUploadRetries = 3;
+        $lastUploadError = null;
+
+        for ($attempt = 1; $attempt <= $maxUploadRetries; $attempt++) {
+            try {
+                $client->putObject([
+                    'Bucket'       => $bucket,
+                    'Key'          => $cleanKey,
+                    'Body'         => $imgData,
+                    'ContentType'  => $mime,
+                    'CacheControl' => 'public, max-age=31536000'
+                ]);
+
+                // Verify upload succeeded
+                $client->headObject([
+                    'Bucket' => $bucket,
+                    'Key'    => $cleanKey
+                ]);
+
+                // Cache it in the mirror map
+                $stmt = $this->db->prepare("INSERT IGNORE INTO image_mirror_map (source_url_hash, source_url, r2_url) VALUES (?, ?, ?)");
+                try { $stmt->execute([$hash, $url, $r2Url]); } catch (\Exception $e) {}
+
+                return ['success' => true, 'url' => $r2Url];
+
+            } catch (\Aws\Exception\AwsException $e) {
+                $lastUploadError = "AwsError: " . $e->getAwsErrorCode() . " - " . $e->getMessage();
+                error_log(date('[Y-m-d H:i:s] ') . "R2 Upload attempt {$attempt}/{$maxUploadRetries} failed for {$url} (SKU: {$sku}). {$lastUploadError}" . PHP_EOL, 3, $logFile);
+                if ($attempt < $maxUploadRetries) {
+                    sleep($attempt); // 1s, 2s backoff
+                }
+            } catch (\Exception $e) {
+                $lastUploadError = $e->getMessage();
+                error_log(date('[Y-m-d H:i:s] ') . "R2 Upload attempt {$attempt}/{$maxUploadRetries} failed for {$url} (SKU: {$sku}). Error: {$lastUploadError}" . PHP_EOL, 3, $logFile);
+                if ($attempt < $maxUploadRetries) {
+                    sleep($attempt);
+                }
+            }
         }
+
+        return ['success' => false, 'error' => 'Upload failed after ' . $maxUploadRetries . ' attempts: ' . $lastUploadError];
     }
 }
