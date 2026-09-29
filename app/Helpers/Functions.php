@@ -44,11 +44,12 @@ if (!function_exists('url')) {
 }
 
 if (!function_exists('asset')) {
-    function asset(string $path): string
+    function asset(?string $path): string
     {
-        $path = trim($path);
-        if (empty($path))
-            return '';
+        $path = trim((string)$path);
+        if (empty($path)) {
+            return 'https://placehold.co/600x600/f8fafc/94a3b8?text=No+Image';
+        }
 
         // External/Absolute URLs (http://, https://, //)
         if (preg_match('/^(https?:)?\/\//i', $path)) {

@@ -316,6 +316,8 @@ $router->post('/admin/products/update/{id}', 'Admin\ProductController@update', [
 $router->post('/admin/products/toggle-flag', 'Admin\ProductController@toggleFlag', [AdminMiddleware::class]);
 $router->get('/admin/products/delete/{id}', 'Admin\ProductController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('products.delete'))->execute()]);
 $router->post('/admin/products/delete/{id}', 'Admin\ProductController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.delete'))->execute()]);
+$router->post('/admin/products/bulk-delete', 'Admin\ProductController@bulkDelete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.delete'))->execute()]);
+$router->post('/admin/products/bulk-delete-export', 'Admin\ProductController@bulkDeleteExport', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('products.delete'))->execute()]);
 
 // Gallery Image AJAX Endpoints
 $router->post('/admin/products/gallery-upload/{id}', 'Admin\ProductController@galleryUpload', [AdminMiddleware::class, CsrfMiddleware::class]);
@@ -343,6 +345,7 @@ $router->get('/admin/products/import/template', 'Admin\BulkProductImportControll
 $router->post('/admin/products/import/parse', 'Admin\BulkProductImportController@parse', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/import/commit', 'Admin\BulkProductImportController@commit', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->get('/admin/products/import/errors-csv', 'Admin\BulkProductImportController@errorsCsv', [AdminMiddleware::class]);
+$router->post('/admin/products/import/sync-images', 'Admin\BulkProductImportController@syncImages', [AdminMiddleware::class, CsrfMiddleware::class]);
 
 // Factory / Manufacturer Management Routes
 $router->get('/admin/factories', 'Admin\FactoryController@index', [AdminMiddleware::class]);

@@ -81,7 +81,7 @@ class BulkProductImportController extends BaseController
             return;
         }
 
-        $chunkIndex = (int)($this->request->input('chunk', 0));
+        $chunkIndex = (int)($_POST['chunk'] ?? $_GET['chunk'] ?? 0);
         $chunkSize = 10;
         
         if ($chunkIndex === 0) {
@@ -127,11 +127,19 @@ class BulkProductImportController extends BaseController
             return;
         }
 
+        if (isset($result['success']) && !$result['success']) {
+            echo json_encode(['success' => false, 'error' => $result['error'] ?? 'Unknown database error during commit']);
+            return;
+        }
+
         if (!empty($result['errors'])) {
             $_SESSION['bulk_import_errors'] = array_merge($_SESSION['bulk_import_errors'], $result['errors']);
         }
-        $_SESSION['bulk_import_summary']['valid_products'] += $result['summary']['valid_products'] ?? 0;
-        $_SESSION['bulk_import_summary']['error_products'] += $result['summary']['error_products'] ?? 0;
+        $_SESSION['bulk_import_summary']['created_products'] = ($_SESSION['bulk_import_summary']['created_products'] ?? 0) + ($result['created_products'] ?? 0);
+        $_SESSION['bulk_import_summary']['updated_products'] = ($_SESSION['bulk_import_summary']['updated_products'] ?? 0) + ($result['updated_products'] ?? 0);
+        $_SESSION['bulk_import_summary']['created_variants'] = ($_SESSION['bulk_import_summary']['created_variants'] ?? 0) + ($result['created_variants'] ?? 0);
+        $_SESSION['bulk_import_summary']['updated_variants'] = ($_SESSION['bulk_import_summary']['updated_variants'] ?? 0) + ($result['updated_variants'] ?? 0);
+        $_SESSION['bulk_import_summary']['error_products']   = ($_SESSION['bulk_import_summary']['error_products'] ?? 0) + ($result['skipped_products'] ?? 0);
         
         if (isset($result['image_stats'])) {
             $_SESSION['image_mirror_stats']['mirrored'] += $result['image_stats']['mirrored'] ?? 0;
@@ -145,6 +153,32 @@ class BulkProductImportController extends BaseController
             'total' => $totalProducts,
             'percentage' => round((($chunkIndex * $chunkSize) + count($chunkProducts)) / $totalProducts * 100)
         ]);
+    }
+
+    /**
+     * Trigger background image synchronization
+     */
+    public function syncImages(): void
+    {
+        header('Content-Type: application/json');
+        
+        // Close session immediately so the HTTP request finishes and doesn't block the UI
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        // Spawn background CLI process to sync images
+        $cliScript = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'cli_sync_images.php';
+        if (file_exists($cliScript)) {
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                pclose(popen('start /B php "' . $cliScript . '" > NUL', 'r'));
+            } else {
+                exec('php "' . $cliScript . '" > /dev/null 2>&1 &');
+            }
+        }
+        
+        echo json_encode(['success' => true]);
+        exit;
     }
 
     /**

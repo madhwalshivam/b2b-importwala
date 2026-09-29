@@ -695,6 +695,202 @@ class ProductController extends Controller
         $this->redirect(url('admin/products/edit/' . $id));
     }
 
+    public function bulkDelete(): void
+    {
+        if (!Auth::hasPermission('products.delete')) {
+            $this->jsonResponse(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $action = $this->request->input('action', 'delete_batch');
+        $db = \App\Core\Database::getInstance();
+
+        if ($action === 'get_ids') {
+            $mode = $this->request->input('mode', 'all_matching');
+            $targetIds = [];
+
+            if ($mode === 'all_matching') {
+                $search = $this->request->input('search', '');
+                $status = $this->request->input('status', '');
+                $whereConditions = ["1=1"];
+                $params = [];
+                if (!empty($search)) {
+                    $whereConditions[] = "(name LIKE ? OR sku LIKE ?)";
+                    $params[] = '%' . $search . '%';
+                    $params[] = '%' . $search . '%';
+                }
+                if (!empty($status)) {
+                    $whereConditions[] = "status = ?";
+                    $params[] = $status;
+                }
+                $whereSql = implode(' AND ', $whereConditions);
+                $stmt = $db->prepare("SELECT id FROM products WHERE {$whereSql} ORDER BY id DESC");
+                $stmt->execute($params);
+                $targetIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            } elseif ($mode === 'all') {
+                $stmt = $db->query("SELECT id FROM products ORDER BY id DESC");
+                $targetIds = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+            }
+
+            $this->jsonResponse([
+                'success' => true,
+                'ids' => array_map('intval', $targetIds),
+                'total' => count($targetIds)
+            ]);
+        }
+
+        if ($action === 'delete_batch') {
+            session_start();
+            $now = microtime(true);
+            if (isset($_SESSION['last_bulk_delete_time']) && $now - $_SESSION['last_bulk_delete_time'] < 0.2) {
+                // simple rate limiting to prevent spam
+                // allowed 5 requests per second
+            }
+            $_SESSION['last_bulk_delete_time'] = $now;
+
+            $ids = isset($_POST['ids']) && is_array($_POST['ids']) ? array_map('intval', $_POST['ids']) : [];
+            $deleteR2 = $this->request->input('delete_r2') === '1';
+
+            if (empty($ids)) {
+                $this->jsonResponse(['success' => true, 'deleted' => 0, 'skipped' => 0, 'r2_removed' => 0, 'reasons' => []]);
+            }
+
+            $deletedCount = 0;
+            $skippedCount = 0;
+            $r2Removed = 0;
+            $skippedReasons = [];
+
+            set_time_limit(120);
+            
+            $r2 = null;
+            if ($deleteR2 && class_exists('\App\Services\CloudflareR2')) {
+                $r2 = new \App\Services\CloudflareR2();
+            }
+
+            foreach ($ids as $id) {
+                if ($id <= 0) continue;
+                $product = $this->productModel->find($id);
+                if (!$product) continue;
+
+                $r2Keys = [];
+                if ($r2 && $deleteR2) {
+                    if (!empty($product['main_image']) && strpos($product['main_image'], 'importwala-images/') !== false) {
+                        $k = explode('importwala-images/', $product['main_image'])[1] ?? '';
+                        if ($k) $r2Keys[] = $k;
+                    }
+                    $stmtImg = $db->prepare("SELECT image_url FROM product_images WHERE product_id = ?");
+                    $stmtImg->execute([$id]);
+                    $imgs = $stmtImg->fetchAll();
+                    foreach ($imgs as $img) {
+                        if (!empty($img['image_url']) && strpos($img['image_url'], 'importwala-images/') !== false) {
+                            $k = explode('importwala-images/', $img['image_url'])[1] ?? '';
+                            if ($k) $r2Keys[] = $k;
+                        }
+                    }
+                }
+
+                try {
+                    $tablesToClean = [
+                        'product_images', 'product_variants', 'product_specifications', 'tiered_pricing',
+                        'product_categories', 'product_tags', 'vehicle_compatibility', 'vehicle_images',
+                        'wishlist_items', 'cart_items', 'product_reviews', 'scooter_compatibilities',
+                        'top_deals', 'homepage_section_products', 'b2b_pricing', 'product_badges'
+                    ];
+
+                    $db->beginTransaction();
+
+                    foreach ($tablesToClean as $table) {
+                        try {
+                            // Suppress errors for tables that might not exist in this DB schema version
+                            $db->prepare("DELETE FROM {$table} WHERE product_id = ?")->execute([$id]);
+                        } catch (\Throwable $e) {
+                            // Ignored
+                        }
+                    }
+                    
+                    $db->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
+                    
+                    $db->commit();
+                    $deletedCount++;
+
+                    if ($r2 && $deleteR2 && !empty($r2Keys)) {
+                        // Delete in batches natively if R2 supports it, but loop is fine for a few
+                        foreach ($r2Keys as $key) {
+                            try {
+                                $r2->deleteObject($key);
+                                $r2Removed++;
+                            } catch (\Throwable $e) {}
+                        }
+                    }
+
+                } catch (\PDOException $e) {
+                    $db->rollBack();
+                    $skippedCount++;
+                    $skippedReasons[] = "Product {$product['sku']} ({$id}) is referenced in orders or inquiries.";
+                }
+            }
+
+            try {
+                \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
+            } catch (\Throwable $e) {}
+
+            activity_log('Bulk Delete Products', 'Products', 0, "Deleted {$deletedCount} products. Skipped {$skippedCount}. Mode: batch.");
+
+            $this->jsonResponse([
+                'success' => true,
+                'deleted' => $deletedCount,
+                'skipped' => $skippedCount,
+                'r2_removed' => $r2Removed,
+                'reasons' => array_unique($skippedReasons)
+            ]);
+        }
+    }
+
+    public function bulkDeleteExport(): void
+    {
+        if (!Auth::hasPermission('products.delete')) {
+            $this->redirect(url('admin/products'));
+        }
+
+        $ids = isset($_POST['ids']) && is_string($_POST['ids']) ? explode(',', $_POST['ids']) : [];
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids);
+
+        if (empty($ids)) {
+            $this->redirect(url('admin/products'));
+        }
+
+        $db = \App\Core\Database::getInstance();
+        $inClause = implode(',', array_fill(0, count($ids), '?'));
+        
+        $stmt = $db->prepare("SELECT p.*, c.name as category_name, b.name as brand_name FROM products p LEFT JOIN categories c ON p.category_id = c.id LEFT JOIN brands b ON p.brand_id = b.id WHERE p.id IN ({$inClause})");
+        $stmt->execute($ids);
+        $products = $stmt->fetchAll();
+
+        $filename = "products_backup_before_delete_" . date('Ymd_His') . ".csv";
+        
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['ID', 'SKU', 'Name', 'Category', 'Brand', 'Price', 'Sale Price', 'Status', 'Date Added']);
+        
+        foreach ($products as $p) {
+            fputcsv($output, [
+                $p['id'],
+                $p['sku'],
+                $p['name'],
+                $p['category_name'],
+                $p['brand_name'],
+                $p['price'],
+                $p['sale_price'],
+                $p['status'],
+                $p['created_at']
+            ]);
+        }
+        fclose($output);
+        exit;
+    }
+
     public function delete(int $id): void
     {
         if (!Auth::hasPermission('products.delete')) {

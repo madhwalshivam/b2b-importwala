@@ -23,7 +23,8 @@ class ImageMirrorService
     public function mirrorImage(string $url, string $sku, string $type): array
     {
         $url = trim($url);
-        if (empty($url)) return ['success' => false, 'error' => 'Empty URL provided'];
+        if (empty($url))
+            return ['success' => false, 'error' => 'Empty URL provided'];
 
         // Validate R2 client is initialized
         if ($this->r2->getClient() === null) {
@@ -39,7 +40,7 @@ class ImageMirrorService
         }
 
         $hash = hash('sha256', $url);
-        
+
         // Check map
         $stmt = $this->db->prepare("SELECT r2_url FROM image_mirror_map WHERE source_url_hash = ?");
         $stmt->execute([$hash]);
@@ -55,14 +56,15 @@ class ImageMirrorService
         }
 
         $logFile = __DIR__ . '/../../logs/import_images.log';
-        if (!is_dir(dirname($logFile))) @mkdir(dirname($logFile), 0777, true);
+        if (!is_dir(dirname($logFile)))
+            @mkdir(dirname($logFile), 0777, true);
 
         // Download with Retries
         $maxRetries = 2;
         $imgData = false;
         $httpCode = 0;
         $errorMsg = '';
-        
+
         for ($i = 0; $i <= $maxRetries; $i++) {
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -71,7 +73,7 @@ class ImageMirrorService
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-            
+
             $imgData = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $error = curl_error($ch);
@@ -80,7 +82,7 @@ class ImageMirrorService
             if ($imgData !== false && $httpCode >= 200 && $httpCode < 300 && strlen($imgData) > 0) {
                 break; // Success
             }
-            
+
             if ($i < $maxRetries) {
                 sleep(1); // Short delay before retry
             } else {
@@ -93,14 +95,14 @@ class ImageMirrorService
         // Validate image
         $finfo = new \finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->buffer($imgData);
-        
+
         $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
         if (!isset($allowedMimes[$mime])) {
             $err = "Invalid MIME type ({$mime}) for {$url} (SKU: {$sku}).";
             error_log(date('[Y-m-d H:i:s] ') . $err . PHP_EOL, 3, $logFile);
             return ['success' => false, 'error' => "Invalid MIME type ({$mime})"];
         }
-        
+
         // Double check with getimagesizefromstring
         if (!@getimagesizefromstring($imgData)) {
             $err = "File is not a valid image structure for {$url} (SKU: {$sku}).";
@@ -126,22 +128,25 @@ class ImageMirrorService
         for ($attempt = 1; $attempt <= $maxUploadRetries; $attempt++) {
             try {
                 $client->putObject([
-                    'Bucket'       => $bucket,
-                    'Key'          => $cleanKey,
-                    'Body'         => $imgData,
-                    'ContentType'  => $mime,
+                    'Bucket' => $bucket,
+                    'Key' => $cleanKey,
+                    'Body' => $imgData,
+                    'ContentType' => $mime,
                     'CacheControl' => 'public, max-age=31536000'
                 ]);
 
                 // Verify upload succeeded
                 $client->headObject([
                     'Bucket' => $bucket,
-                    'Key'    => $cleanKey
+                    'Key' => $cleanKey
                 ]);
 
                 // Cache it in the mirror map
                 $stmt = $this->db->prepare("INSERT IGNORE INTO image_mirror_map (source_url_hash, source_url, r2_url) VALUES (?, ?, ?)");
-                try { $stmt->execute([$hash, $url, $r2Url]); } catch (\Exception $e) {}
+                try {
+                    $stmt->execute([$hash, $url, $r2Url]);
+                } catch (\Exception $e) {
+                }
 
                 return ['success' => true, 'url' => $r2Url];
 

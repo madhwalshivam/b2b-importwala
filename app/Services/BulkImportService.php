@@ -1372,36 +1372,9 @@ class BulkImportService
             $clean = 'https://' . $clean;
         }
 
+        // For bulk import, we DEFER image mirroring to a background/AJAX process for speed.
         if (filter_var($clean, FILTER_VALIDATE_URL)) {
-            if (!isset($this->mirrorService)) {
-                $this->mirrorService = new \App\Services\ImageMirrorService();
-            }
-            try {
-                $result = $this->mirrorService->mirrorImage($clean, $sku, $type);
-                if (is_array($result)) {
-                    if ($result['success']) {
-                        $_SESSION['image_mirror_stats']['mirrored'] = ($_SESSION['image_mirror_stats']['mirrored'] ?? 0) + 1;
-                        return $result['url'];
-                    } else {
-                        $_SESSION['image_mirror_stats']['failed'] = ($_SESSION['image_mirror_stats']['failed'] ?? 0) + 1;
-                        if ($errorLogs !== null) {
-                            $error = $result['error'] ?? 'Unknown error';
-                            $errorLogs[] = "Failed to mirror image [{$sku}] [Col: {$colName}]: {$clean} - Error: {$error}";
-                            // Also add to structured errors for the UI popup
-                            $_SESSION['image_mirror_stats']['error_details'][] = [
-                                'sku' => $sku,
-                                'column' => $colName,
-                                'url' => $clean,
-                                'error' => $error
-                            ];
-                        }
-                        return $clean; // Store source URL so remirror can try again
-                    }
-                }
-            } catch (\Exception $e) {
-                // If it throws an exception (e.g. config missing), stop the whole process or bubble it up
-                throw $e;
-            }
+            return $clean; // Store the raw URL. It will be picked up by the async image sync.
         }
 
         if ($extractedZipDir) {

@@ -30,6 +30,13 @@ include __DIR__ . '/../layouts/header.php';
                 <i data-lucide="upload-cloud" class="w-4 h-4 text-white"></i>
                 <span>Bulk Import</span>
             </button>
+            <?php if (\App\Core\Auth::hasPermission('products.delete')): ?>
+                <button onclick="openBulkDeleteModal('all')" type="button"
+                    class="h-9 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold text-xs rounded-xl transition shadow-sm flex items-center space-x-1.5 cursor-pointer shrink-0 border-0">
+                    <i data-lucide="trash-2" class="w-4 h-4 text-white"></i>
+                    <span>Delete All Products</span>
+                </button>
+            <?php endif; ?>
             <?php if (\App\Core\Auth::hasPermission('products.add')): ?>
                 <a href="<?= url('admin/products/create') ?>"
                     class="h-9 px-4 bg-[#f05a29] hover:bg-[#d8481b] text-white font-semibold text-xs rounded-xl transition shadow-sm shadow-[#f05a29]/30 flex items-center space-x-1.5 cursor-pointer shrink-0">
@@ -65,13 +72,20 @@ include __DIR__ . '/../layouts/header.php';
 
         <!-- Bulk Action Bar -->
         <div id="bulk-action-bar"
-            class="hidden flex items-center space-x-3 bg-red-50 border border-red-200 px-3 py-1.5 rounded-xl">
+            class="hidden flex items-center space-x-3 bg-red-50 border border-red-200 px-3 py-1.5 rounded-xl transition">
             <span class="text-xs font-semibold text-red-700" id="selected-count-label">0 Selected</span>
+            <button type="button" onclick="openBulkDeleteModal('selected')" class="px-2.5 py-1 text-[10px] font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 transition shadow-sm border-0 cursor-pointer">Delete Selected</button>
+            <button type="button" onclick="clearSelection()" class="text-[10px] text-red-500 font-semibold hover:text-red-700 underline border-0 bg-transparent cursor-pointer">Clear selection</button>
         </div>
     </div>
 
     <!-- Compact Modern Table Container -->
-    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
+    <div class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden mt-3">
+        <div id="select-all-banner" class="hidden bg-indigo-50 border-b border-indigo-100 p-2 text-center text-xs text-indigo-800 font-medium">
+            <span id="banner-text-default">All <span id="page-selected-count">0</span> products on this page are selected. 
+            <button type="button" onclick="selectAllMatching()" class="text-indigo-600 font-bold underline bg-transparent border-0 cursor-pointer ml-1">Select all matching products</button></span>
+            <span id="banner-text-all" class="hidden font-bold">All matching products are selected.</span>
+        </div>
         <div class="overflow-x-auto">
             <table class="w-full text-xs text-left border-collapse min-w-[840px]">
                 <thead>
@@ -258,16 +272,62 @@ include __DIR__ . '/../layouts/header.php';
 </div>
 
 <script>
+    let bulkDeleteMode = 'selected';
+    let allMatchingIds = [];
+
     function getSelectedProductIds() {
         return [...document.querySelectorAll('.product-chk:checked')].map(cb => parseInt(cb.value));
     }
 
     function toggleSelectAll(master) {
         document.querySelectorAll('.product-chk').forEach(cb => cb.checked = master.checked);
+        bulkDeleteMode = 'selected';
+        
+        if (master.checked) {
+            document.getElementById('select-all-banner').classList.remove('hidden');
+            document.getElementById('banner-text-default').classList.remove('hidden');
+            document.getElementById('banner-text-all').classList.add('hidden');
+            document.getElementById('page-selected-count').textContent = getSelectedProductIds().length;
+        } else {
+            document.getElementById('select-all-banner').classList.add('hidden');
+        }
+        updateBulkBar();
+    }
+
+    function selectAllMatching() {
+        bulkDeleteMode = 'all_matching';
+        document.getElementById('banner-text-default').classList.add('hidden');
+        document.getElementById('banner-text-all').classList.remove('hidden');
+        
+        // Fetch the count to show it in the action bar
+        const formData = new FormData();
+        formData.append('action', 'get_ids');
+        formData.append('mode', 'all_matching');
+        formData.append('search', '<?= htmlspecialchars($search ?? '') ?>');
+        formData.append('status', '<?= htmlspecialchars($status ?? '') ?>');
+        formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
+
+        fetch('<?= url("admin/products/bulk-delete") ?>', {
+            method: 'POST', body: formData
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                allMatchingIds = data.ids;
+                const label = document.getElementById('selected-count-label');
+                label.textContent = data.total + ' Selected (All Matching)';
+            }
+        });
+    }
+
+    function clearSelection() {
+        document.getElementById('select-all-chk').checked = false;
+        document.querySelectorAll('.product-chk').forEach(cb => cb.checked = false);
+        document.getElementById('select-all-banner').classList.add('hidden');
+        bulkDeleteMode = 'selected';
         updateBulkBar();
     }
 
     function updateBulkBar() {
+        if (bulkDeleteMode === 'all_matching') return; // Handled separately
         const selected = getSelectedProductIds();
         const bar = document.getElementById('bulk-action-bar');
         const label = document.getElementById('selected-count-label');
@@ -276,6 +336,7 @@ include __DIR__ . '/../layouts/header.php';
             label.textContent = selected.length + ' Selected';
         } else {
             bar.classList.add('hidden');
+            document.getElementById('select-all-banner').classList.add('hidden');
         }
     }
 </script>
@@ -433,6 +494,16 @@ include __DIR__ . '/../layouts/header.php';
                     <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
                         <div class="text-slate-500 font-medium">Updated Variants</div>
                         <div class="text-lg font-black text-indigo-700" id="resUpdatedVariants">0</div>
+                    </div>
+                </div>
+
+                <div id="imageStatsContainer" class="hidden grid-cols-1 gap-3 max-w-sm mx-auto text-xs mt-3">
+                    <div class="p-3 bg-cyan-50 border border-cyan-200 rounded-xl">
+                        <div class="text-slate-500 font-medium">Image Sync Process</div>
+                        <div class="text-sm font-black text-cyan-700 mt-1">
+                            Images have been queued for processing.<br>
+                            They will automatically appear once mirrored in the background.
+                        </div>
                     </div>
                 </div>
 
@@ -646,6 +717,15 @@ include __DIR__ . '/../layouts/header.php';
                 if (data.finished) {
                     isFinished = true;
                     finalData = data;
+                    
+                    // Trigger async background image sync
+                    fetch('<?= url('admin/products/import/sync-images') ?>', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
+                        }
+                    });
                 } else {
                     document.getElementById('importProgressText').textContent = `Importing... ${data.percentage}% (${data.processed}/${data.total})`;
                     currentChunk++;
@@ -664,22 +744,272 @@ include __DIR__ . '/../layouts/header.php';
         document.getElementById('importStepResult').classList.remove('hidden');
 
         // Instead of these we can show the summary data
-        document.getElementById('resCreatedProducts').textContent = finalData.summary.valid_products || 0;
-        document.getElementById('resUpdatedProducts').textContent = '-'; // no longer split in summary
-        document.getElementById('resCreatedVariants').textContent = finalData.summary.total_variants || 0;
-        document.getElementById('resUpdatedVariants').textContent = '-';
+        document.getElementById('resCreatedProducts').textContent = finalData.summary.created_products || 0;
+        document.getElementById('resUpdatedProducts').textContent = finalData.summary.updated_products || 0;
+        document.getElementById('resCreatedVariants').textContent = finalData.summary.created_variants || 0;
+        document.getElementById('resUpdatedVariants').textContent = finalData.summary.updated_variants || 0;
 
-        let mirrorStr = '';
         if (finalData.image_stats) {
-            mirrorStr = ` (Images Mirrored: ${finalData.image_stats.mirrored}, Failed: ${finalData.image_stats.failed})`;
+            document.getElementById('imageStatsContainer').classList.remove('hidden');
+            document.getElementById('imageStatsContainer').classList.add('grid');
         }
-        document.getElementById('resCreatedProducts').textContent += mirrorStr;
 
         if (finalData.summary.error_products && finalData.summary.error_products > 0) {
             document.getElementById('resErrorNotice').classList.remove('hidden');
         }
     }
 </script>
+<!-- ============================================================ -->
+<!-- BULK DELETE MODAL -->
+<!-- ============================================================ -->
+<div id="bulkDeleteModal"
+    class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        
+        <div class="px-5 py-4 border-b border-red-100 bg-red-50/30 flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-slate-900">Permanent Deletion</h3>
+                <p class="text-[11px] text-red-600/80 font-medium">This action CANNOT be undone.</p>
+            </div>
+        </div>
+
+        <div class="p-5 space-y-4">
+            <p class="text-xs text-slate-700 leading-relaxed" id="bulkDeleteWarningText">
+                You are about to permanently delete <span id="bd-count" class="font-bold text-red-600 text-sm">0</span> products. All associated variants, images, and pricing tiers will be permanently erased.
+            </p>
+
+            <div id="bd-confirm-container" class="hidden space-y-1.5">
+                <label class="block text-[11px] font-semibold text-slate-700">To confirm, type <span id="bd-expected-text" class="font-mono bg-slate-100 border border-slate-200 px-1 py-0.5 rounded text-red-600 select-all"></span> below:</label>
+                <input type="text" id="bd-confirm-input" class="w-full h-8 px-2.5 text-xs font-mono font-bold uppercase border border-slate-300 rounded-lg focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition" autocomplete="off" oninput="checkBdConfirm()">
+            </div>
+            
+            <div class="space-y-2">
+                <label class="flex items-start space-x-2 cursor-pointer group">
+                    <input type="checkbox" id="bd-csv-chk" checked class="mt-0.5 rounded-sm text-emerald-600 focus:ring-0 w-3.5 h-3.5 border-slate-300">
+                    <div class="flex-1">
+                        <span class="block text-xs font-semibold text-slate-800 group-hover:text-emerald-700 transition">Download CSV Backup</span>
+                    </div>
+                </label>
+                <label class="flex items-start space-x-2 cursor-pointer group">
+                    <input type="checkbox" id="bd-r2-chk" class="mt-0.5 rounded-sm text-red-600 focus:ring-0 w-3.5 h-3.5 border-slate-300">
+                    <div class="flex-1">
+                        <span class="block text-xs font-semibold text-slate-800 group-hover:text-red-700 transition">Delete R2 Images</span>
+                    </div>
+                </label>
+            </div>
+            
+            <!-- Progress Area -->
+            <div id="bd-progress-container" class="hidden space-y-1.5 pt-2">
+                <div class="flex justify-between text-[11px] font-bold text-slate-700">
+                    <span>Deleting...</span>
+                    <span id="bd-progress-text" class="tabular-nums">0 / 0</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                    <div id="bd-progress-bar" class="bg-red-600 h-1.5 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 flex justify-end space-x-2">
+            <button type="button" id="bd-btn-cancel" onclick="closeBulkDeleteModal()" class="px-3.5 h-8 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-semibold text-xs rounded-lg transition cursor-pointer">Cancel</button>
+            <button type="button" id="bd-btn-confirm" onclick="executeBulkDelete()" class="px-3.5 h-8 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg shadow-sm transition cursor-pointer border-0 flex items-center justify-center space-x-1.5 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                <span>Delete</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let bdTargetIds = [];
+    let bdMode = 'selected';
+    let bdExpectedText = '';
+    
+    function openBulkDeleteModal(mode) {
+        bdMode = mode; // 'selected' or 'all' or 'all_matching'
+        if (mode === 'selected') {
+            bdMode = bulkDeleteMode; // Could be 'all_matching' if banner was used
+        }
+        
+        bdTargetIds = [];
+        
+        const modal = document.getElementById('bulkDeleteModal');
+        const countSpan = document.getElementById('bd-count');
+        const confirmContainer = document.getElementById('bd-confirm-container');
+        const confirmInput = document.getElementById('bd-confirm-input');
+        const confirmBtn = document.getElementById('bd-btn-confirm');
+        const expectedTextSpan = document.getElementById('bd-expected-text');
+        
+        document.getElementById('bd-progress-container').classList.add('hidden');
+        confirmInput.value = '';
+        
+        modal.classList.remove('hidden');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+        
+        if (bdMode === 'selected') {
+            bdTargetIds = getSelectedProductIds();
+            setupBulkDeleteUI(bdTargetIds.length, bdTargetIds);
+        } else {
+            // all or all_matching
+            countSpan.textContent = '...';
+            confirmBtn.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('action', 'get_ids');
+            formData.append('mode', bdMode);
+            if (bdMode === 'all_matching') {
+                formData.append('search', '<?= htmlspecialchars($search ?? '') ?>');
+                formData.append('status', '<?= htmlspecialchars($status ?? '') ?>');
+            }
+            formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
+
+            fetch('<?= url("admin/products/bulk-delete") ?>', {
+                method: 'POST', body: formData
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    bdTargetIds = data.ids;
+                    setupBulkDeleteUI(data.total, bdTargetIds, bdMode === 'all');
+                }
+            });
+        }
+    }
+    
+    function setupBulkDeleteUI(total, ids, isAll = false) {
+        document.getElementById('bd-count').textContent = total;
+        const confirmContainer = document.getElementById('bd-confirm-container');
+        const confirmInput = document.getElementById('bd-confirm-input');
+        const expectedTextSpan = document.getElementById('bd-expected-text');
+        
+        if (isAll) {
+            bdExpectedText = 'DELETE ALL';
+            confirmContainer.classList.remove('hidden');
+            expectedTextSpan.textContent = bdExpectedText;
+            document.getElementById('bd-btn-confirm').disabled = true;
+            setTimeout(() => confirmInput.focus(), 100);
+        } else if (total > 20) {
+            bdExpectedText = `DELETE ${total}`;
+            confirmContainer.classList.remove('hidden');
+            expectedTextSpan.textContent = bdExpectedText;
+            document.getElementById('bd-btn-confirm').disabled = true;
+            setTimeout(() => confirmInput.focus(), 100);
+        } else {
+            confirmContainer.classList.add('hidden');
+            bdExpectedText = '';
+            document.getElementById('bd-btn-confirm').disabled = false;
+            setTimeout(() => document.getElementById('bd-btn-cancel').focus(), 100);
+        }
+    }
+    
+    function checkBdConfirm() {
+        const val = document.getElementById('bd-confirm-input').value.trim();
+        document.getElementById('bd-btn-confirm').disabled = (val !== bdExpectedText);
+    }
+    
+    function closeBulkDeleteModal() {
+        document.getElementById('bulkDeleteModal').classList.add('hidden');
+    }
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('bulkDeleteModal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeBulkDeleteModal();
+            }
+        }
+    });
+    
+    async function executeBulkDelete() {
+        if (bdTargetIds.length === 0) return;
+        
+        const btnConfirm = document.getElementById('bd-btn-confirm');
+        const btnCancel = document.getElementById('bd-btn-cancel');
+        const chkR2 = document.getElementById('bd-r2-chk').checked;
+        const chkCsv = document.getElementById('bd-csv-chk').checked;
+        
+        if (chkCsv) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '<?= url("admin/products/bulk-delete-export") ?>';
+            form.target = '_blank';
+            
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_csrf_token';
+            csrf.value = window.CSRF_TOKEN || '<?= csrf_token() ?>';
+            form.appendChild(csrf);
+            
+            const idsInput = document.createElement('input');
+            idsInput.type = 'hidden';
+            idsInput.name = 'ids';
+            idsInput.value = bdTargetIds.join(',');
+            form.appendChild(idsInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            await new Promise(r => setTimeout(r, 1000));
+        }
+        
+        btnConfirm.disabled = true;
+        btnCancel.disabled = true;
+        document.getElementById('bd-confirm-input').disabled = true;
+        
+        document.getElementById('bd-progress-container').classList.remove('hidden');
+        const progressText = document.getElementById('bd-progress-text');
+        const progressBar = document.getElementById('bd-progress-bar');
+        
+        let deletedTotal = 0;
+        let skippedTotal = 0;
+        let reasons = [];
+        
+        const batchSize = 200;
+        const total = bdTargetIds.length;
+        
+        for (let i = 0; i < total; i += batchSize) {
+            const batchIds = bdTargetIds.slice(i, i + batchSize);
+            
+            const formData = new FormData();
+            formData.append('action', 'delete_batch');
+            formData.append('delete_r2', chkR2 ? '1' : '0');
+            batchIds.forEach(id => formData.append('ids[]', id));
+            formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
+            
+            try {
+                const res = await fetch('<?= url("admin/products/bulk-delete") ?>', {
+                    method: 'POST', body: formData
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    deletedTotal += data.deleted;
+                    skippedTotal += data.skipped;
+                    if (data.reasons && data.reasons.length) {
+                        reasons = [...new Set([...reasons, ...data.reasons])];
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+            }
+            
+            const processed = Math.min(i + batchSize, total);
+            progressText.textContent = `${processed} / ${total}`;
+            progressBar.style.width = `${(processed / total) * 100}%`;
+        }
+        
+        let msg = `Deleted ${deletedTotal} products.`;
+        if (skippedTotal > 0) {
+            msg += `\nSkipped ${skippedTotal} products because they are referenced in past orders or RFQs.\n\nReasons:\n` + reasons.join('\n');
+            alert(msg);
+        }
+        
+        window.location.reload();
+    }
+</script>
+
 <?php
 include __DIR__ . '/../layouts/footer.php';
 ?>

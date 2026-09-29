@@ -12,7 +12,7 @@ class Factory extends Model
      * Generate next sequential Factory Code (e.g. FCT-001, FCT-002).
      * Guaranteed to never reuse a code even if a factory is deleted or archived.
      */
-    public function generateNextCode(): string
+    public function generateNextCode(array $excludeCodes = []): string
     {
         $stmtF = $this->db->query("SELECT MAX(CAST(SUBSTRING(factory_code, 5) AS UNSIGNED)) FROM factories WHERE factory_code LIKE 'FCT-%'");
         $maxF = (int)$stmtF->fetchColumn();
@@ -31,7 +31,8 @@ class Factory extends Model
             $checkStmt = $this->db->prepare("SELECT COUNT(*) FROM factories WHERE factory_code = ?");
             $checkStmt->execute([$code]);
             $exists = (int)$checkStmt->fetchColumn() > 0;
-            if ($exists) {
+            if ($exists || in_array($code, $excludeCodes, true)) {
+                $exists = true;
                 $nextNum++;
             }
         } while ($exists);
