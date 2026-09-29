@@ -18,20 +18,24 @@ class ImageMirrorService
 
     /**
      * Mirror an external URL to Cloudflare R2 and return the R2 URL.
-     * Returns null on failure.
+     * Returns ['success' => bool, 'url' => string|null, 'error' => string|null]
      */
-    public function mirrorImage(string $url, string $sku, string $type): ?string
+    public function mirrorImage(string $url, string $sku, string $type): array
     {
         $url = trim($url);
-        if (empty($url)) return null;
+        if (empty($url)) return ['success' => false, 'error' => 'Empty URL provided'];
 
-        // Skip if already R2 or local relative path (not an external url)
+        // Validate R2 client is initialized
+        if ($this->r2->getClient() === null) {
+            throw new \Exception('Cloudflare R2 is not configured properly! Client could not be initialized.');
+        }
+
+        // Skip if already R2
         if (strpos($url, 'r2.dev') !== false || strpos($url, 'cloudflare') !== false) {
-            return $url;
+            return ['success' => true, 'url' => $url];
         }
         if (!preg_match('#^https?://#i', $url)) {
-            // Already a local path or invalid
-            return $url;
+            return ['success' => false, 'error' => 'Invalid URL protocol'];
         }
 
         $hash = hash('sha256', $url);
@@ -41,123 +45,112 @@ class ImageMirrorService
         $stmt->execute([$hash]);
         $existing = $stmt->fetchColumn();
         if ($existing) {
-            return $existing;
+            // Verify existing URL is an r2.dev public URL, otherwise ignore map
+            if (strpos($existing, 'r2.dev') !== false) {
+                return ['success' => true, 'url' => $existing];
+            } else {
+                // Delete invalid cached URL
+                $this->db->prepare("DELETE FROM image_mirror_map WHERE source_url_hash = ?")->execute([$hash]);
+            }
         }
 
-        // Download
-        $tempFile = sys_get_temp_dir() . '/' . uniqid('mirror_') . '.tmp';
-        
-        $ch = curl_init($url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36');
-        curl_setopt($ch, CURLOPT_TIMEOUT, 20);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        
-        $fp = fopen($tempFile, 'w');
-        curl_setopt($ch, CURLOPT_FILE, $fp);
-        
-        curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-        fclose($fp);
+        $logFile = __DIR__ . '/../../logs/import_images.log';
+        if (!is_dir(dirname($logFile))) @mkdir(dirname($logFile), 0777, true);
 
-        if ($httpCode < 200 || $httpCode >= 300 || filesize($tempFile) === 0) {
-            @unlink($tempFile);
-            return null;
+        // Download with Retries
+        $maxRetries = 2;
+        $imgData = false;
+        $httpCode = 0;
+        $errorMsg = '';
+        
+        for ($i = 0; $i <= $maxRetries; $i++) {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36');
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            
+            $imgData = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+            curl_close($ch);
+
+            if ($imgData !== false && $httpCode >= 200 && $httpCode < 300 && strlen($imgData) > 0) {
+                break; // Success
+            }
+            
+            if ($i < $maxRetries) {
+                sleep(1); // Short delay before retry
+            } else {
+                $err = "Download failed for {$url} (SKU: {$sku}). HTTP: {$httpCode}, cURL: {$error}";
+                error_log(date('[Y-m-d H:i:s] ') . $err . PHP_EOL, 3, $logFile);
+                return ['success' => false, 'error' => "HTTP {$httpCode} / cURL: {$error}"];
+            }
         }
 
         // Validate image
-        $mime = mime_content_type($tempFile);
-        $allowedMimes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-        if (!in_array($mime, $allowedMimes)) {
-            @unlink($tempFile);
-            return null;
-        }
-
-        // Optional compression (resize to 1600px max, webp)
-        $finalFile = $this->compressImage($tempFile, $mime);
-        $finalMime = mime_content_type($finalFile);
-        $ext = ($finalMime === 'image/webp') ? 'webp' : (($finalMime === 'image/png') ? 'png' : (($finalMime === 'image/gif') ? 'gif' : 'jpg'));
-
-        $shortHash = substr($hash, 0, 8);
-        $r2Key = "products/" . strtolower($sku) . "/{$type}-{$shortHash}.{$ext}";
-
-        // Upload to R2
-        $success = $this->r2->uploadFile($finalFile, $r2Key, $finalMime);
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->buffer($imgData);
         
-        @unlink($tempFile);
-        if ($finalFile !== $tempFile) {
-            @unlink($finalFile);
+        $allowedMimes = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'image/gif' => 'gif'];
+        if (!isset($allowedMimes[$mime])) {
+            $err = "Invalid MIME type ({$mime}) for {$url} (SKU: {$sku}).";
+            error_log(date('[Y-m-d H:i:s] ') . $err . PHP_EOL, 3, $logFile);
+            return ['success' => false, 'error' => "Invalid MIME type ({$mime})"];
+        }
+        
+        // Double check with getimagesizefromstring
+        if (!@getimagesizefromstring($imgData)) {
+            $err = "File is not a valid image structure for {$url} (SKU: {$sku}).";
+            error_log(date('[Y-m-d H:i:s] ') . $err . PHP_EOL, 3, $logFile);
+            return ['success' => false, 'error' => 'Invalid image structure'];
         }
 
-        if ($success) {
-            // Assume we can construct the public URL (you might want this from config)
-            $r2PublicBase = 'https://01e0ff8f64110937bdefd6c0f82bc3c6.r2.cloudflarestorage.com/importwala-images/'; // or cdn.importwala.com
-            $r2Url = $r2PublicBase . $r2Key;
+        $ext = $allowedMimes[$mime];
+        $shortHash = substr($hash, 0, 8);
+        $safeSku = preg_replace('/[^a-zA-Z0-9_-]/', '', strtolower($sku));
+        $r2Key = "products/{$safeSku}/{$type}-{$shortHash}.{$ext}";
 
-            $stmt = $this->db->prepare("INSERT INTO image_mirror_map (source_url_hash, source_url, r2_url) VALUES (?, ?, ?)");
+        // Upload directly using client
+        $client = $this->r2->getClient();
+        $bucket = $this->r2->getBucketName();
+        $r2PublicBase = rtrim($this->r2->getPublicBaseUrl(), '/');
+        $cleanKey = ltrim($r2Key, '/');
+        $r2Url = $r2PublicBase . '/' . $cleanKey;
+        
+        try {
+            $client->putObject([
+                'Bucket'       => $bucket,
+                'Key'          => $cleanKey,
+                'Body'         => $imgData,
+                'ContentType'  => $mime,
+                'CacheControl' => 'public, max-age=31536000'
+            ]);
+            
+            // Verify upload
+            $client->headObject([
+                'Bucket' => $bucket,
+                'Key'    => $cleanKey
+            ]);
+            
+            // Upload verified, cache it
+            $stmt = $this->db->prepare("INSERT IGNORE INTO image_mirror_map (source_url_hash, source_url, r2_url) VALUES (?, ?, ?)");
             try {
                 $stmt->execute([$hash, $url, $r2Url]);
             } catch (\Exception $e) {}
 
-            return $r2Url;
+            return ['success' => true, 'url' => $r2Url];
+            
+        } catch (\Aws\Exception\AwsException $e) {
+            $err = "R2 Upload failed for {$url} (SKU: {$sku}). AwsError: " . $e->getAwsErrorCode() . " - " . $e->getMessage();
+            error_log(date('[Y-m-d H:i:s] ') . $err . PHP_EOL, 3, $logFile);
+            return ['success' => false, 'error' => "Upload failed: " . $e->getAwsErrorCode()];
+        } catch (\Exception $e) {
+            $err = "R2 Upload failed for {$url} (SKU: {$sku}). Error: " . $e->getMessage();
+            error_log(date('[Y-m-d H:i:s] ') . $err . PHP_EOL, 3, $logFile);
+            return ['success' => false, 'error' => 'Upload failed'];
         }
-
-        return null;
-    }
-
-    private function compressImage(string $filePath, string $mimeType): string
-    {
-        if (!function_exists('imagecreatefromjpeg')) {
-            return $filePath;
-        }
-
-        switch ($mimeType) {
-            case 'image/jpeg': $img = @imagecreatefromjpeg($filePath); break;
-            case 'image/png': $img = @imagecreatefrompng($filePath); break;
-            case 'image/webp': $img = @imagecreatefromwebp($filePath); break;
-            case 'image/gif': $img = @imagecreatefromgif($filePath); break;
-            default: return $filePath;
-        }
-
-        if (!$img) return $filePath;
-
-        $width = imagesx($img);
-        $height = imagesy($img);
-        $max = 1600;
-
-        if ($width > $max || $height > $max) {
-            if ($width > $height) {
-                $newWidth = $max;
-                $newHeight = (int)($height * ($max / $width));
-            } else {
-                $newHeight = $max;
-                $newWidth = (int)($width * ($max / $height));
-            }
-
-            $newImg = imagecreatetruecolor($newWidth, $newHeight);
-            if ($mimeType === 'image/png' || $mimeType === 'image/webp' || $mimeType === 'image/gif') {
-                imagealphablending($newImg, false);
-                imagesavealpha($newImg, true);
-                $transparent = imagecolorallocatealpha($newImg, 255, 255, 255, 127);
-                imagefilledrectangle($newImg, 0, 0, $newWidth, $newHeight, $transparent);
-            }
-
-            imagecopyresampled($newImg, $img, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
-            imagedestroy($img);
-            $img = $newImg;
-        }
-
-        $outFile = sys_get_temp_dir() . '/' . uniqid('opt_') . '.webp';
-        
-        if (function_exists('imagewebp')) {
-            imagewebp($img, $outFile, 80);
-            imagedestroy($img);
-            return $outFile;
-        }
-        
-        imagedestroy($img);
-        return $filePath;
     }
 }

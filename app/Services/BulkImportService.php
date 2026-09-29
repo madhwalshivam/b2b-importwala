@@ -428,7 +428,8 @@ class BulkImportService
                     $factoryLinkStatus = 'new';
                     $factoryBadge      = "New [{$factoryCode}] {$factoryName}";
                 } else {
-                    $targetCode = str_starts_with($mfgIdCode, 'FCT-') ? $mfgIdCode : $this->factoryModel->generateNextCode();
+                    $excludeCodes = array_map(fn($f) => $f['factory_code'], $stagedNewFactories);
+                    $targetCode = str_starts_with($mfgIdCode, 'FCT-') ? $mfgIdCode : $this->factoryModel->generateNextCode($excludeCodes);
                     $targetName = !empty($mfgName) ? $mfgName : ('Factory ' . $targetCode);
 
                     $stagedNewFactoryData = [
@@ -725,7 +726,7 @@ class BulkImportService
                 $assignedFactoryId = !empty($prod['factory_id']) ? (int)$prod['factory_id'] : ($factoryMapByCode[$mfgIdCode] ?? null);
 
                 // Process Main Image
-                $mainImagePath = $this->processImageSource($prod['main_image'], $extractedZipDir, $sku, 'main');
+                $mainImagePath = $this->processImageSource($prod['main_image'], $extractedZipDir, $sku, 'main', $errorLogs, 'Main Product Image');
 
                 // Check existing product in DB
                 $stmtCheck = $this->db->prepare("SELECT id FROM products WHERE sku = ?");
@@ -752,6 +753,7 @@ class BulkImportService
                             moq = :moq,
                             stock = :stock,
                             main_image = COALESCE(:main_image, main_image),
+                            main_image_source_url = COALESCE(:main_image_source_url, main_image_source_url),
                             manufacturer_id_code = :manufacturer_id_code,
                             manufacturer_name = :manufacturer_name,
                             manufacturer_contact_person = :manufacturer_contact_person,
@@ -783,6 +785,7 @@ class BulkImportService
                         ':moq'                         => $prod['moq'],
                         ':stock'                       => $prod['available_qty'],
                         ':main_image'                  => !empty($mainImagePath) ? $mainImagePath : null,
+                        ':main_image_source_url'       => !empty($prod['main_image']) ? $prod['main_image'] : null,
                         ':manufacturer_id_code'        => $prod['manufacturer_id_code'] ?: null,
                         ':manufacturer_name'           => $prod['manufacturer_name'] ?: null,
                         ':manufacturer_contact_person' => $prod['manufacturer_contact_person'] ?: null,
@@ -802,13 +805,13 @@ class BulkImportService
                     $stmtInsert = $this->db->prepare("
                         INSERT INTO products (
                             name, slug, sku, category_id, subcategory_id, brand_id, factory_id,
-                            weight, variety, description, price, sale_price, moq, stock, main_image, video_url,
+                            weight, variety, description, price, sale_price, moq, stock, main_image, main_image_source_url, video_url,
                             manufacturer_id_code, manufacturer_name, manufacturer_contact_person, manufacturer_phone,
                             manufacturer_whatsapp, manufacturer_email, manufacturer_store_url, source_platform,
                             source_product_id, source_product_url, import_date, admin_status, status, created_at, updated_at
                         ) VALUES (
                             :name, :slug, :sku, :category_id, :subcategory_id, :brand_id, :factory_id,
-                            :weight, :variety, :description, :price, :sale_price, :moq, :stock, :main_image, :video_url,
+                            :weight, :variety, :description, :price, :sale_price, :moq, :stock, :main_image, :main_image_source_url, :video_url,
                             :manufacturer_id_code, :manufacturer_name, :manufacturer_contact_person, :manufacturer_phone,
                             :manufacturer_whatsapp, :manufacturer_email, :manufacturer_store_url, :source_platform,
                             :source_product_id, :source_product_url, :import_date, :admin_status, 'active', NOW(), NOW()
@@ -830,6 +833,7 @@ class BulkImportService
                         ':moq'                         => $prod['moq'],
                         ':stock'                       => $prod['available_qty'],
                         ':main_image'                  => $mainImagePath ?: 'assets/images/placeholder.jpg',
+                        ':main_image_source_url'       => !empty($prod['main_image']) ? $prod['main_image'] : null,
                         ':video_url'                   => $prod['video_url'] ?? null,
                         ':manufacturer_id_code'        => $prod['manufacturer_id_code'] ?: null,
                         ':manufacturer_name'           => $prod['manufacturer_name'] ?: null,
@@ -873,7 +877,7 @@ class BulkImportService
                     $imgList = array_map('trim', explode(',', $prod['additional_images']));
                     foreach ($imgList as $gIdx => $gImgName) {
                         if (empty($gImgName)) continue;
-                        $gImgPath = $this->processImageSource($gImgName, $extractedZipDir, $sku, 'gallery-' . $gIdx);
+                        $gImgPath = $this->processImageSource($gImgName, $extractedZipDir, $sku, 'gallery-' . $gIdx, $errorLogs, 'Additional Image ' . ($gIdx + 1));
                         if ($gImgPath && $gImgPath !== $mainImagePath) {
                             $stmtG = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, ?, 0)");
                             $stmtG->execute([$productId, $gImgPath, $gIdx + 1]);
@@ -902,7 +906,7 @@ class BulkImportService
 
                     foreach ($prod['variants'] as $vData) {
                         $colorName = !empty($vData['color_name']) ? $vData['color_name'] : 'Default';
-                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$varSku) : null;
+                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$varSku, $errorLogs, 'Variant Image') : null;
                         $varSku    = $vData['variant_sku'];
                         $varPrice  = $vData['variant_price'];
                         $varStock  = $vData['variant_stock'];
@@ -941,8 +945,8 @@ class BulkImportService
                     foreach ($prod['variants'] as $vData) {
                         $colorName = !empty($vData['color_name']) ? $vData['color_name'] : 'Default';
                         $sizeLabel = !empty($vData['size_label']) ? $vData['size_label'] : 'Standard';
-                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$varSku) : null;
                         $varSku    = $vData['variant_sku'];
+                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$varSku, $errorLogs, 'Variant Image') : null;
                         $varPrice  = $vData['variant_price'];
                         $varStock  = $vData['variant_stock'];
 
@@ -1001,6 +1005,7 @@ class BulkImportService
             'created_factories' => $createdFactoriesCount,
             'skipped_products'  => $skippedProducts,
             'errors'            => $errorLogs,
+            'image_stats'       => $_SESSION['image_mirror_stats'] ?? ['mirrored' => 0, 'failed' => 0]
         ];
     }
 
@@ -1355,24 +1360,48 @@ class BulkImportService
 
     private \App\Services\ImageMirrorService $mirrorService;
 
-    private function processImageSource(string $imageInput, ?string $extractedZipDir, string $sku = 'unknown', string $type = 'img'): string
+    private function processImageSource(string $imageInput, ?string $extractedZipDir, string $sku = 'unknown', string $type = 'img', ?array &$errorLogs = null, string $colName = 'Unknown'): string
     {
         $clean = trim($imageInput);
         if (empty($clean)) {
             return '';
         }
 
+        // Auto-prepend https:// if it looks like a domain but lacks scheme
+        if (preg_match('#^(www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:/|$))#i', $clean) && !preg_match('#^https?://#i', $clean)) {
+            $clean = 'https://' . $clean;
+        }
+
         if (filter_var($clean, FILTER_VALIDATE_URL)) {
             if (!isset($this->mirrorService)) {
                 $this->mirrorService = new \App\Services\ImageMirrorService();
             }
-            $mirrored = $this->mirrorService->mirrorImage($clean, $sku, $type);
-            if ($mirrored) {
-                $_SESSION['image_mirror_stats']['mirrored'] = ($_SESSION['image_mirror_stats']['mirrored'] ?? 0) + 1;
-                return $mirrored;
+            try {
+                $result = $this->mirrorService->mirrorImage($clean, $sku, $type);
+                if (is_array($result)) {
+                    if ($result['success']) {
+                        $_SESSION['image_mirror_stats']['mirrored'] = ($_SESSION['image_mirror_stats']['mirrored'] ?? 0) + 1;
+                        return $result['url'];
+                    } else {
+                        $_SESSION['image_mirror_stats']['failed'] = ($_SESSION['image_mirror_stats']['failed'] ?? 0) + 1;
+                        if ($errorLogs !== null) {
+                            $error = $result['error'] ?? 'Unknown error';
+                            $errorLogs[] = "Failed to mirror image [{$sku}] [Col: {$colName}]: {$clean} - Error: {$error}";
+                            // Also add to structured errors for the UI popup
+                            $_SESSION['image_mirror_stats']['error_details'][] = [
+                                'sku' => $sku,
+                                'column' => $colName,
+                                'url' => $clean,
+                                'error' => $error
+                            ];
+                        }
+                        return $clean; // Store source URL so remirror can try again
+                    }
+                }
+            } catch (\Exception $e) {
+                // If it throws an exception (e.g. config missing), stop the whole process or bubble it up
+                throw $e;
             }
-            $_SESSION['image_mirror_stats']['failed'] = ($_SESSION['image_mirror_stats']['failed'] ?? 0) + 1;
-            return ''; // Skip image if mirroring fails
         }
 
         if ($extractedZipDir) {
@@ -1411,8 +1440,11 @@ class BulkImportService
                         $mimeType = function_exists('mime_content_type') ? mime_content_type($dest) : 'image/jpeg';
                         if (!$mimeType) $mimeType = 'image/jpeg';
                         $r2->uploadFile($dest, 'products/' . $newFilename, $mimeType);
+                        $_SESSION['image_mirror_stats']['mirrored'] = ($_SESSION['image_mirror_stats']['mirrored'] ?? 0) + 1;
                     }
-                } catch (\Throwable $e) {}
+                } catch (\Throwable $e) {
+                    $_SESSION['image_mirror_stats']['failed'] = ($_SESSION['image_mirror_stats']['failed'] ?? 0) + 1;
+                }
 
                 return '/uploads/products/' . $newFilename;
             }

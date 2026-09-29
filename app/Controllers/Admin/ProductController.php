@@ -1334,60 +1334,102 @@ class ProductController extends Controller
         }
 
         $mirrorService = new \App\Services\ImageMirrorService();
+        $r2 = new \App\Services\CloudflareR2();
+        $r2Client = $r2->getClient();
+        $r2Bucket = $r2->getBucketName();
         $sku = $product['sku'];
-        
-        $urlsToRemirror = [];
-        
-        if (!empty($product['main_image']) && strpos($product['main_image'], 'r2.dev') !== false) {
-            $urlsToRemirror[] = ['type' => 'main', 'url' => $product['main_image'], 'table' => 'products', 'field' => 'main_image', 'id' => $id];
-        }
 
-        $stmtG = $db->prepare("SELECT id, image_url FROM product_images WHERE product_id = ? AND image_url LIKE '%r2.dev%'");
-        $stmtG->execute([$id]);
-        foreach ($stmtG->fetchAll() as $g) {
-            $urlsToRemirror[] = ['type' => 'gallery', 'url' => $g['image_url'], 'table' => 'product_images', 'field' => 'image_url', 'id' => $g['id']];
-        }
+        // Helper: check if R2 key exists
+        $r2Exists = function(string $url) use ($r2Client, $r2Bucket) {
+            $key = ltrim(parse_url($url, PHP_URL_PATH), '/');
+            try {
+                $r2Client->headObject(['Bucket' => $r2Bucket, 'Key' => $key]);
+                return true;
+            } catch (\Aws\Exception\AwsException $e) {
+                return false;
+            }
+        };
 
-        $stmtV = $db->prepare("SELECT id, variant_image FROM product_variants WHERE product_id = ? AND variant_image LIKE '%r2.dev%'");
-        $stmtV->execute([$id]);
-        foreach ($stmtV->fetchAll() as $v) {
-            $urlsToRemirror[] = ['type' => 'variant', 'url' => $v['variant_image'], 'table' => 'product_variants', 'field' => 'variant_image', 'id' => $v['id']];
-        }
+        // Helper: find source URL (from mirror map or from product column)
+        $findSource = function(string $r2Url, ?string $fallbackSrc = null) use ($db): ?string {
+            $map = $db->prepare("SELECT source_url FROM image_mirror_map WHERE r2_url = ? LIMIT 1");
+            $map->execute([$r2Url]);
+            $src = $map->fetchColumn();
+            if (!empty($src)) return $src;
+            return $fallbackSrc ?: null;
+        };
 
         $successCount = 0;
-        $failCount = 0;
-        $errors = [];
+        $failCount    = 0;
+        $errors       = [];
 
-        foreach ($urlsToRemirror as $item) {
-            $r2Url = $item['url'];
-            
-            $stmtM = $db->prepare("SELECT source_url_hash, source_url FROM image_mirror_map WHERE r2_url = ? LIMIT 1");
-            $stmtM->execute([$r2Url]);
-            $map = $stmtM->fetch();
-
-            if ($map && !empty($map['source_url'])) {
-                $db->prepare("DELETE FROM image_mirror_map WHERE source_url_hash = ?")->execute([$map['source_url_hash']]);
-                
-                $result = $mirrorService->mirrorImage($map['source_url'], $sku, $item['type']);
-                if (is_array($result) && $result['success']) {
-                    $newUrl = $result['url'];
-                    $updateQ = "UPDATE {$item['table']} SET {$item['field']} = ? WHERE id = ?";
-                    $db->prepare($updateQ)->execute([$newUrl, $item['id']]);
-                    $successCount++;
+        // ─ Main product image ─
+        if (!empty($product['main_image'])) {
+            $r2Url = $product['main_image'];
+            if (!$r2Exists($r2Url)) {
+                $src = $findSource($r2Url, $product['main_image_source_url'] ?? null);
+                if ($src) {
+                    // Clear old cached entry
+                    $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$r2Url]);
+                    $result = $mirrorService->mirrorImage($src, $sku, 'main');
+                    if ($result['success']) {
+                        $db->prepare("UPDATE products SET main_image = ? WHERE id = ?")->execute([$result['url'], $id]);
+                        $db->prepare("UPDATE product_images SET image_url = ? WHERE product_id = ? AND image_url = ?")->execute([$result['url'], $id, $r2Url]);
+                        $successCount++;
+                    } else {
+                        $failCount++;
+                        $errors[] = "Main image failed: " . ($result['error'] ?? 'Unknown');
+                    }
                 } else {
                     $failCount++;
-                    $errors[] = "Failed to remirror {$map['source_url']}: " . ($result['error'] ?? 'Unknown');
+                    $errors[] = "No source URL for main image: $r2Url";
                 }
+            }
+        }
+
+        // ─ Gallery images ─
+        $stmtG = $db->prepare("SELECT id, image_url FROM product_images WHERE product_id = ?");
+        $stmtG->execute([$id]);
+        foreach ($stmtG->fetchAll() as $g) {
+            $r2Url = $g['image_url'];
+            if (strpos($r2Url, 'r2.dev') === false) continue;
+            if ($r2Exists($r2Url)) continue;
+            $src = $findSource($r2Url);
+            if (!$src) { $failCount++; $errors[] = "No source for gallery #{$g['id']}"; continue; }
+            $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$r2Url]);
+            $result = $mirrorService->mirrorImage($src, $sku, 'gallery');
+            if ($result['success']) {
+                $db->prepare("UPDATE product_images SET image_url = ? WHERE id = ?")->execute([$result['url'], $g['id']]);
+                $successCount++;
             } else {
                 $failCount++;
-                $errors[] = "Original source URL not found in cache for {$r2Url}";
+                $errors[] = "Gallery #{$g['id']}: " . ($result['error'] ?? 'Unknown');
+            }
+        }
+
+        // ─ Variant swatch images (product_colors) ─
+        $stmtC = $db->prepare("SELECT id, swatch_hex_or_image FROM product_colors WHERE product_id = ? AND swatch_hex_or_image LIKE '%r2.dev%'");
+        $stmtC->execute([$id]);
+        foreach ($stmtC->fetchAll() as $c) {
+            $r2Url = $c['swatch_hex_or_image'];
+            if ($r2Exists($r2Url)) continue;
+            $src = $findSource($r2Url);
+            if (!$src) { $failCount++; $errors[] = "No source for swatch color #{$c['id']}"; continue; }
+            $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$r2Url]);
+            $result = $mirrorService->mirrorImage($src, $sku, 'variant');
+            if ($result['success']) {
+                $db->prepare("UPDATE product_colors SET swatch_hex_or_image = ? WHERE id = ?")->execute([$result['url'], $c['id']]);
+                $successCount++;
+            } else {
+                $failCount++;
+                $errors[] = "Swatch color #{$c['id']}: " . ($result['error'] ?? 'Unknown');
             }
         }
 
         echo json_encode([
             'success' => true,
-            'message' => "Remirrored {$successCount} images. Failed: {$failCount}.",
-            'errors' => $errors
+            'message' => "Re-mirrored {$successCount} images. Failed: {$failCount}.",
+            'errors'  => $errors
         ]);
         exit;
     }
