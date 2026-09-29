@@ -3,11 +3,11 @@ namespace App\Services;
 
 class CloudflareR2
 {
-    private string $accessKeyId = '6a2ae9571e41761b1c649cee097b8d21';
-    private string $secretAccessKey = 'b00b9b4a5a9a644aa1ca02215e556db52b64ba6c3f1e2a4174bd8c2a20c170cc';
-    private string $bucketName = 'tape';
-    private string $endpoint = 'https://17a03ed838cff7b48ee24c1876e145fc.r2.cloudflarestorage.com';
-    private string $uploadFolder = 'dfix';
+    private string $accessKeyId = '59758d670c5c4a720d5fbfa150a81571';
+    private string $secretAccessKey = '54fabc5b173afdb1c9ba2fa37902fb1180220c6bd78f7c2d3ae3c0b0850d494e';
+    private string $bucketName = 'importwala-images';
+    private string $endpoint = 'https://01e0ff8f64110937bdefd6c0f82bc3c6.r2.cloudflarestorage.com';
+    private string $uploadFolder = '';
 
     public function upload(array $file): string
     {
@@ -17,10 +17,10 @@ class CloudflareR2
 
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $uniqueName = time() . '_' . uniqid() . '.' . ($extension ?: 'jpg');
-        $r2Key = $this->uploadFolder . '/' . $uniqueName;
+        $r2Key = $this->uploadFolder ? ($this->uploadFolder . '/' . $uniqueName) : $uniqueName;
 
         // 1. Save local copy instantly for 0ms UI latency
-        $localDir = __DIR__ . '/../../public/uploads/' . $this->uploadFolder;
+        $localDir = __DIR__ . '/../../public/uploads' . ($this->uploadFolder ? ('/' . $this->uploadFolder) : '');
         if (!is_dir($localDir)) {
             @mkdir($localDir, 0777, true);
         }
@@ -39,7 +39,7 @@ class CloudflareR2
             return '';
         }
 
-        $localUrl = '/uploads/' . $this->uploadFolder . '/' . $uniqueName;
+        $localUrl = '/uploads/' . ($this->uploadFolder ? ($this->uploadFolder . '/') : '') . $uniqueName;
 
         // 2. Non-blocking Cloudflare R2 Upload (Strict 500ms timeout cap so UI never lags)
         $this->uploadToR2Fast($localPath, $r2Key, $file['type'] ?: 'image/jpeg');
@@ -100,12 +100,91 @@ class CloudflareR2
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_NOSIGNAL => 1,
-            CURLOPT_CONNECTTIMEOUT_MS => 200,
-            CURLOPT_TIMEOUT_MS => 500,
+            CURLOPT_CONNECTTIMEOUT_MS => 1000,
+            CURLOPT_TIMEOUT_MS => 5000,
+            CURLOPT_SSL_VERIFYPEER => false,
         ]);
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         return ($httpCode === 200 || $httpCode === 201);
+    }
+
+    /**
+     * Upload a file from a local path directly to R2.
+     * Used by the central upload_to_r2() helper in Functions.php.
+     */
+    public function uploadFile(string $localPath, string $r2Key, string $contentType = 'image/jpeg'): bool
+    {
+        if (!file_exists($localPath)) {
+            return false;
+        }
+
+        $fakeFile = [
+            'tmp_name' => $localPath,
+            'name'     => basename($localPath),
+            'type'     => $contentType,
+            'size'     => filesize($localPath),
+        ];
+
+        return $this->uploadToR2Fast($localPath, $r2Key, $contentType);
+    }
+
+    /**
+     * Delete an object from R2.
+     */
+    public function deleteObject(string $r2Key): bool
+    {
+        $host = parse_url($this->endpoint, PHP_URL_HOST);
+        $uri = '/' . $this->bucketName . '/' . ltrim($r2Key, '/');
+        $url = $this->endpoint . $uri;
+
+        $region = 'auto';
+        $service = 's3';
+        $timestamp = time();
+        $date = gmdate('Ymd', $timestamp);
+        $amzDate = gmdate('Ymd\THis\Z', $timestamp);
+
+        $payloadHash = hash('sha256', '');
+
+        // Canonical Request
+        $canonicalHeaders = "host:{$host}\nx-amz-content-sha256:{$payloadHash}\nx-amz-date:{$amzDate}\n";
+        $signedHeaders = "host;x-amz-content-sha256;x-amz-date";
+        $canonicalRequest = "DELETE\n{$uri}\n\n{$canonicalHeaders}\n{$signedHeaders}\n{$payloadHash}";
+
+        // Credential Scope & String to Sign
+        $credentialScope = "{$date}/{$region}/{$service}/aws4_request";
+        $stringToSign = "AWS4-HMAC-SHA256\n{$amzDate}\n{$credentialScope}\n" . hash('sha256', $canonicalRequest);
+
+        // Calculate Signature
+        $kDate = hash_hmac('sha256', $date, 'AWS4' . $this->secretAccessKey, true);
+        $kRegion = hash_hmac('sha256', $region, $kDate, true);
+        $kService = hash_hmac('sha256', $service, $kRegion, true);
+        $kSigning = hash_hmac('sha256', 'aws4_request', $kService, true);
+        $signature = hash_hmac('sha256', $stringToSign, $kSigning);
+
+        $authorizationHeader = "AWS4-HMAC-SHA256 Credential={$this->accessKeyId}/{$credentialScope}, SignedHeaders={$signedHeaders}, Signature={$signature}";
+
+        $headers = [
+            'Host: ' . $host,
+            'x-amz-date: ' . $amzDate,
+            'x-amz-content-sha256: ' . $payloadHash,
+            'Authorization: ' . $authorizationHeader
+        ];
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_CUSTOMREQUEST => 'DELETE',
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_NOSIGNAL => 1,
+            CURLOPT_CONNECTTIMEOUT_MS => 1000,
+            CURLOPT_TIMEOUT_MS => 5000,
+            CURLOPT_SSL_VERIFYPEER => false,
+        ]);
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        return ($httpCode === 204 || $httpCode === 200);
     }
 }

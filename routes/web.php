@@ -426,6 +426,7 @@ $router->post('/admin/reviews/update-status/{id}', 'Admin\ReviewController@updat
 // Settings & Activity Logs
 $router->get('/admin/settings', 'Admin\SettingsController@index', [AdminMiddleware::class, fn() => (new PermissionMiddleware('settings.view'))->execute()]);
 $router->post('/admin/settings/update', 'Admin\SettingsController@update', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('settings.edit'))->execute()]);
+$router->post('/admin/settings/test-r2-connection', 'Admin\SettingsController@testR2Connection', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('settings.edit'))->execute()]);
 $router->get('/admin/settings/payment-shipping', 'Admin\PaymentShippingSettingsController@index', [AdminMiddleware::class]);
 $router->post('/admin/settings/payment-shipping/razorpay', 'Admin\PaymentShippingSettingsController@updateRazorpay', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->get('/admin/settings/payment-shipping/razorpay', fn() => header('Location: ' . url('admin/settings/payment-shipping')) . exit);

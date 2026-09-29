@@ -613,51 +613,73 @@ include __DIR__ . '/../layouts/header.php';
     async function executeCommitImport() {
         const btn = document.getElementById('btnCommitImport');
         btn.disabled = true;
-        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Importing...</span>';
+        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span id="importProgressText">Importing...</span>';
 
-        const formData = new FormData();
-        formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
+        let currentChunk = 0;
+        let isFinished = false;
+        let finalData = null;
 
-        try {
-            const resp = await fetch('<?= url('admin/products/import/commit') ?>', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
+        while (!isFinished) {
+            const formData = new FormData();
+            formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
+            formData.append('chunk', currentChunk);
+
+            try {
+                const resp = await fetch('<?= url('admin/products/import/commit') ?>', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
+                    }
+                });
+                const data = await resp.json();
+
+                if (!data.success) {
+                    alert(data.error || data.message || 'Commit failed.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Confirm & Import Products</span>';
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                    return;
                 }
-            });
-            const data = await resp.json();
 
-            if (!data.success) {
-                alert(data.error || data.message || 'Commit failed.');
+                if (data.finished) {
+                    isFinished = true;
+                    finalData = data;
+                } else {
+                    document.getElementById('importProgressText').textContent = `Importing... ${data.percentage}% (${data.processed}/${data.total})`;
+                    currentChunk++;
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Server error during import commit.');
                 btn.disabled = false;
                 btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Confirm & Import Products</span>';
                 if (typeof lucide !== 'undefined') lucide.createIcons();
                 return;
             }
+        }
 
-            document.getElementById('importStepPreview').classList.add('hidden');
-            document.getElementById('importStepResult').classList.remove('hidden');
+        document.getElementById('importStepPreview').classList.add('hidden');
+        document.getElementById('importStepResult').classList.remove('hidden');
 
-            document.getElementById('resCreatedProducts').textContent = data.created_products || 0;
-            document.getElementById('resUpdatedProducts').textContent = data.updated_products || 0;
-            document.getElementById('resCreatedVariants').textContent = data.created_variants || 0;
-            document.getElementById('resUpdatedVariants').textContent = data.updated_variants || 0;
+        // Instead of these we can show the summary data
+        document.getElementById('resCreatedProducts').textContent = finalData.summary.valid_products || 0;
+        document.getElementById('resUpdatedProducts').textContent = '-'; // no longer split in summary
+        document.getElementById('resCreatedVariants').textContent = finalData.summary.total_variants || 0;
+        document.getElementById('resUpdatedVariants').textContent = '-';
 
-            if (data.skipped_products && data.skipped_products > 0) {
-                document.getElementById('resErrorNotice').classList.remove('hidden');
-            }
-        } catch (err) {
-            console.error(err);
-            alert('Server error during import commit.');
-            btn.disabled = false;
-            btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Confirm & Import Products</span>';
-            if (typeof lucide !== 'undefined') lucide.createIcons();
+        let mirrorStr = '';
+        if (finalData.image_stats) {
+            mirrorStr = ` (Images Mirrored: ${finalData.image_stats.mirrored}, Failed: ${finalData.image_stats.failed})`;
+        }
+        document.getElementById('resCreatedProducts').textContent += mirrorStr;
+
+        if (finalData.summary.error_products && finalData.summary.error_products > 0) {
+            document.getElementById('resErrorNotice').classList.remove('hidden');
         }
     }
 </script>
-
 <?php
 include __DIR__ . '/../layouts/footer.php';
 ?>

@@ -703,6 +703,29 @@ class ProductController extends Controller
 
         $product = $this->productModel->find($id);
         if ($product) {
+            // Delete R2 Objects
+            try {
+                if (class_exists('\App\Services\CloudflareR2')) {
+                    $r2 = new \App\Services\CloudflareR2();
+                    // main image
+                    if (!empty($product['main_image']) && strpos($product['main_image'], 'importwala-images/') !== false) {
+                        $key = explode('importwala-images/', $product['main_image'])[1] ?? '';
+                        if ($key) $r2->deleteObject($key);
+                    }
+                    // gallery images
+                    $db = \App\Core\Database::getInstance();
+                    $stmt = $db->prepare("SELECT image_url FROM product_images WHERE product_id = ?");
+                    $stmt->execute([$id]);
+                    $images = $stmt->fetchAll();
+                    foreach ($images as $img) {
+                        if (!empty($img['image_url']) && strpos($img['image_url'], 'importwala-images/') !== false) {
+                            $key = explode('importwala-images/', $img['image_url'])[1] ?? '';
+                            if ($key) $r2->deleteObject($key);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {}
+
             $this->productModel->delete($id);
             activity_log('Delete Product', 'Products', $id, "Deleted product ID: {$id}");
             try {
@@ -824,12 +847,22 @@ class ProductController extends Controller
         // 1. Delete record from DB and handle primary re-assignment
         $url = $this->imageModel->delete($imageId);
 
-        // 2. Physical File Cleanup on Server Storage
-        if (!empty($url) && !str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
-            $cleanUrl = ltrim($url, '/');
-            $absPath = __DIR__ . '/../../../public/' . $cleanUrl;
-            if (file_exists($absPath) && is_file($absPath)) {
-                @unlink($absPath);
+        // 2. Physical File Cleanup on Server Storage or R2
+        if (!empty($url)) {
+            if (strpos($url, 'importwala-images/') !== false) {
+                try {
+                    if (class_exists('\App\Services\CloudflareR2')) {
+                        $r2 = new \App\Services\CloudflareR2();
+                        $key = explode('importwala-images/', $url)[1] ?? '';
+                        if ($key) $r2->deleteObject($key);
+                    }
+                } catch (\Throwable $e) {}
+            } elseif (!str_starts_with($url, 'http://') && !str_starts_with($url, 'https://')) {
+                $cleanUrl = ltrim($url, '/');
+                $absPath = __DIR__ . '/../../../public/' . $cleanUrl;
+                if (file_exists($absPath) && is_file($absPath)) {
+                    @unlink($absPath);
+                }
             }
         }
 

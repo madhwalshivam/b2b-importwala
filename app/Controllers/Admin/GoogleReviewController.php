@@ -41,12 +41,8 @@ class GoogleReviewController extends Controller {
         $photoPath = '';
 
         if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../../../public/uploads/reviews/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            $fileName = 'rev_' . time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $_FILES['photo']['name']);
-            if (move_uploaded_file($_FILES['photo']['tmp_name'], $uploadDir . $fileName)) {
+            $fileName = upload_to_r2($_FILES['photo'], 'reviews', 'rev');
+            if ($fileName) {
                 $photoPath = '/uploads/reviews/' . $fileName;
             }
         }
@@ -90,12 +86,8 @@ class GoogleReviewController extends Controller {
         $photoPath = $review['photo_path'];
 
         if (isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = __DIR__ . '/../../../public/uploads/reviews/';
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-            $fileName = 'rev_' . time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $_FILES['photo']['name']);
-            if (move_uploaded_file($_FILES['photo']['tmp_name'], $uploadDir . $fileName)) {
+            $fileName = upload_to_r2($_FILES['photo'], 'reviews', 'rev');
+            if ($fileName) {
                 $photoPath = '/uploads/reviews/' . $fileName;
             }
         }

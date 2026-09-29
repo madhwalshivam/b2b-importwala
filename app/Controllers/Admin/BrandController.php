@@ -302,24 +302,18 @@ class BrandController extends Controller {
             }
         }
 
-        // Generate sanitized unique filename
+        // Generate sanitized unique filename prefix
         $cleanBrandName = slugify($brandName);
         if (empty($cleanBrandName)) $cleanBrandName = 'brand';
-        $fileName = $cleanBrandName . '_' . time() . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
 
-        $uploadDir = __DIR__ . '/../../../public/uploads/brands/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-
-        $destination = $uploadDir . $fileName;
-        if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        $f = upload_to_r2($file, 'brands', $cleanBrandName, 2 * 1024 * 1024);
+        if (!$f) {
             return ['success' => false, 'message' => 'Failed to save uploaded file on server.'];
         }
 
         return [
             'success' => true,
-            'path'    => '/uploads/brands/' . $fileName
+            'path'    => '/uploads/brands/' . $f
         ];
     }
 

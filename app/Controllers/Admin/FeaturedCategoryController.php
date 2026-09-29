@@ -239,16 +239,10 @@ class FeaturedCategoryController extends Controller {
         if (!empty($_FILES[$fileInputName]['name'])) {
             $file = $_FILES[$fileInputName];
             $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
-            $uploadDir = __DIR__ . '/../../../public/uploads/featured_categories/';
-
-            if (!is_dir($uploadDir)) {
-                @mkdir($uploadDir, 0777, true);
-            }
 
             if (in_array($file['type'], $allowed) && $file['size'] <= 5 * 1024 * 1024) {
-                $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                $filename = 'feat_sub_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-                if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
+                $filename = upload_to_r2($file, 'featured_categories', 'feat_sub');
+                if ($filename) {
                     return '/uploads/featured_categories/' . $filename;
                 }
             }

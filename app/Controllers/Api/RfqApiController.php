@@ -204,6 +204,16 @@ class RfqApiController extends BaseController
             $webPath  = self::UPLOAD_WEB_DIR . $safe;
 
             if (move_uploaded_file($photoFiles['tmp_name'][$i], $destPath)) {
+                
+                try {
+                    if (class_exists('\\App\\Services\\CloudflareR2')) {
+                        $r2 = new \App\Services\CloudflareR2();
+                        $mimeType = function_exists('mime_content_type') ? mime_content_type($destPath) : 'image/jpeg';
+                        if (!$mimeType) $mimeType = 'image/jpeg';
+                        $r2->uploadFile($destPath, 'rfq/' . $safe, $mimeType);
+                    }
+                } catch (\Throwable $e) {}
+
                 $this->photoModel->addPhoto(
                     $rfqId,
                     $webPath,

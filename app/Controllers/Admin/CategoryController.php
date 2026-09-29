@@ -426,16 +426,8 @@ class CategoryController extends Controller {
             return null;
         }
 
-        // Upload folder: /public/uploads/categories/
-        $uploadDir = dirname(__DIR__, 3) . '/public/uploads/categories';
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0777, true);
-        }
-
-        $filename = 'category_' . time() . '_' . substr(md5(uniqid()), 0, 8) . '.' . $extension;
-        $targetPath = $uploadDir . '/' . $filename;
-
-        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        $filename = upload_to_r2($file, 'categories', 'category');
+        if ($filename) {
             return '/uploads/categories/' . $filename;
         }
 

@@ -205,21 +205,14 @@ class TestimonialController extends Controller {
      * Helper for uploading reviewer image
      */
     private function handlePhotoUpload(array $file): ?string {
-        $uploadDir = __DIR__ . '/../../../public/uploads/testimonials/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
-        }
-
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $allowed = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
         if (!in_array($ext, $allowed)) {
             return null;
         }
 
-        $fileName = 'testi_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-        $targetPath = $uploadDir . $fileName;
-
-        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        $fileName = upload_to_r2($file, 'testimonials', 'testi');
+        if ($fileName) {
             return '/uploads/testimonials/' . $fileName;
         }
 

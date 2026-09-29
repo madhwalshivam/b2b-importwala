@@ -250,15 +250,10 @@ class CollectionCardController extends Controller {
             $file        = $_FILES[$fileInput];
             $ext         = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $allowedExts = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'];
-            $dir         = __DIR__ . '/../../../public/uploads/collection_cards/';
-
-            if (!is_dir($dir)) {
-                @mkdir($dir, 0777, true);
-            }
 
             if (in_array($ext, $allowedExts) && $file['size'] <= 10 * 1024 * 1024) {
-                $filename = 'cc_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-                if (move_uploaded_file($file['tmp_name'], $dir . $filename)) {
+                $filename = upload_to_r2($file, 'collection_cards', 'cc', 10 * 1024 * 1024);
+                if ($filename) {
                     return '/uploads/collection_cards/' . $filename;
                 }
             }

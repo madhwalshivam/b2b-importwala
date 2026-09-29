@@ -725,7 +725,7 @@ class BulkImportService
                 $assignedFactoryId = !empty($prod['factory_id']) ? (int)$prod['factory_id'] : ($factoryMapByCode[$mfgIdCode] ?? null);
 
                 // Process Main Image
-                $mainImagePath = $this->processImageSource($prod['main_image'], $extractedZipDir);
+                $mainImagePath = $this->processImageSource($prod['main_image'], $extractedZipDir, $sku, 'main');
 
                 // Check existing product in DB
                 $stmtCheck = $this->db->prepare("SELECT id FROM products WHERE sku = ?");
@@ -873,7 +873,7 @@ class BulkImportService
                     $imgList = array_map('trim', explode(',', $prod['additional_images']));
                     foreach ($imgList as $gIdx => $gImgName) {
                         if (empty($gImgName)) continue;
-                        $gImgPath = $this->processImageSource($gImgName, $extractedZipDir);
+                        $gImgPath = $this->processImageSource($gImgName, $extractedZipDir, $sku, 'gallery-' . $gIdx);
                         if ($gImgPath && $gImgPath !== $mainImagePath) {
                             $stmtG = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, ?, 0)");
                             $stmtG->execute([$productId, $gImgPath, $gIdx + 1]);
@@ -902,7 +902,7 @@ class BulkImportService
 
                     foreach ($prod['variants'] as $vData) {
                         $colorName = !empty($vData['color_name']) ? $vData['color_name'] : 'Default';
-                        $swatchHex = $vData['variant_image'] ?? null;
+                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$varSku) : null;
                         $varSku    = $vData['variant_sku'];
                         $varPrice  = $vData['variant_price'];
                         $varStock  = $vData['variant_stock'];
@@ -941,7 +941,7 @@ class BulkImportService
                     foreach ($prod['variants'] as $vData) {
                         $colorName = !empty($vData['color_name']) ? $vData['color_name'] : 'Default';
                         $sizeLabel = !empty($vData['size_label']) ? $vData['size_label'] : 'Standard';
-                        $swatchHex = $vData['variant_image'] ?? null;
+                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$varSku) : null;
                         $varSku    = $vData['variant_sku'];
                         $varPrice  = $vData['variant_price'];
                         $varStock  = $vData['variant_stock'];
@@ -1353,7 +1353,9 @@ class BulkImportService
         return $brandId;
     }
 
-    private function processImageSource(string $imageInput, ?string $extractedZipDir): string
+    private \App\Services\ImageMirrorService $mirrorService;
+
+    private function processImageSource(string $imageInput, ?string $extractedZipDir, string $sku = 'unknown', string $type = 'img'): string
     {
         $clean = trim($imageInput);
         if (empty($clean)) {
@@ -1361,7 +1363,16 @@ class BulkImportService
         }
 
         if (filter_var($clean, FILTER_VALIDATE_URL)) {
-            return $clean;
+            if (!isset($this->mirrorService)) {
+                $this->mirrorService = new \App\Services\ImageMirrorService();
+            }
+            $mirrored = $this->mirrorService->mirrorImage($clean, $sku, $type);
+            if ($mirrored) {
+                $_SESSION['image_mirror_stats']['mirrored'] = ($_SESSION['image_mirror_stats']['mirrored'] ?? 0) + 1;
+                return $mirrored;
+            }
+            $_SESSION['image_mirror_stats']['failed'] = ($_SESSION['image_mirror_stats']['failed'] ?? 0) + 1;
+            return ''; // Skip image if mirroring fails
         }
 
         if ($extractedZipDir) {
@@ -1393,7 +1404,17 @@ class BulkImportService
                 $newFilename = 'bulk_' . time() . '_' . md5($cleanName) . '.' . $ext;
                 $dest = $targetDir . $newFilename;
                 copy($p, $dest);
-                return 'uploads/products/' . $newFilename;
+                
+                try {
+                    if (class_exists('\\App\\Services\\CloudflareR2')) {
+                        $r2 = new \App\Services\CloudflareR2();
+                        $mimeType = function_exists('mime_content_type') ? mime_content_type($dest) : 'image/jpeg';
+                        if (!$mimeType) $mimeType = 'image/jpeg';
+                        $r2->uploadFile($dest, 'products/' . $newFilename, $mimeType);
+                    }
+                } catch (\Throwable $e) {}
+
+                return '/uploads/products/' . $newFilename;
             }
         }
 

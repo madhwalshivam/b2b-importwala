@@ -235,6 +235,26 @@ include __DIR__ . '/../layouts/header.php';
                 </div>
             </div>
 
+            </div>
+
+            <!-- SECTION 6: Cloudflare R2 Integration -->
+            <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div class="flex items-center space-x-2.5">
+                        <i data-lucide="cloud" class="w-5 h-5 text-sky-600"></i>
+                        <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">6. Cloudflare R2 Integration</h3>
+                    </div>
+                    <button type="button" id="btnTestR2" onclick="testR2Connection()"
+                        class="h-9 px-4 bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 rounded-lg font-medium text-[11px] transition shadow-2xs flex items-center space-x-1.5 cursor-pointer">
+                        <i data-lucide="plug" class="w-3.5 h-3.5"></i>
+                        <span>Test R2 Connection</span>
+                    </button>
+                </div>
+                <div class="text-xs text-slate-500">
+                    Test your Cloudflare R2 bucket connectivity, permissions, and upload/delete capabilities.
+                </div>
+            </div>
+
             <!-- Submit Button Row -->
             <div class="flex items-center justify-end pt-2">
                 <button type="submit"
@@ -247,6 +267,43 @@ include __DIR__ . '/../layouts/header.php';
     </form>
 
 </div>
+
+<script>
+    async function testR2Connection() {
+        const btn = document.getElementById('btnTestR2');
+        const origHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<div class="w-3.5 h-3.5 border-2 border-sky-600 border-t-transparent rounded-full animate-spin"></div><span>Testing...</span>';
+
+        const formData = new FormData();
+        formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
+
+        try {
+            const resp = await fetch('<?= url('admin/settings/test-r2-connection') ?>', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
+                }
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                alert(data.message);
+            } else {
+                alert(data.message || 'Connection failed.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Server error while testing R2 connection.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+    }
+</script>
 
 <?php
 include __DIR__ . '/../layouts/footer.php';

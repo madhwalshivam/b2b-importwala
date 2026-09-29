@@ -126,19 +126,8 @@ class SubcategoryController extends Controller {
             // Image Upload
             $imagePath = null;
             if (!empty($_FILES['image_file']['name'])) {
-                $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-                $file = $_FILES['image_file'];
-                if (in_array($file['type'], $allowed) && $file['size'] <= 5 * 1024 * 1024) {
-                    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                    $filename = 'subcat_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-                    $uploadDir = __DIR__ . '/../../../public/uploads/categories/';
-                    if (!is_dir($uploadDir)) {
-                        @mkdir($uploadDir, 0777, true);
-                    }
-                    if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
-                        $imagePath = '/uploads/categories/' . $filename;
-                    }
-                }
+                $f = upload_to_r2($_FILES['image_file'], 'categories', 'subcat');
+                if ($f) $imagePath = '/uploads/categories/' . $f;
             }
 
             $id = $this->subcategoryModel->createSubcategory([
@@ -233,19 +222,8 @@ class SubcategoryController extends Controller {
             // Image Upload
             $imagePath = $existing['image'];
             if (!empty($_FILES['image_file']['name'])) {
-                $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-                $file = $_FILES['image_file'];
-                if (in_array($file['type'], $allowed) && $file['size'] <= 5 * 1024 * 1024) {
-                    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-                    $filename = 'subcat_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-                    $uploadDir = __DIR__ . '/../../../public/uploads/categories/';
-                    if (!is_dir($uploadDir)) {
-                        @mkdir($uploadDir, 0777, true);
-                    }
-                    if (move_uploaded_file($file['tmp_name'], $uploadDir . $filename)) {
-                        $imagePath = '/uploads/categories/' . $filename;
-                    }
-                }
+                $f = upload_to_r2($_FILES['image_file'], 'categories', 'subcat');
+                if ($f) $imagePath = '/uploads/categories/' . $f;
             }
 
             $this->subcategoryModel->updateSubcategory($id, [

@@ -384,6 +384,84 @@ if (!function_exists('get_current_session_id')) {
     }
 }
 
+if (!function_exists('upload_to_r2')) {
+    /**
+     * Central image upload helper — saves to Cloudflare R2 AND local server.
+     *
+     * Usage:
+     *   $filename = upload_to_r2($_FILES['image'], 'banners');
+     *   // Returns filename like 'banner_1234567890.jpg' on success, '' on failure.
+     *   // Local copy: public/uploads/{subfolder}/{filename}
+     *   // R2 copy:    {subfolder}/{filename}
+     *
+     * @param  array  $file       $_FILES element (with tmp_name, name, type, size)
+     * @param  string $subfolder  Subfolder name inside uploads/ and R2 bucket
+     * @param  string $prefix     Optional filename prefix
+     * @param  int    $maxSizeBytes  Max file size in bytes (default 10MB)
+     * @return string  Filename on success, empty string on failure
+     */
+    function upload_to_r2(array $file, string $subfolder = 'general', string $prefix = '', int $maxSizeBytes = 10485760): string
+    {
+        if (empty($file['tmp_name']) || !file_exists($file['tmp_name'])) {
+            return '';
+        }
 
+        $allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/jpg'];
+        $mimeType = $file['type'] ?? 'image/jpeg';
 
+        if (!in_array(strtolower($mimeType), $allowed)) {
+            return '';
+        }
 
+        if (($file['size'] ?? 0) > $maxSizeBytes) {
+            return '';
+        }
+
+        $ext      = strtolower(pathinfo($file['name'] ?? 'image', PATHINFO_EXTENSION)) ?: 'jpg';
+        $prefix   = $prefix ? rtrim($prefix, '_') . '_' : '';
+        $filename = $prefix . time() . '_' . rand(1000, 9999) . '.' . $ext;
+
+        // --- 1. Save locally ---
+        $localDir = rtrim(__DIR__ . '/../../public/uploads/' . ltrim($subfolder, '/'), '/');
+        if (!is_dir($localDir)) {
+            @mkdir($localDir, 0777, true);
+        }
+        $localPath = $localDir . '/' . $filename;
+
+        $saved = false;
+        if (is_uploaded_file($file['tmp_name'])) {
+            $saved = @move_uploaded_file($file['tmp_name'], $localPath);
+        }
+        if (!$saved) {
+            $saved = @copy($file['tmp_name'], $localPath);
+        }
+        if (!$saved) {
+            return '';
+        }
+
+        // --- 2. Upload to Cloudflare R2 (non-blocking, best-effort) ---
+        try {
+            if (class_exists('\\App\\Services\\CloudflareR2')) {
+                // Use CloudflareR2 service uploadFile method which accepts a path
+                $r2 = new \App\Services\CloudflareR2();
+                if (method_exists($r2, 'uploadFile')) {
+                    $r2->uploadFile($localPath, $subfolder . '/' . $filename, $mimeType);
+                } else {
+                    // Fallback: build fake $_FILES array and call upload()
+                    $fakeFile = [
+                        'tmp_name' => $localPath,
+                        'name'     => $filename,
+                        'type'     => $mimeType,
+                        'size'     => filesize($localPath),
+                    ];
+                    $r2->upload($fakeFile);
+                }
+            }
+        } catch (\Throwable $e) {
+            // R2 failure is non-fatal — local copy already saved
+            error_log('[upload_to_r2] R2 upload failed for ' . $filename . ': ' . $e->getMessage());
+        }
+
+        return $filename;
+    }
+}

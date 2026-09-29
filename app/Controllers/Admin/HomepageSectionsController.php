@@ -354,15 +354,8 @@ class HomepageSectionsController extends Controller {
             return null;
         }
 
-        $uploadDir = dirname(__DIR__, 3) . '/public/uploads/banners';
-        if (!is_dir($uploadDir)) {
-            @mkdir($uploadDir, 0777, true);
-        }
-
-        $filename = 'promo_' . time() . '_' . substr(md5(uniqid()), 0, 8) . '.' . $extension;
-        $targetPath = $uploadDir . '/' . $filename;
-
-        if (@move_uploaded_file($file['tmp_name'], $targetPath)) {
+        $filename = upload_to_r2($file, 'banners', 'promo');
+        if ($filename) {
             return 'uploads/banners/' . $filename;
         }
 

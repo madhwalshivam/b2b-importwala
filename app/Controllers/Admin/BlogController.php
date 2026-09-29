@@ -408,16 +408,8 @@ class BlogController extends Controller {
             $ext = $mimeMap[$mimeType] ?? 'jpg';
         }
 
-        $rootPath = defined('ROOT_PATH') ? ROOT_PATH : dirname(__DIR__, 3);
-        $targetDir = $rootPath . '/public/' . trim($subFolder, '/') . '/';
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0755, true);
-        }
-
-        $filename = 'blog_' . time() . '_' . rand(1000, 9999) . '.' . $ext;
-        $targetPath = $targetDir . $filename;
-
-        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+        $filename = upload_to_r2($file, trim($subFolder, '/'), 'blog');
+        if ($filename) {
             return ['path' => trim($subFolder, '/') . '/' . $filename, 'error' => null];
         }
 

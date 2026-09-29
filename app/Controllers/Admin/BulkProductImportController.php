@@ -81,9 +81,45 @@ class BulkProductImportController extends BaseController
             return;
         }
 
+        $chunkIndex = (int)($this->request->input('chunk', 0));
+        $chunkSize = 10;
+        
+        if ($chunkIndex === 0) {
+            $_SESSION['bulk_import_errors'] = [];
+            $_SESSION['bulk_import_summary'] = [
+                'total_rows' => $previewData['summary']['total_rows'] ?? 0,
+                'total_products' => $previewData['summary']['total_products'] ?? 0,
+                'total_variants' => $previewData['summary']['total_variants'] ?? 0,
+                'valid_products' => 0,
+                'error_products' => 0,
+                'staged_factories' => $previewData['summary']['staged_factories'] ?? 0,
+            ];
+            $_SESSION['image_mirror_stats'] = ['mirrored' => 0, 'failed' => 0];
+        }
+
+        $totalProducts = count($previewData['products']);
+        $chunkProducts = array_slice($previewData['products'], $chunkIndex * $chunkSize, $chunkSize);
+
+        if (empty($chunkProducts)) {
+            $result = [
+                'success' => true,
+                'summary' => $_SESSION['bulk_import_summary'],
+                'errors' => $_SESSION['bulk_import_errors'],
+                'image_stats' => $_SESSION['image_mirror_stats'] ?? [],
+                'finished' => true
+            ];
+            
+            $_SESSION['bulk_import_last_errors'] = $_SESSION['bulk_import_errors'];
+            unset($_SESSION['bulk_import_preview']);
+            try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+            
+            echo json_encode($result);
+            return;
+        }
+
         try {
             $result = $this->importService->commitImport(
-                $previewData['products'],
+                $chunkProducts,
                 $previewData['extracted_zip_dir'] ?? null
             );
         } catch (\Throwable $e) {
@@ -91,16 +127,24 @@ class BulkProductImportController extends BaseController
             return;
         }
 
-        if ($result['success']) {
-            $_SESSION['bulk_import_last_errors'] = $result['errors'] ?? [];
-            unset($_SESSION['bulk_import_preview']);
-
-            try {
-                \App\Infrastructure\Cache\CacheManager::getInstance()->flush();
-            } catch (\Throwable $e) {}
+        if (!empty($result['errors'])) {
+            $_SESSION['bulk_import_errors'] = array_merge($_SESSION['bulk_import_errors'], $result['errors']);
+        }
+        $_SESSION['bulk_import_summary']['valid_products'] += $result['summary']['valid_products'] ?? 0;
+        $_SESSION['bulk_import_summary']['error_products'] += $result['summary']['error_products'] ?? 0;
+        
+        if (isset($result['image_stats'])) {
+            $_SESSION['image_mirror_stats']['mirrored'] += $result['image_stats']['mirrored'] ?? 0;
+            $_SESSION['image_mirror_stats']['failed'] += $result['image_stats']['failed'] ?? 0;
         }
 
-        echo json_encode($result);
+        echo json_encode([
+            'success' => true,
+            'finished' => false,
+            'processed' => ($chunkIndex * $chunkSize) + count($chunkProducts),
+            'total' => $totalProducts,
+            'percentage' => round((($chunkIndex * $chunkSize) + count($chunkProducts)) / $totalProducts * 100)
+        ]);
     }
 
     /**

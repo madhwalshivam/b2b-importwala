@@ -1,17 +1,16 @@
 <?php
-define('ROOT_PATH', __DIR__);
-require_once 'config/app.php';
-require_once 'app/Core/Database.php';
+require 'vendor/autoload.php';
+require 'app/Core/Database.php';
 
-$db = App\Core\Database::getInstance();
-
-echo "=== Merged products check ===\n";
-$stmt = $db->query("SELECT id, name, status FROM products WHERE status = 'merged'");
-$merged = $stmt->fetchAll(PDO::FETCH_ASSOC);
-echo "Merged count: " . count($merged) . "\n";
-foreach ($merged as $m) {
-    echo "ID: {$m['id']} - {$m['name']}\n";
+$db = \App\Core\Database::getInstance();
+foreach(['products', 'product_gallery', 'product_variants'] as $t) {
+    try {
+        echo "\nTable: $t\n";
+        $cols = $db->query("SHOW COLUMNS FROM $t")->fetchAll(PDO::FETCH_ASSOC);
+        foreach($cols as $c) {
+            echo $c['Field'] . ' ' . $c['Type'] . "\n";
+        }
+    } catch (Exception $e) {
+        echo "Table not found.\n";
+    }
 }
-
-$updated = $db->exec("UPDATE products SET status = 'active' WHERE status = 'merged'");
-echo "Updated {$updated} products from 'merged' back to 'active'.\n";

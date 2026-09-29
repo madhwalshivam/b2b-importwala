@@ -55,4 +55,38 @@ class SettingsController extends Controller {
         $this->setFlash('success', 'Settings saved successfully.');
         $this->redirect(url('admin/settings'));
     }
+
+    public function testR2Connection(): void {
+        header('Content-Type: application/json');
+        if (!Auth::hasPermission('settings.edit')) {
+            echo json_encode(['success' => false, 'message' => 'Forbidden']);
+            exit;
+        }
+
+        try {
+            if (class_exists('\App\Services\CloudflareR2')) {
+                $r2 = new \App\Services\CloudflareR2();
+                // Test by creating a temp file and uploading it, then deleting it
+                $tmp = sys_get_temp_dir() . '/' . uniqid('r2test_') . '.txt';
+                file_put_contents($tmp, 'test');
+                
+                $key = 'test/' . basename($tmp);
+                $success = $r2->uploadFile($tmp, $key, 'text/plain');
+                
+                @unlink($tmp);
+                
+                if ($success) {
+                    $r2->deleteObject($key);
+                    echo json_encode(['success' => true, 'message' => 'Cloudflare R2 Connection Successful!']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Upload failed. Check your R2 credentials.']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'CloudflareR2 service not found.']);
+            }
+        } catch (\Throwable $e) {
+            echo json_encode(['success' => false, 'message' => 'Error testing connection: ' . $e->getMessage()]);
+        }
+        exit;
+    }
 }
