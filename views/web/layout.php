@@ -161,189 +161,191 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 <body>
 
   <!-- Top Header Wrapper (Announcement Bar + Main Header for Mobile Auto-Hide) -->
-  <div class="top-header-wrapper" id="topHeaderWrapper">
+  <?php if (empty($hideGlobalHeader)): ?>
+    <div class="top-header-wrapper" id="topHeaderWrapper">
 
-  <!-- Top Announcement Bar (Dynamic Full-Bar Clickable Marquee) -->
-  <?php
-  $db = \App\Core\Database::getInstance();
-  $announcementStmt = $db->query("SELECT * FROM announcements WHERE is_active = 1 ORDER BY id DESC LIMIT 1");
-  $announcement = $announcementStmt ? $announcementStmt->fetch() : null;
-  ?>
+      <!-- Top Announcement Bar (Dynamic Full-Bar Clickable Marquee) -->
+      <?php
+      $db = \App\Core\Database::getInstance();
+      $announcementStmt = $db->query("SELECT * FROM announcements WHERE is_active = 1 ORDER BY id DESC LIMIT 1");
+      $announcement = $announcementStmt ? $announcementStmt->fetch() : null;
+      ?>
 
-  <?php if (!empty($announcement) && !empty($announcement['is_active'])): ?>
-    <?php
-    $msgText = htmlspecialchars(htmlspecialchars_decode($announcement['message']));
-    $ctaLink = !empty($announcement['cta_link']) ? url(ltrim($announcement['cta_link'], '/')) : '#';
-    $repeatedBlock = $msgText . ' &nbsp;&nbsp;&bull;&nbsp;&nbsp; ' . $msgText . ' &nbsp;&nbsp;&bull;&nbsp;&nbsp; ' . $msgText . ' &nbsp;&nbsp;&bull;&nbsp;&nbsp; ' . $msgText . ' &nbsp;&nbsp;&bull;&nbsp;&nbsp; ';
-    ?>
-    <style>
-      @keyframes announcementLoopAnimation {
-        0% {
-          transform: translateX(0);
-        }
+      <?php if (!empty($announcement) && !empty($announcement['is_active'])): ?>
+        <?php
+        $msgText = htmlspecialchars(htmlspecialchars_decode($announcement['message']));
+        $ctaLink = !empty($announcement['cta_link']) ? url(ltrim($announcement['cta_link'], '/')) : '#';
+        $repeatedBlock = $msgText . ' &nbsp;&nbsp;&bull;&nbsp;&nbsp; ' . $msgText . ' &nbsp;&nbsp;&bull;&nbsp;&nbsp; ' . $msgText . ' &nbsp;&nbsp;&bull;&nbsp;&nbsp; ' . $msgText . ' &nbsp;&nbsp;&bull;&nbsp;&nbsp; ';
+        ?>
+        <style>
+          @keyframes announcementLoopAnimation {
+            0% {
+              transform: translateX(0);
+            }
 
-        100% {
-          transform: translateX(-50%);
-        }
-      }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
 
-      .announcement-moving-track {
-        display: inline-flex !important;
-        align-items: center !important;
-        white-space: nowrap !important;
-        animation: announcementLoopAnimation 50s linear infinite !important;
-        will-change: transform;
-      }
+          .announcement-moving-track {
+            display: inline-flex !important;
+            align-items: center !important;
+            white-space: nowrap !important;
+            animation: announcementLoopAnimation 50s linear infinite !important;
+            will-change: transform;
+          }
 
-      .announcement-moving-wrapper:hover .announcement-moving-track {
-        animation-play-state: paused !important;
-      }
-    </style>
+          .announcement-moving-wrapper:hover .announcement-moving-track {
+            animation-play-state: paused !important;
+          }
+        </style>
 
-    <div class="top-announcement-bar" id="topAnnouncementBar"
-      style="background:#FFF2ED; color:#D8481B; height:38px; min-height:38px; max-height:38px; display:flex !important; align-items:center !important; justify-content:space-between !important; padding:0 12px 0 16px; border-bottom:1px solid #FFE2E2; overflow:hidden !important; font-size:12.5px; font-weight:500; white-space:nowrap !important; line-height:38px;">
+        <div class="top-announcement-bar" id="topAnnouncementBar"
+          style="background:#FFF2ED; color:#D8481B; height:38px; min-height:38px; max-height:38px; display:flex !important; align-items:center !important; justify-content:space-between !important; padding:0 12px 0 16px; border-bottom:1px solid #FFE2E2; overflow:hidden !important; font-size:12.5px; font-weight:500; white-space:nowrap !important; line-height:38px;">
 
-      <!-- Entire Announcement Bar Clickable Link -->
-      <a href="<?= $ctaLink ?>" class="announcement-moving-wrapper"
-        style="flex:1; overflow:hidden !important; white-space:nowrap !important; position:relative; display:flex !important; align-items:center !important; margin-right:12px; height:38px; text-decoration:none !important; color:#D8481B !important; cursor:pointer;"
-        title="Click to view offer">
-        <div class="announcement-moving-track">
-          <span
-            style="white-space:nowrap !important; font-weight:500; font-size:12.5px; color:#D8481B; display:inline-block !important;"><?= $repeatedBlock ?></span>
-          <span aria-hidden="true"
-            style="white-space:nowrap !important; font-weight:500; font-size:12.5px; color:#D8481B; display:inline-block !important;"><?= $repeatedBlock ?></span>
+          <!-- Entire Announcement Bar Clickable Link -->
+          <a href="<?= $ctaLink ?>" class="announcement-moving-wrapper"
+            style="flex:1; overflow:hidden !important; white-space:nowrap !important; position:relative; display:flex !important; align-items:center !important; margin-right:12px; height:38px; text-decoration:none !important; color:#D8481B !important; cursor:pointer;"
+            title="Click to view offer">
+            <div class="announcement-moving-track">
+              <span
+                style="white-space:nowrap !important; font-weight:500; font-size:12.5px; color:#D8481B; display:inline-block !important;"><?= $repeatedBlock ?></span>
+              <span aria-hidden="true"
+                style="white-space:nowrap !important; font-weight:500; font-size:12.5px; color:#D8481B; display:inline-block !important;"><?= $repeatedBlock ?></span>
+            </div>
+          </a>
+
+          <!-- Close Button Only -->
+          <div
+            style="display:flex !important; align-items:center !important; flex-shrink:0; background:#FFF2ED; height:100%; padding-left:8px; z-index:10;">
+            <button type="button"
+              onclick="document.getElementById('topAnnouncementBar').style.display='none'; if(typeof adjustTopHeaderSpacer === 'function') adjustTopHeaderSpacer();"
+              title="Close Announcement"
+              style="background:none !important; border:none !important; outline:none !important; box-shadow:none !important; font-size:14px; color:#9CA3AF; cursor:pointer; padding:2px 4px; line-height:1;"
+              onmouseover="this.style.color='#111827';" onmouseout="this.style.color='#9CA3AF';">
+              ✕
+            </button>
+          </div>
+
         </div>
-      </a>
+      <?php endif; ?>
 
-      <!-- Close Button Only -->
-      <div
-        style="display:flex !important; align-items:center !important; flex-shrink:0; background:#FFF2ED; height:100%; padding-left:8px; z-index:10;">
-        <button type="button" onclick="document.getElementById('topAnnouncementBar').style.display='none'; if(typeof adjustTopHeaderSpacer === 'function') adjustTopHeaderSpacer();"
-          title="Close Announcement"
-          style="background:none !important; border:none !important; outline:none !important; box-shadow:none !important; font-size:14px; color:#9CA3AF; cursor:pointer; padding:2px 4px; line-height:1;"
-          onmouseover="this.style.color='#111827';" onmouseout="this.style.color='#9CA3AF';">
-          ✕
-        </button>
-      </div>
+      <!-- Header Main -->
+      <header class="header-container">
+        <div class="header-main">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <!-- Mobile Hamburger Toggle Button -->
+            <button type="button" class="mobile-menu-toggle-btn" onclick="openMobileNavDrawer()"
+              aria-label="Open Navigation Menu">
+              <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
 
-    </div>
-  <?php endif; ?>
+            <!-- Official ImportWale Logo -->
+            <a href="<?= url('') ?>" class="brand-logo">
+              <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" class="brand-logo-img">
+            </a>
+          </div>
 
-  <!-- Header Main -->
-  <header class="header-container">
-    <div class="header-main">
-      <div style="display:flex; align-items:center; gap:8px;">
-        <!-- Mobile Hamburger Toggle Button -->
-        <button type="button" class="mobile-menu-toggle-btn" onclick="openMobileNavDrawer()" aria-label="Open Navigation Menu">
-          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+          <!-- Search Bar with Camera & Voice Search -->
+          <form action="<?= url('catalog') ?>" method="GET" class="search-bar-wrapper">
+            <input type="text" name="q" id="headerSearchInput" class="search-input"
+              placeholder="Search 50,000+ wholesale items..." value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
 
-        <!-- Official ImportWale Logo -->
-        <a href="<?= url('') ?>" class="brand-logo">
-          <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" class="brand-logo-img">
-        </a>
-      </div>
+            <!-- Voice Search Microphone Icon Button + Tooltip -->
+            <button type="button" class="voice-search-trigger" id="voiceSearchBtn" onclick="startVoiceSearch()"
+              aria-label="Search by Voice" title="Search by Voice (Click to Speak)"
+              style="background:none !important; border:none !important; outline:none !important; box-shadow:none !important; padding:4px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
+              <svg style="width:19px; height:19px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                  d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+              <div class="camera-tooltip">Search by Voice</div>
+            </button>
 
-      <!-- Search Bar with Camera & Voice Search -->
-      <form action="<?= url('catalog') ?>" method="GET" class="search-bar-wrapper">
-        <input type="text" name="q" id="headerSearchInput" class="search-input"
-          placeholder="Search 50,000+ wholesale items..."
-          value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+            <!-- Camera Search Icon Button + Tooltip -->
+            <button type="button" class="camera-search-trigger" onclick="triggerVisualSearchModal()"
+              aria-label="Search by Image">
+              <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <circle cx="12" cy="13" r="3" />
+              </svg>
+              <div class="camera-tooltip">Search by Image</div>
+            </button>
 
-        <!-- Voice Search Microphone Icon Button + Tooltip -->
-        <button type="button" class="voice-search-trigger" id="voiceSearchBtn" onclick="startVoiceSearch()"
-          aria-label="Search by Voice" title="Search by Voice (Click to Speak)"
-          style="background:none !important; border:none !important; outline:none !important; box-shadow:none !important; padding:4px; display:inline-flex; align-items:center; justify-content:center; cursor:pointer;">
-          <svg style="width:19px; height:19px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-          </svg>
-          <div class="camera-tooltip">Search by Voice</div>
-        </button>
+            <button type="submit" class="search-submit-btn">
+              <svg style="width:18px; height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+          </form>
 
-        <!-- Camera Search Icon Button + Tooltip -->
-        <button type="button" class="camera-search-trigger" onclick="triggerVisualSearchModal()"
-          aria-label="Search by Image">
-          <svg style="width:20px; height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-              d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <circle cx="12" cy="13" r="3" />
-          </svg>
-          <div class="camera-tooltip">Search by Image</div>
-        </button>
+          <!-- Right Grouping Container: RFQ Quote Button + Action Icons -->
+          <div class="header-right-group">
+            <!-- RFQ Get a Custom Quote Button -->
+            <button type="button" id="rfqOpenBtn" onclick="openRfqModal(null, true)"
+              style="display:inline-flex; align-items:center; gap:7px; background:var(--primary-color,#f05a29); color:#fff; font-family:var(--font-sans); font-size:13px; font-weight:700; padding:9px 18px; border:none; border-radius:8px; cursor:pointer; white-space:nowrap; transition:background .2s,transform .15s;"
+              onmouseover="this.style.background='#d8481b'; this.style.transform='translateY(-1px)'"
+              onmouseout="this.style.background='#f05a29'; this.style.transform='translateY(0)'">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              Get a Custom Quote
+            </button>
 
-        <button type="submit" class="search-submit-btn">
-          <svg style="width:18px; height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </button>
-      </form>
-
-      <!-- Right Grouping Container: RFQ Quote Button + Action Icons -->
-      <div class="header-right-group">
-        <!-- RFQ Get a Custom Quote Button -->
-        <button type="button" id="rfqOpenBtn" onclick="openRfqModal(null, true)"
-          style="display:inline-flex; align-items:center; gap:7px; background:var(--primary-color,#f05a29); color:#fff; font-family:var(--font-sans); font-size:13px; font-weight:700; padding:9px 18px; border:none; border-radius:8px; cursor:pointer; white-space:nowrap; transition:background .2s,transform .15s;"
-          onmouseover="this.style.background='#d8481b'; this.style.transform='translateY(-1px)'"
-          onmouseout="this.style.background='#f05a29'; this.style.transform='translateY(0)'">
-          <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Get a Custom Quote
-        </button>
-
-        <div class="header-actions">
-          <!-- Ship to / Language / Currency Popover Wrapper -->
-          <?php /*
+            <div class="header-actions">
+              <!-- Ship to / Language / Currency Popover Wrapper -->
+              <?php /*
 <div class="ship-to-popover-wrapper">
 <button type="button" class="ship-to-trigger-btn" onclick="toggleShipToPopover(event)" id="shipToTriggerBtn">
 <span id="triggerLangText">EN</span> - <span id="triggerCurrText">USD</span>
 <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
- stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
- style="margin-left:3px; display:inline-block; vertical-align:middle;">
- <path d="M6 9l6 6 6-6" />
+stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+style="margin-left:3px; display:inline-block; vertical-align:middle;">
+<path d="M6 9l6 6 6-6" />
 </svg>
 </button>
 
 <!-- Popover Dropdown Menu -->
 <div class="ship-to-popover-menu" id="shipToPopoverMenu">
 <div class="popover-field-group">
- <label class="popover-label">Ship to:</label>
- <select id="popoverCountrySelect" class="popover-select" onchange="onShipToCountryChange(this.value)">
-   <option value="US">🇺🇸 United States</option>
-   <option value="IN">🇮🇳 India</option>
-   <option value="GB">🇬🇧 United Kingdom</option>
-   <option value="EU">🇪🇺 European Union</option>
-   <option value="CA">🇨🇦 Canada</option>
-   <option value="AU">🇦🇺 Australia</option>
- </select>
+<label class="popover-label">Ship to:</label>
+<select id="popoverCountrySelect" class="popover-select" onchange="onShipToCountryChange(this.value)">
+<option value="US">🇺🇸 United States</option>
+<option value="IN">🇮🇳 India</option>
+<option value="GB">🇬🇧 United Kingdom</option>
+<option value="EU">🇪🇺 European Union</option>
+<option value="CA">🇨🇦 Canada</option>
+<option value="AU">🇦🇺 Australia</option>
+</select>
 </div>
 
 <div class="popover-field-group">
- <label class="popover-label">Language:</label>
- <select id="popoverLanguageSelect" class="popover-select" onchange="onLanguageChange(this.value)">
-   <option value="EN">English</option>
-   <option value="HI">Hindi</option>
-   <option value="ES">Spanish</option>
-   <option value="FR">French</option>
-   <option value="DE">German</option>
- </select>
+<label class="popover-label">Language:</label>
+<select id="popoverLanguageSelect" class="popover-select" onchange="onLanguageChange(this.value)">
+<option value="EN">English</option>
+<option value="HI">Hindi</option>
+<option value="ES">Spanish</option>
+<option value="FR">French</option>
+<option value="DE">German</option>
+</select>
 </div>
 
 <div class="popover-field-group">
- <label class="popover-label">Currency:</label>
- <select id="popoverCurrencySelect" class="popover-select">
-   <option value="USD">USD ($)</option>
-   <option value="INR">INR (₹)</option>
-   <option value="GBP">GBP (£)</option>
-   <option value="EUR">EUR (€)</option>
-   <option value="CAD">CAD ($)</option>
-   <option value="AUD">AUD ($)</option>
- </select>
+<label class="popover-label">Currency:</label>
+<select id="popoverCurrencySelect" class="popover-select">
+<option value="USD">USD ($)</option>
+<option value="INR">INR (₹)</option>
+<option value="GBP">GBP (£)</option>
+<option value="EUR">EUR (€)</option>
+<option value="CAD">CAD ($)</option>
+<option value="AUD">AUD ($)</option>
+</select>
 </div>
 
 <button type="button" class="btn-save-popover" onclick="saveShipToPreference()">Save</button>
@@ -351,99 +353,100 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 </div>
 */ ?>
 
-          <a href="<?= url('account') ?>" class="header-icon-item" title="Account">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          </a>
-          <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-            </svg>
-            <div class="cart-pill-count" id="headerWishlistCount"
-              style="display:<?= $initialWishlistCount > 0 ? 'flex' : 'none' ?>;">
-              <?= $initialWishlistCount ?>
-            </div>
-          </a>
-          <button type="button" onclick="openCartDrawer()" class="header-icon-item cursor-pointer" title="Cart">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-            </svg>
-            <div class="cart-pill-count" id="headerCartCount"
-              style="display:<?= $initialCartCount > 0 ? 'flex' : 'none' ?>;"><?= $initialCartCount ?></div>
-          </button>
-          <?php /*
+              <a href="<?= url('account') ?>" class="header-icon-item" title="Account">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </a>
+              <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <div class="cart-pill-count" id="headerWishlistCount"
+                  style="display:<?= $initialWishlistCount > 0 ? 'flex' : 'none' ?>;">
+                  <?= $initialWishlistCount ?>
+                </div>
+              </a>
+              <button type="button" onclick="openCartDrawer()" class="header-icon-item cursor-pointer" title="Cart">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                </svg>
+                <div class="cart-pill-count" id="headerCartCount"
+                  style="display:<?= $initialCartCount > 0 ? 'flex' : 'none' ?>;"><?= $initialCartCount ?></div>
+              </button>
+              <?php /*
 <a href="<?= url('inquiry') ?>" class="header-icon-item" title="My Inquiry">
 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
- d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
 </svg>
 <div class="cart-pill-count" id="headerInquiryCount" style="background:#f05a29; display:none;">0</div>
 </a>
 */ ?>
-        </div>
-      </div>
-    </div>
-
-    <!-- Category Sub-Nav Bar (Fully Database Driven) -->
-    <?php
-    $navModel = new \App\Models\NavLink();
-    $dynamicNavTree = $navModel->getTree(true); // Fetch active links (is_active = 1) ordered by sort_order ASC
-    $currentUri = trim($_SERVER['REQUEST_URI'] ?? '', '/');
-    ?>
-    <nav class="nav-categories-bar">
-      <div class="nav-categories-inner">
-        <?php foreach ($dynamicNavTree as $navItem): ?>
-          <?php
-          $cleanPath = ltrim($navItem['url'], '/');
-          $targetUrl = url($cleanPath);
-          $hasChildren = !empty($navItem['children']) || $navItem['type'] === 'dropdown';
-          $targetAttr = (!empty($navItem['open_in_new_tab']) && (str_starts_with($navItem['url'], 'http://') || str_starts_with($navItem['url'], 'https://'))) ? 'target="_blank" rel="noopener"' : '';
-
-          // Determine active tab class
-          $isActiveClass = '';
-          if (($navItem['url'] === '/' || $navItem['url'] === '') && ($currentUri === '' || str_contains($currentUri, 'importwala/index.php'))) {
-            $isActiveClass = 'active';
-          } elseif (!empty($cleanPath) && str_contains($currentUri, $cleanPath)) {
-            $isActiveClass = 'active';
-          }
-          ?>
-
-          <div class="nav-item-dropdown-wrapper <?= $hasChildren ? 'has-dropdown' : '' ?>">
-            <a href="<?= $targetUrl ?>" class="nav-category-link <?= $isActiveClass ?>" <?= $targetAttr ?>>
-              <?= htmlspecialchars($navItem['label']) ?>
-              <?php if ($hasChildren): ?>
-                <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
-                  style="margin-left:3px; display:inline-block; vertical-align:middle;">
-                  <path d="M6 9l6 6 6-6" />
-                </svg>
-              <?php endif; ?>
-            </a>
-
-            <?php if (!empty($navItem['children'])): ?>
-              <div class="nav-sub-dropdown-menu">
-                <?php foreach ($navItem['children'] as $childItem): ?>
-                  <?php
-                  $childCleanPath = ltrim($childItem['url'], '/');
-                  $childUrl = url($childCleanPath);
-                  $childTargetAttr = (!empty($childItem['open_in_new_tab']) && (str_starts_with($childItem['url'], 'http://') || str_starts_with($childItem['url'], 'https://'))) ? 'target="_blank" rel="noopener"' : '';
-                  ?>
-                  <a href="<?= $childUrl ?>" class="nav-sub-dropdown-item" <?= $childTargetAttr ?>>
-                    <?= htmlspecialchars($childItem['label']) ?>
-                  </a>
-                <?php endforeach; ?>
-              </div>
-            <?php endif; ?>
+            </div>
           </div>
-        <?php endforeach; ?>
-      </div>
-    </nav>
-  </header>
-  </div>
+        </div>
+
+        <!-- Category Sub-Nav Bar (Fully Database Driven) -->
+        <?php
+        $navModel = new \App\Models\NavLink();
+        $dynamicNavTree = $navModel->getTree(true); // Fetch active links (is_active = 1) ordered by sort_order ASC
+        $currentUri = trim($_SERVER['REQUEST_URI'] ?? '', '/');
+        ?>
+        <nav class="nav-categories-bar">
+          <div class="nav-categories-inner">
+            <?php foreach ($dynamicNavTree as $navItem): ?>
+              <?php
+              $cleanPath = ltrim($navItem['url'], '/');
+              $targetUrl = url($cleanPath);
+              $hasChildren = !empty($navItem['children']) || $navItem['type'] === 'dropdown';
+              $targetAttr = (!empty($navItem['open_in_new_tab']) && (str_starts_with($navItem['url'], 'http://') || str_starts_with($navItem['url'], 'https://'))) ? 'target="_blank" rel="noopener"' : '';
+
+              // Determine active tab class
+              $isActiveClass = '';
+              if (($navItem['url'] === '/' || $navItem['url'] === '') && ($currentUri === '' || str_contains($currentUri, 'importwala/index.php'))) {
+                $isActiveClass = 'active';
+              } elseif (!empty($cleanPath) && str_contains($currentUri, $cleanPath)) {
+                $isActiveClass = 'active';
+              }
+              ?>
+
+              <div class="nav-item-dropdown-wrapper <?= $hasChildren ? 'has-dropdown' : '' ?>">
+                <a href="<?= $targetUrl ?>" class="nav-category-link <?= $isActiveClass ?>" <?= $targetAttr ?>>
+                  <?= htmlspecialchars($navItem['label']) ?>
+                  <?php if ($hasChildren): ?>
+                    <svg class="dropdown-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                      style="margin-left:3px; display:inline-block; vertical-align:middle;">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  <?php endif; ?>
+                </a>
+
+                <?php if (!empty($navItem['children'])): ?>
+                  <div class="nav-sub-dropdown-menu">
+                    <?php foreach ($navItem['children'] as $childItem): ?>
+                      <?php
+                      $childCleanPath = ltrim($childItem['url'], '/');
+                      $childUrl = url($childCleanPath);
+                      $childTargetAttr = (!empty($childItem['open_in_new_tab']) && (str_starts_with($childItem['url'], 'http://') || str_starts_with($childItem['url'], 'https://'))) ? 'target="_blank" rel="noopener"' : '';
+                      ?>
+                      <a href="<?= $childUrl ?>" class="nav-sub-dropdown-item" <?= $childTargetAttr ?>>
+                        <?= htmlspecialchars($childItem['label']) ?>
+                      </a>
+                    <?php endforeach; ?>
+                  </div>
+                <?php endif; ?>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        </nav>
+      </header>
+    </div>
+  <?php endif; ?>
   <div id="topHeaderSpacer" style="display:none;"></div>
 
   <!-- Mobile Slide-Out Navigation Drawer -->
@@ -453,18 +456,27 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         <div class="mobile-drawer-title">
           <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" style="height: 24px; width: auto;">
         </div>
-        <button type="button" class="mobile-drawer-close-btn" onclick="closeMobileNavDrawer()" aria-label="Close Menu">✕</button>
+        <button type="button" class="mobile-drawer-close-btn" onclick="closeMobileNavDrawer()"
+          aria-label="Close Menu">✕</button>
       </div>
       <div class="mobile-drawer-body">
         <div class="mobile-drawer-section-title">Navigation</div>
         <ul class="mobile-drawer-nav-list">
-          <li class="mobile-drawer-nav-item"><a href="<?= url('') ?>" class="<?= ($currentUri === '' || str_contains($currentUri, 'importwala/index.php')) ? 'active' : '' ?>">Home</a></li>
-          <li class="mobile-drawer-nav-item"><a href="<?= url('catalog') ?>" class="<?= str_contains($currentUri, 'catalog') ? 'active' : '' ?>">All Products / Catalog</a></li>
-          <li class="mobile-drawer-nav-item"><a href="<?= url('categories') ?>" class="<?= str_contains($currentUri, 'categories') ? 'active' : '' ?>">All Categories</a></li>
-          <li class="mobile-drawer-nav-item"><a href="<?= url('factories') ?>" class="<?= str_contains($currentUri, 'factories') ? 'active' : '' ?>">Verified Factories</a></li>
-          <li class="mobile-drawer-nav-item"><a href="<?= url('wishlist') ?>" class="<?= str_contains($currentUri, 'wishlist') ? 'active' : '' ?>">My Wishlist</a></li>
-          <li class="mobile-drawer-nav-item"><a href="<?= url('inquiry') ?>" class="<?= str_contains($currentUri, 'inquiry') ? 'active' : '' ?>">My Inquiries / Custom Quotes</a></li>
-          <li class="mobile-drawer-nav-item"><a href="<?= url('account') ?>" class="<?= str_contains($currentUri, 'account') ? 'active' : '' ?>">My Account</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('') ?>"
+              class="<?= ($currentUri === '' || str_contains($currentUri, 'importwala/index.php')) ? 'active' : '' ?>">Home</a>
+          </li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('catalog') ?>"
+              class="<?= str_contains($currentUri, 'catalog') ? 'active' : '' ?>">All Products / Catalog</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('categories') ?>"
+              class="<?= str_contains($currentUri, 'categories') ? 'active' : '' ?>">All Categories</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('factories') ?>"
+              class="<?= str_contains($currentUri, 'factories') ? 'active' : '' ?>">Verified Factories</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('wishlist') ?>"
+              class="<?= str_contains($currentUri, 'wishlist') ? 'active' : '' ?>">My Wishlist</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('inquiry') ?>"
+              class="<?= str_contains($currentUri, 'inquiry') ? 'active' : '' ?>">My Inquiries / Custom Quotes</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('account') ?>"
+              class="<?= str_contains($currentUri, 'account') ? 'active' : '' ?>">My Account</a></li>
         </ul>
 
         <?php if (!empty($dynamicNavTree)): ?>
@@ -487,11 +499,13 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           <li class="mobile-drawer-nav-item"><a href="<?= url('support') ?>">Help Center & FAQs</a></li>
           <li class="mobile-drawer-nav-item"><a href="<?= url('about-us') ?>">About ImportWale</a></li>
           <li class="mobile-drawer-nav-item"><a href="<?= url('contact-us') ?>">Contact Support</a></li>
-          <li class="mobile-drawer-nav-item"><a href="https://wa.me/919540317079" target="_blank" rel="noopener">WhatsApp (+91 95403 17079)</a></li>
+          <li class="mobile-drawer-nav-item"><a href="https://wa.me/919540317079" target="_blank"
+              rel="noopener">WhatsApp (+91 95403 17079)</a></li>
         </ul>
 
         <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #E2E8F0;">
-          <button type="button" onclick="closeMobileNavDrawer(); openRfqModal(null, true);" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #F05A29; color: #fff; font-size: 14px; font-weight: 700; padding: 12px; border-radius: 10px; border: none; cursor: pointer;">
+          <button type="button" onclick="closeMobileNavDrawer(); openRfqModal(null, true);"
+            style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: #F05A29; color: #fff; font-size: 14px; font-weight: 700; padding: 12px; border-radius: 10px; border: none; cursor: pointer;">
             Get a Custom Quote
           </button>
         </div>
@@ -528,198 +542,200 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
   </div>
 
   <!-- Footer -->
-  <footer class="footer-container">
-    <!-- Top B2B Trust & Newsletter Strip -->
-    <div class="footer-trust-strip">
-      <div class="footer-trust-inner">
-        <div class="footer-trust-item">
-          <div class="footer-trust-icon">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-          </div>
-          <div>
-            <div class="footer-trust-title">Trade Protection</div>
-            <div class="footer-trust-desc">100% Escrow & Order Protection</div>
-          </div>
-        </div>
-        <div class="footer-trust-item">
-          <div class="footer-trust-icon">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1" />
-            </svg>
-          </div>
-          <div>
-            <div class="footer-trust-title">Verified Factories</div>
-            <div class="footer-trust-desc">Direct Global Manufacturer Sourced</div>
-          </div>
-        </div>
-        <div class="footer-trust-item">
-          <div class="footer-trust-icon">
-            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-          </div>
-          <div>
-            <div class="footer-trust-title">Express Freight</div>
-            <div class="footer-trust-desc">Air & Sea Customs Cleared Shipping</div>
-          </div>
-        </div>
-
-        <div class="footer-newsletter-box">
-          <form action="#" method="POST"
-            onsubmit="event.preventDefault(); alert('Thank you for subscribing to ImportWale Wholesale price drop alerts!');"
-            class="footer-newsletter-form">
-            <input type="email" placeholder="Enter business email for price drops" required
-              class="footer-newsletter-input">
-            <button type="submit" class="footer-newsletter-btn">Subscribe</button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer Main Columns -->
-    <div class="footer-main-wrapper">
-      <div class="footer-inner">
-        <!-- Brand Column -->
-        <div class="footer-col">
-          <a href="<?= url('') ?>" class="footer-brand-logo">
-            <div class="footer-logo-card">
-              <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" class="footer-logo-img">
+  <?php if (empty($hideGlobalFooter)): ?>
+    <footer class="footer-container">
+      <!-- Top B2B Trust & Newsletter Strip -->
+      <div class="footer-trust-strip">
+        <div class="footer-trust-inner">
+          <div class="footer-trust-item">
+            <div class="footer-trust-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
             </div>
-
-          </a>
-          <p class="footer-desc">
-            World-Scale B2B Wholesale Platform connecting international buyers directly with verified global
-            manufacturers and direct factory pricing.
-          </p>
-          <div class="footer-contact-list">
-            <a href="mailto:support@importwale.com" class="footer-contact-item">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <span>support@importwale.com</span>
-            </a>
-            <a href="https://wa.me/919540317079" target="_blank" rel="noopener"
-              class="footer-contact-item whatsapp-link">
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-              </svg>
-              <span>Phone/WhatsApp: +91 95403 17079</span>
-            </a>
+            <div>
+              <div class="footer-trust-title">Trade Protection</div>
+              <div class="footer-trust-desc">100% Escrow & Order Protection</div>
+            </div>
           </div>
-          <div class="footer-social-links">
-            <a href="#" class="footer-social-btn" aria-label="Facebook" title="Facebook">
-              <svg viewBox="0 0 24 24">
-                <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+          <div class="footer-trust-item">
+            <div class="footer-trust-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5m0 0h4m-4 0V11m0 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1" />
               </svg>
-            </a>
-            <a href="#" class="footer-social-btn" aria-label="Instagram" title="Instagram">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
-              </svg>
-            </a>
-            <a href="#" class="footer-social-btn" aria-label="LinkedIn" title="LinkedIn">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14m-.5 15.5v-5.3a3.26 3.26 0 00-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 011.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.72a1.47 1.47 0 100 2.94 1.47 1.47 0 000-2.94z" />
-              </svg>
-            </a>
-            <a href="https://wa.me/919540317079" target="_blank" rel="noopener" class="footer-social-btn"
-              aria-label="WhatsApp" title="WhatsApp">
-              <svg viewBox="0 0 24 24">
-                <path
-                  d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
-              </svg>
-            </a>
+            </div>
+            <div>
+              <div class="footer-trust-title">Verified Factories</div>
+              <div class="footer-trust-desc">Direct Global Manufacturer Sourced</div>
+            </div>
           </div>
-        </div>
+          <div class="footer-trust-item">
+            <div class="footer-trust-icon">
+              <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            </div>
+            <div>
+              <div class="footer-trust-title">Express Freight</div>
+              <div class="footer-trust-desc">Air & Sea Customs Cleared Shipping</div>
+            </div>
+          </div>
 
-        <!-- Support & Help -->
-        <div class="footer-col">
-          <h4>Support & Help</h4>
-          <ul>
-            <li><a href="<?= url('support') ?>">Help Center & FAQs</a></li>
-            <li><a href="<?= url('contact-us') ?>">Contact Support</a></li>
-            <li><a href="<?= url('shipping-policy') ?>">Shipping & Delivery Policy</a></li>
-            <li><a href="<?= url('refund-policy') ?>">Return, Replacement & Refund Policy</a></li>
-            <li><a href="<?= url('cancellation-policy') ?>">Cancellation & Order Change Policy</a></li>
-          </ul>
-        </div>
-
-        <!-- Company & Legal -->
-        <div class="footer-col">
-          <h4>Company & Legal</h4>
-          <ul>
-            <li><a href="<?= url('') ?>">Home</a></li>
-            <li><a href="<?= url('about-us') ?>">About ImportWale</a></li>
-            <li><a href="<?= url('terms-and-conditions') ?>">Terms & Conditions</a></li>
-            <li><a href="<?= url('privacy-policy') ?>">Privacy Policy</a></li>
-            <li><a href="<?= url('payment-policy') ?>">Payment Policy</a></li>
-          </ul>
+          <div class="footer-newsletter-box">
+            <form action="#" method="POST"
+              onsubmit="event.preventDefault(); alert('Thank you for subscribing to ImportWale Wholesale price drop alerts!');"
+              class="footer-newsletter-form">
+              <input type="email" placeholder="Enter business email for price drops" required
+                class="footer-newsletter-input">
+              <button type="submit" class="footer-newsletter-btn">Subscribe</button>
+            </form>
+          </div>
         </div>
       </div>
 
-      <!-- Subtle Horizontal Divider -->
-      <div class="footer-divider"></div>
+      <!-- Footer Main Columns -->
+      <div class="footer-main-wrapper">
+        <div class="footer-inner">
+          <!-- Brand Column -->
+          <div class="footer-col">
+            <a href="<?= url('') ?>" class="footer-brand-logo">
+              <div class="footer-logo-card">
+                <img src="<?= asset('images/importwale-logo.png') ?>" alt="IMPORTWALE" class="footer-logo-img">
+              </div>
 
-      <!-- Bottom Bar -->
-      <div class="footer-bottom">
-        <div class="footer-bottom-copy">
-          &copy; <?= date('Y') ?> <strong>ImportWale Wholesale Inc.</strong> All rights reserved. High-Scale B2B
-          Architecture.
+            </a>
+            <p class="footer-desc">
+              World-Scale B2B Wholesale Platform connecting international buyers directly with verified global
+              manufacturers and direct factory pricing.
+            </p>
+            <div class="footer-contact-list">
+              <a href="mailto:support@importwale.com" class="footer-contact-item">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <span>support@importwale.com</span>
+              </a>
+              <a href="https://wa.me/919540317079" target="_blank" rel="noopener"
+                class="footer-contact-item whatsapp-link">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+                <span>Phone/WhatsApp: +91 95403 17079</span>
+              </a>
+            </div>
+            <div class="footer-social-links">
+              <a href="#" class="footer-social-btn" aria-label="Facebook" title="Facebook">
+                <svg viewBox="0 0 24 24">
+                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+                </svg>
+              </a>
+              <a href="#" class="footer-social-btn" aria-label="Instagram" title="Instagram">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                </svg>
+              </a>
+              <a href="#" class="footer-social-btn" aria-label="LinkedIn" title="LinkedIn">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14m-.5 15.5v-5.3a3.26 3.26 0 00-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 011.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.72a1.47 1.47 0 100 2.94 1.47 1.47 0 000-2.94z" />
+                </svg>
+              </a>
+              <a href="https://wa.me/919540317079" target="_blank" rel="noopener" class="footer-social-btn"
+                aria-label="WhatsApp" title="WhatsApp">
+                <svg viewBox="0 0 24 24">
+                  <path
+                    d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          <!-- Support & Help -->
+          <div class="footer-col">
+            <h4>Support & Help</h4>
+            <ul>
+              <li><a href="<?= url('support') ?>">Help Center & FAQs</a></li>
+              <li><a href="<?= url('contact-us') ?>">Contact Support</a></li>
+              <li><a href="<?= url('shipping-policy') ?>">Shipping & Delivery Policy</a></li>
+              <li><a href="<?= url('refund-policy') ?>">Return, Replacement & Refund Policy</a></li>
+              <li><a href="<?= url('cancellation-policy') ?>">Cancellation & Order Change Policy</a></li>
+            </ul>
+          </div>
+
+          <!-- Company & Legal -->
+          <div class="footer-col">
+            <h4>Company & Legal</h4>
+            <ul>
+              <li><a href="<?= url('') ?>">Home</a></li>
+              <li><a href="<?= url('about-us') ?>">About ImportWale</a></li>
+              <li><a href="<?= url('terms-and-conditions') ?>">Terms & Conditions</a></li>
+              <li><a href="<?= url('privacy-policy') ?>">Privacy Policy</a></li>
+              <li><a href="<?= url('payment-policy') ?>">Payment Policy</a></li>
+            </ul>
+          </div>
         </div>
 
-        <div class="footer-payment-badges">
-          <div class="payment-badge" title="Verified B2B Trade Protection">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="#FFF2ED"
-                stroke="#f05a29" stroke-width="2" stroke-linejoin="round" />
-              <path d="M9 11.5l2 2 4-4" stroke="#f05a29" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round" />
-            </svg>
-            <span>Trade Protection</span>
+        <!-- Subtle Horizontal Divider -->
+        <div class="footer-divider"></div>
+
+        <!-- Bottom Bar -->
+        <div class="footer-bottom">
+          <div class="footer-bottom-copy">
+            &copy; <?= date('Y') ?> <strong>ImportWale Wholesale Inc.</strong> All rights reserved. High-Scale B2B
+            Architecture.
           </div>
-          <div class="payment-badge" title="Razorpay Secure Payment Gateway">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M22.43 4.47L10.3 22H5.06l7.85-11.41L7.54 4.47h14.89z" fill="#0C2340" />
-              <path d="M15.42 4.47l-7.88 11.43L4 12.35l6.54-7.88h4.88z" fill="#0284C7" />
-            </svg>
-            <span>Razorpay Gateway</span>
-          </div>
-          <div class="payment-badge" title="UPI Instant Direct Payments">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M17.4 3.6L12.9 12h3.4l-4.5 8.4 9-9.6h-3.4l4.5-7.2z" fill="#059669" />
-              <path d="M6.6 3.6L2.1 12h3.4l-4.5 8.4 9-9.6H5.5l4.5-7.2z" fill="#0284C7" />
-            </svg>
-            <span>UPI Instant</span>
-          </div>
-          <div class="payment-badge" title="Mastercard Accepted">
-            <svg width="18" height="12" viewBox="0 0 24 16" fill="none">
-              <circle cx="7" cy="8" r="7" fill="#EB001B" />
-              <circle cx="17" cy="8" r="7" fill="#F79E1B" />
-              <path d="M12 2.7A6.97 6.97 0 009.6 8c0 2.2.9 4.2 2.4 5.3A6.97 6.97 0 0014.4 8c0-2.2-.9-4.2-2.4-5.3z"
-                fill="#FF5F00" />
-            </svg>
-            <span>Mastercard</span>
-          </div>
-          <div class="payment-badge" title="Direct Bank Wire Transfer">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
-            </svg>
-            <span>Bank Wire</span>
+
+          <div class="footer-payment-badges">
+            <div class="payment-badge" title="Verified B2B Trade Protection">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" fill="#FFF2ED"
+                  stroke="#f05a29" stroke-width="2" stroke-linejoin="round" />
+                <path d="M9 11.5l2 2 4-4" stroke="#f05a29" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+              </svg>
+              <span>Trade Protection</span>
+            </div>
+            <div class="payment-badge" title="Razorpay Secure Payment Gateway">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M22.43 4.47L10.3 22H5.06l7.85-11.41L7.54 4.47h14.89z" fill="#0C2340" />
+                <path d="M15.42 4.47l-7.88 11.43L4 12.35l6.54-7.88h4.88z" fill="#0284C7" />
+              </svg>
+              <span>Razorpay Gateway</span>
+            </div>
+            <div class="payment-badge" title="UPI Instant Direct Payments">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M17.4 3.6L12.9 12h3.4l-4.5 8.4 9-9.6h-3.4l4.5-7.2z" fill="#059669" />
+                <path d="M6.6 3.6L2.1 12h3.4l-4.5 8.4 9-9.6H5.5l4.5-7.2z" fill="#0284C7" />
+              </svg>
+              <span>UPI Instant</span>
+            </div>
+            <div class="payment-badge" title="Mastercard Accepted">
+              <svg width="18" height="12" viewBox="0 0 24 16" fill="none">
+                <circle cx="7" cy="8" r="7" fill="#EB001B" />
+                <circle cx="17" cy="8" r="7" fill="#F79E1B" />
+                <path d="M12 2.7A6.97 6.97 0 009.6 8c0 2.2.9 4.2 2.4 5.3A6.97 6.97 0 0014.4 8c0-2.2-.9-4.2-2.4-5.3z"
+                  fill="#FF5F00" />
+              </svg>
+              <span>Mastercard</span>
+            </div>
+            <div class="payment-badge" title="Direct Bank Wire Transfer">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3" />
+              </svg>
+              <span>Bank Wire</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  </footer>
+    </footer>
+  <?php endif; ?>
 
   <!-- Floating Need Help Widget -->
   <a href="<?= url('support') ?>" class="floating-need-help-btn" id="needHelpBtn">
@@ -728,49 +744,66 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
   <!-- Fixed App-Style Bottom Navigation Bar (Mobile Only) -->
   <!-- Fixed App-Style Bottom Navigation Bar (Mobile Only: 5 Items - Category, Shop, Factory, Inquiry, Me) -->
-  <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Mobile Navigation" style="background: #ffffff !important; background-color: #ffffff !important; bottom: 0 !important; z-index: 999999 !important; border-top: 1px solid #e2e8f0 !important;">
-    
-    <!-- Item 1: Category -->
-    <a href="<?= url('categories') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'categories') ? 'active' : '' ?>" title="Category">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-      </svg>
-      <span>Category</span>
-    </a>
+  <?php if (empty($hideMobileBottomNav)): ?>
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Mobile Navigation"
+      style="background: #ffffff !important; background-color: #ffffff !important; bottom: 0 !important; z-index: 999999 !important; border-top: 1px solid #e2e8f0 !important;">
 
-    <!-- Item 2: Shop -->
-    <a href="<?= url('shop') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'shop') ? 'active' : '' ?>" title="Shop">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.25a.75.75 0 01-.75-.75V8.25m18 0V20.25a.75.75 0 01-.75.75H13.5M2.25 8.25l9.75-5.25 9.75 5.25M2.25 8.25v.75H21.75v-.75" />
-      </svg>
-      <span>Shop</span>
-    </a>
+      <!-- Item 1: Category -->
+      <a href="<?= url('categories') ?>"
+        class="mobile-nav-item <?= str_contains($currentUri, 'categories') ? 'active' : '' ?>" title="Category">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+        </svg>
+        <span>Category</span>
+      </a>
 
-    <!-- Item 3: Factory -->
-    <a href="<?= url('factories') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'factories') || str_contains($currentUri, 'factory') ? 'active' : '' ?>" title="Factory">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5l-6-3.75v17.25m-4.5-12h.008v.008H9V9zm0 3.75h.008v.008H9v-.008zm0 3.75h.008v.008H9v-.008zm-4.5-7.5h.008v.008H4.5V9zm0 3.75h.008v.008H4.5v-.008zm0 3.75h.008v.008H4.5v-.008z" />
-      </svg>
-      <span>Factory</span>
-    </a>
+      <!-- Item 2: Shop -->
+      <a href="<?= url('shop') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'shop') ? 'active' : '' ?>"
+        title="Shop">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.25a.75.75 0 01-.75-.75V8.25m18 0V20.25a.75.75 0 01-.75.75H13.5M2.25 8.25l9.75-5.25 9.75 5.25M2.25 8.25v.75H21.75v-.75" />
+        </svg>
+        <span>Shop</span>
+      </a>
 
-    <!-- Item 4: Request Quote (Opens RFQ Modal Popup) -->
-    <button type="button" onclick="if (typeof openRfqWithProducts === 'function') { openRfqWithProducts(); } else if (typeof openRfqModal === 'function') { openRfqModal(null, true); }" class="mobile-nav-item border-0 bg-transparent cursor-pointer" title="Request Quote" style="background: none; border: none; outline: none; padding: 0;">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-      <span>Get Price</span>
-    </button>
+      <!-- Item 3: Factory -->
+      <a href="<?= url('factories') ?>"
+        class="mobile-nav-item <?= str_contains($currentUri, 'factories') || str_contains($currentUri, 'factory') ? 'active' : '' ?>"
+        title="Factory">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5l-6-3.75v17.25m-4.5-12h.008v.008H9V9zm0 3.75h.008v.008H9v-.008zm0 3.75h.008v.008H9v-.008zm-4.5-7.5h.008v.008H4.5V9zm0 3.75h.008v.008H4.5v-.008zm0 3.75h.008v.008H4.5v-.008z" />
+        </svg>
+        <span>Factory</span>
+      </a>
 
-    <!-- Item 5: Me / Account -->
-    <a href="<?= url('account') ?>" class="mobile-nav-item <?= str_contains($currentUri, 'account') || str_contains($currentUri, 'login') ? 'active' : '' ?>" title="Me">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-      </svg>
-      <span>Me</span>
-    </a>
+      <!-- Item 4: Request Quote (Opens RFQ Modal Popup) -->
+      <button type="button"
+        onclick="if (typeof openRfqWithProducts === 'function') { openRfqWithProducts(); } else if (typeof openRfqModal === 'function') { openRfqModal(null, true); }"
+        class="mobile-nav-item border-0 bg-transparent cursor-pointer" title="Request Quote"
+        style="background: none; border: none; outline: none; padding: 0;">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>Get Price</span>
+      </button>
 
-  </nav>
+      <!-- Item 5: Me / Account -->
+      <a href="<?= url('account') ?>"
+        class="mobile-nav-item <?= str_contains($currentUri, 'account') || str_contains($currentUri, 'login') ? 'active' : '' ?>"
+        title="Me">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+        </svg>
+        <span>Me</span>
+      </a>
+
+    </nav>
+  <?php endif; ?>
 
   <script>
     function openMobileNavDrawer() {
@@ -1506,6 +1539,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       .rfq-step-tag {
         display: none;
       }
+
       .rfq-step-title {
         font-size: 10px;
       }
@@ -1632,6 +1666,7 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
     }
 
     @media (max-width: 540px) {
+
       .rfq-g2,
       .rfq-g3 {
         grid-template-columns: 1fr;
@@ -2109,7 +2144,8 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
               <div class="flex items-start gap-3.5">
                 <!-- Left Thumbnail Image -->
                 <div class="shrink-0 w-16 h-16 sm:w-20 sm:h-20">
-                  <div class="relative w-full h-full rounded-xl bg-white border border-slate-200 overflow-hidden shadow-2xs">
+                  <div
+                    class="relative w-full h-full rounded-xl bg-white border border-slate-200 overflow-hidden shadow-2xs">
                     <img id="rfqProductMainImg" src="" alt="Product Image" class="w-full h-full object-cover">
                   </div>
                 </div>
@@ -2117,12 +2153,15 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
                 <!-- Right Metadata -->
                 <div class="flex-1 min-w-0">
                   <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">SELECTED ITEM</div>
-                  <h3 id="rfqProductNameDisplay" class="text-xs sm:text-sm font-bold text-slate-900 leading-snug break-words">Loading…</h3>
+                  <h3 id="rfqProductNameDisplay"
+                    class="text-xs sm:text-sm font-bold text-slate-900 leading-snug break-words">Loading…</h3>
 
                   <div class="flex items-center gap-2 text-xs font-semibold text-slate-600 mt-1">
-                    <span>Price: <strong id="rfqProductPriceDisplay" class="text-[#f05a29] font-bold text-sm">₹0.00</strong></span>
+                    <span>Price: <strong id="rfqProductPriceDisplay"
+                        class="text-[#f05a29] font-bold text-sm">₹0.00</strong></span>
                     <span>•</span>
-                    <span><strong id="rfqProductVarCountDisplay" class="text-slate-900 font-bold">0</strong> Variants</span>
+                    <span><strong id="rfqProductVarCountDisplay" class="text-slate-900 font-bold">0</strong>
+                      Variants</span>
                     <span class="hidden" id="rfqProductSkuDisplay"></span>
                     <span class="hidden" id="rfqProductMoqDisplay"></span>
                   </div>
@@ -2132,7 +2171,8 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
               <!-- Variant List Box -->
               <div class="mt-3.5 pt-3 border-t border-slate-200">
                 <div class="flex items-center justify-between mb-2">
-                  <label class="text-xs font-bold text-slate-800">Variant-wise requirements <span class="text-red-500">*</span></label>
+                  <label class="text-xs font-bold text-slate-800">Variant-wise requirements <span
+                      class="text-red-500">*</span></label>
                   <span class="text-[11px] text-slate-500 font-medium">Select variants &amp; add qty</span>
                 </div>
 
@@ -2154,8 +2194,10 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
                     </button>
                     <button type="button" onclick="rfqToggleChangeProductSearch()"
                       class="inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 shadow-2xs transition cursor-pointer">
-                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                       Change Product
                     </button>
@@ -2262,12 +2304,14 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
               <div class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                 <span class="w-6 h-6 rounded-lg bg-orange-50 text-[#f05a29] flex items-center justify-center shrink-0">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </span>
                 Step 2 of 3: Your Contact Details
               </div>
-              <div class="text-xs text-slate-500 font-normal mt-0.5">Please provide your contact details so our team can send your custom quote.</div>
+              <div class="text-xs text-slate-500 font-normal mt-0.5">Please provide your contact details so our team can
+                send your custom quote.</div>
             </div>
 
             <div class="rfq-g2">
@@ -2307,12 +2351,14 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
               <div class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
                 <span class="w-6 h-6 rounded-lg bg-orange-50 text-[#f05a29] flex items-center justify-center shrink-0">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </span>
                 Step 3 of 3: Business Information
               </div>
-              <div class="text-xs text-slate-500 font-normal mt-0.5">Help us understand your business requirements for better pricing recommendations.</div>
+              <div class="text-xs text-slate-500 font-normal mt-0.5">Help us understand your business requirements for
+                better pricing recommendations.</div>
             </div>
 
             <div class="rfq-g2">
@@ -3092,9 +3138,11 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
 
       <div class="grid grid-cols-2 gap-2">
         <a href="<?= url('cart') ?>"
-          class="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold text-xs rounded-xl text-center transition flex items-center justify-center">View Cart</a>
+          class="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold text-xs rounded-xl text-center transition flex items-center justify-center">View
+          Cart</a>
         <button type="button" onclick="showComingSoonModal()"
-          class="py-2.5 px-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl text-center transition shadow-xs flex items-center justify-center border-0 cursor-pointer">Checkout &rarr;</button>
+          class="py-2.5 px-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl text-center transition shadow-xs flex items-center justify-center border-0 cursor-pointer">Checkout
+          &rarr;</button>
       </div>
     </div>
   </div>
@@ -3103,8 +3151,9 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
   <div id="comingSoonModalOverlay"
     class="fixed inset-0 z-[999999] flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 hidden opacity-0 transition-opacity duration-200"
     onclick="if(event.target===this)closeComingSoonModal()">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-left space-y-4 border border-gray-200">
-      
+    <div
+      class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative text-left space-y-4 border border-gray-200">
+
       <!-- Close Button -->
       <button type="button" onclick="closeComingSoonModal()"
         class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-full hover:bg-gray-100 transition border-0 bg-transparent cursor-pointer">
@@ -3114,7 +3163,8 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       </button>
 
       <!-- Clean Header Pill Badge -->
-      <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-full font-bold text-[11px] tracking-wide uppercase border border-slate-200/80">
+      <div
+        class="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-700 rounded-full font-bold text-[11px] tracking-wide uppercase border border-slate-200/80">
         <span>B2B Wholesale Portal</span>
       </div>
 
@@ -3124,16 +3174,21 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
           Direct Online Checkout Coming Soon
         </h3>
         <p class="text-xs text-gray-600 leading-relaxed font-sans">
-          Direct payment gateway integration is currently under final deployment. In the meantime, you can submit an instant <strong>Custom Quote Request</strong> to receive a proforma invoice and priority factory dispatch.
+          Direct payment gateway integration is currently under final deployment. In the meantime, you can submit an
+          instant <strong>Custom Quote Request</strong> to receive a proforma invoice and priority factory dispatch.
         </p>
       </div>
 
       <!-- Professional B2B Guarantee Strip -->
-      <div class="bg-orange-50/60 border border-orange-200/60 rounded-xl p-3 flex items-start gap-2.5 text-xs text-gray-800">
-        <svg class="w-4 h-4 text-[#f05a29] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+      <div
+        class="bg-orange-50/60 border border-orange-200/60 rounded-xl p-3 flex items-start gap-2.5 text-xs text-gray-800">
+        <svg class="w-4 h-4 text-[#f05a29] shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
         </svg>
-        <span><strong>100% Trade Assurance:</strong> Orders placed via custom quote are protected with factory-direct pricing & escrow safety.</span>
+        <span><strong>100% Trade Assurance:</strong> Orders placed via custom quote are protected with factory-direct
+          pricing & escrow safety.</span>
       </div>
 
       <!-- Action Buttons -->
@@ -3294,11 +3349,11 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
       }
     }
 
-    window.updateHeaderCartCount = function(count) {
+    window.updateHeaderCartCount = function (count) {
       updateHeaderCartBadge(count);
     };
 
-    window.updateInquiryCountBadge = function(count) {
+    window.updateInquiryCountBadge = function (count) {
       const numCount = parseInt(count) || 0;
       const mobileBadge = document.getElementById('mobileInquiryCount');
       if (mobileBadge) {
@@ -3520,10 +3575,10 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
         }
       }, { passive: true });
 
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', function () {
         adjustTopHeaderSpacer();
       });
-      window.addEventListener('load', function() {
+      window.addEventListener('load', function () {
         adjustTopHeaderSpacer();
       });
     })();
@@ -3531,25 +3586,57 @@ $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
   <style>
     /* ===== MOBILE FOOTER GAP FIX ===== */
     @media (max-width: 767px) {
+
       /* Body ko padding-bottom NAHI dena — warna body ka background gap dikhata hai */
-      html, body {
+      html,
+      body {
         padding-bottom: 0 !important;
         background: #FAF9F6 !important;
       }
+
       /* Footer ko padding-bottom do — uski apni background fill karti hai woh space */
       footer.footer-container {
         padding: 0 0 62px 0 !important;
         margin: 0 !important;
         background: #FAF9F6 !important;
       }
-      .footer-trust-strip { display: none !important; }
-      .footer-newsletter-box { display: none !important; }
-      .footer-main-wrapper { padding: 16px 16px 0 16px !important; margin: 0 !important; }
-      .footer-inner { margin-bottom: 12px !important; gap: 16px !important; }
-      .footer-divider { margin-bottom: 10px !important; }
-      .footer-bottom { margin: 0 !important; padding: 0 !important; gap: 8px !important; }
-      .footer-bottom-copy { display: none !important; }
-      .footer-payment-badges { margin: 0 0 12px 0 !important; padding: 0 !important; }
+
+      .footer-trust-strip {
+        display: none !important;
+      }
+
+      .footer-newsletter-box {
+        display: none !important;
+      }
+
+      .footer-main-wrapper {
+        padding: 16px 16px 0 16px !important;
+        margin: 0 !important;
+      }
+
+      .footer-inner {
+        margin-bottom: 12px !important;
+        gap: 16px !important;
+      }
+
+      .footer-divider {
+        margin-bottom: 10px !important;
+      }
+
+      .footer-bottom {
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 8px !important;
+      }
+
+      .footer-bottom-copy {
+        display: none !important;
+      }
+
+      .footer-payment-badges {
+        margin: 0 0 12px 0 !important;
+        padding: 0 !important;
+      }
     }
   </style>
 </body>

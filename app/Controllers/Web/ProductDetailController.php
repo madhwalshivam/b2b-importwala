@@ -131,6 +131,8 @@ class ProductDetailController extends BaseController
             'productTiers' => $productTiers,
             'variantTiersMap' => $variantTiersMap,
             'selectedVariantCode' => $selectedVariantCode,
+            'hideGlobalHeader' => false,
+            'hideMobileBottomNav' => true,
         ]);
     }
 }

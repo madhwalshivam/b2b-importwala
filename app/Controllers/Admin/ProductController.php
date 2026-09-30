@@ -374,20 +374,25 @@ class ProductController extends Controller
         $galleryImages = $this->imageModel->getByProduct($id);
         if (!empty($product['main_image'])) {
             $mainImgVal = $product['main_image'];
-            $hasMainInGallery = false;
-            foreach ($galleryImages as $gi) {
-                if (($gi['image_url'] ?? $gi['image_path'] ?? '') === $mainImgVal) {
-                    $hasMainInGallery = true;
-                    break;
+            // Only auto-insert main image into gallery if it's already an R2 URL
+            // Never insert raw bulkflowai.com URLs — they will be cleaned by the mirror process
+            $isR2Url = strpos($mainImgVal, 'r2.dev') !== false || strpos($mainImgVal, 'cloudflare') !== false;
+            if ($isR2Url) {
+                $hasMainInGallery = false;
+                foreach ($galleryImages as $gi) {
+                    if (($gi['image_url'] ?? $gi['image_path'] ?? '') === $mainImgVal) {
+                        $hasMainInGallery = true;
+                        break;
+                    }
                 }
-            }
-            if (!$hasMainInGallery) {
-                try {
-                    $db = \App\Core\Database::getInstance();
-                    $insM = $db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, 0, 1)");
-                    $insM->execute([$id, $mainImgVal]);
-                    $galleryImages = $this->imageModel->getByProduct($id);
-                } catch (\Throwable $e) {
+                if (!$hasMainInGallery) {
+                    try {
+                        $db = \App\Core\Database::getInstance();
+                        $insM = $db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, 0, 1)");
+                        $insM->execute([$id, $mainImgVal]);
+                        $galleryImages = $this->imageModel->getByProduct($id);
+                    } catch (\Throwable $e) {
+                    }
                 }
             }
         }
@@ -644,8 +649,21 @@ class ProductController extends Controller
         $galleryUrls = trim($_POST['gallery_urls'] ?? '');
         if (!empty($galleryUrls)) {
             $lines = array_filter(array_map('trim', explode("\n", $galleryUrls)));
+            $existingImages = array_column($this->imageModel->getByProduct($id), 'image_url');
+            
+            // Map existing R2 URLs back to their source hashes if possible to prevent adding the same source twice
+            $existingHashes = [];
+            foreach ($existingImages as $eImg) {
+                $existingHashes[] = hash('sha256', $eImg);
+                if (strpos($eImg, 'r2.dev') !== false || strpos($eImg, 'cloudflare') !== false) {
+                    $mapStmt = \App\Core\Database::getInstance()->prepare("SELECT source_url_hash FROM image_mirror_map WHERE r2_url = ? LIMIT 1");
+                    $mapStmt->execute([$eImg]);
+                    if ($h = $mapStmt->fetchColumn()) $existingHashes[] = $h;
+                }
+            }
+
             foreach ($lines as $gUrl) {
-                if (!empty($gUrl)) {
+                if (!empty($gUrl) && !in_array($gUrl, $existingImages) && !in_array(hash('sha256', $gUrl), $existingHashes)) {
                     $this->imageModel->add($id, $gUrl);
                 }
             }
@@ -1559,18 +1577,24 @@ class ProductController extends Controller
         $failCount    = 0;
         $errors       = [];
 
+        // Helper to determine if a URL is an R2 URL
+        $isR2Url = function(string $url) use ($r2) {
+            return strpos($url, 'r2.dev') !== false || strpos($url, 'cloudflare') !== false;
+        };
+
         // ─ Main product image ─
         if (!empty($product['main_image'])) {
-            $r2Url = $product['main_image'];
-            if (!$r2Exists($r2Url)) {
-                $src = $findSource($r2Url, $product['main_image_source_url'] ?? null);
+            $url = $product['main_image'];
+            $needsMirror = !$isR2Url($url) || !$r2Exists($url);
+            
+            if ($needsMirror) {
+                $src = $isR2Url($url) ? $findSource($url, $product['main_image_source_url'] ?? null) : $url;
                 if ($src) {
-                    // Clear old cached entry
-                    $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$r2Url]);
+                    if ($isR2Url($url)) $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$url]);
                     $result = $mirrorService->mirrorImage($src, $sku, 'main');
                     if ($result['success']) {
                         $db->prepare("UPDATE products SET main_image = ? WHERE id = ?")->execute([$result['url'], $id]);
-                        $db->prepare("UPDATE product_images SET image_url = ? WHERE product_id = ? AND image_url = ?")->execute([$result['url'], $id, $r2Url]);
+                        $db->prepare("UPDATE product_images SET image_url = ? WHERE product_id = ? AND image_url = ?")->execute([$result['url'], $id, $url]);
                         $successCount++;
                     } else {
                         $failCount++;
@@ -1578,7 +1602,7 @@ class ProductController extends Controller
                     }
                 } else {
                     $failCount++;
-                    $errors[] = "No source URL for main image: $r2Url";
+                    $errors[] = "No source URL for main image: $url";
                 }
             }
         }
@@ -1587,12 +1611,16 @@ class ProductController extends Controller
         $stmtG = $db->prepare("SELECT id, image_url FROM product_images WHERE product_id = ?");
         $stmtG->execute([$id]);
         foreach ($stmtG->fetchAll() as $g) {
-            $r2Url = $g['image_url'];
-            if (strpos($r2Url, 'r2.dev') === false) continue;
-            if ($r2Exists($r2Url)) continue;
-            $src = $findSource($r2Url);
+            $url = $g['image_url'];
+            if (empty($url)) continue;
+            
+            $needsMirror = !$isR2Url($url) || !$r2Exists($url);
+            if (!$needsMirror) continue;
+
+            $src = $isR2Url($url) ? $findSource($url) : $url;
             if (!$src) { $failCount++; $errors[] = "No source for gallery #{$g['id']}"; continue; }
-            $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$r2Url]);
+            
+            if ($isR2Url($url)) $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$url]);
             $result = $mirrorService->mirrorImage($src, $sku, 'gallery');
             if ($result['success']) {
                 $db->prepare("UPDATE product_images SET image_url = ? WHERE id = ?")->execute([$result['url'], $g['id']]);
@@ -1604,14 +1632,22 @@ class ProductController extends Controller
         }
 
         // ─ Variant swatch images (product_colors) ─
-        $stmtC = $db->prepare("SELECT id, swatch_hex_or_image FROM product_colors WHERE product_id = ? AND swatch_hex_or_image LIKE '%r2.dev%'");
+        $stmtC = $db->prepare("SELECT id, swatch_hex_or_image FROM product_colors WHERE product_id = ?");
         $stmtC->execute([$id]);
         foreach ($stmtC->fetchAll() as $c) {
-            $r2Url = $c['swatch_hex_or_image'];
-            if ($r2Exists($r2Url)) continue;
-            $src = $findSource($r2Url);
+            $url = $c['swatch_hex_or_image'];
+            if (empty($url)) continue;
+            
+            // Skip hex colors
+            if (strpos($url, '#') === 0 || !preg_match('#^https?://#i', $url)) continue;
+            
+            $needsMirror = !$isR2Url($url) || !$r2Exists($url);
+            if (!$needsMirror) continue;
+            
+            $src = $isR2Url($url) ? $findSource($url) : $url;
             if (!$src) { $failCount++; $errors[] = "No source for swatch color #{$c['id']}"; continue; }
-            $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$r2Url]);
+            
+            if ($isR2Url($url)) $db->prepare("DELETE FROM image_mirror_map WHERE r2_url = ?")->execute([$url]);
             $result = $mirrorService->mirrorImage($src, $sku, 'variant');
             if ($result['success']) {
                 $db->prepare("UPDATE product_colors SET swatch_hex_or_image = ? WHERE id = ?")->execute([$result['url'], $c['id']]);

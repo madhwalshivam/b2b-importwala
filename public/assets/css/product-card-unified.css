@@ -83,15 +83,22 @@
   flex: 0 0 100% !important;
   width: 100% !important;
   height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
   scroll-snap-align: start !important;
   scroll-snap-stop: always !important;
   display: block !important;
   text-decoration: none !important;
+  overflow: hidden !important;
 }
 
 .ef-swipe-slide img {
   width: 100% !important;
   height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
   object-fit: cover !important;
   display: block !important;
   pointer-events: none !important;
@@ -146,6 +153,7 @@
 .ef-swipe-wrap {
   position: relative !important;
   width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
   flex-shrink: 0 !important;
   overflow: hidden !important;
   border-radius: 8px 8px 0 0 !important;
@@ -157,6 +165,7 @@
   display: flex !important;
   width: 100% !important;
   height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
   overflow-x: auto !important;
   overflow-y: hidden !important;
   scroll-snap-type: x mandatory !important;
@@ -174,15 +183,18 @@
   flex: 0 0 100% !important;
   width: 100% !important;
   height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
   scroll-snap-align: start !important;
   scroll-snap-stop: always !important;
   position: relative !important;
   display: block !important;
+  overflow: hidden !important;
 }
 
 .ef-img-slide img {
   width: 100% !important;
   height: 100% !important;
+  aspect-ratio: 1 / 1 !important;
   object-fit: cover !important;
   display: block !important;
 }
@@ -228,7 +240,9 @@
 .ef-icon-btn,
 .icon-btn,
 .robu-wishlist-btn,
-.robu-cart-btn {
+.robu-cart-btn,
+.ef-wishlist-btn,
+.wishlist-btn {
   width: 28px !important;
   height: 28px !important;
   min-width: 28px !important;
@@ -262,7 +276,9 @@
 .ef-icon-btn::after,
 .icon-btn::after,
 .robu-wishlist-btn::after,
-.robu-cart-btn::after {
+.robu-cart-btn::after,
+.ef-wishlist-btn::after,
+.wishlist-btn::after {
   content: "" !important;
   position: absolute !important;
   top: -6px !important;
@@ -281,7 +297,9 @@
 .robu-wishlist-btn i,
 .robu-cart-btn i,
 .ef-icon-btn svg,
-.icon-btn svg {
+.icon-btn svg,
+.ef-wishlist-btn svg,
+.wishlist-btn svg {
   width: 15px !important;
   height: 15px !important;
   min-width: 15px !important;

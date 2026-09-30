@@ -580,7 +580,7 @@ class CatalogController extends BaseController
     }
 
     /**
-     * Legacy route redirect (/factory/{code}) -> 301 redirect to /factories/{slug}
+     * Factory Catalog Public View (/factory/{code})
      */
     public function factoryCodeRedirect(?string $code = null): void
     {
@@ -590,17 +590,27 @@ class CatalogController extends BaseController
         }
 
         $db = Database::getReadConnection();
-        $stmt = $db->prepare("SELECT id, name FROM factories WHERE factory_code = ? OR id = ? LIMIT 1");
+        $stmt = $db->prepare("SELECT id, name, factory_code, (SELECT COUNT(id) FROM products WHERE factory_id = factories.id AND status = 'active') as product_count FROM factories WHERE (factory_code = ? OR id = ?) AND status = 'active' LIMIT 1");
         $stmt->execute([$code, (int)$code]);
         $factory = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if ($factory) {
-            $slug = $this->slugifyFactoryName($factory['name']);
-            header('Location: ' . url('factories/' . $slug), true, 301);
-            exit;
+            $fCode = $factory['factory_code'] ?: 'Unknown';
+            $displayName = "Factory " . $fCode;
+            $pCount = (int)($factory['product_count'] ?? 0);
+
+            $this->renderCatalogPage([
+                'factory_ids' => [$factory['id']],
+                'seo_title' => $displayName . ' | ImportWala',
+                'seo_description' => 'Browse ' . $pCount . '+ direct wholesale products sourced from ' . $displayName . ' on ImportWala.',
+                'canonical_url' => url('factory/' . $code),
+                'page_heading' => $displayName,
+            ]);
+            return;
         }
 
-        header('Location: ' . url('factories'), true, 302);
+        http_response_code(404);
+        echo "Factory not found.";
         exit;
     }
 

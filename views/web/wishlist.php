@@ -2,6 +2,7 @@
 $title = 'My Wishlist | ImportWale Wholesale';
 $items = !empty($products) ? $products : (!empty($wishlistItems) ? $wishlistItems : []);
 $wishlistCount = count($items);
+$isWishlistPage = true;
 ob_start();
 ?>
 
@@ -42,7 +43,6 @@ ob_start();
             class="inline-block px-6 py-3 bg-[#f05a29] hover:bg-[#d94e20] text-white text-xs font-semibold rounded-xl shadow-xs transition">Browse Wholesale Catalog</a>
     </div>
 
-    <!-- Responsive Product Grid (2-Col Mobile, 5-Col Desktop) -->
     <div id="wishlistGridContainer" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5 sm:gap-4" style="display: <?= !empty($items) ? 'grid' : 'none' ?>;">
         <?php foreach ($items as $product): ?>
             <?php 

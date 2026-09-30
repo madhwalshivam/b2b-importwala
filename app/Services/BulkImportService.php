@@ -22,10 +22,15 @@ class BulkImportService
     private ProductVariant $variantModel;
     private ProductSpecification $specModel;
     private Factory $factoryModel;
+    private ImageMirrorService $mirrorSvc;
 
     private ?array $categoryCache = null;
     private ?array $subcategoryCache = null;
     private ?array $brandCache = null;
+
+    /** Tracks failed image URLs for import summary */
+    private array $imageFailed = [];
+    private int   $imageMirrored = 0;
 
     public const HEADERS = [
         'Product Name',                                                        // 0
@@ -101,6 +106,7 @@ class BulkImportService
         $this->variantModel = new ProductVariant();
         $this->specModel = new ProductSpecification();
         $this->factoryModel = new Factory();
+        $this->mirrorSvc = new ImageMirrorService();
     }
 
     /**
@@ -672,10 +678,17 @@ class BulkImportService
                 if (($prod['status'] ?? '') === 'error') continue;
 
                 $mfgIdCode = strtoupper(trim($prod['manufacturer_id_code'] ?? ''));
+                $providedFactoryCode = strtoupper(trim($prod['factory_code'] ?? ''));
+
                 if (!empty($mfgIdCode) && empty($prod['factory_id'])) {
                     if (isset($factoryMapByCode[$mfgIdCode])) {
                         // Linked to existing
                         $factoryId = $factoryMapByCode[$mfgIdCode];
+                    } elseif (!empty($providedFactoryCode) && isset($factoryMapByCode[$providedFactoryCode])) {
+                        // Already created in a previous chunk
+                        $factoryId = $factoryMapByCode[$providedFactoryCode];
+                        // Cache it for subsequent rows in this chunk
+                        $factoryMapByCode[$mfgIdCode] = $factoryId;
                     } else {
                         // Create factory record in DB
                         $code = !empty($prod['factory_code']) ? $prod['factory_code'] : $this->factoryModel->generateNextCode();
@@ -862,11 +875,27 @@ class BulkImportService
                 $this->syncFilterOptions($productId, $prod);
                 (new \App\Services\FilterAttributeService())->syncProductSpecificationsToFilterAttributes($productId);
 
+                // Helper to check if image already exists (including mirrored R2 versions)
+                $imageExists = function($productId, $imagePath) {
+                    $chk = $this->db->prepare("SELECT id FROM product_images WHERE product_id = ? AND (image_url = ? OR image_path = ?)");
+                    $chk->execute([$productId, $imagePath, $imagePath]);
+                    if ($chk->fetch()) return true;
+                    
+                    // Check if there is an R2 mirror for this image path
+                    $hash = hash('sha256', $imagePath);
+                    $mapStmt = $this->db->prepare("SELECT r2_url FROM image_mirror_map WHERE source_url_hash = ? LIMIT 1");
+                    $mapStmt->execute([$hash]);
+                    $r2Url = $mapStmt->fetchColumn();
+                    if ($r2Url) {
+                        $chk->execute([$productId, $r2Url, $r2Url]);
+                        if ($chk->fetch()) return true;
+                    }
+                    return false;
+                };
+
                 // Process Main Cover Image in product_images table
                 if (!empty($mainImagePath)) {
-                    $chkM = $this->db->prepare("SELECT id FROM product_images WHERE product_id = ? AND (image_url = ? OR image_path = ?)");
-                    $chkM->execute([$productId, $mainImagePath, $mainImagePath]);
-                    if (!$chkM->fetch()) {
+                    if (!$imageExists($productId, $mainImagePath)) {
                         $stmtM = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, 0, 1)");
                         $stmtM->execute([$productId, $mainImagePath]);
                     }
@@ -879,8 +908,10 @@ class BulkImportService
                         if (empty($gImgName)) continue;
                         $gImgPath = $this->processImageSource($gImgName, $extractedZipDir, $sku, 'gallery-' . $gIdx, $errorLogs, 'Additional Image ' . ($gIdx + 1));
                         if ($gImgPath && $gImgPath !== $mainImagePath) {
-                            $stmtG = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, ?, 0)");
-                            $stmtG->execute([$productId, $gImgPath, $gIdx + 1]);
+                            if (!$imageExists($productId, $gImgPath)) {
+                                $stmtG = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, ?, 0)");
+                                $stmtG->execute([$productId, $gImgPath, $gIdx + 1]);
+                            }
                         }
                     }
                 }
@@ -955,6 +986,11 @@ class BulkImportService
 
                         if ($cExist) {
                             $colorId = (int)$cExist['id'];
+                            // Update swatch if we now have a mirrored R2 URL
+                            if (!empty($swatchHex)) {
+                                $this->db->prepare("UPDATE product_colors SET swatch_hex_or_image = ? WHERE id = ? AND (swatch_hex_or_image IS NULL OR swatch_hex_or_image = '' OR swatch_hex_or_image NOT LIKE '%r2.dev%')")
+                                    ->execute([$swatchHex, $colorId]);
+                            }
                         } else {
                             $cStmtIns->execute([$productId, $colorName, $swatchHex]);
                             $colorId = (int)$this->db->lastInsertId();
@@ -1005,7 +1041,11 @@ class BulkImportService
             'created_factories' => $createdFactoriesCount,
             'skipped_products'  => $skippedProducts,
             'errors'            => $errorLogs,
-            'image_stats'       => $_SESSION['image_mirror_stats'] ?? ['mirrored' => 0, 'failed' => 0]
+            'image_stats'       => [
+                'mirrored' => $this->imageMirrored,
+                'failed'   => count($this->imageFailed),
+                'failed_urls' => $this->imageFailed,
+            ]
         ];
     }
 
@@ -1358,8 +1398,11 @@ class BulkImportService
         return $brandId;
     }
 
-    private \App\Services\ImageMirrorService $mirrorService;
-
+    /**
+     * Process an image input: mirror external URLs to R2 synchronously.
+     * Returns R2 URL on success, empty string on failure (failure is tracked in $this->imageFailed).
+     * For ZIP-bundled images, returns the local path as-is (handled by cli_sync_images later).
+     */
     private function processImageSource(string $imageInput, ?string $extractedZipDir, string $sku = 'unknown', string $type = 'img', ?array &$errorLogs = null, string $colName = 'Unknown'): string
     {
         $clean = trim($imageInput);
@@ -1372,11 +1415,34 @@ class BulkImportService
             $clean = 'https://' . $clean;
         }
 
-        // For bulk import, we DEFER image mirroring to a background/AJAX process for speed.
-        if (filter_var($clean, FILTER_VALIDATE_URL)) {
-            return $clean; // Store the raw URL. It will be picked up by the async image sync.
+        // If it's already an R2 URL, return as-is
+        if (strpos($clean, 'r2.dev') !== false || strpos($clean, 'cloudflare') !== false) {
+            return $clean;
         }
 
+        // External URL → mirror to R2 synchronously
+        if (filter_var($clean, FILTER_VALIDATE_URL)) {
+            try {
+                $result = $this->mirrorSvc->mirrorImage($clean, $sku, $type);
+                if ($result['success']) {
+                    $this->imageMirrored++;
+                    return $result['url']; // Return R2 URL — original never stored
+                } else {
+                    // Mirror failed — track for summary, store nothing
+                    $errMsg = "{$colName} mirror failed for SKU {$sku}: " . ($result['error'] ?? 'Unknown error');
+                    $this->imageFailed[] = ['sku' => $sku, 'url' => $clean, 'error' => $result['error'] ?? 'Unknown'];
+                    if ($errorLogs !== null) {
+                        $errorLogs[] = ['sku' => $sku, 'name' => '', 'reason' => $errMsg];
+                    }
+                    return ''; // Do NOT store the raw bulkflowai URL
+                }
+            } catch (\Throwable $e) {
+                $this->imageFailed[] = ['sku' => $sku, 'url' => $clean, 'error' => $e->getMessage()];
+                return '';
+            }
+        }
+
+        // ZIP-bundled image filename → resolve local path
         if ($extractedZipDir) {
             $resolvedPath = $this->resolveZipImage($clean, $extractedZipDir);
             if ($resolvedPath) {
@@ -1384,7 +1450,7 @@ class BulkImportService
             }
         }
 
-        return $clean;
+        return ''; // Unknown input — store nothing
     }
 
     private function resolveZipImage(string $imageFilename, string $extractedZipDir): ?string

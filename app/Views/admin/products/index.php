@@ -717,15 +717,7 @@ include __DIR__ . '/../layouts/header.php';
                 if (data.finished) {
                     isFinished = true;
                     finalData = data;
-                    
-                    // Trigger async background image sync
-                    fetch('<?= url('admin/products/import/sync-images') ?>', {
-                        method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
-                        }
-                    });
+                    // Images are now mirrored synchronously during import — no background sync needed
                 } else {
                     document.getElementById('importProgressText').textContent = `Importing... ${data.percentage}% (${data.processed}/${data.total})`;
                     currentChunk++;
@@ -752,6 +744,10 @@ include __DIR__ . '/../layouts/header.php';
         if (finalData.image_stats) {
             document.getElementById('imageStatsContainer').classList.remove('hidden');
             document.getElementById('imageStatsContainer').classList.add('grid');
+            const elMirrored = document.getElementById('imageMirroredCount');
+            const elFailed   = document.getElementById('imageFailedCount');
+            if (elMirrored) elMirrored.textContent = finalData.image_stats.mirrored || 0;
+            if (elFailed)   elFailed.textContent   = finalData.image_stats.failed  || 0;
         }
 
         if (finalData.summary.error_products && finalData.summary.error_products > 0) {

@@ -45,7 +45,7 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     {
         $cacheKey = "catalog:product:{$id}";
         return CacheManager::getInstance()->remember($cacheKey, 3600, function () use ($id) {
-            $stmt = $this->getReadDb()->prepare("SELECT p.*, c.name as category_name, c.slug as category_slug FROM `products` p JOIN `categories` c ON p.category_id = c.id WHERE p.id = :id AND p.status = 'active' LIMIT 1");
+            $stmt = $this->getReadDb()->prepare("SELECT p.*, c.name as category_name, c.slug as category_slug, f.factory_code, f.name as factory_name FROM `products` p JOIN `categories` c ON p.category_id = c.id LEFT JOIN `factories` f ON p.factory_id = f.id WHERE p.id = :id AND p.status = 'active' LIMIT 1");
             $stmt->execute(['id' => $id]);
             $product = $stmt->fetch();
 

@@ -16,7 +16,7 @@ class CartService extends BaseService
     {
         parent::__construct();
         $this->productRepo = new ProductRepository();
-        $this->pricingService = new TieredPricingService();
+        $this->pricingService = new TieredPricingService(); 
     }
 
     public function getCartKey(string $cartId): string

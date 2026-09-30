@@ -1,0 +1,86 @@
+@media (max-width: 640px) {
+        .floating-need-help-btn {
+            display: none !important;
+        }
+        .product-cover-card {
+            width: 100% !important;
+            height: auto !important;
+            aspect-ratio: 1 / 1 !important;
+            max-height: 360px !important;
+        }
+        .product-cover-card img {
+            object-fit: cover !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    }
+    
+    /* DESKTOP EXACT GRID LAYOUT OVERRIDES (min-width: 768px) */
+    @media (min-width: 768px) {
+        /* Reset any conflicting Tailwind classes on desktop using !important */
+        .product-top { 
+            display: grid !important; 
+            grid-template-columns: 440px minmax(0, 1fr) 340px !important; 
+            gap: 24px !important; 
+            align-items: start !important; 
+        }
+        .product-gallery, .product-side { 
+            position: sticky !important; 
+            top: 84px !important; 
+            align-self: start !important; 
+        }
+        .product-details { 
+            position: relative !important; 
+            z-index: 1 !important; 
+            background: #fff !important; 
+            margin-top: 32px !important; 
+            clear: both !important; 
+        }
+
+        /* Gallery Layout */
+        .product-gallery { 
+            display: flex !important; 
+            flex-direction: column !important; 
+            gap: 10px !important; 
+            width: 440px !important; 
+            max-width: 100% !important; 
+        }
+        .gallery-main { 
+            width: 100% !important; 
+            aspect-ratio: 1/1 !important; 
+            overflow: hidden !important; 
+            border-radius: 12px !important; 
+            position: relative !important; 
+            max-height: none !important;
+        }
+        .gallery-main img { 
+            position: absolute !important; 
+            inset: 0 !important; 
+            width: 100% !important; 
+            height: 100% !important; 
+            object-fit: cover !important; 
+        }
+        .gallery-thumbs { 
+            display: flex !important; 
+            gap: 8px !important; 
+            overflow-x: auto !important; 
+            padding: 0 !important;
+            border: none !important;
+            background: transparent !important;
+        }
+        .gallery-thumbs::-webkit-scrollbar {
+            display: none !important;
+        }
+
+        /* Specs and Description Overrides */
+        .spec-list {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 12px !important;
+            max-width: 880px !important;
+        }
+        .desc-text-wrapper {
+            max-width: 820px !important;
+            line-height: 1.7 !important;
+        }
+    }

@@ -1,0 +1,274 @@
+<style>
+    body { background-color: #f5f5f5; }
+    @media (max-width: 768px) {
+        .floating-need-help-btn { display: none !important; }
+        .product-cover-card { width: 100% !important; height: 350px !important; max-height: 45vh !important; border-radius: 0 !important; }
+        .product-cover-card img { object-fit: contain !important; background-color: #ffffff; }
+    }
+    /* Hide scrollbar for horizontal scroll areas */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
+<div class="w-full max-w-7xl mx-auto md:px-6 md:py-6 font-sans text-gray-900 pb-20 md:pb-0">
+    <div class="w-full flex flex-col md:flex-row gap-0 md:gap-6 items-start">
+
+        <!-- ======================================================= -->
+        <!-- LEFT — IMAGE GALLERY -->
+        <!-- ======================================================= -->
+        <div class="w-full md:w-1/2 shrink-0 md:sticky md:top-24 bg-white md:rounded-2xl relative overflow-hidden">
+            <!-- Main Image Card -->
+            <div id="mainImgCardWrapper" class="product-cover-card relative w-full aspect-square bg-white overflow-hidden group/mainimg">
+                <img id="mainProductImage" src="<?= htmlspecialchars($mainImage) ?>" alt="<?= $productName ?>"
+                    class="w-full h-full object-contain transition duration-300 cursor-zoom-in"
+                    onclick="openLightbox(this.src)">
+            </div>
+
+            <!-- Thumbnail Strip -->
+            <?php if ($totalImgs > 1): ?>
+                <div class="relative bg-white px-3 py-3 border-t border-gray-100">
+                    <div class="flex gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory no-scrollbar" id="thumbStrip">
+                        <?php foreach ($gallery as $idx => $imgUrl): ?>
+                            <button onclick="switchImage(<?= $idx ?>, '<?= htmlspecialchars($imgUrl) ?>')"
+                                class="thumb-btn flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden transition-all focus:outline-none cursor-pointer snap-start <?= $idx === 0 ? 'border-2' : 'border border-gray-200' ?>"
+                                style="<?= $idx === 0 ? 'border-color: #f05a29;' : '' ?>"
+                                data-idx="<?= $idx ?>">
+                                <img src="<?= htmlspecialchars($imgUrl) ?>" class="w-full h-full object-cover" loading="lazy">
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- RIGHT — INFO & BUY BOX -->
+        <!-- ======================================================= -->
+        <div class="w-full md:w-1/2 min-w-0 flex flex-col gap-1 sm:gap-2 mt-0 bg-[#f5f5f5]">
+
+            <!-- Title & Price Block -->
+            <div class="bg-white p-3 sm:p-4 md:p-5 md:rounded-2xl shadow-sm border-b border-gray-100 md:border-0">
+                <!-- Title & Stats -->
+                <div class="flex gap-2 justify-between items-start mb-3">
+                    <h1 class="text-sm font-semibold text-gray-800 leading-snug flex-1" id="selectedVariantTitle">
+                        <?= $productName ?>
+                    </h1>
+                    <div class="flex flex-col items-end flex-shrink-0 pl-2">
+                        <div class="text-[9px] sm:text-[10px] text-gray-500 font-medium whitespace-nowrap bg-gray-50 px-1.5 py-0.5 rounded">4K+ sold</div>
+                    </div>
+                </div>
+
+                <!-- Pricing Mode Toggle -->
+                <div class="flex bg-gray-100 rounded-md p-0.5 sm:p-1 mb-3 max-w-[180px]">
+                    <button id="btnWholesale" onclick="setPricingMode('wholesale')" class="flex-1 py-1 text-xs font-semibold rounded text-center transition-all cursor-pointer shadow-sm text-white" style="background-color: #334155;">Wholesale</button>
+                    <button id="btnOnePiece" onclick="setPricingMode('onepiece')" class="flex-1 py-1 text-xs font-semibold rounded text-center transition-all cursor-pointer text-gray-600 bg-transparent">Single</button>
+                </div>
+
+                <!-- Price Box -->
+                <div class="flex flex-col gap-0.5 mb-2">
+                    <div class="flex items-end gap-1 text-orange-600 font-bold text-xl tracking-tight" style="color: #f05a29;">
+                        <span class="text-sm">₹</span>
+                        <span id="priceDisplay"><?= number_format($wholesaleStartPrice, 0) ?></span>
+                        <span class="text-[10px] sm:text-xs text-gray-500 font-medium mb-0.5">/ piece</span>
+                    </div>
+                    <div class="text-[10px] sm:text-xs text-gray-400 font-medium hidden" id="singlePriceRow">No MOQ for single piece</div>
+                </div>
+
+                <!-- Horizontal Tiers Strip -->
+                <div id="wholesaleTierContainer">
+                    <div class="text-[10px] sm:text-xs text-gray-400 font-medium mb-1.5">≥ <?= $moq ?> pieces MOQ</div>
+                    <div class="flex overflow-x-auto gap-2 no-scrollbar pb-1" id="tierCardsRow">
+                        <?php
+                        $initialTiers = !empty($variantsJsonData[0]['tiers']) ? $variantsJsonData[0]['tiers'] : ($productTiers ?? []);
+                        if (empty($initialTiers)) {
+                            $initialTiers = [['min_qty' => $moq, 'max_qty' => null, 'unit_price' => $wholesaleStartPrice]];
+                        }
+                        foreach ($initialTiers as $tIdx => $t):
+                            $tMin = (int) $t['min_qty'];
+                            $tMax = !empty($t['max_qty']) ? (int) $t['max_qty'] : null;
+                            $tPrice = (float) $t['unit_price'];
+                            $rangeLabel = $tMax ? "{$tMin}-{$tMax}" : "≥{$tMin}";
+                        ?>
+                            <div class="flex flex-col w-16 sm:w-20 flex-shrink-0">
+                                <span class="text-xs sm:text-sm font-bold text-gray-800">₹<?= number_format($tPrice, 0) ?></span>
+                                <span class="text-[9px] sm:text-[10px] text-gray-500"><?= $rangeLabel ?> pcs</span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info Rows (Shipping, Factory) styled similar to Reference screenshot -->
+            <div class="bg-white px-3 sm:px-4 py-2 md:rounded-2xl shadow-sm flex flex-col mb-1 text-[11px] sm:text-xs">
+                <!-- Shipping -->
+                <a href="#" class="py-2 border-b border-gray-50 flex items-start gap-2">
+                    <div class="mt-0.5 text-gray-400 flex-shrink-0 w-16">Shipping</div>
+                    <div class="flex-1 text-gray-700">
+                        <div class="font-semibold text-orange-600 mb-0.5" style="color: #f05a29;">Standard <span class="text-gray-800 font-normal">Consolidation to India</span></div>
+                        <div class="text-gray-500 mb-0.5">ETA: <?= $delivStart ?> - <?= $delivEnd ?> days</div>
+                        <div class="text-gray-500">Fees applied at checkout</div>
+                    </div>
+                    <div class="text-gray-400 mt-0.5">›</div>
+                </a>
+                
+                <!-- Factory -->
+                <a href="#" class="py-2 flex items-start gap-2">
+                    <div class="mt-0.5 text-gray-400 flex-shrink-0 w-16">Factory</div>
+                    <div class="flex-1 text-gray-700">
+                        <div class="font-medium text-gray-800 mb-0.5 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" style="color: #f05a29;" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                            Direct Factory Supply
+                        </div>
+                        <div class="text-gray-500">Ship from Guangdong Province</div>
+                    </div>
+                    <div class="text-gray-400 mt-0.5">›</div>
+                </a>
+            </div>
+
+            <!-- Compact Variant Selector -->
+            <?php if (!empty($variants)): ?>
+                <div class="bg-white p-3 sm:p-4 md:p-5 md:rounded-2xl shadow-sm mb-1" id="variantSelectorBox">
+                    <?php if ($isDoubleMode && !empty($groupedColors)): ?>
+                        <!-- Colors -->
+                        <div class="mb-3">
+                            <div class="text-[11px] sm:text-xs font-bold text-gray-800 mb-1.5">Color <span class="text-gray-400 font-normal ml-1"><?= count($groupedColors) ?> options</span></div>
+                            <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1" id="colorCardsGrid">
+                                <?php foreach ($groupedColors as $colorName => $colorData): ?>
+                                    <button type="button"
+                                        class="color-card flex-shrink-0 flex items-center justify-center p-0.5 rounded border border-gray-200 transition-all cursor-pointer relative"
+                                        data-color="<?= htmlspecialchars($colorName) ?>"
+                                        data-color-image="<?= htmlspecialchars($colorData['image']) ?>"
+                                        onclick="selectColorCard('<?= htmlspecialchars(addslashes($colorName)) ?>')">
+                                        <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-sm overflow-hidden bg-gray-100">
+                                            <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-cover">
+                                        </div>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        
+                        <!-- Sizes -->
+                        <div id="sizeChipsSection">
+                            <div class="text-[11px] sm:text-xs font-bold text-gray-800 mb-1.5">Size</div>
+                            <div id="sizePlaceholder" class="text-[10px] sm:text-[11px] text-gray-400">Select a color to see sizes</div>
+                            <div id="sizeChipsContainer" class="hidden flex-wrap gap-1.5" style="display:none;">
+                                <?php foreach ($variants as $vi => $v): 
+                                    $parts = explode(' - ', $v['attribute_value'] ?? '');
+                                    $rowColor = trim($parts[0] ?? '');
+                                    $sizeName = isset($parts[1]) ? trim(implode(' - ', array_slice($parts, 1))) : htmlspecialchars($v['attribute_value']);
+                                ?>
+                                    <button type="button"
+                                        class="size-chip px-2.5 py-1 sm:px-3 sm:py-1.5 rounded bg-gray-50 border border-gray-200 text-[10px] sm:text-[11px] font-medium text-gray-700 transition-all cursor-pointer text-center"
+                                        data-variant-idx="<?= $vi ?>"
+                                        data-color="<?= htmlspecialchars($rowColor) ?>"
+                                        data-wholesale="<?= (float) $v['wholesale_price'] ?>"
+                                        data-img="<?= !empty($v['image_url']) ? asset($v['image_url']) : $mainImage ?>"
+                                        style="display:none;"
+                                        onclick="selectAmazonVariant(<?= $vi ?>)">
+                                        <span><?= $sizeName ?></span>
+                                        <span class="hidden"></span>
+                                        <span id="vQtyVal_<?= $vi ?>" class="hidden">0</span>
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <!-- Single Mode Variants -->
+                        <div class="text-[11px] sm:text-xs font-bold text-gray-800 mb-1.5">Variants <span class="text-gray-400 font-normal ml-1"><?= $varCount ?> options</span></div>
+                        <div class="flex flex-col gap-1.5 max-h-56 overflow-y-auto no-scrollbar">
+                            <?php foreach ($variants as $vi => $v): 
+                                $vImg = !empty($v['image_url']) ? asset($v['image_url']) : $mainImage;
+                            ?>
+                                <button type="button"
+                                    class="variant-row w-full px-2.5 py-1.5 sm:px-3 sm:py-2 rounded bg-gray-50 border border-gray-100 text-[10px] sm:text-[11px] font-medium text-gray-700 transition-all cursor-pointer flex items-center gap-2"
+                                    data-variant-idx="<?= $vi ?>"
+                                    data-wholesale="<?= (float) $v['wholesale_price'] ?>"
+                                    data-img="<?= htmlspecialchars($vImg) ?>"
+                                    onclick="selectAmazonVariant(<?= $vi ?>)">
+                                    <?php if ($vImg != $mainImage): ?>
+                                        <img src="<?= htmlspecialchars($vImg) ?>" class="w-6 h-6 sm:w-8 sm:h-8 rounded overflow-hidden object-cover border border-gray-200">
+                                    <?php endif; ?>
+                                    <span class="flex-1 text-left"><?= htmlspecialchars($v['attribute_value']) ?></span>
+                                    <span id="vQtyVal_<?= $vi ?>" class="hidden">0</span>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <!-- Specs Box -->
+            <?php if (!empty($specs)): ?>
+            <div class="bg-white p-3 sm:p-4 md:p-5 md:rounded-2xl shadow-sm mb-1">
+                <h2 class="text-[11px] sm:text-xs font-bold text-gray-800 mb-2 border-b border-gray-50 pb-1.5">Specifications</h2>
+                <div class="grid grid-cols-1 gap-0.5 text-[10px] sm:text-[11px]">
+                    <?php foreach ($specs as $s): ?>
+                        <div class="flex py-1 border-b border-gray-50 last:border-0">
+                            <div class="w-1/3 text-gray-500 font-medium"><?= htmlspecialchars($s['spec_key'] ?? '') ?></div>
+                            <div class="w-2/3 text-gray-800"><?= htmlspecialchars($s['spec_value'] ?? '') ?></div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Description Box -->
+            <?php if ($descHtml): ?>
+                <div class="bg-white p-3 sm:p-4 md:p-5 md:rounded-2xl shadow-sm mb-1">
+                    <h2 class="text-[11px] sm:text-xs font-bold text-gray-800 mb-2 border-b border-gray-50 pb-1.5">Product Details</h2>
+                    <div class="text-[10px] sm:text-[11px] text-gray-700 leading-relaxed font-sans prose prose-sm max-w-none">
+                        <?= $descHtml ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+
+        </div>
+    </div>
+    
+    <!-- Similar Products -->
+    <?php if (!empty($visuallySimilar)): ?>
+        <div class="mt-2 sm:mt-4 bg-white p-3 sm:p-4 md:p-6 md:rounded-2xl">
+            <h2 class="text-xs sm:text-sm md:text-base font-bold text-gray-900 tracking-tight mb-3">Similar Products</h2>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
+                <?php foreach ($visuallySimilar as $simItem): 
+                    $product = $simItem;
+                    require __DIR__ . '/partials/product_card.php';
+                endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
+</div>
+
+<!-- ============================================================ -->
+<!-- STICKY BOTTOM ACTION BAR -->
+<!-- ============================================================ -->
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg pb-[env(safe-area-inset-bottom)]">
+    <div class="w-full max-w-7xl mx-auto flex items-stretch h-[52px]">
+        <!-- Icons -->
+        <div class="flex items-center gap-1 sm:gap-2 px-1 sm:px-2 flex-shrink-0">
+            <button class="flex flex-col items-center justify-center w-12 text-gray-500 hover:text-gray-800 transition-colors" onclick="window.location.href='#'">
+                <svg class="w-[18px] h-[18px] mb-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                <span class="text-[9px] font-medium">Factory</span>
+            </button>
+            <button class="flex flex-col items-center justify-center w-12 text-gray-500 hover:text-gray-800 transition-colors" onclick="window.open(`https://wa.me/<?= $waNumber ?>`, '_blank')">
+                <svg class="w-[18px] h-[18px] mb-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                <span class="text-[9px] font-medium leading-tight">Request<br>Quote</span>
+            </button>
+            <button class="flex flex-col items-center justify-center w-12 text-gray-500 hover:text-gray-800 transition-colors" onclick="toggleDetailWishlist()">
+                <svg id="detailWishlistIcon" class="w-[18px] h-[18px] mb-[2px]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                <span class="text-[9px] font-medium">Save</span>
+            </button>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex-1 flex gap-2 items-center pr-2 py-1.5">
+            <button class="flex-1 h-full rounded border font-semibold text-[11px] sm:text-xs flex items-center justify-center transition-opacity hover:opacity-80" style="border-color: #f05a29; color: #f05a29;" onclick="addToCartFromDetail()">
+                Add cart
+            </button>
+            <button class="flex-1 h-full rounded text-white font-semibold text-[11px] sm:text-xs shadow-sm flex items-center justify-center transition-opacity hover:opacity-90" style="background-color: #f05a29;" onclick="buyNowFromDetail()">
+                Order now
+            </button>
+        </div>
+    </div>
+</div>

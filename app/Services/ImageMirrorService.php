@@ -111,9 +111,9 @@ class ImageMirrorService
         }
 
         $ext = $allowedMimes[$mime];
-        $shortHash = substr($hash, 0, 8);
         $safeSku = preg_replace('/[^a-zA-Z0-9_-]/', '', strtolower($sku));
-        $r2Key = "products/{$safeSku}/{$type}-{$shortHash}.{$ext}";
+        // Deterministic R2 key: same source URL + same SKU always yields same key
+        $r2Key = "products/{$safeSku}/{$hash}.{$ext}";
 
         // Upload directly using client — retry up to 3 times on network errors
         $client = $this->r2->getClient();
