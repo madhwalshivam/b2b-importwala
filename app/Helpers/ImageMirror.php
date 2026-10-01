@@ -53,7 +53,9 @@ class ImageMirror
     }
 
     /**
-     * Safely triggers the background worker script via exec (non-blocking).
+     * Triggers the background worker non-blocking:
+     *  1. Via PHP CLI exec (works on VPS / local)
+     *  2. Falls back to HTTP fire-and-forget (works on shared hosting like Hostinger)
      */
     public static function triggerWorker(): void
     {
@@ -63,18 +65,61 @@ class ImageMirror
         self::$workerTriggered = true;
 
         register_shutdown_function(function () {
-            try {
-                $script = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'cli_mirror_queue.php';
-                
-                // If on Windows
-                if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-                    pclose(popen("start /B php " . escapeshellarg($script) . " > NUL 2>&1", "r"));
-                } else {
-                    // Linux/Hostinger
-                    exec("php " . escapeshellarg($script) . " > /dev/null 2>&1 &");
+            // --- Method 1: PHP CLI (VPS / local) ---
+            $script = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'cli_mirror_queue.php';
+            $phpBin = PHP_BINARY ?: 'php';
+
+            $launched = false;
+            if (function_exists('exec') && is_file($script)) {
+                try {
+                    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                        pclose(popen("start /B \"\" " . escapeshellarg($phpBin) . " " . escapeshellarg($script) . " > NUL 2>&1", "r"));
+                    } else {
+                        exec(escapeshellarg($phpBin) . " " . escapeshellarg($script) . " > /dev/null 2>&1 &");
+                    }
+                    $launched = true;
+                } catch (\Throwable $e) {
+                    // fall through to HTTP method
                 }
-            } catch (\Throwable $e) {
-                // Ignore, let cron handle it as fallback
+            }
+
+            // --- Method 2: Non-blocking HTTP (shared hosting fallback) ---
+            if (!$launched) {
+                try {
+                    $secret  = env('WORKER_SECRET', '');
+                    $appUrl  = rtrim(env('APP_URL', ''), '/');
+                    if (empty($secret) || empty($appUrl)) return;
+
+                    $workerUrl = $appUrl . '/worker.php?token=' . urlencode($secret);
+
+                    // Parse URL to get host/path
+                    $parsed = parse_url($workerUrl);
+                    $host   = $parsed['host'] ?? '';
+                    $path   = ($parsed['path'] ?? '/') . (isset($parsed['query']) ? '?' . $parsed['query'] : '');
+                    $scheme = $parsed['scheme'] ?? 'https';
+                    $port   = $parsed['port'] ?? ($scheme === 'https' ? 443 : 80);
+
+                    // fsockopen with 1s connect timeout — fire and forget
+                    if ($scheme === 'https') {
+                        $fp = @fsockopen("ssl://{$host}", $port, $errno, $errstr, 1);
+                    } else {
+                        $fp = @fsockopen($host, $port, $errno, $errstr, 1);
+                    }
+
+                    if ($fp) {
+                        $request = "GET {$path} HTTP/1.1\r\n"
+                            . "Host: {$host}\r\n"
+                            . "Connection: close\r\n"
+                            . "User-Agent: ImportWala-Worker/1.0\r\n\r\n";
+                        fwrite($fp, $request);
+                        // Do NOT wait for response — fire and forget
+                        stream_set_timeout($fp, 0, 100000); // 0.1s read timeout
+                        @fgets($fp, 128); // read just status line then close
+                        fclose($fp);
+                    }
+                } catch (\Throwable $e) {
+                    // Ignore — cron will handle it as final fallback
+                }
             }
         });
     }

@@ -471,3 +471,9 @@ $router->post('/admin/blogs/delete/{id}', 'Admin\BlogController@delete', [AdminM
 $router->post('/admin/blogs/upload-image', 'Admin\BlogController@uploadImage', [AdminMiddleware::class, CsrfMiddleware::class]);
 
 
+
+// Image Mirror / R2 Sync Routes
+$router->get('/admin/image-sync',          'Admin\ImageMirrorController@statusPage',  [AdminMiddleware::class]);
+$router->get('/admin/image-sync/selftest', 'Admin\ImageMirrorController@runSelftest', [AdminMiddleware::class]);
+$router->get('/admin/image-sync/batch',    'Admin\ImageMirrorController@batch',       [AdminMiddleware::class]);
+$router->post('/admin/image-sync/batch',   'Admin\ImageMirrorController@batch',       [AdminMiddleware::class]);
