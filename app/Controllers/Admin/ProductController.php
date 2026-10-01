@@ -975,27 +975,44 @@ class ProductController extends Controller
 
     private function uploadImageFile(array $file, string $folder = 'products'): ?string
     {
-        if (empty($file['tmp_name']))
+        if (empty($file['tmp_name'])) {
             return null;
-        try {
-            if (class_exists('\App\Services\CloudflareR2')) {
-                $r2 = new CloudflareR2();
-                $url = $r2->upload($file);
-                if (!empty($url))
-                    return $url;
+        }
+        
+        $driver = env('IMAGE_DRIVER', 'r2');
+
+        if ($driver === 'r2' && class_exists('\App\Services\CloudflareR2')) {
+            try {
+                $r2 = new \App\Services\CloudflareR2();
+                
+                $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION)) ?: 'jpg';
+                $name = time() . '_' . uniqid() . '.' . $ext;
+                $key = "{$folder}/{$name}";
+                
+                $success = $r2->uploadFile($file['tmp_name'], $key, $file['type'] ?? 'image/jpeg');
+                
+                if ($success) {
+                    return rtrim($r2->getPublicBaseUrl(), '/') . '/' . $key;
+                }
+            } catch (\Throwable $e) {
+                error_log("R2 Upload Error: " . $e->getMessage());
+                // Fallthrough to local on failure, or return null?
             }
-        } catch (\Throwable $e) {
         }
 
-        // Fallback to local
+        // Local driver (or fallback)
         $uploadDir = __DIR__ . '/../../../public/uploads/' . $folder . '/';
-        if (!is_dir($uploadDir))
+        if (!is_dir($uploadDir)) {
             @mkdir($uploadDir, 0777, true);
+        }
+        
         $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION)) ?: 'jpg';
         $name = time() . '_' . uniqid() . '.' . $ext;
+        
         if (@move_uploaded_file($file['tmp_name'], $uploadDir . $name)) {
             return '/uploads/' . $folder . '/' . $name;
         }
+        
         return null;
     }
 

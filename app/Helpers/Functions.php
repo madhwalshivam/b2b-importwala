@@ -157,9 +157,50 @@ if (!function_exists('image_url')) {
         if (empty($key_or_url)) {
             return url('assets/img/placeholder.png');
         }
+
+        // External URL: check queue for a completed mirror, then auto-enqueue
         if (str_starts_with($key_or_url, 'http://') || str_starts_with($key_or_url, 'https://')) {
+            // Skip if already an R2 URL
+            $r2PublicUrl = rtrim(env('R2_PUBLIC_URL', ''), '/');
+            if (!empty($r2PublicUrl) && str_starts_with($key_or_url, $r2PublicUrl)) {
+                return $key_or_url;
+            }
+
+            static $mirrorQueueCache = [];
+
+            if (isset($mirrorQueueCache[$key_or_url])) {
+                return $mirrorQueueCache[$key_or_url];
+            }
+
+            try {
+                $db = \App\Core\Database::getInstance();
+                // Use sha1 — same as ImageMirror::enqueue() and ImageMirrorWorker
+                $hash = sha1($key_or_url);
+                $stmt = $db->prepare("SELECT status, r2_key FROM image_mirror_queue WHERE source_hash = ? LIMIT 1");
+                $stmt->execute([$hash]);
+                $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+                if ($row && $row['status'] === 'done' && !empty($row['r2_key'])) {
+                    // Build the R2 public URL from the r2_key
+                    $resolved = !empty($r2PublicUrl)
+                        ? $r2PublicUrl . '/' . ltrim($row['r2_key'], '/')
+                        : $key_or_url;
+                    $mirrorQueueCache[$key_or_url] = $resolved;
+                    return $resolved;
+                }
+
+                // Not yet mirrored: auto-enqueue so the worker picks it up
+                \App\Helpers\ImageMirror::enqueue($key_or_url);
+            } catch (\Throwable $e) {
+                // Ignore DB errors — fall through to original URL
+            }
+
+            // Return original URL while the worker processes it in background
+            $mirrorQueueCache[$key_or_url] = $key_or_url;
             return $key_or_url;
         }
+
+        // R2 key (no scheme): prepend R2_PUBLIC_URL
         $r2PublicUrl = rtrim(env('R2_PUBLIC_URL', ''), '/');
         if (empty($r2PublicUrl)) {
             return url('assets/img/placeholder.png');

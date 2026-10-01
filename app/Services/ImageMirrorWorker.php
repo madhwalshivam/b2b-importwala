@@ -89,26 +89,35 @@ class ImageMirrorWorker
     {
         $this->db->prepare("UPDATE image_mirror_queue SET status = 'done', r2_key = ?, updated_at = NOW() WHERE id = ?")->execute([$r2Key, $row['id']]);
 
-        // Update all tables holding this source URL
-        $r2Url = image_url($r2Key);
+        // Build R2 public URL directly from key (avoid calling image_url() to prevent recursion)
+        $r2PublicUrl = rtrim(env('R2_PUBLIC_URL', ''), '/');
+        $r2Url = !empty($r2PublicUrl) ? $r2PublicUrl . '/' . ltrim($r2Key, '/') : $r2Key;
         $sourceUrl = $row['source_url'];
 
+        // Update every table column that may still hold the original external URL
         $updates = [
-            "UPDATE product_images SET image_url = ? WHERE image_url = ?",
+            "UPDATE product_images SET image_url = ?, image_path = ? WHERE image_url = ?",
+            "UPDATE product_images SET image_url = ?, image_path = ? WHERE image_path = ?",
             "UPDATE products SET main_image = ? WHERE main_image = ?",
             "UPDATE product_colors SET swatch_hex_or_image = ? WHERE swatch_hex_or_image = ?",
             "UPDATE product_variants SET image_url = ? WHERE image_url = ?",
-            "UPDATE inquiry_items SET product_image_snapshot = ? WHERE product_image_snapshot = ?"
+            "UPDATE inquiry_items SET product_image_snapshot = ? WHERE product_image_snapshot = ?",
         ];
 
         foreach ($updates as $sql) {
             try {
-                $this->db->prepare($sql)->execute([$r2Url, $sourceUrl]);
+                // product_images needs 3 params (url, path, old); others need 2
+                if (strpos($sql, 'image_url = ?, image_path') !== false) {
+                    $this->db->prepare($sql)->execute([$r2Url, $r2Url, $sourceUrl]);
+                } else {
+                    $this->db->prepare($sql)->execute([$r2Url, $sourceUrl]);
+                }
             } catch (\Exception $e) {
-                // Ignore update errors (like missing table)
+                // Ignore update errors (e.g. missing table)
             }
         }
     }
+
 
     private function markFailed(array $row, string $error): void
     {

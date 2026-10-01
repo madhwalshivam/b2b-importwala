@@ -348,6 +348,8 @@ $router->get('/admin/products/import/errors-csv', 'Admin\BulkProductImportContro
 $router->post('/admin/products/import/sync-images', 'Admin\BulkProductImportController@syncImages', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/images/mirror-batch', 'Admin\ImageMirrorController@batch', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/images/mirror-batch-cli', 'Admin\ImageMirrorController@batch', [AdminMiddleware::class]);
+$router->get('/admin/image-sync-status', 'Admin\ImageMirrorController@statusPage', [AdminMiddleware::class]);
+$router->post('/admin/image-sync-status/selftest', 'Admin\ImageMirrorController@runSelftest', [AdminMiddleware::class, CsrfMiddleware::class]);
 // Factory / Manufacturer Management Routes
 $router->get('/admin/factories', 'Admin\FactoryController@index', [AdminMiddleware::class]);
 $router->get('/admin/factories/create', 'Admin\FactoryController@create', [AdminMiddleware::class]);

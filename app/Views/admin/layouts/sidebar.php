@@ -238,6 +238,13 @@ $isActive = function(string $path) use ($currentUri): bool {
                         <span class="truncate">Inventory</span>
                     </a>
                 <?php endif; ?>
+
+                <a href="<?= url('admin/image-sync-status') ?>"
+                    class="group flex items-center space-x-2 px-3 py-2.5 rounded-xl border text-[11px] font-semibold transition cursor-pointer <?= $isActive('admin/image-sync-status') ? 'bg-[#f05a29] text-white border-[#f05a29] shadow-xs' : 'bg-slate-800/40 hover:bg-slate-800 text-slate-300 border-slate-700/50' ?>"
+                    title="Image Sync Status">
+                    <i data-lucide="cloud-upload" class="w-4 h-4 shrink-0 <?= $isActive('admin/image-sync-status') ? 'text-white' : 'text-slate-400 group-hover:text-slate-200' ?>"></i>
+                    <span class="truncate">Image Sync</span>
+                </a>
             </div>
         </div>
 
