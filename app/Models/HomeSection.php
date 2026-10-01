@@ -394,7 +394,7 @@ class HomeSection extends Model {
             $limitParam = $displayCount > 0 ? $displayCount : null;
             $products = $this->getSectionProducts((int)$section['id'], $limitParam, true);
             $section['products'] = $products;
-            $result[$section['slug'] ?: $section['section_key']] = $section;
+            $result[$section['slug'] ?? $section['section_key']] = $section;
         }
 
         return $result;

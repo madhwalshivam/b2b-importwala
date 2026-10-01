@@ -11,7 +11,14 @@
  * Safe to re-run (uses INSERT IGNORE / duplicate-slug guard).
  */
 
-require_once __DIR__ . '/../app/Core/Database.php';
+if (!defined('ROOT_PATH')) {
+    define('ROOT_PATH', dirname(__DIR__));
+}
+require_once ROOT_PATH . '/app/Core/EnvLoader.php';
+\App\Core\EnvLoader::load(ROOT_PATH);
+require_once ROOT_PATH . '/app/Helpers/Functions.php';
+require_once ROOT_PATH . '/config/app.php';
+require_once ROOT_PATH . '/app/Core/Database.php';
 
 use App\Core\Database;
 

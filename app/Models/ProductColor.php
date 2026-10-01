@@ -54,7 +54,7 @@ class ProductColor extends Model
         $stmt->execute([
             ':product_id'          => (int)$data['product_id'],
             ':color_name'          => trim($data['color_name'] ?? 'Default Color'),
-            ':swatch_hex_or_image' => !empty($data['swatch_hex_or_image']) ? trim($data['swatch_hex_or_image']) : null,
+            ':swatch_hex_or_image' => !empty($data['swatch_hex_or_image']) ? \App\Helpers\ImageMirror::enqueue(trim($data['swatch_hex_or_image'])) : null,
             ':sku'                 => !empty($data['sku']) ? trim($data['sku']) : null,
             ':price'               => isset($data['price']) && $data['price'] !== '' ? (float)$data['price'] : null,
             ':stock_qty'           => isset($data['stock_qty']) && $data['stock_qty'] !== '' ? (int)$data['stock_qty'] : null,
@@ -82,7 +82,7 @@ class ProductColor extends Model
         return $stmt->execute([
             ':id'                  => $id,
             ':color_name'          => trim($data['color_name'] ?? 'Default Color'),
-            ':swatch_hex_or_image' => !empty($data['swatch_hex_or_image']) ? trim($data['swatch_hex_or_image']) : null,
+            ':swatch_hex_or_image' => !empty($data['swatch_hex_or_image']) ? \App\Helpers\ImageMirror::enqueue(trim($data['swatch_hex_or_image'])) : null,
             ':sku'                 => !empty($data['sku']) ? trim($data['sku']) : null,
             ':price'               => isset($data['price']) && $data['price'] !== '' ? (float)$data['price'] : null,
             ':stock_qty'           => isset($data['stock_qty']) && $data['stock_qty'] !== '' ? (int)$data['stock_qty'] : null,

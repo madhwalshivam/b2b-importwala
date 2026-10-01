@@ -16,7 +16,7 @@ class SearchService extends BaseService
     {
         parent::__construct();
         $this->productRepo = new ProductRepository();
-        $this->esEndpoint = getenv('ELASTICSEARCH_HOST') ?: null;
+        $this->esEndpoint = env('ELASTICSEARCH_HOST');
         if ($this->esEndpoint) {
             $this->useElasticsearch = true;
         }

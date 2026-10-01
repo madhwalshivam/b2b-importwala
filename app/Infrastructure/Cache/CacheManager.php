@@ -17,8 +17,8 @@ class CacheManager implements CacheInterface
             @mkdir($this->cacheStoragePath, 0777, true);
         }
 
-        // Attempt Redis initialization
-        if (class_exists('\Redis')) {
+        // Attempt Redis initialization if configured
+        if (env('CACHE_DRIVER', 'file') === 'redis' && class_exists('\Redis')) {
             try {
                 $redisConfig = require __DIR__ . '/../../../config/redis.php';
                 $redisClass = '\Redis';
@@ -35,8 +35,12 @@ class CacheManager implements CacheInterface
                     $client->select($redisConfig['cache']['database']);
                     $this->redisClient = $client;
                     $this->useRedis = true;
+                } else {
+                    error_log("WARNING: Redis CACHE_DRIVER selected but connection failed. Falling back to file cache.");
+                    $this->useRedis = false;
                 }
             } catch (\Throwable $e) {
+                error_log("WARNING: Redis cache connection exception: " . $e->getMessage() . ". Falling back to file cache.");
                 $this->useRedis = false;
             }
         }

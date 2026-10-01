@@ -664,36 +664,95 @@ class BulkImportService
         $createdFactoriesCount = 0;
         $errorLogs = [];
 
-        $this->db->beginTransaction();
+        // 1. Pre-load all factories
+        $factoryMapByCode = [];
+        $dbFactories = $this->factoryModel->all();
+        foreach ($dbFactories as $f) {
+            $factoryMapByCode[strtoupper($f['factory_code'])] = (int)$f['id'];
+        }
 
-        try {
-            // Step 1: Commit any newly staged Factories into DB first
-            $factoryMapByCode = [];
-            $dbFactories = $this->factoryModel->all();
-            foreach ($dbFactories as $f) {
-                $factoryMapByCode[strtoupper($f['factory_code'])] = (int)$f['id'];
+        // 2. Pre-load existing products by SKU for this chunk
+        $skus = [];
+        foreach ($productsData as $prod) {
+            if (($prod['status'] ?? '') !== 'error' && !empty($prod['product_sku'])) {
+                $skus[] = $prod['product_sku'];
+            }
+        }
+        $existingProducts = [];
+        if (!empty($skus)) {
+            $placeholders = implode(',', array_fill(0, count($skus), '?'));
+            $stmt = $this->db->prepare("SELECT id, sku FROM products WHERE sku IN ($placeholders)");
+            $stmt->execute($skus);
+            foreach ($stmt->fetchAll() as $row) {
+                $existingProducts[$row['sku']] = (int)$row['id'];
+            }
+        }
+
+        // Prepare product statements
+        $stmtUpdateProduct = $this->db->prepare("
+            UPDATE products SET
+                name = :name, slug = :slug, category_id = :category_id, subcategory_id = :subcategory_id,
+                brand_id = :brand_id, factory_id = :factory_id, weight = :weight, variety = :variety,
+                description = :description, price = :price, sale_price = :sale_price, moq = :moq,
+                stock = :stock, main_image = COALESCE(:main_image, main_image),
+                main_image_source_url = COALESCE(:main_image_source_url, main_image_source_url),
+                manufacturer_id_code = :manufacturer_id_code, manufacturer_name = :manufacturer_name,
+                manufacturer_contact_person = :manufacturer_contact_person, manufacturer_phone = :manufacturer_phone,
+                manufacturer_whatsapp = :manufacturer_whatsapp, manufacturer_email = :manufacturer_email,
+                manufacturer_store_url = :manufacturer_store_url, source_platform = :source_platform,
+                source_product_id = :source_product_id, source_product_url = :source_product_url,
+                import_date = :import_date, admin_status = :admin_status, status = 'active',
+                updated_at = NOW(), variation_mode = :variation_mode
+            WHERE id = :id
+        ");
+
+        $stmtInsertProduct = $this->db->prepare("
+            INSERT INTO products (
+                name, slug, sku, category_id, subcategory_id, brand_id, factory_id,
+                weight, variety, description, price, sale_price, moq, stock, main_image, main_image_source_url, video_url,
+                manufacturer_id_code, manufacturer_name, manufacturer_contact_person, manufacturer_phone,
+                manufacturer_whatsapp, manufacturer_email, manufacturer_store_url, source_platform,
+                source_product_id, source_product_url, import_date, admin_status, status, created_at, updated_at, variation_mode
+            ) VALUES (
+                :name, :slug, :sku, :category_id, :subcategory_id, :brand_id, :factory_id,
+                :weight, :variety, :description, :price, :sale_price, :moq, :stock, :main_image, :main_image_source_url, :video_url,
+                :manufacturer_id_code, :manufacturer_name, :manufacturer_contact_person, :manufacturer_phone,
+                :manufacturer_whatsapp, :manufacturer_email, :manufacturer_store_url, :source_platform,
+                :source_product_id, :source_product_url, :import_date, :admin_status, 'active', NOW(), NOW(), :variation_mode
+            )
+        ");
+
+        $vService = new \App\Services\VariationService();
+        $fs = new \App\Services\FilterAttributeService(); // Caches for images, colors, sizes to avoid per-row queries
+        $existingImagesMap = [];
+        $existingColorsMap = [];
+        $existingColorSizesMap = [];
+
+        foreach ($productsData as $prod) {
+            if (($prod['status'] ?? '') === 'error') {
+                $skippedProducts++;
+                $errorLogs[] = [
+                    'sku'    => $prod['product_sku'],
+                    'name'   => $prod['name'],
+                    'reason' => implode('; ', $prod['errors'] ?? ['Validation failed.'])
+                ];
+                continue;
             }
 
-            foreach ($productsData as $prod) {
-                if (($prod['status'] ?? '') === 'error') continue;
-
+            try {
                 $mfgIdCode = strtoupper(trim($prod['manufacturer_id_code'] ?? ''));
                 $providedFactoryCode = strtoupper(trim($prod['factory_code'] ?? ''));
 
+                $factoryId = null;
                 if (!empty($mfgIdCode) && empty($prod['factory_id'])) {
                     if (isset($factoryMapByCode[$mfgIdCode])) {
-                        // Linked to existing
                         $factoryId = $factoryMapByCode[$mfgIdCode];
                     } elseif (!empty($providedFactoryCode) && isset($factoryMapByCode[$providedFactoryCode])) {
-                        // Already created in a previous chunk
                         $factoryId = $factoryMapByCode[$providedFactoryCode];
-                        // Cache it for subsequent rows in this chunk
                         $factoryMapByCode[$mfgIdCode] = $factoryId;
                     } else {
-                        // Create factory record in DB
                         $code = !empty($prod['factory_code']) ? $prod['factory_code'] : $this->factoryModel->generateNextCode();
                         $name = !empty($prod['factory_name']) ? $prod['factory_name'] : ($prod['manufacturer_name'] ?: ('Factory ' . $code));
-
                         $factoryId = $this->factoryModel->insert([
                             'factory_code'    => $code,
                             'name'            => $name,
@@ -708,25 +767,12 @@ class BulkImportService
                             'created_at'      => date('Y-m-d H:i:s'),
                             'updated_at'      => date('Y-m-d H:i:s'),
                         ]);
-
                         $factoryMapByCode[$code] = $factoryId;
                         $factoryMapByCode[$mfgIdCode] = $factoryId;
                         $createdFactoriesCount++;
                     }
-                }
-            }
-
-            // Step 2: Commit Products
-            $vService = new \App\Services\VariationService();
-            foreach ($productsData as $prod) {
-                if (($prod['status'] ?? '') === 'error') {
-                    $skippedProducts++;
-                    $errorLogs[] = [
-                        'sku'    => $prod['product_sku'],
-                        'name'   => $prod['name'],
-                        'reason' => implode('; ', $prod['errors'] ?? ['Validation failed.'])
-                    ];
-                    continue;
+                } else {
+                    $factoryId = !empty($prod['factory_id']) ? (int)$prod['factory_id'] : ($factoryMapByCode[$mfgIdCode] ?? null);
                 }
 
                 $sku = $prod['product_sku'];
@@ -734,192 +780,13 @@ class BulkImportService
                 $subcategoryId = !empty($prod['subcategory']) ? $this->resolveOrCreateSubcategory($categoryId, $prod['subcategory']) : null;
                 $brandId = !empty($prod['brand']) ? $this->resolveOrCreateBrand($prod['brand']) : null;
 
-                // Resolve Factory ID
-                $mfgIdCode = strtoupper(trim($prod['manufacturer_id_code'] ?? ''));
-                $assignedFactoryId = !empty($prod['factory_id']) ? (int)$prod['factory_id'] : ($factoryMapByCode[$mfgIdCode] ?? null);
+                $this->db->beginTransaction();
 
-                // Process Main Image
                 $mainImagePath = $this->processImageSource($prod['main_image'], $extractedZipDir, $sku, 'main', $errorLogs, 'Main Product Image');
-
-                // Check existing product in DB
-                $stmtCheck = $this->db->prepare("SELECT id FROM products WHERE sku = ?");
-                $stmtCheck->execute([$sku]);
-                $existing = $stmtCheck->fetch();
-
                 $slug = $this->slugify($prod['name']) . '-' . strtolower($sku);
 
-                if ($existing) {
-                    $productId = (int)$existing['id'];
-                    $stmtUpdate = $this->db->prepare("
-                        UPDATE products SET
-                            name = :name,
-                            slug = :slug,
-                            category_id = :category_id,
-                            subcategory_id = :subcategory_id,
-                            brand_id = :brand_id,
-                            factory_id = :factory_id,
-                            weight = :weight,
-                            variety = :variety,
-                            description = :description,
-                            price = :price,
-                            sale_price = :sale_price,
-                            moq = :moq,
-                            stock = :stock,
-                            main_image = COALESCE(:main_image, main_image),
-                            main_image_source_url = COALESCE(:main_image_source_url, main_image_source_url),
-                            manufacturer_id_code = :manufacturer_id_code,
-                            manufacturer_name = :manufacturer_name,
-                            manufacturer_contact_person = :manufacturer_contact_person,
-                            manufacturer_phone = :manufacturer_phone,
-                            manufacturer_whatsapp = :manufacturer_whatsapp,
-                            manufacturer_email = :manufacturer_email,
-                            manufacturer_store_url = :manufacturer_store_url,
-                            source_platform = :source_platform,
-                            source_product_id = :source_product_id,
-                            source_product_url = :source_product_url,
-                            import_date = :import_date,
-                            admin_status = :admin_status,
-                            status = 'active',
-                            updated_at = NOW()
-                        WHERE id = :id
-                    ");
-                    $stmtUpdate->execute([
-                        ':name'                        => $prod['name'],
-                        ':slug'                        => $slug,
-                        ':category_id'                 => $categoryId,
-                        ':subcategory_id'              => $subcategoryId,
-                        ':brand_id'                    => $brandId,
-                        ':factory_id'                  => $assignedFactoryId,
-                        ':weight'                      => $prod['weight'] ?: null,
-                        ':variety'                     => $prod['variety'] ?: null,
-                        ':description'                 => $prod['description'],
-                        ':price'                       => $prod['tier1_price'] > 0 ? $prod['tier1_price'] : $prod['one_piece_price'],
-                        ':sale_price'                  => $prod['one_piece_price'],
-                        ':moq'                         => $prod['moq'],
-                        ':stock'                       => $prod['available_qty'],
-                        ':main_image'                  => !empty($mainImagePath) ? $mainImagePath : null,
-                        ':main_image_source_url'       => !empty($prod['main_image']) ? $prod['main_image'] : null,
-                        ':manufacturer_id_code'        => $prod['manufacturer_id_code'] ?: null,
-                        ':manufacturer_name'           => $prod['manufacturer_name'] ?: null,
-                        ':manufacturer_contact_person' => $prod['manufacturer_contact_person'] ?: null,
-                        ':manufacturer_phone'          => $prod['manufacturer_phone'] ?: null,
-                        ':manufacturer_whatsapp'       => $prod['manufacturer_whatsapp'] ?: null,
-                        ':manufacturer_email'          => $prod['manufacturer_email'] ?: null,
-                        ':manufacturer_store_url'      => $prod['manufacturer_store_url'] ?: null,
-                        ':source_platform'             => $prod['source_platform'] ?: null,
-                        ':source_product_id'           => $prod['source_product_id'] ?: null,
-                        ':source_product_url'          => $prod['source_product_url'] ?: null,
-                        ':import_date'                 => $prod['import_date'] ?: date('Y-m-d H:i:s'),
-                        ':admin_status'                => $prod['admin_status'] ?: 'Active',
-                        ':id'                          => $productId,
-                    ]);
-                    $updatedProducts++;
-                } else {
-                    $stmtInsert = $this->db->prepare("
-                        INSERT INTO products (
-                            name, slug, sku, category_id, subcategory_id, brand_id, factory_id,
-                            weight, variety, description, price, sale_price, moq, stock, main_image, main_image_source_url, video_url,
-                            manufacturer_id_code, manufacturer_name, manufacturer_contact_person, manufacturer_phone,
-                            manufacturer_whatsapp, manufacturer_email, manufacturer_store_url, source_platform,
-                            source_product_id, source_product_url, import_date, admin_status, status, created_at, updated_at
-                        ) VALUES (
-                            :name, :slug, :sku, :category_id, :subcategory_id, :brand_id, :factory_id,
-                            :weight, :variety, :description, :price, :sale_price, :moq, :stock, :main_image, :main_image_source_url, :video_url,
-                            :manufacturer_id_code, :manufacturer_name, :manufacturer_contact_person, :manufacturer_phone,
-                            :manufacturer_whatsapp, :manufacturer_email, :manufacturer_store_url, :source_platform,
-                            :source_product_id, :source_product_url, :import_date, :admin_status, 'active', NOW(), NOW()
-                        )
-                    ");
-                    $stmtInsert->execute([
-                        ':name'                        => $prod['name'],
-                        ':slug'                        => $slug,
-                        ':sku'                         => $sku,
-                        ':category_id'                 => $categoryId,
-                        ':subcategory_id'              => $subcategoryId,
-                        ':brand_id'                    => $brandId,
-                        ':factory_id'                  => $assignedFactoryId,
-                        ':weight'                      => $prod['weight'] ?: null,
-                        ':variety'                     => $prod['variety'] ?: null,
-                        ':description'                 => $prod['description'],
-                        ':price'                       => $prod['tier1_price'] > 0 ? $prod['tier1_price'] : $prod['one_piece_price'],
-                        ':sale_price'                  => $prod['one_piece_price'],
-                        ':moq'                         => $prod['moq'],
-                        ':stock'                       => $prod['available_qty'],
-                        ':main_image'                  => $mainImagePath ?: 'assets/images/placeholder.jpg',
-                        ':main_image_source_url'       => !empty($prod['main_image']) ? $prod['main_image'] : null,
-                        ':video_url'                   => $prod['video_url'] ?? null,
-                        ':manufacturer_id_code'        => $prod['manufacturer_id_code'] ?: null,
-                        ':manufacturer_name'           => $prod['manufacturer_name'] ?: null,
-                        ':manufacturer_contact_person' => $prod['manufacturer_contact_person'] ?: null,
-                        ':manufacturer_phone'          => $prod['manufacturer_phone'] ?: null,
-                        ':manufacturer_whatsapp'       => $prod['manufacturer_whatsapp'] ?: null,
-                        ':manufacturer_email'          => $prod['manufacturer_email'] ?: null,
-                        ':manufacturer_store_url'      => $prod['manufacturer_store_url'] ?: null,
-                        ':source_platform'             => $prod['source_platform'] ?: null,
-                        ':source_product_id'           => $prod['source_product_id'] ?: null,
-                        ':source_product_url'          => $prod['source_product_url'] ?: null,
-                        ':import_date'                 => $prod['import_date'] ?: date('Y-m-d H:i:s'),
-                        ':admin_status'                => $prod['admin_status'] ?: 'Active',
-                    ]);
-                    $productId = (int)$this->db->lastInsertId();
-                    $createdProducts++;
-                }
-
-                // Sync Wholesale Tiers into `tiered_prices`
-                $this->syncWholesaleTiers($productId, $prod);
-
-                // Sync Specifications into `product_specifications`
-                $this->syncProductSpecifications($productId, $prod);
-
-                // Auto-populate filter option values from imported product data
-                $this->syncFilterOptions($productId, $prod);
-                (new \App\Services\FilterAttributeService())->syncProductSpecificationsToFilterAttributes($productId);
-
-                // Helper to check if image already exists (including mirrored R2 versions)
-                $imageExists = function($productId, $imagePath) {
-                    $chk = $this->db->prepare("SELECT id FROM product_images WHERE product_id = ? AND (image_url = ? OR image_path = ?)");
-                    $chk->execute([$productId, $imagePath, $imagePath]);
-                    if ($chk->fetch()) return true;
-                    
-                    // Check if there is an R2 mirror for this image path
-                    $hash = hash('sha256', $imagePath);
-                    $mapStmt = $this->db->prepare("SELECT r2_url FROM image_mirror_map WHERE source_url_hash = ? LIMIT 1");
-                    $mapStmt->execute([$hash]);
-                    $r2Url = $mapStmt->fetchColumn();
-                    if ($r2Url) {
-                        $chk->execute([$productId, $r2Url, $r2Url]);
-                        if ($chk->fetch()) return true;
-                    }
-                    return false;
-                };
-
-                // Process Main Cover Image in product_images table
-                if (!empty($mainImagePath)) {
-                    if (!$imageExists($productId, $mainImagePath)) {
-                        $stmtM = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, 0, 1)");
-                        $stmtM->execute([$productId, $mainImagePath]);
-                    }
-                }
-
-                // Process Additional Gallery Images
-                if (!empty($prod['additional_images'])) {
-                    $imgList = array_map('trim', explode(',', $prod['additional_images']));
-                    foreach ($imgList as $gIdx => $gImgName) {
-                        if (empty($gImgName)) continue;
-                        $gImgPath = $this->processImageSource($gImgName, $extractedZipDir, $sku, 'gallery-' . $gIdx, $errorLogs, 'Additional Image ' . ($gIdx + 1));
-                        if ($gImgPath && $gImgPath !== $mainImagePath) {
-                            if (!$imageExists($productId, $gImgPath)) {
-                                $stmtG = $this->db->prepare("INSERT INTO product_images (product_id, image_url, sort_order, is_primary) VALUES (?, ?, ?, 0)");
-                                $stmtG->execute([$productId, $gImgPath, $gIdx + 1]);
-                            }
-                        }
-                    }
-                }
-
-                // Sync Variants into product_colors & product_color_sizes (and product_variants legacy fallback)
                 $varMode = !empty($prod['variation_mode']) ? strtolower(trim($prod['variation_mode'])) : 'none';
                 if ($varMode === 'none' && !empty($prod['variants'])) {
-                    // Check if variants specify sizes
                     $hasSizes = false;
                     foreach ($prod['variants'] as $v) {
                         if (!empty($v['size_label'])) { $hasSizes = true; break; }
@@ -927,66 +794,160 @@ class BulkImportService
                     $varMode = $hasSizes ? 'double' : 'single';
                 }
 
-                // Update variation_mode on product
-                $this->db->prepare("UPDATE products SET variation_mode = ? WHERE id = ?")->execute([$varMode, $productId]);
+                $isExisting = isset($existingProducts[$sku]);
+                $productId = $isExisting ? $existingProducts[$sku] : null;
+
+                $productDataArr = [
+                    ':name'                        => $prod['name'],
+                    ':slug'                        => $slug,
+                    ':category_id'                 => $categoryId,
+                    ':subcategory_id'              => $subcategoryId,
+                    ':brand_id'                    => $brandId,
+                    ':factory_id'                  => $factoryId,
+                    ':weight'                      => $prod['weight'] ?: null,
+                    ':variety'                     => $prod['variety'] ?: null,
+                    ':description'                 => $prod['description'],
+                    ':price'                       => $prod['tier1_price'] > 0 ? $prod['tier1_price'] : $prod['one_piece_price'],
+                    ':sale_price'                  => $prod['one_piece_price'],
+                    ':moq'                         => $prod['moq'],
+                    ':stock'                       => $prod['available_qty'],
+                    ':main_image'                  => !empty($mainImagePath) ? $mainImagePath : ($isExisting ? null : 'assets/images/placeholder.jpg'),
+                    ':main_image_source_url'       => !empty($prod['main_image']) ? $prod['main_image'] : null,
+                    ':manufacturer_id_code'        => $prod['manufacturer_id_code'] ?: null,
+                    ':manufacturer_name'           => $prod['manufacturer_name'] ?: null,
+                    ':manufacturer_contact_person' => $prod['manufacturer_contact_person'] ?: null,
+                    ':manufacturer_phone'          => $prod['manufacturer_phone'] ?: null,
+                    ':manufacturer_whatsapp'       => $prod['manufacturer_whatsapp'] ?: null,
+                    ':manufacturer_email'          => $prod['manufacturer_email'] ?: null,
+                    ':manufacturer_store_url'      => $prod['manufacturer_store_url'] ?: null,
+                    ':source_platform'             => $prod['source_platform'] ?: null,
+                    ':source_product_id'           => $prod['source_product_id'] ?: null,
+                    ':source_product_url'          => $prod['source_product_url'] ?: null,
+                    ':import_date'                 => $prod['import_date'] ?: date('Y-m-d H:i:s'),
+                    ':admin_status'                => $prod['admin_status'] ?: 'Active',
+                    ':variation_mode'              => $varMode
+                ];
+
+                if ($isExisting) {
+                    $productDataArr[':id'] = $productId;
+                    $stmtUpdateProduct->execute($productDataArr);
+                    $updatedProducts++;
+                } else {
+                    $productDataArr[':video_url'] = $prod['video_url'] ?? null;
+                    $productDataArr[':sku'] = $sku;
+                    $stmtInsertProduct->execute($productDataArr);
+                    $productId = (int)$this->db->lastInsertId();
+                    $existingProducts[$sku] = $productId; // cache it
+                    $createdProducts++;
+                }
+
+                $this->syncWholesaleTiers($productId, $prod);
+                $this->syncProductSpecifications($productId, $prod);
+                $this->syncFilterOptions($productId, $prod, $fs);
+
+                // Images
+                $imagesToInsert = [];
+                if (!isset($existingImagesMap[$productId])) {
+                    $existingImgs = $this->db->prepare("SELECT image_path, image_url FROM product_images WHERE product_id = ?");
+                    $existingImgs->execute([$productId]);
+                    $existingImagesMap[$productId] = [];
+                    foreach ($existingImgs->fetchAll() as $imgRow) {
+                        $existingImagesMap[$productId][] = $imgRow['image_path'];
+                        $existingImagesMap[$productId][] = $imgRow['image_url'];
+                    }
+                }
+                
+                $imageExistsLocal = function($pid, $imgPath) use (&$existingImagesMap) {
+                    return in_array($imgPath, $existingImagesMap[$pid]);
+                };
+
+                if (!empty($mainImagePath) && !$imageExistsLocal($productId, $mainImagePath)) {
+                    $imagesToInsert[] = [$productId, $mainImagePath, $mainImagePath, 0, 1];
+                    $existingImagesMap[$productId][] = $mainImagePath;
+                }
+
+                if (!empty($prod['additional_images'])) {
+                    $imgList = array_map('trim', explode(',', $prod['additional_images']));
+                    foreach ($imgList as $gIdx => $gImgName) {
+                        if (empty($gImgName)) continue;
+                        $gImgPath = $this->processImageSource($gImgName, $extractedZipDir, $sku, 'gallery-' . $gIdx, $errorLogs, 'Additional Image ' . ($gIdx + 1));
+                        if ($gImgPath && $gImgPath !== $mainImagePath && !$imageExistsLocal($productId, $gImgPath)) {
+                            $imagesToInsert[] = [$productId, $gImgPath, $gImgPath, $gIdx + 1, 0];
+                            $existingImagesMap[$productId][] = $gImgPath;
+                        }
+                    }
+                }
+                if (!empty($imagesToInsert)) {
+                    $qmarks = implode(',', array_fill(0, count($imagesToInsert), '(?,?,?,?,?)'));
+                    $flatArgs = [];
+                    foreach ($imagesToInsert as $imgArgs) {
+                        $flatArgs = array_merge($flatArgs, $imgArgs);
+                    }
+                    $this->db->prepare("INSERT INTO product_images (product_id, image_url, image_path, sort_order, is_primary) VALUES $qmarks")->execute($flatArgs);
+                }
+
+                // Variants
+                if (!isset($existingColorsMap[$productId])) {
+                    $existingColors = $this->db->prepare("SELECT id, LOWER(color_name) as cname FROM product_colors WHERE product_id = ?");
+                    $existingColors->execute([$productId]);
+                    $existingColorsMap[$productId] = [];
+                    foreach ($existingColors->fetchAll() as $cRow) {
+                        $existingColorsMap[$productId][$cRow['cname']] = (int)$cRow['id'];
+                    }
+                }
 
                 if ($varMode === 'single') {
-                    $cStmtCheck = $this->db->prepare("SELECT id FROM product_colors WHERE product_id = ? AND LOWER(color_name) = LOWER(?)");
-                    $cStmtUpd   = $this->db->prepare("UPDATE product_colors SET sku = :sku, price = :price, stock_qty = :stock, swatch_hex_or_image = COALESCE(:swatch, swatch_hex_or_image) WHERE id = :id");
-                    $cStmtIns   = $this->db->prepare("INSERT INTO product_colors (product_id, color_name, swatch_hex_or_image, sku, price, stock_qty) VALUES (:product_id, :color_name, :swatch, :sku, :price, :stock)");
-
+                    $cStmtUpd = $this->db->prepare("UPDATE product_colors SET sku = :sku, price = :price, stock_qty = :stock, swatch_hex_or_image = COALESCE(:swatch, swatch_hex_or_image) WHERE id = :id");
+                    $cStmtIns = $this->db->prepare("INSERT INTO product_colors (product_id, color_name, swatch_hex_or_image, sku, price, stock_qty) VALUES (:product_id, :color_name, :swatch, :sku, :price, :stock)");
                     foreach ($prod['variants'] as $vData) {
                         $colorName = !empty($vData['color_name']) ? $vData['color_name'] : 'Default';
-                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$varSku, $errorLogs, 'Variant Image') : null;
-                        $varSku    = $vData['variant_sku'];
-                        $varPrice  = $vData['variant_price'];
-                        $varStock  = $vData['variant_stock'];
-
-                        $cStmtCheck->execute([$productId, $colorName]);
-                        $cExist = $cStmtCheck->fetch();
-
-                        if ($cExist) {
+                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$vData['variant_sku'], $errorLogs, 'Variant Image') : null;
+                        
+                        $cKey = strtolower($colorName);
+                        if (isset($existingColorsMap[$productId][$cKey])) {
                             $cStmtUpd->execute([
-                                ':sku'    => $varSku,
-                                ':price'  => $varPrice,
-                                ':stock'  => $varStock,
-                                ':swatch' => !empty($swatchHex) ? $swatchHex : null,
-                                ':id'     => (int)$cExist['id'],
+                                ':sku'    => $vData['variant_sku'],
+                                ':price'  => $vData['variant_price'],
+                                ':stock'  => $vData['variant_stock'],
+                                ':swatch' => $swatchHex ?: null,
+                                ':id'     => $existingColorsMap[$productId][$cKey],
                             ]);
                         } else {
                             $cStmtIns->execute([
                                 ':product_id' => $productId,
                                 ':color_name' => $colorName,
                                 ':swatch'     => $swatchHex,
-                                ':sku'        => $varSku,
-                                ':price'      => $varPrice,
-                                ':stock'      => $varStock,
+                                ':sku'        => $vData['variant_sku'],
+                                ':price'      => $vData['variant_price'],
+                                ':stock'      => $vData['variant_stock'],
                             ]);
+                            $existingColorsMap[$productId][$cKey] = (int)$this->db->lastInsertId();
                         }
                         $createdVariants++;
                     }
                 } elseif ($varMode === 'double') {
-                    $cStmtCheck = $this->db->prepare("SELECT id FROM product_colors WHERE product_id = ? AND LOWER(color_name) = LOWER(?)");
-                    $cStmtIns   = $this->db->prepare("INSERT INTO product_colors (product_id, color_name, swatch_hex_or_image) VALUES (?, ?, ?)");
+                    $cStmtIns = $this->db->prepare("INSERT INTO product_colors (product_id, color_name, swatch_hex_or_image) VALUES (?, ?, ?)");
+                    
+                    if (!isset($existingColorSizesMap[$productId])) {
+                        $existingColorSizesMap[$productId] = [];
+                        $existingSizes = $this->db->prepare("SELECT id, color_id, LOWER(size_label) as slabel FROM product_color_sizes WHERE color_id IN (SELECT id FROM product_colors WHERE product_id = ?)");
+                        $existingSizes->execute([$productId]);
+                        foreach ($existingSizes->fetchAll() as $sRow) {
+                            $existingColorSizesMap[$productId][$sRow['color_id'] . '_' . $sRow['slabel']] = (int)$sRow['id'];
+                        }
+                    }
 
-                    $sStmtCheck = $this->db->prepare("SELECT id FROM product_color_sizes WHERE color_id = ? AND LOWER(size_label) = LOWER(?)");
-                    $sStmtUpd   = $this->db->prepare("UPDATE product_color_sizes SET sku = :sku, price = :price, stock_qty = :stock WHERE id = :id");
-                    $sStmtIns   = $this->db->prepare("INSERT INTO product_color_sizes (color_id, size_label, sku, price, stock_qty) VALUES (:color_id, :size_label, :sku, :price, :stock)");
+                    $sStmtUpd = $this->db->prepare("UPDATE product_color_sizes SET sku = :sku, price = :price, stock_qty = :stock WHERE id = :id");
+                    $sStmtIns = $this->db->prepare("INSERT INTO product_color_sizes (color_id, size_label, sku, price, stock_qty) VALUES (:color_id, :size_label, :sku, :price, :stock)");
 
                     foreach ($prod['variants'] as $vData) {
                         $colorName = !empty($vData['color_name']) ? $vData['color_name'] : 'Default';
                         $sizeLabel = !empty($vData['size_label']) ? $vData['size_label'] : 'Standard';
-                        $varSku    = $vData['variant_sku'];
-                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$varSku, $errorLogs, 'Variant Image') : null;
-                        $varPrice  = $vData['variant_price'];
-                        $varStock  = $vData['variant_stock'];
+                        $swatchHex = !empty($vData['variant_image']) ? $this->processImageSource($vData['variant_image'], $extractedZipDir, $sku, 'variant-'.$vData['variant_sku'], $errorLogs, 'Variant Image') : null;
 
-                        $cStmtCheck->execute([$productId, $colorName]);
-                        $cExist = $cStmtCheck->fetch();
-
-                        if ($cExist) {
-                            $colorId = (int)$cExist['id'];
-                            // Update swatch if we now have a mirrored R2 URL
+                        $cKey = strtolower($colorName);
+                        if (isset($existingColorsMap[$productId][$cKey])) {
+                            $colorId = $existingColorsMap[$productId][$cKey];
                             if (!empty($swatchHex)) {
                                 $this->db->prepare("UPDATE product_colors SET swatch_hex_or_image = ? WHERE id = ? AND (swatch_hex_or_image IS NULL OR swatch_hex_or_image = '' OR swatch_hex_or_image NOT LIKE '%r2.dev%')")
                                     ->execute([$swatchHex, $colorId]);
@@ -994,42 +955,44 @@ class BulkImportService
                         } else {
                             $cStmtIns->execute([$productId, $colorName, $swatchHex]);
                             $colorId = (int)$this->db->lastInsertId();
+                            $existingColorsMap[$productId][$cKey] = $colorId;
                         }
 
-                        $sStmtCheck->execute([$colorId, $sizeLabel]);
-                        $sExist = $sStmtCheck->fetch();
-
-                        if ($sExist) {
+                        $sKey = $colorId . '_' . strtolower($sizeLabel);
+                        if (isset($existingColorSizesMap[$productId][$sKey])) {
                             $sStmtUpd->execute([
-                                ':sku'   => $varSku,
-                                ':price' => $varPrice,
-                                ':stock' => $varStock,
-                                ':id'    => (int)$sExist['id'],
+                                ':sku'   => $vData['variant_sku'],
+                                ':price' => $vData['variant_price'],
+                                ':stock' => $vData['variant_stock'],
+                                ':id'    => $existingColorSizesMap[$productId][$sKey],
                             ]);
                         } else {
                             $sStmtIns->execute([
                                 ':color_id'   => $colorId,
                                 ':size_label' => $sizeLabel,
-                                ':sku'        => $varSku,
-                                ':price'      => $varPrice,
-                                ':stock'      => $varStock,
+                                ':sku'        => $vData['variant_sku'],
+                                ':price'      => $vData['variant_price'],
+                                ':stock'      => $vData['variant_stock'],
                             ]);
+                            $existingColorSizesMap[$productId][$sKey] = (int)$this->db->lastInsertId();
                         }
                         $createdVariants++;
                     }
                 }
 
-                // Sync to flat variants for legacy frontend support
                 $vService->syncToFlatVariants($productId, $varMode);
+                $this->db->commit();
+            } catch (\Throwable $e) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                $skippedProducts++;
+                $errorLogs[] = [
+                    'sku'    => $prod['product_sku'],
+                    'name'   => $prod['name'],
+                    'reason' => 'Transaction failed: ' . $e->getMessage()
+                ];
             }
-
-            $this->db->commit();
-        } catch (\Throwable $e) {
-            $this->db->rollBack();
-            return [
-                'success' => false,
-                'error'   => 'Database commit failed: ' . $e->getMessage()
-            ];
         }
 
         return [
@@ -1047,12 +1010,7 @@ class BulkImportService
                 'failed_urls' => $this->imageFailed,
             ]
         ];
-    }
-
-    /**
-     * Save specifications from the 60-column bulk sheet.
-     */
-    private function syncProductSpecifications(int $productId, array $prod): void
+    }    private function syncProductSpecifications(int $productId, array $prod): void
     {
         $specMap = [
             'Jewellery Type'                    => $prod['jewellery_type'] ?? '',
@@ -1107,12 +1065,10 @@ class BulkImportService
      * values (e.g. "Vacuum Electroplating, Hand Weaving") are split into
      * individual filter options.
      */
-    private function syncFilterOptions(int $productId, array $prod): void
+    private function syncFilterOptions(int $productId, array $prod, $fs = null): void
     {
         /** @var \App\Services\FilterAttributeService $fs */
-        $fs = new \App\Services\FilterAttributeService();
-
-        // field-value  →  filter attribute slug mapping
+        if (!$fs) { $fs = new \App\Services\FilterAttributeService(); } // field-value  →  filter attribute slug mapping
         $fieldToSlug = [
             'category'              => 'category',
             'subcategory'           => 'subcategory',
@@ -1179,7 +1135,7 @@ class BulkImportService
      */
     private function syncWholesaleTiers(int $productId, array $prod): void
     {
-        $stmtDel = $this->db->prepare("DELETE FROM tiered_prices WHERE product_id = ? AND (variant_id IS NULL OR variant_id = 0)");
+        $stmtDel = $this->db->prepare("DELETE FROM tiered_prices WHERE product_id = ?");
         $stmtDel->execute([$productId]);
 
         $tiers = [];
@@ -1210,9 +1166,13 @@ class BulkImportService
             ];
         }
 
-        $stmtIns = $this->db->prepare("INSERT INTO tiered_prices (product_id, min_qty, max_qty, unit_price) VALUES (?, ?, ?, ?)");
-        foreach ($tiers as $t) {
-            $stmtIns->execute([$productId, $t['min_qty'], $t['max_qty'], $t['unit_price']]);
+        if (!empty($tiers)) {
+            $qmarks = implode(',', array_fill(0, count($tiers), '(?,?,?,?)'));
+            $flatArgs = [];
+            foreach ($tiers as $t) {
+                $flatArgs = array_merge($flatArgs, [$productId, $t['min_qty'], $t['max_qty'], $t['unit_price']]);
+            }
+            $this->db->prepare("INSERT INTO tiered_prices (product_id, min_qty, max_qty, unit_price) VALUES $qmarks")->execute($flatArgs);
         }
     }
 
@@ -1420,26 +1380,9 @@ class BulkImportService
             return $clean;
         }
 
-        // External URL → mirror to R2 synchronously
+        // Return URL directly (do not download during import)
         if (filter_var($clean, FILTER_VALIDATE_URL)) {
-            try {
-                $result = $this->mirrorSvc->mirrorImage($clean, $sku, $type);
-                if ($result['success']) {
-                    $this->imageMirrored++;
-                    return $result['url']; // Return R2 URL — original never stored
-                } else {
-                    // Mirror failed — track for summary, store nothing
-                    $errMsg = "{$colName} mirror failed for SKU {$sku}: " . ($result['error'] ?? 'Unknown error');
-                    $this->imageFailed[] = ['sku' => $sku, 'url' => $clean, 'error' => $result['error'] ?? 'Unknown'];
-                    if ($errorLogs !== null) {
-                        $errorLogs[] = ['sku' => $sku, 'name' => '', 'reason' => $errMsg];
-                    }
-                    return ''; // Do NOT store the raw bulkflowai URL
-                }
-            } catch (\Throwable $e) {
-                $this->imageFailed[] = ['sku' => $sku, 'url' => $clean, 'error' => $e->getMessage()];
-                return '';
-            }
+            return \App\Helpers\ImageMirror::enqueue($clean);
         }
 
         // ZIP-bundled image filename → resolve local path

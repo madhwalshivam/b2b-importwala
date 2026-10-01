@@ -7,18 +7,18 @@ return [
         'mysql' => [
             'read' => [
                 'host' => [
-                    getenv('DB_READ_HOST') ?: '127.0.0.1',
+                    env('DB_HOST', '127.0.0.1'),
                 ],
             ],
             'write' => [
                 'host' => [
-                    getenv('DB_WRITE_HOST') ?: '127.0.0.1',
+                    env('DB_HOST', '127.0.0.1'),
                 ],
             ],
-            'port'     => getenv('DB_PORT') ?: '3306',
-            'dbname'   => getenv('DB_DATABASE') ?: 'ecommerce',
-            'username' => getenv('DB_USERNAME') ?: 'root',
-            'password' => getenv('DB_PASSWORD') ?: '',
+            'port'     => env('DB_PORT', '3306'),
+            'dbname'   => env('DB_DATABASE'),
+            'username' => env('DB_USERNAME'),
+            'password' => env('DB_PASSWORD'),
             'charset'  => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'options'  => [

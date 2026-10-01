@@ -12,19 +12,18 @@ class CloudflareR2
     
     public function __construct()
     {
-        $accountId = getenv('R2_ACCOUNT_ID') ?: '01e0ff8f64110937bdefd6c0f82bc3c6';
-        $accessKey = getenv('R2_ACCESS_KEY') ?: '1e453fb192850ae21d857265efb6a98a'; 
-        $secretKey = getenv('R2_SECRET_KEY') ?: '899894385cd18e4bb6f51918d679fdd3fb3e0167c26350ecc309503f6f5e7f1a';
+        $accountId = env('R2_ACCOUNT_ID');
+        $accessKey = env('R2_ACCESS_KEY_ID');
+        $secretKey = env('R2_SECRET_ACCESS_KEY');
+        $endpoint = env('R2_ENDPOINT');
         
-        $this->bucketName = getenv('R2_BUCKET') ?: 'importwala-images';
-        // Go to your bucket settings -> Public Access -> Custom Domains or r2.dev subdomain
-        $this->publicBaseUrl = rtrim(getenv('R2_PUBLIC_URL') ?: 'https://pub-d9978a80e9cc429a9b9b47103cded128.r2.dev', '/');
+        $this->bucketName = env('R2_BUCKET', 'importwala-images');
+        $this->publicBaseUrl = rtrim(env('R2_PUBLIC_URL', ''), '/');
 
-        if ($accountId !== 'YOUR_ACCOUNT_ID' && $accessKey !== 'YOUR_ACCESS_KEY') {
+        if ($accountId && $accessKey && $secretKey) {
             try {
-                $this->client = new S3Client([
+                $clientConfig = [
                     'region'      => 'auto',
-                    'endpoint'    => "https://{$accountId}.r2.cloudflarestorage.com",
                     'version'     => 'latest',
                     'credentials' => [
                         'key'    => $accessKey,
@@ -34,10 +33,20 @@ class CloudflareR2
                     'http' => [
                         'verify' => false
                     ]
-                ]);
+                ];
+                
+                if ($endpoint) {
+                    $clientConfig['endpoint'] = $endpoint;
+                } else {
+                    $clientConfig['endpoint'] = "https://{$accountId}.r2.cloudflarestorage.com";
+                }
+                
+                $this->client = new S3Client($clientConfig);
             } catch (\Exception $e) {
-                // Log or handle init failure
+                error_log("WARNING: Failed to instantiate R2 client: " . $e->getMessage());
             }
+        } else {
+            error_log("WARNING: R2 credentials missing. Skipping R2 client initialization.");
         }
     }
 

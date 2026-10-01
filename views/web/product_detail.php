@@ -8,6 +8,10 @@ $sku = htmlspecialchars($product['sku'] ?? 'N/A');
 $canonicalUrl = url('product/' . ($product['slug'] ?? $product['id']));
 $initialVariantCode = $selectedVariantCode ?? $_GET['variant'] ?? '';
 $moq = (int) ($product['moq'] ?? 1);
+
+$cartWishlistState = get_cart_and_wishlist_state();
+$initialCartCount = $cartWishlistState['cart_count'];
+
 // Safe Description Formatting
 function formatProductDescription($text) {
     if (empty($text)) return '';
@@ -432,7 +436,7 @@ ob_start();
                 <div class="flex gap-2">
                     <button type="button" onclick="openCartDrawer()" class="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center text-white cursor-pointer backdrop-blur-sm border-0 relative">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                        <div class="absolute -top-1 -right-1 bg-[#f05a29] text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold" id="mobileCustomCartCount" style="display: <?= $initialCartCount > 0 ? 'flex' : 'none' ?>"><?= $initialCartCount ?></div>
+                        <div class="absolute -top-1 -right-1 bg-[#f05a29] text-[9px] w-4 h-4 rounded-full flex items-center justify-center font-bold" id="mobileCustomCartCount" style="display: <?= ($initialCartCount ?? 0) > 0 ? 'flex' : 'none' ?>"><?= (int)($initialCartCount ?? 0) ?></div>
                     </button>
                 </div>
             </div>
@@ -960,11 +964,11 @@ ob_start();
         const d = document.getElementById(id);
         if(d) { d.classList.remove('open'); setTimeout(() => d.classList.add('hidden'), 300); }
     }
-    const WHATSAPP_NUMBER = '<?= $waNumber ?>';
-    const PRODUCT_NAME = '<?= addslashes($productName) ?>';
-    const PRODUCT_URL = '<?= $canonicalUrl ?>';
-    const WS_START = <?= $wholesaleStartPrice ?>;
-    const OP_START = <?= $onePieceStartPrice ?>;
+    const WHATSAPP_NUMBER = <?= json_encode($waNumber ?? '') ?>;
+    const PRODUCT_NAME = <?= json_encode($productName ?? '') ?>;
+    const PRODUCT_URL = <?= json_encode($canonicalUrl ?? '') ?>;
+    const WS_START = <?= (float)($wholesaleStartPrice ?? 0) ?>;
+    const OP_START = <?= (float)($onePieceStartPrice ?? 0) ?>;
 
     let currentMode = 'wholesale';
     let selectedVariantEl = null;
@@ -1198,7 +1202,7 @@ ob_start();
         if (priceEl && displayStr) priceEl.textContent = displayStr;
     }
 
-    const GALLERY_IMAGES = <?= json_encode(array_values($gallery)) ?>;
+    const GALLERY_IMAGES = <?= json_encode(array_values($gallery ?? [])) ?>;
     let currentImgIdx = 0;
 
     function switchImage(idx, src) {
@@ -1334,7 +1338,7 @@ ob_start();
         }
     }
 
-    const VARIANTS_LIST = <?= json_encode($variantsJsonData) ?>;
+    const VARIANTS_LIST = <?= json_encode($variantsJsonData ?? []) ?>;
     let selectedVariantIndex = null; // null = no variant selected yet
 
     function selectAmazonVariant(idx) {
@@ -1342,7 +1346,7 @@ ob_start();
 
         // Deselect: clicking the already-selected variant clears size selection, keeps color active
         if (selectedVariantIndex === idx) {
-            if (<?= $isDoubleMode ? 'true' : 'false' ?> && currentColorSelection) {
+            if (<?= !empty($isDoubleMode) ? 'true' : 'false' ?> && currentColorSelection) {
                 // Save color before restore (restore clears it)
                 const savedColor = VARIANTS_LIST[idx].color || '';
                 selectedVariantIndex = null;
@@ -1477,7 +1481,7 @@ ob_start();
         }
 
         // 6. Update URL to clean SEO route without page reload
-        const baseUrl = <?= json_encode($canonicalUrl) ?>;
+        const baseUrl = <?= json_encode($canonicalUrl ?? '') ?>;
         if (v.code) {
             const cleanUrl = baseUrl + '/' + encodeURIComponent(v.code);
             window.history.replaceState(null, '', cleanUrl);
@@ -1638,11 +1642,11 @@ ob_start();
         }
 
         // Restore product-level tiers
-        const prodTiers = <?= json_encode($prodTiers) ?>;
+        const prodTiers = <?= json_encode($prodTiers ?? []) ?>;
         renderVariantTiers(prodTiers);
 
         // Restore URL to base product URL
-        window.history.replaceState(null, '', <?= json_encode($canonicalUrl) ?>);
+        window.history.replaceState(null, '', <?= json_encode($canonicalUrl ?? '') ?>);
 
         // Clear all variant active styling
         document.querySelectorAll('.variant-row').forEach(r => {
@@ -1873,7 +1877,7 @@ ob_start();
 
     function handleCartRemoveResponse(data) {
         if (!data || !VARIANTS_LIST) return;
-        const currentProductId = <?= (int) $product['id'] ?>;
+        const currentProductId = <?= (int)($product['id'] ?? 0) ?>;
         if (parseInt(data.product_id) !== currentProductId) return;
         if (data.pricing_mode && data.pricing_mode !== currentMode) return;
 
@@ -1890,7 +1894,7 @@ ob_start();
     function syncExistingCartToSteppers(items) {
         if (initialCartSynced || !VARIANTS_LIST || !items) return;
         initialCartSynced = true;
-        const currentProductId = <?= (int) $product['id'] ?>;
+        const currentProductId = <?= (int)($product['id'] ?? 0) ?>;
         items.forEach(item => {
             if (parseInt(item.product_id) === currentProductId) {
                 const vi = VARIANTS_LIST.findIndex(v => parseInt(v.id) === parseInt(item.variant_id));
@@ -1921,7 +1925,7 @@ ob_start();
     }
 
     function updateDetailQtyTotal(val) {
-        let price = <?= (float)$price ?>;
+        let price = <?= (float)($price ?? 0) ?>;
         if (currentMode === 'wholesale') {
             const cards = document.querySelectorAll('.tier-card');
             cards.forEach(card => {
@@ -2085,7 +2089,7 @@ ob_start();
             items = window.lastCartItems;
         }
 
-        const currentProductId = <?= (int) $product['id'] ?>;
+        const currentProductId = <?= (int)($product['id'] ?? 0) ?>;
 
         if (!items || !Array.isArray(items)) {
             currentAtcQty = 0;
@@ -2142,7 +2146,7 @@ ob_start();
 
     let detailAddToCartInFlight = false;
     async function addToCartFromDetail(overrideQty = null) {
-        const pId = <?= (int) $product['id'] ?>;
+        const pId = <?= (int)($product['id'] ?? 0) ?>;
         if (detailAddToCartInFlight) return;
         detailAddToCartInFlight = true;
 
@@ -2233,7 +2237,7 @@ ob_start();
     }
 
     async function toggleDetailWishlist() {
-        const pId = <?= (int) $product['id'] ?>;
+        const pId = <?= (int)($product['id'] ?? 0) ?>;
         const payload = new URLSearchParams();
         payload.append('product_id', pId);
         try {

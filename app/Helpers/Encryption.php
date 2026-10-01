@@ -11,7 +11,7 @@ class Encryption {
      * Get or derive secret encryption key
      */
     private static function getSecretKey(): string {
-        $envKey = getenv('APP_SECRET_KEY');
+        $envKey = env('APP_SECRET_KEY');
         if (!empty($envKey)) {
             return hash('sha256', $envKey, true);
         }

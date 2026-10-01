@@ -22,6 +22,39 @@ class Session {
                     'samesite' => 'Lax'
                 ]);
             }
+            
+            if (env('SESSION_DRIVER') === 'redis' && extension_loaded('redis')) {
+                try {
+                    $redisConfig = require __DIR__ . '/../../config/redis.php';
+                    $host = $redisConfig['session']['host'] ?? '127.0.0.1';
+                    $port = $redisConfig['session']['port'] ?? 6379;
+                    $password = $redisConfig['session']['password'] ?? '';
+                    $db = $redisConfig['session']['database'] ?? 2;
+                    
+                    // Quick test connection to avoid crash on session_start
+                    // Use dynamic instantiation to prevent IDE "Unknown class" warnings
+                    $redisClass = '\Redis';
+                    $redis = new $redisClass();
+                    $connected = @$redis->connect($host, $port, 1.5);
+                    if ($connected) {
+                        if ($password) $redis->auth($password);
+                        $redis->select($db);
+                        $redis->close(); // Close test connection
+                        
+                        $savePath = "tcp://$host:$port?database=$db";
+                        if ($password) {
+                            $savePath .= "&auth=" . urlencode($password);
+                        }
+                        
+                        ini_set('session.save_handler', 'redis');
+                        ini_set('session.save_path', $savePath);
+                    } else {
+                        error_log("WARNING: Redis SESSION_DRIVER selected but connection failed. Falling back to file session.");
+                    }
+                } catch (\Throwable $e) {
+                    error_log("WARNING: Redis session connection exception: " . $e->getMessage() . ". Falling back to file session.");
+                }
+            }
             @session_start();
         }
     }

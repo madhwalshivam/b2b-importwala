@@ -1,5 +1,35 @@
 <?php
 
+if (!function_exists('env')) {
+    function env(string $key, mixed $default = null): mixed
+    {
+        $value = getenv($key);
+        if ($value === false) {
+            $value = $_ENV[$key] ?? $_SERVER[$key] ?? false;
+        }
+        
+        if ($value === false) {
+            return $default;
+        }
+
+        $lowerValue = strtolower($value);
+        if ($lowerValue === 'true' || $lowerValue === '(true)') {
+            return true;
+        }
+        if ($lowerValue === 'false' || $lowerValue === '(false)') {
+            return false;
+        }
+        if ($lowerValue === 'empty' || $lowerValue === '(empty)') {
+            return '';
+        }
+        if ($lowerValue === 'null' || $lowerValue === '(null)') {
+            return null;
+        }
+
+        return $value;
+    }
+}
+
 if (!function_exists('e')) {
     /**
      * Escape HTML entities safely without double-encoding existing entities
@@ -29,17 +59,13 @@ if (!function_exists('sanitize_input')) {
 if (!function_exists('url')) {
     function url(string $path = ''): string
     {
-        if (isset($_SERVER['HTTP_HOST'])) {
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-            if (str_ends_with($scriptDir, '/public') || str_ends_with($scriptDir, '\\public')) {
-                $scriptDir = substr($scriptDir, 0, -7);
-            }
-            $baseUrl = $protocol . '://' . $_SERVER['HTTP_HOST'] . $scriptDir;
-            return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
-        }
-        $baseUrl = rtrim($GLOBALS['app_config']['url'] ?? 'http://localhost/importwala', '/');
-        return $baseUrl . '/' . ltrim($path, '/');
+        $appUrl = env('APP_URL', 'http://localhost/importwala');
+        $basePath = env('APP_BASE_PATH', '/importwala');
+        
+        $baseUrl = rtrim($appUrl, '/');
+        
+        // Return full url directly
+        return rtrim($baseUrl, '/') . '/' . ltrim($path, '/');
     }
 }
 
@@ -122,6 +148,23 @@ if (!function_exists('search_url')) {
         $clean = str_replace('&', 'and', $clean);
         $slug = slugify($clean);
         return url('search/' . $slug);
+    }
+}
+
+if (!function_exists('image_url')) {
+    function image_url(?string $key_or_url): string
+    {
+        if (empty($key_or_url)) {
+            return url('assets/img/placeholder.png');
+        }
+        if (str_starts_with($key_or_url, 'http://') || str_starts_with($key_or_url, 'https://')) {
+            return $key_or_url;
+        }
+        $r2PublicUrl = rtrim(env('R2_PUBLIC_URL', ''), '/');
+        if (empty($r2PublicUrl)) {
+            return url('assets/img/placeholder.png');
+        }
+        return $r2PublicUrl . '/' . ltrim($key_or_url, '/');
     }
 }
 
@@ -385,6 +428,51 @@ if (!function_exists('get_current_session_id')) {
     }
 }
 
+if (!function_exists('get_cart_and_wishlist_state')) {
+    function get_cart_and_wishlist_state(): array
+    {
+        $db = \App\Core\Database::getInstance();
+        $userId = get_current_user_id();
+        $sessionId = get_current_session_id();
+        
+        try {
+            if ($userId) {
+                $wStmt = $db->prepare("SELECT DISTINCT product_id FROM wishlist WHERE user_id = ?");
+                $wStmt->execute([$userId]);
+                $cStmt = $db->prepare("SELECT DISTINCT product_id FROM cart_items WHERE user_id = ?");
+                $cStmt->execute([$userId]);
+                $cQtyStmt = $db->prepare("SELECT SUM(quantity) FROM cart_items WHERE user_id = ?");
+                $cQtyStmt->execute([$userId]);
+            } else {
+                $wStmt = $db->prepare("SELECT DISTINCT product_id FROM wishlist WHERE session_id = ?");
+                $wStmt->execute([$sessionId]);
+                $cStmt = $db->prepare("SELECT DISTINCT product_id FROM cart_items WHERE session_id = ?");
+                $cStmt->execute([$sessionId]);
+                $cQtyStmt = $db->prepare("SELECT SUM(quantity) FROM cart_items WHERE session_id = ?");
+                $cQtyStmt->execute([$sessionId]);
+            }
+            
+            $initialWishlistProductIds = array_map('intval', $wStmt->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+            $initialWishlistCount = count($initialWishlistProductIds);
+            
+            $initialCartProductIds = array_map('intval', $cStmt->fetchAll(\PDO::FETCH_COLUMN) ?: []);
+            $initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
+        } catch (\Throwable $e) {
+            $initialWishlistProductIds = [];
+            $initialWishlistCount = 0;
+            $initialCartProductIds = [];
+            $initialCartCount = 0;
+        }
+        
+        return [
+            'wishlist_ids' => $initialWishlistProductIds,
+            'wishlist_count' => $initialWishlistCount,
+            'cart_ids' => $initialCartProductIds,
+            'cart_count' => $initialCartCount,
+        ];
+    }
+}
+
 if (!function_exists('upload_to_r2')) {
     /**
      * Central image upload helper — saves to Cloudflare R2 AND local server.
@@ -445,18 +533,7 @@ if (!function_exists('upload_to_r2')) {
             if (class_exists('\\App\\Services\\CloudflareR2')) {
                 // Use CloudflareR2 service uploadFile method which accepts a path
                 $r2 = new \App\Services\CloudflareR2();
-                if (method_exists($r2, 'uploadFile')) {
-                    $r2->uploadFile($localPath, $subfolder . '/' . $filename, $mimeType);
-                } else {
-                    // Fallback: build fake $_FILES array and call upload()
-                    $fakeFile = [
-                        'tmp_name' => $localPath,
-                        'name'     => $filename,
-                        'type'     => $mimeType,
-                        'size'     => filesize($localPath),
-                    ];
-                    $r2->upload($fakeFile);
-                }
+                $r2->uploadFile($localPath, $subfolder . '/' . $filename, $mimeType);
             }
         } catch (\Throwable $e) {
             // R2 failure is non-fatal — local copy already saved

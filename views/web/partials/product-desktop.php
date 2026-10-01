@@ -823,11 +823,11 @@
 <!-- JAVASCRIPT -->
 <!-- ============================================================ -->
 <script>
-    const WHATSAPP_NUMBER = '<?= $waNumber ?>';
-    const PRODUCT_NAME = '<?= addslashes($productName) ?>';
-    const PRODUCT_URL = '<?= $canonicalUrl ?>';
-    const WS_START = <?= $wholesaleStartPrice ?>;
-    const OP_START = <?= $onePieceStartPrice ?>;
+    const WHATSAPP_NUMBER = <?= json_encode($waNumber ?? '') ?>;
+    const PRODUCT_NAME = <?= json_encode($productName ?? '') ?>;
+    const PRODUCT_URL = <?= json_encode($canonicalUrl ?? '') ?>;
+    const WS_START = <?= (float)($wholesaleStartPrice ?? 0) ?>;
+    const OP_START = <?= (float)($onePieceStartPrice ?? 0) ?>;
 
     let currentMode = 'wholesale';
     let selectedVariantEl = null;
@@ -969,7 +969,7 @@
         if (priceEl && targetPrice > 0) priceEl.textContent = formatNum(targetPrice);
     }
 
-    const GALLERY_IMAGES = <?= json_encode(array_values($gallery)) ?>;
+    const GALLERY_IMAGES = <?= json_encode(array_values($gallery ?? [])) ?>;
     let currentImgIdx = 0;
 
     function switchImage(idx, src) {
@@ -1087,7 +1087,7 @@
         }
     }
 
-    const VARIANTS_LIST = <?= json_encode($variantsJsonData) ?>;
+    const VARIANTS_LIST = <?= json_encode($variantsJsonData ?? []) ?>;
     let selectedVariantIndex = null; // null = no variant selected yet
 
     function selectAmazonVariant(idx) {
@@ -1095,7 +1095,7 @@
 
         // Deselect: clicking the already-selected variant clears size selection, keeps color active
         if (selectedVariantIndex === idx) {
-            if (<?= $isDoubleMode ? 'true' : 'false' ?> && currentColorSelection) {
+            if (<?= !empty($isDoubleMode) ? 'true' : 'false' ?> && currentColorSelection) {
                 // Save color before restore (restore clears it)
                 const savedColor = VARIANTS_LIST[idx].color || '';
                 selectedVariantIndex = null;
@@ -1216,7 +1216,7 @@
         }
 
         // 6. Update URL to clean SEO route without page reload
-        const baseUrl = <?= json_encode($canonicalUrl) ?>;
+        const baseUrl = <?= json_encode($canonicalUrl ?? '') ?>;
         if (v.code) {
             const cleanUrl = baseUrl + '/' + encodeURIComponent(v.code);
             window.history.replaceState(null, '', cleanUrl);
@@ -1377,11 +1377,11 @@
         }
 
         // Restore product-level tiers
-        const prodTiers = <?= json_encode($prodTiers) ?>;
+        const prodTiers = <?= json_encode($prodTiers ?? []) ?>;
         renderVariantTiers(prodTiers);
 
         // Restore URL to base product URL
-        window.history.replaceState(null, '', <?= json_encode($canonicalUrl) ?>);
+        window.history.replaceState(null, '', <?= json_encode($canonicalUrl ?? '') ?>);
 
         // Clear all variant active styling
         document.querySelectorAll('.variant-row').forEach(r => {
@@ -1604,7 +1604,7 @@
 
     function handleCartRemoveResponse(data) {
         if (!data || !VARIANTS_LIST) return;
-        const currentProductId = <?= (int) $product['id'] ?>;
+        const currentProductId = <?= (int)($product['id'] ?? 0) ?>;
         if (parseInt(data.product_id) !== currentProductId) return;
         if (data.pricing_mode && data.pricing_mode !== currentMode) return;
 
@@ -1621,7 +1621,7 @@
     function syncExistingCartToSteppers(items) {
         if (initialCartSynced || !VARIANTS_LIST || !items) return;
         initialCartSynced = true;
-        const currentProductId = <?= (int) $product['id'] ?>;
+        const currentProductId = <?= (int)($product['id'] ?? 0) ?>;
         items.forEach(item => {
             if (parseInt(item.product_id) === currentProductId) {
                 const vi = VARIANTS_LIST.findIndex(v => parseInt(v.id) === parseInt(item.variant_id));
@@ -1768,7 +1768,7 @@
             items = window.lastCartItems;
         }
 
-        const currentProductId = <?= (int) $product['id'] ?>;
+        const currentProductId = <?= (int)($product['id'] ?? 0) ?>;
 
         if (!items || !Array.isArray(items)) {
             currentAtcQty = 0;
@@ -1813,7 +1813,7 @@
 
     let detailAddToCartInFlight = false;
     async function addToCartFromDetail(overrideQty = null) {
-        const pId = <?= (int) $product['id'] ?>;
+        const pId = <?= (int)($product['id'] ?? 0) ?>;
         if (detailAddToCartInFlight) return;
         detailAddToCartInFlight = true;
 
@@ -1904,7 +1904,7 @@
     }
 
     async function toggleDetailWishlist() {
-        const pId = <?= (int) $product['id'] ?>;
+        const pId = <?= (int)($product['id'] ?? 0) ?>;
         const payload = new URLSearchParams();
         payload.append('product_id', pId);
         try {

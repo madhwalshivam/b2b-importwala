@@ -131,31 +131,11 @@
 </head>
 
 <?php
-$db = \App\Core\Database::getInstance();
-$userId = get_current_user_id();
-$sessionId = get_current_session_id();
-
-if ($userId) {
-  $wStmt = $db->prepare("SELECT DISTINCT product_id FROM wishlist WHERE user_id = ?");
-  $wStmt->execute([$userId]);
-  $cStmt = $db->prepare("SELECT DISTINCT product_id FROM cart_items WHERE user_id = ?");
-  $cStmt->execute([$userId]);
-  $cQtyStmt = $db->prepare("SELECT SUM(quantity) FROM cart_items WHERE user_id = ?");
-  $cQtyStmt->execute([$userId]);
-} else {
-  $wStmt = $db->prepare("SELECT DISTINCT product_id FROM wishlist WHERE session_id = ?");
-  $wStmt->execute([$sessionId]);
-  $cStmt = $db->prepare("SELECT DISTINCT product_id FROM cart_items WHERE session_id = ?");
-  $cStmt->execute([$sessionId]);
-  $cQtyStmt = $db->prepare("SELECT SUM(quantity) FROM cart_items WHERE session_id = ?");
-  $cQtyStmt->execute([$sessionId]);
-}
-
-$initialWishlistProductIds = array_map('intval', $wStmt->fetchAll(\PDO::FETCH_COLUMN) ?: []);
-$initialWishlistCount = count($initialWishlistProductIds);
-
-$initialCartProductIds = array_map('intval', $cStmt->fetchAll(\PDO::FETCH_COLUMN) ?: []);
-$initialCartCount = (int) ($cQtyStmt->fetchColumn() ?: 0);
+$cartWishlistState = get_cart_and_wishlist_state();
+$initialWishlistProductIds = $cartWishlistState['wishlist_ids'];
+$initialWishlistCount = $cartWishlistState['wishlist_count'];
+$initialCartProductIds = $cartWishlistState['cart_ids'];
+$initialCartCount = $cartWishlistState['cart_count'];
 ?>
 
 <body>
@@ -1120,10 +1100,10 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
       }
     };
 
-    window.USER_WISHLIST_PRODUCT_IDS = <?= json_encode($initialWishlistProductIds) ?>;
-    window.USER_CART_PRODUCT_IDS = <?= json_encode($initialCartProductIds) ?>;
-    window.INITIAL_WISHLIST_COUNT = <?= $initialWishlistCount ?>;
-    window.INITIAL_CART_COUNT = <?= $initialCartCount ?>;
+    window.USER_WISHLIST_PRODUCT_IDS = <?= json_encode($initialWishlistProductIds ?? []) ?>;
+    window.USER_CART_PRODUCT_IDS = <?= json_encode($initialCartProductIds ?? []) ?>;
+    window.INITIAL_WISHLIST_COUNT = <?= (int)($initialWishlistCount ?? 0) ?>;
+    window.INITIAL_CART_COUNT = <?= (int)($initialCartCount ?? 0) ?>;
 
     window.applyUserProductStates = function (wishlistIds, cartIds) {
       if (Array.isArray(wishlistIds)) {

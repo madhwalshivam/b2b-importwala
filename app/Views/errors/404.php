@@ -12,7 +12,7 @@
     <div class="max-w-md w-full text-center bg-white p-8 rounded-2xl shadow-xl">
         <h1 class="text-6xl font-black text-red-600 mb-2">404</h1>
         <h2 class="text-2xl font-semibold text-gray-800 mb-4">Page Not Found</h2>
-        <p class="text-gray-600 mb-6">The electric scooter accessory or page you are looking for does not exist or has
+        <p class="text-gray-600 mb-6">The page or product you are looking for does not exist or has
             been moved.</p>
         <a href="<?= url('/') ?>"
             class="inline-flex items-center px-6 py-3 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition">Back

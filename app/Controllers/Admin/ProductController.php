@@ -138,7 +138,12 @@ class ProductController extends Controller
         $description = trim($_POST['description'] ?? '');
 
         // Handle Main Image
-        $mainImage = trim(htmlspecialchars_decode($this->request->input('main_image_url', ''))) ?: '/assets/images/placeholder.jpg';
+        $mainImage = trim(htmlspecialchars_decode($this->request->input('main_image_url', '')));
+        if (!empty($mainImage) && filter_var($mainImage, FILTER_VALIDATE_URL)) {
+            $mainImage = \App\Helpers\ImageMirror::enqueue($mainImage);
+        } else {
+            $mainImage = $mainImage ?: '/assets/images/placeholder.jpg';
+        }
         if (!empty($_FILES['main_image']['tmp_name']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
             $uploadedUrl = $this->uploadImageFile($_FILES['main_image'], 'products');
             if (!empty($uploadedUrl)) {
@@ -592,14 +597,18 @@ class ProductController extends Controller
         ];
 
         // Handle Main Image: 1. Uploaded File or 2. Direct Image URL
-        $imageUrl = trim($this->request->input('main_image_url', ''));
+        $imageUrl = trim(htmlspecialchars_decode($this->request->input('main_image_url', '')));
         if (!empty($_FILES['main_image']['tmp_name']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
             $uploadedUrl = $this->uploadImageFile($_FILES['main_image'], 'products');
             if (!empty($uploadedUrl)) {
                 $data['main_image'] = $uploadedUrl;
             }
-        } elseif (!empty($imageUrl)) {
-            $data['main_image'] = $imageUrl;
+        } elseif (!empty($imageUrl) && $imageUrl !== '/assets/images/placeholder.jpg') {
+            if (filter_var($imageUrl, FILTER_VALIDATE_URL)) {
+                $data['main_image'] = \App\Helpers\ImageMirror::enqueue($imageUrl);
+            } else {
+                $data['main_image'] = $imageUrl;
+            }
         }
 
         $this->productModel->update($id, $data);
@@ -664,7 +673,8 @@ class ProductController extends Controller
 
             foreach ($lines as $gUrl) {
                 if (!empty($gUrl) && !in_array($gUrl, $existingImages) && !in_array(hash('sha256', $gUrl), $existingHashes)) {
-                    $this->imageModel->add($id, $gUrl);
+                    $queuedUrl = \App\Helpers\ImageMirror::enqueue($gUrl);
+                    $this->imageModel->add($id, $queuedUrl);
                 }
             }
         }

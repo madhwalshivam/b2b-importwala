@@ -13,6 +13,8 @@ spl_autoload_register(function ($class) {
     $file = $base_dir . str_replace('\\', '/', substr($class, $len)) . '.php';
     if (file_exists($file)) require $file;
 });
+require_once __DIR__ . '/../app/Core/EnvLoader.php';
+\App\Core\EnvLoader::load(__DIR__ . '/../');
 require_once __DIR__ . '/../app/Helpers/Functions.php';
 
 $db = App\Core\Database::getInstance();

@@ -19,3 +19,7 @@ vendor/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Uploads
+public/uploads/
+public/assets/uploads/

@@ -85,6 +85,27 @@ class BulkProductImportController extends BaseController
         $chunkSize = 10;
         
         if ($chunkIndex === 0) {
+            // Verify essential tables exist
+            $requiredTables = [
+                'products', 'product_categories', 'product_brands', 'product_images', 
+                'product_colors', 'product_color_sizes', 'product_variants', 'product_variations',
+                'product_specifications', 'categories', 'subcategories', 'brands', 'factories'
+            ];
+            
+            $db = \App\Core\Database::getInstance();
+            $missingTables = [];
+            foreach ($requiredTables as $t) {
+                $check = $db->query("SHOW TABLES LIKE '$t'")->fetchColumn();
+                if (!$check) {
+                    $missingTables[] = $t;
+                }
+            }
+            
+            if (!empty($missingTables)) {
+                echo json_encode(['success' => false, 'error' => 'Database is missing tables: ' . implode(', ', $missingTables)]);
+                return;
+            }
+
             $_SESSION['bulk_import_errors'] = [];
             $_SESSION['bulk_import_summary'] = [
                 'total_rows' => $previewData['summary']['total_rows'] ?? 0,

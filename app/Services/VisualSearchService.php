@@ -430,7 +430,7 @@ class VisualSearchService
         // Check if top match is strong (>= 0.85) -> auto redirect
         if (!empty($matchingProducts) && $matchingProducts[0]['raw_score'] >= self::STRONG_MATCH_THRESHOLD) {
             $topMatch = $matchingProducts[0];
-            $redirectUrl = function_exists('url') ? url('product/' . $topMatch['slug']) : '/importwala/product/' . $topMatch['slug'];
+            $redirectUrl = function_exists('url') ? url('product/' . $topMatch['slug']) : '/product/' . $topMatch['slug'];
             return [
                 'has_matches' => true,
                 'auto_redirect' => true,
@@ -843,7 +843,7 @@ class VisualSearchService
             return asset($path);
         }
 
-        return '/importwala/public/' . ltrim($path, '/');
+        return function_exists('asset') ? asset('public/' . ltrim($path, '/')) : '/public/' . ltrim($path, '/');
     }
 
     private function ensureCatalogIndexed(): void

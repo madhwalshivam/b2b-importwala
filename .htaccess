@@ -1,5 +1,17 @@
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<FilesMatch "\.(env|log|sql)$">
+    Require all denied
+</FilesMatch>
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
+    
+    # Block access to sensitive directories
+    RewriteRule ^(config|storage|vendor)(/.*)?$ - [F,L]
+
     RewriteRule ^$ public/ [L]
     RewriteRule ^((?!public/).*)$ public/$1 [L]
 </IfModule>

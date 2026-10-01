@@ -53,22 +53,46 @@ class Database
 
     private static function createPdoInstance(string $type): PDO
     {
-        if (empty(self::$config)) {
-            self::$config = require __DIR__ . '/../../config/database.php';
-        }
+        // Always read the DB config straight from config/database.php (uses getenv)
+self::$config = require __DIR__ . '/../../config/database.php';
 
         $connConfig = self::$config['connections']['mysql'] ?? [];
-        $hosts = $connConfig[$type]['host'] ?? (self::$config['host'] ?? '127.0.0.1');
+        
+        $hosts = $connConfig[$type]['host'] ?? (self::$config['host'] ?? null);
+        // Sometimes config/database.php might return an array with a null value like [null]
+        if (is_array($hosts) && empty(array_filter($hosts))) {
+            $hosts = null;
+        }
+        if (empty($hosts)) {
+            throw new RuntimeException("Database Configuration Error: DB_HOST is missing in .env.");
+        }
+        
         if (is_array($hosts)) {
             $host = $hosts[array_rand($hosts)];
         } else {
             $host = $hosts;
         }
 
-        $port = $connConfig['port'] ?? (self::$config['port'] ?? 3306);
-        $dbname = $connConfig['dbname'] ?? (self::$config['dbname'] ?? 'ecommerce');
-        $user = $connConfig['username'] ?? (self::$config['username'] ?? 'root');
+        $port = $connConfig['port'] ?? (self::$config['port'] ?? null);
+        if (empty($port)) {
+            throw new RuntimeException("Database Configuration Error: DB_PORT is missing in .env.");
+        }
+
+        $dbname = $connConfig['dbname'] ?? (self::$config['dbname'] ?? null);
+        if (empty($dbname)) {
+            throw new RuntimeException("Database Configuration Error: DB_DATABASE is missing in .env.");
+        }
+
+        $user = $connConfig['username'] ?? (self::$config['username'] ?? null);
+        if (empty($user)) {
+            throw new RuntimeException("Database Configuration Error: DB_USERNAME is missing in .env.");
+        }
+
+        if (!array_key_exists('password', $connConfig) && !array_key_exists('password', self::$config)) {
+            throw new RuntimeException("Database Configuration Error: DB_PASSWORD is missing in .env.");
+        }
         $pass = $connConfig['password'] ?? (self::$config['password'] ?? '');
+        
         $charset = $connConfig['charset'] ?? (self::$config['charset'] ?? 'utf8mb4');
         $options = $connConfig['options'] ?? (self::$config['options'] ?? []);
 
