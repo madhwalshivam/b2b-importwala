@@ -168,6 +168,14 @@ class RfqApiController extends BaseController
         }
 
         return [
+            'product_id'             => !empty($post['product_id']) ? (int)$post['product_id'] : null,
+            'product_sku'            => htmlspecialchars(trim($post['product_sku'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'variant_id'             => !empty($post['variant_id']) ? (int)$post['variant_id'] : null,
+            'variant_label'          => htmlspecialchars(trim($post['variant_label'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'variant_sku'            => htmlspecialchars(trim($post['variant_sku'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'pricing_mode'           => htmlspecialchars(trim($post['pricing_mode'] ?? ''), ENT_QUOTES, 'UTF-8'),
+            'unit_price'             => isset($post['unit_price']) ? (float)$post['unit_price'] : null,
+            'product_image'          => filter_var(trim($post['product_image'] ?? ''), FILTER_SANITIZE_URL),
             'product_name'           => htmlspecialchars(trim($post['product_name'] ?? ''), ENT_QUOTES, 'UTF-8'),
             'product_reference_link' => filter_var(trim($post['product_reference_link'] ?? ''), FILTER_SANITIZE_URL),
             'quantity'               => (int)($post['quantity'] ?? 0),

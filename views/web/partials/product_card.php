@@ -121,19 +121,6 @@ $variantCount = ($prodId > 0) ? ($variantCountCache[$prodId] ?? 0) : 0;
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-    <?php else: ?>
-      <button type="button" 
-              class="ef-wishlist-btn wishlist-btn <?= $isInWishlist ? 'active' : '' ?>" 
-              data-product-id="<?= $prodId ?>" 
-              aria-label="Wishlist" 
-              title="<?= $isInWishlist ? 'Remove from Wishlist' : 'Save to Wishlist' ?>"
-              onclick="event.preventDefault(); event.stopPropagation(); toggleCardWishlist(<?= $prodId ?>, this);">
-        <svg class="ef-heart-icon" viewBox="0 0 24 24" width="14" height="14" 
-             fill="<?= $isInWishlist ? '#f05a29' : 'none' ?>" 
-             stroke="<?= $isInWishlist ? '#f05a29' : 'currentColor' ?>">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-        </svg>
-      </button>
     <?php endif; ?>
     <div class="ef-swipe-track" id="track_<?= $cardId ?>">
       <?php foreach ($cardImages as $sIdx => $sUrl): ?>

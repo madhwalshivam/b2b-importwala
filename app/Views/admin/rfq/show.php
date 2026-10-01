@@ -65,6 +65,32 @@ $cleanPhone = preg_replace('/[^0-9]/', '', $rfq['phone']);
                 <i data-lucide="package" class="w-4 h-4 text-[#f05a29]"></i> Product Specifications &amp; Requirements
             </h3>
 
+            <?php if (!empty($rfq['product_id'])): ?>
+                <div class="p-3 bg-white border border-slate-200 rounded-xl flex gap-4 items-center">
+                    <?php if (!empty($rfq['product_image'])): ?>
+                        <img src="<?= htmlspecialchars($rfq['product_image']) ?>" alt="Product" class="w-16 h-16 object-cover rounded-lg border border-slate-100 shrink-0">
+                    <?php else: ?>
+                        <div class="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
+                            <i data-lucide="image" class="w-6 h-6 text-slate-400"></i>
+                        </div>
+                    <?php endif; ?>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="text-sm font-semibold text-slate-900 truncate"><a href="<?= url('product/' . $rfq['product_id']) ?>" target="_blank" class="hover:text-[#f05a29] transition"><?= htmlspecialchars($rfq['product_name']) ?></a></h4>
+                        <?php if (!empty($rfq['variant_label'])): ?>
+                            <p class="text-[11px] text-slate-600 font-medium mt-0.5 truncate">Variant: <?= htmlspecialchars($rfq['variant_label']) ?></p>
+                        <?php endif; ?>
+                        <div class="flex items-center gap-3 mt-1.5">
+                            <span class="text-[10px] font-semibold text-slate-500 uppercase">SKU: <?= htmlspecialchars($rfq['variant_sku'] ?: $rfq['product_sku'] ?: 'N/A') ?></span>
+                            <?php if (!empty($rfq['unit_price'])): ?>
+                                <span class="text-[10px] font-semibold text-[#f05a29] uppercase px-1.5 py-0.5 bg-orange-50 rounded">
+                                    <?= htmlspecialchars(ucfirst($rfq['pricing_mode'] ?: 'Price')) ?>: ₹<?= number_format($rfq['unit_price'], 2) ?>/pc
+                                </span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
                 <div class="p-3 bg-slate-50 border border-slate-200/60 rounded-xl">
                     <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Quantity</span>

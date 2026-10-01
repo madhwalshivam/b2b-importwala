@@ -2648,35 +2648,57 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
         var idInp = document.getElementById('rfq_product_id');
         if (idInp) idInp.value = pData.id || '';
 
+        var imgEl = document.getElementById('rfqProductMainImg');
+        
+        var vars = pData.variants || [];
+        var selectedVar = pData.selectedVariantIndex !== null && vars[pData.selectedVariantIndex] ? vars[pData.selectedVariantIndex] : null;
+
         var nameDisp = document.getElementById('rfqProductNameDisplay');
-        if (nameDisp) nameDisp.textContent = pData.name || 'Product Details';
+        if (nameDisp) {
+            if (selectedVar) {
+                var vLabel = selectedVar.value || selectedVar.label || 'Variant';
+                nameDisp.innerHTML = (pData.name || 'Product Details') + '<br><span style="font-size: 11px; font-weight: 500; color: #475569; display: block; margin-top: 2px;">Variant: ' + vLabel + '</span>';
+            } else {
+                nameDisp.textContent = pData.name || 'Product Details';
+            }
+        }
 
         var skuDisp = document.getElementById('rfqProductSkuDisplay');
-        if (skuDisp) skuDisp.textContent = pData.sku || 'N/A';
+        if (skuDisp) {
+            skuDisp.textContent = (selectedVar && selectedVar.code) ? selectedVar.code : (pData.sku || 'N/A');
+            skuDisp.classList.remove('hidden'); // Ensure SKU is visible as per acceptance criteria
+            skuDisp.className = 'text-[10px] font-semibold text-slate-500 uppercase';
+        }
 
         var moqDisp = document.getElementById('rfqProductMoqDisplay');
         if (moqDisp) moqDisp.textContent = pData.moq || 1;
 
-        var imgEl = document.getElementById('rfqProductMainImg');
-        if (imgEl) imgEl.src = pData.main_image || (pData.gallery && pData.gallery[0]) || '';
+        if (imgEl) {
+            imgEl.src = (selectedVar && selectedVar.image) ? selectedVar.image : (pData.main_image || (pData.gallery && pData.gallery[0]) || '');
+        }
 
-        var vars = pData.variants || [];
         var varCountDisp = document.getElementById('rfqProductVarCountDisplay');
         if (varCountDisp) varCountDisp.textContent = vars.length;
 
-        var prices = vars.map(function (v) {
-          return pData.pricingMode === 'onepiece' ? (v.one_piece_price || v.wholesale_price) : v.wholesale_price;
-        }).filter(function (p) { return p > 0; });
-
         var priceDisp = document.getElementById('rfqProductPriceDisplay');
         if (priceDisp) {
-          if (prices.length === 0) {
-            priceDisp.textContent = '₹0.00';
-          } else {
-            var minP = Math.min.apply(null, prices);
-            var maxP = Math.max.apply(null, prices);
-            priceDisp.textContent = minP === maxP ? ('₹' + minP.toFixed(2)) : ('₹' + minP.toFixed(2) + ' – ₹' + maxP.toFixed(2));
-          }
+            if (selectedVar) {
+                var singleP = pData.pricingMode === 'onepiece' ? (selectedVar.one_piece_price || selectedVar.wholesale_price) : selectedVar.wholesale_price;
+                priceDisp.textContent = '₹' + parseFloat(singleP).toFixed(2) + ' / pc (' + (pData.pricingMode === 'onepiece' ? 'Single' : 'Wholesale') + ')';
+                priceDisp.style.fontSize = '12px';
+            } else {
+                var prices = vars.map(function (v) {
+                  return pData.pricingMode === 'onepiece' ? (v.one_piece_price || v.wholesale_price) : v.wholesale_price;
+                }).filter(function (p) { return p > 0; });
+                
+                if (prices.length === 0) {
+                  priceDisp.textContent = '₹0.00';
+                } else {
+                  var minP = Math.min.apply(null, prices);
+                  var maxP = Math.max.apply(null, prices);
+                  priceDisp.textContent = minP === maxP ? ('₹' + minP.toFixed(2)) : ('₹' + minP.toFixed(2) + ' – ₹' + maxP.toFixed(2));
+                }
+            }
         }
 
         rfqRenderVariantTable(vars, pData.pricingMode);
@@ -3053,16 +3075,38 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
 
           var fd = new FormData(this);
 
+          // Append our new product tracking fields if we have an active catalog product
+          if (!window.isGeneralRfqMode && window.activeRfqProduct) {
+            fd.set('product_id', window.activeRfqProduct.id || '');
+            fd.set('product_sku', window.activeRfqProduct.sku || '');
+            fd.set('product_name', window.activeRfqProduct.name || '');
+            fd.set('product_image', window.activeRfqProduct.main_image || '');
+            fd.set('pricing_mode', window.activeRfqProduct.pricingMode || '');
+          }
+
           // Format selected variant breakdown into specifications
           var selectedVarLines = [];
-          if (window.activeRfqProduct && window.activeRfqProduct.variants) {
+          if (window.activeRfqProduct && window.activeRfqProduct.variants && !window.isGeneralRfqMode) {
+            var firstVariantData = null;
             window.activeRfqProduct.variants.forEach(function (v) {
               if (v.checked && v.qty > 0) {
                 var price = window.activeRfqProduct.pricingMode === 'onepiece' ? (v.one_piece_price || v.wholesale_price) : v.wholesale_price;
                 var label = v.value || v.label || 'Variant';
                 selectedVarLines.push('- ' + label + (v.code ? ' (' + v.code + ')' : '') + ': Qty ' + v.qty + ' @ ₹' + parseFloat(price).toFixed(2));
+                
+                // Track first selected variant to save as primary variant info for admin preview
+                if (!firstVariantData) {
+                    firstVariantData = { id: v.id, label: label, sku: v.code, price: price };
+                }
               }
             });
+            
+            if (firstVariantData) {
+                fd.set('variant_id', firstVariantData.id || '');
+                fd.set('variant_label', firstVariantData.label || '');
+                fd.set('variant_sku', firstVariantData.sku || '');
+                fd.set('unit_price', firstVariantData.price || '');
+            }
           }
           var specsEl = g('rfq_specs');
           var userSpecs = specsEl ? specsEl.value.trim() : '';

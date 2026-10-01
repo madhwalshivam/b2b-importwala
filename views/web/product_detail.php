@@ -800,7 +800,7 @@ ob_start();
                 </div>
 
                 <div class="flex flex-col gap-2">
-                    <button onclick="openRfqModal(null, true)" class="w-full h-11 bg-[#f05a29] hover:bg-[#d8481b] text-white font-bold text-sm rounded shadow-sm transition cursor-pointer border-0 flex items-center justify-center gap-2">
+                    <button onclick="if(typeof openRfqWithProducts === 'function'){openRfqWithProducts();}else{openRfqModal(null,true);}" class="w-full h-11 bg-[#f05a29] hover:bg-[#d8481b] text-white font-bold text-sm rounded shadow-sm transition cursor-pointer border-0 flex items-center justify-center gap-2">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         Get Quote
                     </button>
@@ -1294,7 +1294,8 @@ ob_start();
         const detailQty = parseInt(document.getElementById('detailQtyInput')?.value) || 1;
         const mainImg = document.getElementById('mainProductImage')?.src || <?= json_encode($mainImage) ?>;
 
-        const vars = (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST) ? VARIANTS_LIST.map((v) => {
+        const vars = (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST) ? VARIANTS_LIST.map((v, i) => {
+            const isSelected = (typeof selectedVariantIndex !== 'undefined' && selectedVariantIndex === i);
             return {
                 id: v.id,
                 code: v.code,
@@ -1304,8 +1305,8 @@ ob_start();
                 wholesale_price: v.wholesale_price,
                 one_piece_price: v.one_piece_price,
                 image: v.image,
-                checked: false,
-                qty: 0
+                checked: isSelected,
+                qty: isSelected ? detailQty : 0
             };
         }) : [];
 
@@ -1319,17 +1320,12 @@ ob_start();
             gallery: (typeof GALLERY_IMAGES !== 'undefined' && GALLERY_IMAGES) ? GALLERY_IMAGES : [mainImg],
             pricingMode: activeMode,
             selectedVariantIndex: (typeof selectedVariantIndex !== 'undefined') ? selectedVariantIndex : null,
+            detailQty: detailQty,
             variants: vars
         };
     };
 
     function openRfqWithProducts() {
-        // Partial selection guard (double-mode: color chosen but no size yet)
-        if (<?= $isDoubleMode ? 'true' : 'false' ?> && currentColorSelection && selectedVariantIndex === null) {
-            showPartialSelectionHint('Size');
-            return;
-        }
-        // No variant required — null means main product (variant_id = null)
         const prodData = window.rfqGetProductContextFromPage();
         if (typeof openRfqModal === 'function') {
             openRfqModal(prodData);

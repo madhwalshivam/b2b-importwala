@@ -16,12 +16,14 @@ class RfqRequest extends Model
     {
         $stmt = $this->db->prepare("
             INSERT INTO rfq_requests (
+                product_id, product_sku, variant_id, variant_label, variant_sku, pricing_mode, unit_price, product_image,
                 product_name, product_reference_link, quantity, unit,
                 target_price, overall_budget, sourcing_purpose, specifications,
                 full_name, phone, email, pincode,
                 business_type, has_gst, additional_comments,
                 status, created_at
             ) VALUES (
+                :product_id, :product_sku, :variant_id, :variant_label, :variant_sku, :pricing_mode, :unit_price, :product_image,
                 :product_name, :product_reference_link, :quantity, :unit,
                 :target_price, :overall_budget, :sourcing_purpose, :specifications,
                 :full_name, :phone, :email, :pincode,
@@ -31,6 +33,14 @@ class RfqRequest extends Model
         ");
 
         $stmt->execute([
+            'product_id'             => !empty($data['product_id']) ? (int)$data['product_id'] : null,
+            'product_sku'            => trim($data['product_sku'] ?? '') ?: null,
+            'variant_id'             => !empty($data['variant_id']) ? (int)$data['variant_id'] : null,
+            'variant_label'          => trim($data['variant_label'] ?? '') ?: null,
+            'variant_sku'            => trim($data['variant_sku'] ?? '') ?: null,
+            'pricing_mode'           => trim($data['pricing_mode'] ?? '') ?: null,
+            'unit_price'             => isset($data['unit_price']) && is_numeric($data['unit_price']) ? (float)$data['unit_price'] : null,
+            'product_image'          => trim($data['product_image'] ?? '') ?: null,
             'product_name'           => trim($data['product_name'] ?? ''),
             'product_reference_link' => trim($data['product_reference_link'] ?? '') ?: null,
             'quantity'               => (int)($data['quantity'] ?? 0),

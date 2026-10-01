@@ -1047,7 +1047,8 @@
         const detailQty = parseInt(document.getElementById('detailQtyInput')?.value) || 1;
         const mainImg = document.getElementById('mainProductImage')?.src || <?= json_encode($mainImage) ?>;
 
-        const vars = (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST) ? VARIANTS_LIST.map((v) => {
+        const vars = (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST) ? VARIANTS_LIST.map((v, i) => {
+            const isSelected = (typeof selectedVariantIndex !== 'undefined' && selectedVariantIndex === i);
             return {
                 id: v.id,
                 code: v.code,
@@ -1057,8 +1058,8 @@
                 wholesale_price: v.wholesale_price,
                 one_piece_price: v.one_piece_price,
                 image: v.image,
-                checked: false,
-                qty: 0
+                checked: isSelected,
+                qty: isSelected ? detailQty : 0
             };
         }) : [];
 
@@ -1072,17 +1073,12 @@
             gallery: (typeof GALLERY_IMAGES !== 'undefined' && GALLERY_IMAGES) ? GALLERY_IMAGES : [mainImg],
             pricingMode: activeMode,
             selectedVariantIndex: (typeof selectedVariantIndex !== 'undefined') ? selectedVariantIndex : null,
+            detailQty: detailQty,
             variants: vars
         };
     };
 
     function openRfqWithProducts() {
-        // Partial selection guard (double-mode: color chosen but no size yet)
-        if (<?= $isDoubleMode ? 'true' : 'false' ?> && currentColorSelection && selectedVariantIndex === null) {
-            showPartialSelectionHint('Size');
-            return;
-        }
-        // No variant required — null means main product (variant_id = null)
         const prodData = window.rfqGetProductContextFromPage();
         if (typeof openRfqModal === 'function') {
             openRfqModal(prodData);

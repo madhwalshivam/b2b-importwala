@@ -85,7 +85,6 @@
   height: 100% !important;
   max-width: 100% !important;
   max-height: 100% !important;
-  aspect-ratio: 1 / 1 !important;
   scroll-snap-align: start !important;
   scroll-snap-stop: always !important;
   display: block !important;
@@ -98,7 +97,6 @@
   height: 100% !important;
   max-width: 100% !important;
   max-height: 100% !important;
-  aspect-ratio: 1 / 1 !important;
   object-fit: cover !important;
   display: block !important;
   pointer-events: none !important;
