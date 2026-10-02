@@ -541,36 +541,95 @@ ob_start();
            3. SERVER-SIDE NUMBERED PAGINATION CONTROLS
            ============================================================ -->
       <?php if ($totalPages > 1): ?>
-        <nav class="shop-pagination-wrapper" aria-label="Page navigation"
-          style="margin-top: 36px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;">
+        <?php
+        $buildPageUrl = function ($targetPage) use ($baseUrl) {
+          $params = $_GET;
+          unset($params['ajax']);
+          if (isset($params['per_page']) && ((int) $params['per_page'] === 24 || (int) $params['per_page'] === 25)) {
+            unset($params['per_page']);
+          }
+          $params['page'] = $targetPage;
+          return $baseUrl . (count($params) > 0 ? ('?' . http_build_query($params)) : '');
+        };
 
-          <?php
-          $buildPageUrl = function ($targetPage) use ($baseUrl) {
-            $params = $_GET;
-            unset($params['ajax']);
-            if (isset($params['per_page']) && ((int) $params['per_page'] === 24 || (int) $params['per_page'] === 25)) {
-              unset($params['per_page']);
-            }
-            $params['page'] = $targetPage;
-            return $baseUrl . (count($params) > 0 ? ('?' . http_build_query($params)) : '');
-          };
-          ?>
+        // Compute mobile page window (max 5 items plus arrows)
+        $mobilePageWindow = (function($cur, $tot) {
+          if ($tot <= 5) return range(1, $tot);
+          
+          if ($cur <= 2) {
+              return [1, 2, 3, '...', $tot];
+          } elseif ($cur >= $tot - 1) {
+              return [1, '...', $tot - 2, $tot - 1, $tot];
+          } else {
+              return [1, '...', $cur, '...', $tot];
+          }
+        })($currentPage, $totalPages);
+        ?>
 
-          <!-- Previous Button -->
+        <!-- MOBILE PAGINATION (< 768px) -->
+        <nav class="shop-pagination-wrapper shop-pagination-mobile flex md:hidden" aria-label="Mobile page navigation">
+          <!-- Previous Button (Icon Only on Mobile) -->
           <?php if ($currentPage > 1): ?>
             <a href="<?= htmlspecialchars($buildPageUrl($currentPage - 1)) ?>"
               onclick="goToShopPage(event, <?= $currentPage - 1 ?>)" class="shop-page-btn shop-page-prev"
-              style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #1e293b; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;"
-              onmouseover="this.style.borderColor='#94a3b8'; this.style.background='#f8fafc';"
-              onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#ffffff';">
+              title="Previous Page">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+              </svg>
+            </a>
+          <?php else: ?>
+            <span class="shop-page-btn disabled" title="Previous Page">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+              </svg>
+            </span>
+          <?php endif; ?>
+
+          <!-- Mobile Page Numbers -->
+          <?php foreach ($mobilePageWindow as $p): ?>
+            <?php if ($p === '...'): ?>
+              <span class="shop-page-ellipsis">...</span>
+            <?php elseif ((int) $p === $currentPage): ?>
+              <span class="shop-page-btn active"><?= $p ?></span>
+            <?php else: ?>
+              <a href="<?= htmlspecialchars($buildPageUrl((int) $p)) ?>" onclick="goToShopPage(event, <?= (int) $p ?>)"
+                class="shop-page-btn">
+                <?= $p ?>
+              </a>
+            <?php endif; ?>
+          <?php endforeach; ?>
+
+          <!-- Next Button (Icon Only on Mobile) -->
+          <?php if ($currentPage < $totalPages): ?>
+            <a href="<?= htmlspecialchars($buildPageUrl($currentPage + 1)) ?>"
+              onclick="goToShopPage(event, <?= $currentPage + 1 ?>)" class="shop-page-btn shop-page-next"
+              title="Next Page">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
+          <?php else: ?>
+            <span class="shop-page-btn disabled" title="Next Page">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          <?php endif; ?>
+        </nav>
+
+        <!-- DESKTOP PAGINATION (>= 768px) -->
+        <nav class="shop-pagination-wrapper shop-pagination-desktop hidden md:flex" aria-label="Desktop page navigation">
+          <!-- Previous Button -->
+          <?php if ($currentPage > 1): ?>
+            <a href="<?= htmlspecialchars($buildPageUrl($currentPage - 1)) ?>"
+              onclick="goToShopPage(event, <?= $currentPage - 1 ?>)" class="shop-page-btn shop-page-prev">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
               <span class="shop-btn-text">Previous</span>
             </a>
           <?php else: ?>
-            <span class="shop-page-btn disabled"
-              style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; color: #cbd5e1; font-size: 13px; font-weight: 500; cursor: not-allowed;">
+            <span class="shop-page-btn disabled">
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
               </svg>
@@ -578,21 +637,15 @@ ob_start();
             </span>
           <?php endif; ?>
 
-          <!-- Page Numbers -->
+          <!-- Desktop Page Numbers -->
           <?php foreach ($pageWindow as $p): ?>
             <?php if ($p === '...'): ?>
-              <span style="padding: 8px 6px; color: #94a3b8; font-size: 13px; font-weight: 600;">...</span>
+              <span class="shop-page-ellipsis">...</span>
             <?php elseif ((int) $p === $currentPage): ?>
-              <span class="shop-page-btn active"
-                style="display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; padding: 0 10px; background: #f05a29; border: 1px solid #f05a29; border-radius: 9999px; color: #ffffff; font-size: 13.5px; font-weight: 700; box-shadow: 0 2px 6px rgba(240,90,41,0.3);">
-                <?= $p ?>
-              </span>
+              <span class="shop-page-btn active"><?= $p ?></span>
             <?php else: ?>
               <a href="<?= htmlspecialchars($buildPageUrl((int) $p)) ?>" onclick="goToShopPage(event, <?= (int) $p ?>)"
-                class="shop-page-btn"
-                style="display: inline-flex; align-items: center; justify-content: center; min-width: 38px; height: 38px; padding: 0 10px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #334155; font-size: 13.5px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;"
-                onmouseover="this.style.borderColor='#f05a29'; this.style.color='#f05a29'; this.style.background='#fff7ed';"
-                onmouseout="this.style.borderColor='#cbd5e1'; this.style.color='#334155'; this.style.background='#ffffff';">
+                class="shop-page-btn">
                 <?= $p ?>
               </a>
             <?php endif; ?>
@@ -601,18 +654,14 @@ ob_start();
           <!-- Next Button -->
           <?php if ($currentPage < $totalPages): ?>
             <a href="<?= htmlspecialchars($buildPageUrl($currentPage + 1)) ?>"
-              onclick="goToShopPage(event, <?= $currentPage + 1 ?>)" class="shop-page-btn shop-page-next"
-              style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9999px; color: #1e293b; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.15s ease;"
-              onmouseover="this.style.borderColor='#94a3b8'; this.style.background='#f8fafc';"
-              onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#ffffff';">
+              onclick="goToShopPage(event, <?= $currentPage + 1 ?>)" class="shop-page-btn shop-page-next">
               <span class="shop-btn-text">Next</span>
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
               </svg>
             </a>
           <?php else: ?>
-            <span class="shop-page-btn disabled"
-              style="display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 9999px; color: #cbd5e1; font-size: 13px; font-weight: 500; cursor: not-allowed;">
+            <span class="shop-page-btn disabled">
               <span class="shop-btn-text">Next</span>
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -631,40 +680,150 @@ ob_start();
 
 <!-- Styles for Dynamic 4-col vs 5-col Grid & Custom Scrollbar -->
 <style>
-  @media (max-width: 640px) {
-    .shop-pagination-wrapper {
+  /* ============================================================
+     RESPONSIVE PAGINATION & GRID STYLES
+     ============================================================ */
+  .shop-pagination-wrapper {
+    margin-top: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    width: 100%;
+    max-width: 100%;
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+
+  .shop-pagination-wrapper .shop-page-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 9999px;
+    color: #334155;
+    font-size: 13.5px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
+  .shop-pagination-wrapper .shop-page-btn:hover {
+    border-color: #f05a29;
+    color: #f05a29;
+    background: #fff7ed;
+  }
+
+  .shop-pagination-wrapper .shop-page-btn.active {
+    background: #f05a29 !important;
+    border-color: #f05a29 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(240, 90, 41, 0.3) !important;
+  }
+
+  .shop-pagination-wrapper .shop-page-btn.disabled {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #cbd5e1 !important;
+    opacity: 0.5 !important;
+    cursor: default !important;
+    pointer-events: none !important;
+  }
+
+  .shop-pagination-wrapper .shop-page-ellipsis {
+    width: 16px;
+    min-width: 16px;
+    padding: 0;
+    color: #94a3b8;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  @media (max-width: 767px) {
+    /* Hide desktop pagination on mobile */
+    .shop-pagination-desktop {
+      display: none !important;
+    }
+
+    .shop-pagination-mobile {
       margin-top: 24px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
-      gap: 4px !important;
+      gap: 6px !important;
       flex-wrap: nowrap !important;
       width: 100% !important;
       max-width: 100% !important;
-      overflow-x: auto !important;
-      -webkit-overflow-scrolling: touch;
-      padding: 6px 0 !important;
+      padding: 0 12px !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
     }
 
-    .shop-pagination-wrapper .shop-page-btn {
-      min-width: 32px !important;
-      height: 32px !important;
-      padding: 0 4px !important;
-      font-size: 12.5px !important;
+    .shop-pagination-mobile .shop-page-btn {
+      min-width: 36px !important;
+      width: 36px !important;
+      height: 36px !important;
+      padding: 0 !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      border-radius: 50% !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       flex-shrink: 0 !important;
     }
 
-    .shop-pagination-wrapper .shop-btn-text {
+    .shop-pagination-mobile .shop-page-btn.shop-page-prev,
+    .shop-pagination-mobile .shop-page-btn.shop-page-next,
+    .shop-pagination-mobile .shop-page-btn.disabled {
+      padding: 0 !important;
+      min-width: 36px !important;
+      width: 36px !important;
+      height: 36px !important;
+    }
+  }
+
+  @media (min-width: 768px) {
+    /* Hide mobile pagination on desktop */
+    .shop-pagination-mobile {
       display: none !important;
     }
+  }
 
-    .shop-pagination-wrapper .shop-page-prev,
-    .shop-pagination-wrapper .shop-page-next,
-    .shop-pagination-wrapper .shop-page-btn.disabled {
-      padding: 0 8px !important;
+  @media (max-width: 360px) {
+    .shop-pagination-mobile {
+      gap: 4px !important;
+      padding: 0 12px !important;
+    }
+
+    .shop-pagination-mobile .shop-page-btn,
+    .shop-pagination-mobile .shop-page-btn.shop-page-prev,
+    .shop-pagination-mobile .shop-page-btn.shop-page-next,
+    .shop-pagination-mobile .shop-page-btn.disabled {
       min-width: 32px !important;
+      width: 32px !important;
       height: 32px !important;
-      justify-content: center !important;
+      font-size: 13px !important;
+    }
+
+    .shop-pagination-mobile .shop-page-ellipsis {
+      width: 14px !important;
+      min-width: 14px !important;
+      font-size: 12px !important;
     }
   }
 
@@ -722,20 +881,30 @@ ob_start();
     }
 
     .shop-main-layout.sidebar-is-closed .product-grid,
-    .shop-main-layout.sidebar-is-open .product-grid {
+    .shop-main-layout.sidebar-is-open .product-grid,
+    .product-grid {
+      display: grid !important;
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 12px 8px !important;
-      padding: 8px 6px 16px !important;
+      gap: 12px !important;
+      padding: 0 12px 16px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
       align-items: stretch !important;
     }
   }
 
   @media (max-width: 480px) {
     .shop-main-layout.sidebar-is-closed .product-grid,
-    .shop-main-layout.sidebar-is-open .product-grid {
+    .shop-main-layout.sidebar-is-open .product-grid,
+    .product-grid {
+      display: grid !important;
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-      gap: 12px 8px !important;
-      padding: 8px 6px 16px !important;
+      gap: 12px !important;
+      padding: 0 12px 16px !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
       align-items: stretch !important;
     }
   }

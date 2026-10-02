@@ -1102,8 +1102,8 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
 
     window.USER_WISHLIST_PRODUCT_IDS = <?= json_encode($initialWishlistProductIds ?? []) ?>;
     window.USER_CART_PRODUCT_IDS = <?= json_encode($initialCartProductIds ?? []) ?>;
-    window.INITIAL_WISHLIST_COUNT = <?= (int)($initialWishlistCount ?? 0) ?>;
-    window.INITIAL_CART_COUNT = <?= (int)($initialCartCount ?? 0) ?>;
+    window.INITIAL_WISHLIST_COUNT = <?= (int) ($initialWishlistCount ?? 0) ?>;
+    window.INITIAL_CART_COUNT = <?= (int) ($initialCartCount ?? 0) ?>;
 
     window.applyUserProductStates = function (wishlistIds, cartIds) {
       if (Array.isArray(wishlistIds)) {
@@ -1253,6 +1253,10 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
 
         if (typeof updateHeaderWishlistCount === 'function') {
           updateHeaderWishlistCount(data.count);
+        }
+
+        if (typeof showCartToast === 'function') {
+          showCartToast(isAdded ? 'Added to Wishlist ❤️' : 'Removed from Wishlist');
         }
 
         if (typeof window.onWishlistToggled === 'function') {
@@ -2629,32 +2633,32 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
         if (idInp) idInp.value = pData.id || '';
 
         var imgEl = document.getElementById('rfqProductMainImg');
-        
+
         var vars = pData.variants || [];
         var selectedVar = pData.selectedVariantIndex !== null && vars[pData.selectedVariantIndex] ? vars[pData.selectedVariantIndex] : null;
 
         var nameDisp = document.getElementById('rfqProductNameDisplay');
         if (nameDisp) {
-            if (selectedVar) {
-                var vLabel = selectedVar.value || selectedVar.label || 'Variant';
-                nameDisp.innerHTML = (pData.name || 'Product Details') + '<br><span style="font-size: 11px; font-weight: 500; color: #475569; display: block; margin-top: 2px;">Variant: ' + vLabel + '</span>';
-            } else {
-                nameDisp.textContent = pData.name || 'Product Details';
-            }
+          if (selectedVar) {
+            var vLabel = selectedVar.value || selectedVar.label || 'Variant';
+            nameDisp.innerHTML = (pData.name || 'Product Details') + '<br><span style="font-size: 11px; font-weight: 500; color: #475569; display: block; margin-top: 2px;">Variant: ' + vLabel + '</span>';
+          } else {
+            nameDisp.textContent = pData.name || 'Product Details';
+          }
         }
 
         var skuDisp = document.getElementById('rfqProductSkuDisplay');
         if (skuDisp) {
-            skuDisp.textContent = (selectedVar && selectedVar.code) ? selectedVar.code : (pData.sku || 'N/A');
-            skuDisp.classList.remove('hidden'); // Ensure SKU is visible as per acceptance criteria
-            skuDisp.className = 'text-[10px] font-semibold text-slate-500 uppercase';
+          skuDisp.textContent = (selectedVar && selectedVar.code) ? selectedVar.code : (pData.sku || 'N/A');
+          skuDisp.classList.remove('hidden'); // Ensure SKU is visible as per acceptance criteria
+          skuDisp.className = 'text-[10px] font-semibold text-slate-500 uppercase';
         }
 
         var moqDisp = document.getElementById('rfqProductMoqDisplay');
         if (moqDisp) moqDisp.textContent = pData.moq || 1;
 
         if (imgEl) {
-            imgEl.src = (selectedVar && selectedVar.image) ? selectedVar.image : (pData.main_image || (pData.gallery && pData.gallery[0]) || '');
+          imgEl.src = (selectedVar && selectedVar.image) ? selectedVar.image : (pData.main_image || (pData.gallery && pData.gallery[0]) || '');
         }
 
         var varCountDisp = document.getElementById('rfqProductVarCountDisplay');
@@ -2662,23 +2666,23 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
 
         var priceDisp = document.getElementById('rfqProductPriceDisplay');
         if (priceDisp) {
-            if (selectedVar) {
-                var singleP = pData.pricingMode === 'onepiece' ? (selectedVar.one_piece_price || selectedVar.wholesale_price) : selectedVar.wholesale_price;
-                priceDisp.textContent = '₹' + parseFloat(singleP).toFixed(2) + ' / pc (' + (pData.pricingMode === 'onepiece' ? 'Single' : 'Wholesale') + ')';
-                priceDisp.style.fontSize = '12px';
+          if (selectedVar) {
+            var singleP = pData.pricingMode === 'onepiece' ? (selectedVar.one_piece_price || selectedVar.wholesale_price) : selectedVar.wholesale_price;
+            priceDisp.textContent = '₹' + parseFloat(singleP).toFixed(2) + ' / pc (' + (pData.pricingMode === 'onepiece' ? 'Single' : 'Wholesale') + ')';
+            priceDisp.style.fontSize = '12px';
+          } else {
+            var prices = vars.map(function (v) {
+              return pData.pricingMode === 'onepiece' ? (v.one_piece_price || v.wholesale_price) : v.wholesale_price;
+            }).filter(function (p) { return p > 0; });
+
+            if (prices.length === 0) {
+              priceDisp.textContent = '₹0.00';
             } else {
-                var prices = vars.map(function (v) {
-                  return pData.pricingMode === 'onepiece' ? (v.one_piece_price || v.wholesale_price) : v.wholesale_price;
-                }).filter(function (p) { return p > 0; });
-                
-                if (prices.length === 0) {
-                  priceDisp.textContent = '₹0.00';
-                } else {
-                  var minP = Math.min.apply(null, prices);
-                  var maxP = Math.max.apply(null, prices);
-                  priceDisp.textContent = minP === maxP ? ('₹' + minP.toFixed(2)) : ('₹' + minP.toFixed(2) + ' – ₹' + maxP.toFixed(2));
-                }
+              var minP = Math.min.apply(null, prices);
+              var maxP = Math.max.apply(null, prices);
+              priceDisp.textContent = minP === maxP ? ('₹' + minP.toFixed(2)) : ('₹' + minP.toFixed(2) + ' – ₹' + maxP.toFixed(2));
             }
+          }
         }
 
         rfqRenderVariantTable(vars, pData.pricingMode);
@@ -3073,19 +3077,19 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
                 var price = window.activeRfqProduct.pricingMode === 'onepiece' ? (v.one_piece_price || v.wholesale_price) : v.wholesale_price;
                 var label = v.value || v.label || 'Variant';
                 selectedVarLines.push('- ' + label + (v.code ? ' (' + v.code + ')' : '') + ': Qty ' + v.qty + ' @ ₹' + parseFloat(price).toFixed(2));
-                
+
                 // Track first selected variant to save as primary variant info for admin preview
                 if (!firstVariantData) {
-                    firstVariantData = { id: v.id, label: label, sku: v.code, price: price };
+                  firstVariantData = { id: v.id, label: label, sku: v.code, price: price };
                 }
               }
             });
-            
+
             if (firstVariantData) {
-                fd.set('variant_id', firstVariantData.id || '');
-                fd.set('variant_label', firstVariantData.label || '');
-                fd.set('variant_sku', firstVariantData.sku || '');
-                fd.set('unit_price', firstVariantData.price || '');
+              fd.set('variant_id', firstVariantData.id || '');
+              fd.set('variant_label', firstVariantData.label || '');
+              fd.set('variant_sku', firstVariantData.sku || '');
+              fd.set('unit_price', firstVariantData.price || '');
             }
           }
           var specsEl = g('rfq_specs');
@@ -3232,7 +3236,7 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
 
   <!-- Toast Notification Popup -->
   <div id="cartToast"
-    class="fixed bottom-6 right-6 z-[999999] hidden items-center gap-3 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-semibold border border-gray-700 transition transform duration-300">
+    class="fixed bottom-20 left-1/2 -translate-x-1/2 md:bottom-6 md:right-6 md:translate-x-0 z-[999999] hidden items-center gap-3 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-2xl text-xs font-semibold border border-gray-700 transition transform duration-300 pointer-events-none">
     <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
     <span id="cartToastText">Item added to cart</span>
   </div>
@@ -3371,6 +3375,15 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
           mobileBadge.style.display = 'none';
         }
       }
+      const mobileCustomBadge = document.getElementById('mobileCustomCartCount');
+      if (mobileCustomBadge) {
+        if (numCount > 0) {
+          mobileCustomBadge.textContent = numCount;
+          mobileCustomBadge.style.display = 'flex';
+        } else {
+          mobileCustomBadge.style.display = 'none';
+        }
+      }
     }
 
     window.updateHeaderCartCount = function (count) {
@@ -3452,7 +3465,7 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
         setTimeout(() => {
           toast.classList.add('hidden');
           toast.classList.remove('flex');
-        }, 3500);
+        }, 2000);
       }
     }
 

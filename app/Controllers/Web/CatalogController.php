@@ -709,6 +709,7 @@ class CatalogController extends BaseController
         }
 
         $pageWindow = $this->getPageWindow($page, $totalPages);
+        $mobilePageWindow = $this->getMobilePageWindow($page, $totalPages);
 
         $seoOptions = [
             'title' => $options['seo_title'] ?? 'Shop All Wholesale Products | ImportWale',
@@ -729,6 +730,7 @@ class CatalogController extends BaseController
             'totalPages' => $totalPages,
             'totalItems' => $totalItems,
             'pageWindow' => $pageWindow,
+            'mobilePageWindow' => $mobilePageWindow,
             'seoOptions' => $seoOptions,
             'dynamicFilterAttributes' => $dynamicFilterAttributes,
             'pageHeading' => $options['page_heading'] ?? null,
@@ -868,6 +870,46 @@ class CatalogController extends BaseController
         }
 
         return $unique;
+    }
+
+    /**
+     * Generate mobile numbered pagination array (max ~7 items: 1 ... cur-1 cur cur+1 ... last)
+     */
+    private function getMobilePageWindow(int $currentPage, int $totalPages): array
+    {
+        if ($totalPages <= 5) {
+            return range(1, $totalPages);
+        }
+
+        $pages = [];
+        $pages[] = 1;
+
+        $start = max(2, $currentPage - 1);
+        $end = min($totalPages - 1, $currentPage + 1);
+
+        if ($currentPage <= 3) {
+            $start = 2;
+            $end = min(4, $totalPages - 1);
+        } elseif ($currentPage >= $totalPages - 2) {
+            $start = max(2, $totalPages - 3);
+            $end = $totalPages - 1;
+        }
+
+        if ($start > 2) {
+            $pages[] = '...';
+        }
+
+        for ($i = $start; $i <= $end; $i++) {
+            $pages[] = $i;
+        }
+
+        if ($end < $totalPages - 1) {
+            $pages[] = '...';
+        }
+
+        $pages[] = $totalPages;
+
+        return $pages;
     }
 
     /**
