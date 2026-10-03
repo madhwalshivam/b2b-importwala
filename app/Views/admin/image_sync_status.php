@@ -38,18 +38,6 @@ require_once __DIR__ . '/layouts/sidebar.php';
                 </div>
             </div>
 
-            <!-- Self-Test Button -->
-            <div class="bg-white border border-slate-200 p-6 rounded-xl shadow-sm mb-6">
-                <h3 class="font-bold text-slate-800 mb-2">Cloudflare R2 Self-Test</h3>
-                <p class="text-slate-500 text-sm mb-4">Run the R2 self-test to verify credentials, upload capabilities, and public URL configuration.</p>
-                
-                <button type="button" id="btnSelftest" onclick="runSelftest()" class="px-5 py-2.5 bg-slate-800 text-white font-semibold rounded-xl text-sm hover:bg-slate-700 transition flex items-center space-x-2 cursor-pointer">
-                    <i data-lucide="shield-check" class="w-4 h-4"></i>
-                    <span>Run Self-Test</span>
-                </button>
-
-                <div id="selftestResult" class="hidden mt-4 p-4 rounded-xl font-mono text-xs whitespace-pre-wrap"></div>
-            </div>
 
             <?php if (!empty($recentErrors)): ?>
                 <!-- Recent Errors -->
@@ -86,58 +74,5 @@ require_once __DIR__ . '/layouts/sidebar.php';
     </div>
 </div>
 
-<script>
-function runSelftest() {
-    const btn = document.getElementById('btnSelftest');
-    const resultBox = document.getElementById('selftestResult');
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>Running...</span>';
-    lucide.createIcons();
-    
-    resultBox.classList.remove('hidden', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'bg-red-50', 'text-red-800', 'border-red-200');
-    resultBox.classList.add('bg-slate-100', 'text-slate-800', 'border', 'border-slate-200');
-    resultBox.textContent = "Running test on server...\n\n";
-    
-    fetch('<?= url('admin/image-sync-status/selftest') ?>', {
-        method: 'POST',
-        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: '_csrf_token=<?= csrf_token() ?>'
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) {
-            resultBox.textContent += "Error executing test: " + data.error;
-            resultBox.classList.replace('bg-slate-100', 'bg-red-50');
-            resultBox.classList.replace('text-slate-800', 'text-red-800');
-            resultBox.classList.replace('border-slate-200', 'border-red-200');
-            return;
-        }
-        
-        resultBox.textContent += data.output;
-        
-        if (data.pass) {
-            resultBox.classList.replace('bg-slate-100', 'bg-emerald-50');
-            resultBox.classList.replace('text-slate-800', 'text-emerald-800');
-            resultBox.classList.replace('border-slate-200', 'border-emerald-200');
-        } else {
-            resultBox.classList.replace('bg-slate-100', 'bg-red-50');
-            resultBox.classList.replace('text-slate-800', 'text-red-800');
-            resultBox.classList.replace('border-slate-200', 'border-red-200');
-        }
-    })
-    .catch(err => {
-        resultBox.textContent += "Network Error: " + err;
-        resultBox.classList.replace('bg-slate-100', 'bg-red-50');
-        resultBox.classList.replace('text-slate-800', 'text-red-800');
-        resultBox.classList.replace('border-slate-200', 'border-red-200');
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.innerHTML = '<i data-lucide="shield-check" class="w-4 h-4"></i><span>Run Self-Test Again</span>';
-        lucide.createIcons();
-    });
-}
-</script>
 
 <?php require_once __DIR__ . '/layouts/footer.php'; ?>
