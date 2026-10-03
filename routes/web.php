@@ -344,6 +344,7 @@ $router->post('/admin/products/{id}/nested-variations/save', 'Admin\ProductContr
 $router->get('/admin/products/import/template', 'Admin\BulkProductImportController@downloadTemplate', [AdminMiddleware::class]);
 $router->post('/admin/products/import/parse', 'Admin\BulkProductImportController@parse', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/products/import/commit', 'Admin\BulkProductImportController@commit', [AdminMiddleware::class, CsrfMiddleware::class]);
+$router->get('/admin/products/import/errors-xlsx', 'Admin\BulkProductImportController@errorsXlsx', [AdminMiddleware::class]);
 $router->get('/admin/products/import/errors-csv', 'Admin\BulkProductImportController@errorsCsv', [AdminMiddleware::class]);
 $router->post('/admin/products/import/sync-images', 'Admin\BulkProductImportController@syncImages', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/images/mirror-batch', 'Admin\ImageMirrorController@batch', [AdminMiddleware::class, CsrfMiddleware::class]);

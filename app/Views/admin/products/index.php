@@ -343,12 +343,12 @@ include __DIR__ . '/../layouts/header.php';
 
 
 <!-- ============================================================ -->
-<!-- BULK IMPORT MODAL & STAGED PREVIEW -->
+<!-- BULK IMPORT MODAL & STAGED PREVIEW (v2 — validate-then-commit) -->
 <!-- ============================================================ -->
 <div id="bulkImportModal"
     class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
     <div
-        class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
 
         <!-- Modal Header -->
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -357,7 +357,7 @@ include __DIR__ . '/../layouts/header.php';
                     <i data-lucide="upload-cloud" class="w-5 h-5 text-emerald-600"></i>
                     <span>Bulk Product Listing Importer</span>
                 </h3>
-                <p class="text-xs text-slate-500 mt-0.5">Upload .xlsx / .csv catalog spreadsheet</p>
+                <p class="text-xs text-slate-500 mt-0.5">Upload .xlsx / .csv catalog spreadsheet (Two-Phase All-or-Nothing Import)</p>
             </div>
             <button onclick="closeBulkImportModal()" type="button"
                 class="w-8 h-8 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition border-0 cursor-pointer">
@@ -396,7 +396,7 @@ include __DIR__ . '/../layouts/header.php';
                         <button type="submit" id="btnParseSpreadsheet"
                             class="px-6 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-2 cursor-pointer border-0">
                             <i data-lucide="scan" class="w-4 h-4"></i>
-                            <span>Parse &amp; Validate Catalog</span>
+                            <span>Validate &amp; Preview Import</span>
                         </button>
                     </div>
                 </form>
@@ -407,12 +407,59 @@ include __DIR__ . '/../layouts/header.php';
                 <div
                     class="w-10 h-10 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin mx-auto">
                 </div>
-                <h4 class="text-sm font-bold text-slate-800">Parsing catalog spreadsheet &amp; verifying schema...</h4>
-                <p class="text-xs text-slate-500">Checking product SKUs, variant codes, prices, and categories...</p>
+                <h4 class="text-sm font-bold text-slate-800">Parsing spreadsheet &amp; performing dry-run validations...</h4>
+                <p class="text-xs text-slate-500">Checking rows, duplicate titles, SKUs, category requirements, and price constraints...</p>
             </div>
 
-            <!-- STEP 2: PREVIEW TABLE -->
+            <!-- STEP 2: PREVIEW & VALIDATION RESULTS TABLE -->
             <div id="importStepPreview" class="hidden space-y-4">
+
+                <!-- Error Alert Banner (Shown when validation fails) -->
+                <div id="previewErrorBanner" class="hidden bg-red-50 border border-red-200 rounded-2xl p-4 text-xs space-y-3">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+                                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-extrabold text-red-900 text-sm">Validation Failed — Import Blocked</h4>
+                                <p class="text-red-700 mt-0.5">
+                                    <span id="previewErrorBannerCount">0</span> errors detected across the spreadsheet.
+                                    <strong class="font-bold underline">Nothing has been added or changed in the database.</strong>
+                                    Please correct the errors in your spreadsheet and re-upload.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <a href="<?= url('admin/products/import/errors-xlsx') ?>" target="_blank"
+                                class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs transition flex items-center space-x-1 shadow-sm">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>Download Error XLSX</span>
+                            </a>
+                            <a href="<?= url('admin/products/import/errors-csv') ?>" target="_blank"
+                                class="px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition flex items-center space-x-1 shadow-sm">
+                                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                <span>Download CSV</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Ready Banner (Shown when 0 errors) -->
+                <div id="previewSuccessBanner" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-xs">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-extrabold text-emerald-900 text-sm">All Validation Checks Passed!</h4>
+                            <p class="text-emerald-700 mt-0.5">
+                                Zero errors found. Ready to perform atomic transaction commit.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Summary Metrics Bar -->
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
                     <div class="bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
@@ -424,48 +471,78 @@ include __DIR__ . '/../layouts/header.php';
                         <div class="text-base font-black text-slate-800" id="previewTotalProducts">0</div>
                     </div>
                     <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-xl">
-                        <div class="text-[10px] uppercase font-bold text-emerald-600">Valid Products</div>
-                        <div class="text-base font-black text-emerald-700" id="previewValidProducts">0</div>
+                        <div class="text-[10px] uppercase font-bold text-emerald-600">New Products</div>
+                        <div class="text-base font-black text-emerald-700" id="previewNewProducts">0</div>
                     </div>
                     <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-xl">
-                        <div class="text-[10px] uppercase font-bold text-amber-600">Warnings</div>
-                        <div class="text-base font-black text-amber-700" id="previewWarningProducts">0</div>
+                        <div class="text-[10px] uppercase font-bold text-amber-600">Merge Products</div>
+                        <div class="text-base font-black text-amber-700" id="previewMergeProducts">0</div>
                     </div>
                     <div class="bg-red-50 border border-red-200 p-2.5 rounded-xl">
-                        <div class="text-[10px] uppercase font-bold text-red-600">Errors</div>
+                        <div class="text-[10px] uppercase font-bold text-red-600">Total Errors</div>
                         <div class="text-base font-black text-red-700" id="previewErrorProducts">0</div>
                     </div>
                 </div>
 
-                <!-- Products Group Table -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden max-h-[350px] overflow-y-auto">
-                    <table class="w-full text-xs text-left border-collapse min-w-[700px]" <thead
-                        class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] font-semibold uppercase sticky top-0 z-10">
-                        <tr>
-                            <th class="py-2.5 px-3">Product SKU</th>
-                            <th class="py-2.5 px-3">Product Name</th>
-                            <th class="py-2.5 px-3">Category</th>
-                            <th class="py-2.5 px-3">Factory Link</th>
-                            <th class="py-2.5 px-3 text-center">Variants</th>
-                            <th class="py-2.5 px-3 text-center">Status</th>
-                        </tr>
-                        </thead>
-                        <tbody id="previewTableBody" class="divide-y divide-slate-100 bg-white">
-                            <!-- Populated dynamically -->
-                        </tbody>
-                    </table>
+                <!-- Detailed Error List Section (If errors exist) -->
+                <div id="previewErrorListContainer" class="hidden space-y-2">
+                    <h5 class="text-xs font-bold text-red-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-red-600"></i>
+                        <span>Validation Errors Details (<span id="previewErrorCountHeader">0</span>)</span>
+                    </h5>
+                    <div class="border border-red-200 rounded-xl overflow-hidden max-h-[220px] overflow-y-auto bg-red-50/20">
+                        <table class="w-full text-xs text-left border-collapse min-w-[700px]">
+                            <thead class="bg-red-100/80 border-b border-red-200 text-red-900 text-[10px] font-bold uppercase sticky top-0 z-10">
+                                <tr>
+                                    <th class="py-2 px-3 w-16 text-center">Row #</th>
+                                    <th class="py-2 px-3 w-32">Product SKU</th>
+                                    <th class="py-2 px-3">Product Name</th>
+                                    <th class="py-2 px-3 w-36">Column</th>
+                                    <th class="py-2 px-3">Error Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewErrorTableBody" class="divide-y divide-red-100 bg-white text-slate-800">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Products Staged Preview Table -->
+                <div class="space-y-2">
+                    <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="package" class="w-4 h-4 text-slate-500"></i>
+                        <span>Parsed Products &amp; Variants Staged Preview</span>
+                    </h5>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden max-h-[280px] overflow-y-auto">
+                        <table class="w-full text-xs text-left border-collapse min-w-[700px]">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-500 text-[10px] font-semibold uppercase sticky top-0 z-10">
+                                <tr>
+                                    <th class="py-2.5 px-3">Product SKU</th>
+                                    <th class="py-2.5 px-3">Product Name</th>
+                                    <th class="py-2.5 px-3">Category</th>
+                                    <th class="py-2.5 px-3 text-center">Variants</th>
+                                    <th class="py-2.5 px-3 text-center">Import Action</th>
+                                    <th class="py-2.5 px-3 text-center">Validation</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previewTableBody" class="divide-y divide-slate-100 bg-white">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <!-- Preview Actions Footer -->
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
                     <button onclick="resetImportModal()" type="button"
                         class="px-4 h-9 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition cursor-pointer border-0">
-                        Back / Re-upload
+                        Back / Re-upload File
                     </button>
                     <button id="btnCommitImport" onclick="executeCommitImport()" type="button"
                         class="px-6 h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center space-x-2 cursor-pointer border-0">
                         <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-                        <span>Confirm &amp; Import Products</span>
+                        <span>Confirm &amp; Execute Import</span>
                     </button>
                 </div>
             </div>
@@ -476,7 +553,8 @@ include __DIR__ . '/../layouts/header.php';
                     class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
                     <i data-lucide="check-check" class="w-8 h-8"></i>
                 </div>
-                <h3 class="text-lg font-extrabold text-slate-900">Import Operation Completed!</h3>
+                <h3 class="text-lg font-extrabold text-slate-900">Import Operation Completed Successfully!</h3>
+                <p class="text-xs text-slate-500">All products and variants have been committed to the database in a single transaction.</p>
 
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-lg mx-auto text-xs">
                     <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
@@ -484,7 +562,7 @@ include __DIR__ . '/../layouts/header.php';
                         <div class="text-lg font-black text-emerald-700" id="resCreatedProducts">0</div>
                     </div>
                     <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                        <div class="text-slate-500 font-medium">Updated Products</div>
+                        <div class="text-slate-500 font-medium">Updated/Merged Products</div>
                         <div class="text-lg font-black text-blue-700" id="resUpdatedProducts">0</div>
                     </div>
                     <div class="p-3 bg-purple-50 border border-purple-200 rounded-xl">
@@ -492,38 +570,27 @@ include __DIR__ . '/../layouts/header.php';
                         <div class="text-lg font-black text-purple-700" id="resCreatedVariants">0</div>
                     </div>
                     <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl">
-                        <div class="text-slate-500 font-medium">Updated Variants</div>
+                        <div class="text-slate-500 font-medium">Updated/Merged Variants</div>
                         <div class="text-lg font-black text-indigo-700" id="resUpdatedVariants">0</div>
                     </div>
                 </div>
 
-                <div id="imageStatsContainer" class="hidden grid-cols-1 gap-3 max-w-sm mx-auto text-xs mt-3">
-                    <div class="p-3 bg-cyan-50 border border-cyan-200 rounded-xl">
-                        <div class="text-slate-500 font-medium">Image Sync Process</div>
-                        <div class="text-sm font-black text-cyan-700 mt-1">
-                            Images have been queued for processing.<br>
-                            They will automatically appear once mirrored in the background.
+                <div id="imageStatsContainer" class="hidden grid-cols-1 gap-3 max-w-md mx-auto text-xs mt-3">
+                    <div class="p-3 bg-cyan-50 border border-cyan-200 rounded-xl text-center">
+                        <div class="text-slate-500 font-medium">Image Sync Status</div>
+                        <div class="text-xs font-semibold text-cyan-900 mt-1">
+                            Images enqueued &amp; syncing in background to Cloudflare R2.<br>
+                            <a href="<?= url('admin/image-sync-status') ?>" target="_blank" class="inline-block mt-1.5 font-bold text-cyan-700 hover:text-cyan-900 underline">
+                                View Live Queue Progress (&rarr;)
+                            </a>
                         </div>
                     </div>
-                </div>
-
-                <div id="resErrorNotice"
-                    class="hidden max-w-lg mx-auto bg-amber-50 border border-amber-200 p-3 rounded-xl text-left text-xs text-amber-800 flex items-center justify-between">
-                    <div>
-                        <strong class="font-bold block">Some rows were skipped due to validation errors.</strong>
-                        <span class="text-[11px] text-amber-700">You can download the error CSV report below for
-                            correction.</span>
-                    </div>
-                    <a href="<?= url('admin/products/import/errors-csv') ?>" target="_blank"
-                        class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs transition shrink-0 ml-3">
-                        Download Error CSV
-                    </a>
                 </div>
 
                 <div class="pt-4">
                     <button onclick="window.location.reload()" type="button"
                         class="px-6 h-10 bg-slate-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer border-0">
-                        Done &amp; Refresh Products
+                        Done &amp; Refresh Products List
                     </button>
                 </div>
             </div>
@@ -554,7 +621,6 @@ include __DIR__ . '/../layouts/header.php';
     async function handleParseSpreadsheet(e) {
         e.preventDefault();
         const fileInput = document.getElementById('importSpreadsheetFile');
-        const zipInput = document.getElementById('importZipFile');
         const chkAuto = document.getElementById('chkAutoCreateCategory');
 
         if (!fileInput.files || fileInput.files.length === 0) {
@@ -564,9 +630,6 @@ include __DIR__ . '/../layouts/header.php';
 
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        if (zipInput && zipInput.files && zipInput.files.length > 0) {
-            formData.append('zip_file', zipInput.files[0]);
-        }
         formData.append('auto_create_category', chkAuto.checked ? '1' : '0');
         formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
 
@@ -604,154 +667,157 @@ include __DIR__ . '/../layouts/header.php';
         document.getElementById('importStepPreview').classList.remove('hidden');
 
         const s = data.summary || {};
+        const errors = data.errors || [];
+        const products = data.products || [];
+        const canCommit = data.can_commit === true || (data.can_commit !== false && !data.has_errors && errors.length === 0);
+
+        // Summary counters
         document.getElementById('previewTotalRows').textContent = s.total_rows || 0;
         document.getElementById('previewTotalProducts').textContent = s.total_products || 0;
-        document.getElementById('previewValidProducts').textContent = s.valid_products || 0;
-        document.getElementById('previewWarningProducts').textContent = s.warning_products || 0;
-        document.getElementById('previewErrorProducts').textContent = s.error_products || 0;
+        document.getElementById('previewNewProducts').textContent = s.new_products !== undefined ? s.new_products : (s.total_products - (s.merge_products || 0));
+        document.getElementById('previewMergeProducts').textContent = s.merge_products || 0;
+        document.getElementById('previewErrorProducts').textContent = errors.length;
 
+        // Banners
+        const elErrBanner = document.getElementById('previewErrorBanner');
+        const elSucBanner = document.getElementById('previewSuccessBanner');
+        const elErrListCont = document.getElementById('previewErrorListContainer');
+
+        if (!canCommit || errors.length > 0) {
+            elErrBanner.classList.remove('hidden');
+            elSucBanner.classList.add('hidden');
+            document.getElementById('previewErrorBannerCount').textContent = errors.length;
+
+            // Render Error Details Table
+            elErrListCont.classList.remove('hidden');
+            document.getElementById('previewErrorCountHeader').textContent = errors.length;
+            const errTbody = document.getElementById('previewErrorTableBody');
+            errTbody.innerHTML = '';
+
+            errors.forEach(err => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-red-50/50';
+                tr.innerHTML = `
+                    <td class="py-2 px-3 text-center font-mono font-bold text-red-700">${err.row || '-'}</td>
+                    <td class="py-2 px-3 font-mono text-slate-800">${err.product_sku || '-'}</td>
+                    <td class="py-2 px-3 text-slate-700">${err.product_name || '-'}</td>
+                    <td class="py-2 px-3 font-semibold text-slate-600">${err.column || '-'}</td>
+                    <td class="py-2 px-3 text-red-600 font-semibold">${err.reason || '-'}</td>
+                `;
+                errTbody.appendChild(tr);
+            });
+        } else {
+            elErrBanner.classList.add('hidden');
+            elSucBanner.classList.remove('hidden');
+            elErrListCont.classList.add('hidden');
+        }
+
+        // Staged Products Table
         const tbody = document.getElementById('previewTableBody');
         tbody.innerHTML = '';
 
-        if (!data.products || data.products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">No product groups found in file.</td></tr>';
-            return;
-        }
+        if (products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400">No product groups found in spreadsheet.</td></tr>';
+        } else {
+            products.forEach(p => {
+                let actionBadge = '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md border bg-emerald-100 text-emerald-800 border-emerald-300">NEW</span>';
+                if (p.action === 'merge' || p.merge_action === 'merge') {
+                    actionBadge = '<span class="px-2 py-0.5 text-[10px] font-bold rounded-md border bg-amber-100 text-amber-800 border-amber-300">MERGE EXISTING</span>';
+                }
 
-        data.products.forEach(p => {
-            let badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-            let badgeLabel = 'VALID';
-            if (p.status === 'error') {
-                badgeClass = 'bg-red-100 text-red-800 border-red-300';
-                badgeLabel = 'ERROR';
-            } else if (p.status === 'warning') {
-                badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
-                badgeLabel = 'WARNING';
-            }
+                let badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                let badgeLabel = 'VALID';
+                if (p.status === 'error') {
+                    badgeClass = 'bg-red-100 text-red-800 border-red-300';
+                    badgeLabel = 'ERROR';
+                } else if (p.status === 'warning') {
+                    badgeClass = 'bg-amber-100 text-amber-800 border-amber-300';
+                    badgeLabel = 'WARNING';
+                }
 
-            let fBadgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
-            if (p.factory_link_status === 'existing') {
-                fBadgeClass = 'bg-indigo-100 text-indigo-800 border-indigo-300';
-            } else if (p.factory_link_status === 'new') {
-                fBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-            }
-
-            let tr = document.createElement('tr');
-            tr.className = 'hover:bg-slate-50 border-b border-slate-100';
-            tr.innerHTML = `
-                <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${p.product_sku || 'N/A'}</td>
-                <td class="py-2.5 px-3 font-semibold text-slate-800">${p.name || 'Unnamed Product'}</td>
-                <td class="py-2.5 px-3 text-slate-600">${p.category || 'N/A'}</td>
-                <td class="py-2.5 px-3">
-                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-md border ${fBadgeClass}">
-                        ${p.factory_badge || 'Unassigned'}
-                    </span>
-                </td>
-                <td class="py-2.5 px-3 text-center font-bold text-slate-700">${(p.variants || []).length}</td>
-                <td class="py-2.5 px-3 text-center">
-                    <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full border ${badgeClass}">${badgeLabel}</span>
-                </td>
-            `;
-            tbody.appendChild(tr);
-
-            // If errors or warnings present, show details sub-row
-            const logs = [...(p.errors || []), ...(p.warnings || [])];
-            if (logs.length > 0) {
-                let errTr = document.createElement('tr');
-                errTr.className = 'bg-slate-50/80';
-                errTr.innerHTML = `
-                    <td colspan="6" class="py-2 px-4 text-[11px] text-slate-600">
-                        <ul class="list-disc pl-4 space-y-0.5">
-                            ${logs.map(l => `<li class="${p.errors && p.errors.includes(l) ? 'text-red-600 font-semibold' : 'text-amber-700'}">${l}</li>`).join('')}
-                        </ul>
+                let tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${p.product_sku || 'N/A'}</td>
+                    <td class="py-2.5 px-3 font-semibold text-slate-800">${p.name || 'Unnamed Product'}</td>
+                    <td class="py-2.5 px-3 text-slate-600">${p.category || 'N/A'}</td>
+                    <td class="py-2.5 px-3 text-center font-bold text-slate-700">${(p.variants || []).length}</td>
+                    <td class="py-2.5 px-3 text-center">${actionBadge}</td>
+                    <td class="py-2.5 px-3 text-center">
+                        <span class="px-2 py-0.5 text-[10px] font-extrabold rounded-full border ${badgeClass}">${badgeLabel}</span>
                     </td>
                 `;
-                tbody.appendChild(errTr);
-            }
-        });
+                tbody.appendChild(tr);
+            });
+        }
 
-        // Enable / Disable commit button
+        // Enable / Disable confirm button
         const btnCommit = document.getElementById('btnCommitImport');
-        if ((s.valid_products || 0) + (s.warning_products || 0) === 0) {
+        if (!canCommit) {
             btnCommit.disabled = true;
             btnCommit.classList.add('opacity-50', 'cursor-not-allowed');
+            btnCommit.title = 'Validation failed. Fix errors in spreadsheet to enable import.';
         } else {
             btnCommit.disabled = false;
             btnCommit.classList.remove('opacity-50', 'cursor-not-allowed');
+            btnCommit.title = 'Click to execute atomic import transaction';
         }
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
     }
 
     async function executeCommitImport() {
         const btn = document.getElementById('btnCommitImport');
         btn.disabled = true;
-        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span id="importProgressText">Importing...</span>';
+        btn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div><span>Committing transaction...</span>';
 
-        let currentChunk = 0;
-        let isFinished = false;
-        let finalData = null;
+        const formData = new FormData();
+        formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
 
-        while (!isFinished) {
-            const formData = new FormData();
-            formData.append('_csrf_token', window.CSRF_TOKEN || '<?= csrf_token() ?>');
-            formData.append('chunk', currentChunk);
-
-            try {
-                const resp = await fetch('<?= url('admin/products/import/commit') ?>', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
-                    }
-                });
-                const data = await resp.json();
-
-                if (!data.success) {
-                    alert(data.error || data.message || 'Commit failed.');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Confirm & Import Products</span>';
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
-                    return;
+        try {
+            const resp = await fetch('<?= url('admin/products/import/commit') ?>', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': window.CSRF_TOKEN || '<?= csrf_token() ?>'
                 }
+            });
+            const data = await resp.json();
 
-                if (data.finished) {
-                    isFinished = true;
-                    finalData = data;
-                    // Images are now mirrored synchronously during import — no background sync needed
-                } else {
-                    document.getElementById('importProgressText').textContent = `Importing... ${data.percentage}% (${data.processed}/${data.total})`;
-                    currentChunk++;
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Server error during import commit.');
+            if (!data.success) {
+                alert('Import Failed & Database Rolled Back:\n\n' + (data.error || data.message || 'Commit transaction error.'));
                 btn.disabled = false;
-                btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Confirm & Import Products</span>';
+                btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Confirm &amp; Execute Import</span>';
                 if (typeof lucide !== 'undefined') lucide.createIcons();
                 return;
             }
-        }
 
-        document.getElementById('importStepPreview').classList.add('hidden');
-        document.getElementById('importStepResult').classList.remove('hidden');
+            // Success screen
+            document.getElementById('importStepPreview').classList.add('hidden');
+            document.getElementById('importStepResult').classList.remove('hidden');
 
-        // Instead of these we can show the summary data
-        document.getElementById('resCreatedProducts').textContent = finalData.summary.created_products || 0;
-        document.getElementById('resUpdatedProducts').textContent = finalData.summary.updated_products || 0;
-        document.getElementById('resCreatedVariants').textContent = finalData.summary.created_variants || 0;
-        document.getElementById('resUpdatedVariants').textContent = finalData.summary.updated_variants || 0;
+            const summary = data.summary || data;
+            document.getElementById('resCreatedProducts').textContent = summary.created_products || 0;
+            document.getElementById('resUpdatedProducts').textContent = summary.updated_products || summary.merged_products || 0;
+            document.getElementById('resCreatedVariants').textContent = summary.created_variants || 0;
+            document.getElementById('resUpdatedVariants').textContent = summary.updated_variants || 0;
 
-        if (finalData.image_stats) {
-            document.getElementById('imageStatsContainer').classList.remove('hidden');
-            document.getElementById('imageStatsContainer').classList.add('grid');
-            const elMirrored = document.getElementById('imageMirroredCount');
-            const elFailed   = document.getElementById('imageFailedCount');
-            if (elMirrored) elMirrored.textContent = finalData.image_stats.mirrored || 0;
-            if (elFailed)   elFailed.textContent   = finalData.image_stats.failed  || 0;
-        }
+            if (data.image_stats) {
+                document.getElementById('imageStatsContainer').classList.remove('hidden');
+                document.getElementById('imageStatsContainer').classList.add('grid');
+            }
 
-        if (finalData.summary.error_products && finalData.summary.error_products > 0) {
-            document.getElementById('resErrorNotice').classList.remove('hidden');
+            // Trigger background worker process immediately
+            fetch('<?= url("admin/products/import/sync-images") ?>', { method: 'POST' }).catch(() => {});
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        } catch (err) {
+            console.error(err);
+            alert('Server error during import transaction commit.');
+            btn.disabled = false;
+            btn.innerHTML = '<i data-lucide="check-circle-2" class="w-4 h-4"></i><span>Confirm &amp; Execute Import</span>';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
     }
 </script>

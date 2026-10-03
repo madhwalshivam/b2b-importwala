@@ -757,7 +757,7 @@ ob_start();
     /* Hide desktop pagination on mobile */
     .shop-pagination-desktop {
       display: none !important;
-    }
+    } 
 
     .shop-pagination-mobile {
       margin-top: 24px !important;
