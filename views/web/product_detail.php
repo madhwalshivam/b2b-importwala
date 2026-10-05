@@ -1625,8 +1625,13 @@ body.vs-open #mobileBottomBar { display: none !important; }
     }
 
     // Mobile bottom bar ka "Add cart":
-    //  - variant select hai to wahi variant, nahi to main product seedha cart me add
+    //  - variants hon to variant popup khulta hai
+    //  - warna main product seedha cart me add
     function handleMobileAtcClick() {
+        if (typeof window.openVariantSheet === 'function') {
+            window.openVariantSheet('');
+            return;
+        }
         const list = (typeof VARIANTS_LIST !== 'undefined') ? VARIANTS_LIST : [];
         const real = list.filter(function (v) { return v.id > 0; });
 
@@ -1719,14 +1724,26 @@ body.vs-open #mobileBottomBar { display: none !important; }
 .vs-color i { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #f05a29; color: #fff; font-style: normal; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
 
 .vs-list { flex: 1; overflow-y: auto; padding: 0 16px 8px; -webkit-overflow-scrolling: touch; }
-.vs-row { padding: 8px 0; border-bottom: 1px solid #f1f1f1; display: flex; flex-direction: row; align-items: center; gap: 6px; }
+.vs-row { padding: 10px 0; border-bottom: 1px solid #f1f1f1; display: flex; flex-direction: row; align-items: center; gap: 8px; }
 .vs-row:last-child { border-bottom: 0; }
 .vs-row.is-oos .vs-rimg, .vs-row.is-oos .vs-rname { opacity: .55; }
-.vs-r1, .vs-r2 { display: contents; }
-.vs-rimg { width: 34px; height: 34px; border-radius: 6px; object-fit: cover; background: #f1f5f9; border: 1px solid #eee; flex-shrink: 0; }
-.vs-rname { flex: 1; min-width: 0; font-size: 12px; font-weight: 500; color: #1f2937; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.vs-rimg { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; background: #f1f5f9; border: 1px solid #eee; flex-shrink: 0; cursor: zoom-in; }
+
+#vsPreview {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000003;
+    background: rgba(0,0,0,.88); display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 56px 16px 24px; box-sizing: border-box;
+    opacity: 0; visibility: hidden; transition: opacity .2s ease, visibility 0s linear .2s;
+}
+#vsPreview.is-open { opacity: 1; visibility: visible; transition: opacity .2s ease; }
+#vsPreview img { max-width: 100%; max-height: calc(100% - 40px); object-fit: contain; border-radius: 10px; background: #fff; }
+#vsPreview .vs-pv-name { margin-top: 12px; color: #fff; font-size: 13px; font-weight: 500; text-align: center; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#vsPreview .vs-pv-close { position: absolute; top: 12px; right: 12px; width: 38px; height: 38px; min-width: 0; min-height: 0; padding: 0; border: 0; border-radius: 999px; background: rgba(255,255,255,.18); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+@media (min-width: 768px) { #vsPreview { display: none !important; } }
+.vs-rname { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 500; color: #1f2937; line-height: 1.3; }
+.vs-rname-t { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vs-rprice { font-size: 12px; font-weight: 600; color: #111827; white-space: nowrap; flex-shrink: 0; }
-.vs-oos { display: block; font-size: 10px; color: #ef4444; }
+.vs-oos { display: block; font-size: 10px; font-weight: 500; color: #ef4444; line-height: 1.2; }
 
 /* Row controls: stepper + cart + wishlist -- sabki height same (--vs-h) */
 #vsSheet { --vs-h: 30px; }
@@ -1777,6 +1794,11 @@ body.vs-open #mobileBottomBar { display: none !important; }
     <div class="vs-list" id="vsList"></div>
 </div>
 <div id="vsToast"></div>
+<div id="vsPreview" role="dialog" aria-modal="true" aria-label="Variant image" aria-hidden="true">
+    <button type="button" class="vs-pv-close" id="vsPreviewClose" aria-label="Close">&#10005;</button>
+    <img id="vsPreviewImg" src="" alt="">
+    <div class="vs-pv-name" id="vsPreviewName"></div>
+</div>
 
 <script>
 (function () {
@@ -1972,25 +1994,18 @@ body.vs-open #mobileBottomBar { display: none !important; }
             var oos = v.stock <= 0;
             var name = IS_DOUBLE ? (v.size || v.value) : v.value;
             var added = !oos && q > 0 && cartMap[v.id] === q;
-            var wished = !!wishMap[v.id];
             return '<div class="vs-row' + (oos ? ' is-oos' : '') + '" data-idx="' + i + '">' +
-                '<div class="vs-r1">' +
-                    '<img class="vs-rimg" src="' + esc(v.image) + '" alt="">' +
-                    '<div class="vs-rname">' + esc(name) + (oos ? '<span class="vs-oos">' + esc(TXT.oos) + '</span>' : '') + '</div>' +
-                    '<div class="vs-rprice">' + esc(money(unitPrice(v, total))) + '</div>' +
+                '<img class="vs-rimg" src="' + esc(v.image) + '" alt="' + esc(name) + '" role="button" aria-label="View larger image">' +
+                '<div class="vs-rname" title="' + esc(name) + '"><span class="vs-rname-t">' + esc(name) + '</span>' +
+                    (oos ? '<span class="vs-oos">' + esc(TXT.oos) + '</span>' : '') + '</div>' +
+                '<div class="vs-rprice">' + esc(money(unitPrice(v, total))) + '</div>' +
+                '<div class="vs-step' + (oos ? ' is-disabled' : '') + '">' +
+                    '<button type="button" data-act="dec" aria-label="Decrease"' + (q <= 0 ? ' disabled' : '') + '>' + ICON_MINUS + '</button>' +
+                    '<input type="number" inputmode="numeric" min="0" max="' + (v.stock > 0 ? v.stock : 0) + '" value="' + q + '" data-act="input">' +
+                    '<button type="button" data-act="inc" aria-label="Increase">' + ICON_PLUS + '</button>' +
                 '</div>' +
-                '<div class="vs-r2">' +
-                    '<div class="vs-step' + (oos ? ' is-disabled' : '') + '">' +
-                        '<button type="button" data-act="dec" aria-label="Decrease"' + (q <= 0 ? ' disabled' : '') + '>' + ICON_MINUS + '</button>' +
-                        '<input type="number" inputmode="numeric" min="0" max="' + (v.stock > 0 ? v.stock : 0) + '" value="' + q + '" data-act="input">' +
-                        '<button type="button" data-act="inc" aria-label="Increase">' + ICON_PLUS + '</button>' +
-                    '</div>' +
-                    '<button type="button" class="vs-ic' + (added ? ' is-added' : '') + '" data-act="cart" aria-label="Add to cart"' + (oos ? ' disabled' : '') + '>' +
-                        (added ? ICON_CHECK : ICON_CART) + '</button>' +
-                    '<button type="button" class="vs-ic" data-act="wish" aria-label="Wishlist">' +
-                        '<svg class="vs-heart-icon" viewBox="0 0 24 24" fill="' + (wished ? '#f05a29' : 'none') + '" stroke="' + (wished ? '#f05a29' : '#6B7280') + '" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="' + HEART_PATH + '"/></svg>' +
-                    '</button>' +
-                '</div>' +
+                '<button type="button" class="vs-ic' + (added ? ' is-added' : '') + '" data-act="cart" aria-label="Add to cart"' + (oos ? ' disabled' : '') + '>' +
+                    (added ? ICON_CHECK : ICON_CART) + '</button>' +
             '</div>';
         }).join('');
     }
@@ -2103,6 +2118,7 @@ body.vs-open #mobileBottomBar { display: none !important; }
     function close(fromPop) {
         if (!isOpen) return;
         isOpen = false;
+        closePreview();
         el('vsOverlay').classList.remove('is-open');
         el('vsSheet').classList.remove('is-open');
         el('vsSheet').setAttribute('aria-hidden', 'true');
@@ -2128,10 +2144,32 @@ body.vs-open #mobileBottomBar { display: none !important; }
         open(b.getAttribute('data-vs-color') || '');
     });
 
+    function openPreview(src, name) {
+        if (!src) return;
+        el('vsPreviewImg').src = src;
+        el('vsPreviewImg').alt = name || '';
+        el('vsPreviewName').textContent = name || '';
+        el('vsPreview').classList.add('is-open');
+        el('vsPreview').setAttribute('aria-hidden', 'false');
+    }
+    function closePreview() {
+        el('vsPreview').classList.remove('is-open');
+        el('vsPreview').setAttribute('aria-hidden', 'true');
+    }
+    function previewOpen() { return el('vsPreview').classList.contains('is-open'); }
+
+    el('vsPreview').addEventListener('click', function (e) {
+        if (e.target.id !== 'vsPreviewImg') closePreview();
+    });
+
     el('vsCloseBtn').addEventListener('click', function () { close(false); });
     el('vsOverlay').addEventListener('click', function () { close(false); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen) close(false); });
-    window.addEventListener('popstate', function () { if (isOpen) { historyPushed = false; close(true); } });
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        if (previewOpen()) closePreview();
+        else if (isOpen) close(false);
+    });
+    window.addEventListener('popstate', function () { closePreview(); if (isOpen) { historyPushed = false; close(true); } });
 
     // Color switch: sirf user ke tap pe
     el('vsColors').addEventListener('click', function (e) {
@@ -2144,6 +2182,8 @@ body.vs-open #mobileBottomBar { display: none !important; }
 
     var listEl = el('vsList');
     listEl.addEventListener('click', function (e) {
+        var img = e.target.closest('.vs-rimg');
+        if (img) { openPreview(img.getAttribute('src'), img.getAttribute('alt')); return; }
         var b = e.target.closest('button[data-act]');
         if (!b || b.disabled) return;
         var row = b.closest('.vs-row');

@@ -67,7 +67,7 @@ curl_setopt_array($ch, [
 $response = curl_exec($ch);
 $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 $curlErr  = curl_error($ch);
-curl_close($ch);
+
 
 echo "<pre style='font-size:14px;font-family:monospace;padding:20px;'>";
 echo "=== R2 Upload Debug ===\n\n";
