@@ -420,7 +420,9 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
 
                 <!-- 2.5 VARIATION SELECTOR (Single vs Double Nested Mode) -->
                 <?php if (!empty($variationMatrix['colors'])): ?>
-                    <div class="space-y-4 py-3 border-t border-b border-gray-100 my-1">
+
+                    <!-- DESKTOP (md+): Inline color + size selector (unchanged) -->
+                    <div class="hidden md:block space-y-4 py-3 border-t border-b border-gray-100 my-1">
                         <!-- COLOR SELECTOR (Available in single & double modes) -->
                         <div class="space-y-1.5">
                             <div class="flex items-center justify-between text-xs">
@@ -480,6 +482,50 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                             </div>
                         </template>
                     </div>
+
+                    <!-- MOBILE (< md): Color thumbnails strip — tap to open bottom sheet -->
+                    <div class="md:hidden py-2 border-t border-gray-100 my-1">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-semibold text-gray-700 uppercase tracking-wider">Color
+                                <span class="font-normal text-gray-500 normal-case ml-1">
+                                    (<span x-text="variationMatrix.colors.length"></span> options)
+                                </span>
+                            </span>
+                            <span class="text-xs font-bold text-red-700" x-text="(variationMatrix.colors.find(c => c.id == selectedColorId)?.color_name) || ''"></span>
+                        </div>
+                        <!-- Scrollable thumbnail row: tap opens bottom sheet -->
+                        <div class="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                            <template x-for="color in variationMatrix.colors" :key="color.id">
+                                <button type="button"
+                                    @click="openVariantSheet(color.id)"
+                                    :title="color.color_name"
+                                    :class="{
+                                        'border-red-600 ring-2 ring-red-300': selectedColorId == color.id,
+                                        'border-gray-200': selectedColorId != color.id,
+                                        'opacity-40': variationMatrix.variation_mode === 'single' ? (color.stock_qty <= 0) : (!color.sizes || !color.sizes.some(s => s.stock_qty > 0))
+                                    }"
+                                    class="shrink-0 w-11 h-11 rounded-lg border-2 overflow-hidden bg-gray-50 transition cursor-pointer focus:outline-none">
+                                    <template x-if="color.swatch_hex_or_image && (color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/'))">
+                                        <img :src="color.swatch_hex_or_image" class="w-full h-full object-cover" :alt="color.color_name">
+                                    </template>
+                                    <template x-if="color.swatch_hex_or_image && color.swatch_hex_or_image.startsWith('#')">
+                                        <span class="block w-full h-full" :style="'background-color:' + color.swatch_hex_or_image"></span>
+                                    </template>
+                                    <template x-if="!color.swatch_hex_or_image">
+                                        <span class="block w-full h-full flex items-center justify-center text-[9px] text-gray-500 font-medium leading-tight text-center p-0.5" x-text="color.color_name.substring(0,4)"></span>
+                                    </template>
+                                </button>
+                            </template>
+                        </div>
+                        <!-- Tap prompt -->
+                        <button type="button"
+                            @click="openVariantSheet(selectedColorId)"
+                            class="mt-2 w-full flex items-center justify-between border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 bg-gray-50 hover:bg-gray-100 transition cursor-pointer">
+                            <span>Select size &amp; quantity</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+
                 <?php endif; ?>
 
                 <!-- 3. STOCK STATUS -->
@@ -1027,11 +1073,11 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
             </a>
         </div>
 
-        <!-- BLINKIT-STYLE HIGH-CONVERTING FIXED BOTTOM ACTION BAR WITH TICKET STAMP PRICE BADGE IN RED THEME (MOBILE/TABLET ONLY) -->
+        <!-- BLINKIT-STYLE HIGH-CONVERTING FIXED BOTTOM ACTION BAR (MOBILE/TABLET ONLY) -->
         <div
             class="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-white border-t border-gray-200 shadow-2xl py-2.5 px-4 sm:px-6">
             <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
-                <!-- Left: Blinkit Ticket Stamp Sale Price Badge in Red, Regular MRP Line-Through, and Inclusive of all taxes -->
+                <!-- Left: Price badge -->
                 <div class="flex flex-col gap-0.5">
                     <div class="flex items-center gap-2">
                         <span class="text-lg font-bold text-red-600 tracking-tight leading-none" x-text="formatPrice(activePrice)">
@@ -1045,33 +1091,127 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                     <span class="text-[9px] text-gray-500 font-medium">Inclusive of all taxes</span>
                 </div>
 
-                <!-- Right: Add to Cart Button with Lighter/Clean Font Weight that Transforms into Inline Controller [- 1 +] -->
+                <!-- Right: Add to Cart — opens bottom sheet on mobile if variants exist, else direct add -->
                 <div class="shrink-0">
-                    <!-- State 1: Solid BRAND RED Add to Cart Button with Lighter Font Weight (When cartQty <= 0) -->
-                    <button type="button" x-show="cartQty <= 0" @click="addToCart()" :disabled="loading || stock <= 0"
-                        class="h-10 sm:h-11 px-5 sm:px-8 bg-red-600 hover:bg-red-700 text-white font-medium text-xs sm:text-xs rounded-xl transition shadow-md hover:shadow-lg flex items-center justify-center disabled:bg-gray-400 cursor-pointer tracking-wider uppercase">
-                        <span x-text="loading ? 'Adding...' : (stock > 0 ? 'Add to cart' : 'Out of stock')"></span>
-                    </button>
-
-                    <!-- State 2: Dynamic Inline Quantity Controller (When cartQty > 0) -->
-                    <div x-show="cartQty > 0" x-cloak
-                        class="h-11 sm:h-12 px-2 bg-red-600 text-white font-medium text-sm sm:text-base rounded-xl shadow-md flex items-center justify-between space-x-3 w-32 sm:w-40 select-none">
-                        <button type="button" @click.stop="decreaseQty()" :disabled="loading"
-                            class="w-9 h-9 rounded-lg hover:bg-red-700 text-white font-medium text-lg flex items-center justify-center cursor-pointer transition">
-                            -
+                    <?php if (!empty($variationMatrix['colors'])): ?>
+                        <!-- Variants exist: open bottom sheet -->
+                        <button type="button" id="btn-open-variant-sheet"
+                            @click="openVariantSheet(selectedColorId)"
+                            class="h-10 sm:h-11 px-5 sm:px-8 bg-red-600 hover:bg-red-700 text-white font-medium text-xs rounded-xl transition shadow-md cursor-pointer tracking-wider uppercase flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 11H4L5 9z"/></svg>
+                            <span>Add to Cart</span>
                         </button>
-                        <span class="font-medium text-white text-base sm:text-lg" x-text="cartQty"></span>
-                        <button type="button" @click.stop="increaseQty()" :disabled="loading"
-                            class="w-9 h-9 rounded-lg hover:bg-red-700 text-white font-medium text-lg flex items-center justify-center cursor-pointer transition">
-                            +
+                    <?php else: ?>
+                        <!-- No variants: direct add (existing behaviour) -->
+                        <button type="button" x-show="cartQty <= 0" @click="addToCart()" :disabled="loading || stock <= 0"
+                            class="h-10 sm:h-11 px-5 sm:px-8 bg-red-600 hover:bg-red-700 text-white font-medium text-xs rounded-xl transition shadow-md flex items-center justify-center disabled:bg-gray-400 cursor-pointer tracking-wider uppercase">
+                            <span x-text="loading ? 'Adding...' : (stock > 0 ? 'Add to cart' : 'Out of stock')"></span>
                         </button>
-                    </div>
+                        <div x-show="cartQty > 0" x-cloak
+                            class="h-11 sm:h-12 px-2 bg-red-600 text-white font-medium text-sm rounded-xl shadow-md flex items-center justify-between space-x-3 w-32 sm:w-40 select-none">
+                            <button type="button" @click.stop="decreaseQty()" :disabled="loading"
+                                class="w-9 h-9 rounded-lg hover:bg-red-700 text-white font-medium text-lg flex items-center justify-center cursor-pointer transition">-</button>
+                            <span class="font-medium text-white text-base" x-text="cartQty"></span>
+                            <button type="button" @click.stop="increaseQty()" :disabled="loading"
+                                class="w-9 h-9 rounded-lg hover:bg-red-700 text-white font-medium text-lg flex items-center justify-center cursor-pointer transition">+</button>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ====================================================
+         MOBILE VARIANT BOTTOM SHEET
+         Renders only when product has color/size variations.
+         Data source: variationMatrix JSON (PHP → JS).
+    ===================================================== -->
+    <?php if (!empty($variationMatrix['colors'])): ?>
+    <div id="variant-sheet-overlay"
+         class="lg:hidden fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm hidden"
+         aria-hidden="true"
+         onclick="variantSheetClose()"
+         style="transition: opacity 0.25s;"></div>
+
+    <div id="variant-sheet"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Select variant"
+         class="lg:hidden fixed bottom-0 left-0 right-0 z-[201] bg-white flex flex-col"
+         style="border-radius:20px 20px 0 0; max-height:85vh; transform:translateY(100%); transition:transform 0.28s cubic-bezier(.4,0,.2,1); will-change:transform;">
+
+        <!-- Sheet handle -->
+        <div class="flex justify-center pt-2 pb-1 shrink-0">
+            <div class="w-10 h-1 rounded-full bg-gray-300"></div>
+        </div>
+
+        <!-- Header: close button -->
+        <div class="flex items-center justify-between px-4 pb-2 shrink-0 border-b border-gray-100">
+            <h2 class="text-sm font-semibold text-gray-800" id="vsheet-color-name">Select Options</h2>
+            <button type="button" onclick="variantSheetClose()" class="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition cursor-pointer" aria-label="Close">
+                <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <!-- Color thumbnails strip (horizontal scroll, switch color without closing) -->
+        <div class="px-4 py-2 shrink-0 border-b border-gray-100">
+            <div id="vsheet-color-strip" class="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none"></div>
+        </div>
+
+        <!-- Price tier row (product-level tiers, scrollable) -->
+        <div id="vsheet-tier-row-wrap" class="px-4 pt-3 pb-2 shrink-0">
+            <!-- Color thumbnail + tier pills side by side -->
+            <div class="flex items-center gap-3">
+                <img id="vsheet-color-thumb" src="" alt="" class="w-12 h-12 rounded-xl object-cover border border-gray-200 shrink-0" onerror="this.style.display='none'">
+                <!-- Tier pills -->
+                <div id="vsheet-tiers" class="flex gap-2 overflow-x-auto scrollbar-none flex-1 pb-0.5"></div>
+            </div>
+            <!-- Current unit price (big) -->
+            <div class="mt-2">
+                <span class="text-xl font-bold text-gray-900" id="vsheet-unit-price">—</span>
+                <span class="text-xs text-gray-400 ml-1">/ piece</span>
+            </div>
+        </div>
+
+        <!-- Variant list (scrollable) -->
+        <div class="flex-1 overflow-y-auto px-4 pt-1 pb-2" id="vsheet-variant-list"
+             style="-webkit-overflow-scrolling:touch;"></div>
+
+        <!-- Sticky footer: wishlist + add to cart -->
+        <div class="shrink-0 border-t border-gray-100 px-4 py-3 bg-white" style="padding-bottom: max(12px, env(safe-area-inset-bottom));">
+            <!-- Totals row -->
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-gray-500" id="vsheet-total-qty-label">0 items</span>
+                <span class="text-sm font-bold text-gray-900" id="vsheet-total-amount">—</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- Wishlist button -->
+                <?php $isWishedSheet = in_array((int)$product['id'], $wishlistProductIds ?? []); ?>
+                <button type="button"
+                    id="vsheet-wishlist-btn"
+                    onclick="toggleWishlist(<?= (int)$product['id'] ?>, this)"
+                    data-wishlist-id="<?= (int)$product['id'] ?>"
+                    class="w-12 h-12 shrink-0 rounded-xl border border-gray-200 bg-gray-50 hover:bg-red-50 flex items-center justify-center transition cursor-pointer"
+                    title="<?= $isWishedSheet ? 'Remove from Wishlist' : 'Save to Wishlist' ?>">
+                    <svg class="w-5 h-5" fill="<?= $isWishedSheet ? '#A8111C' : 'none' ?>" viewBox="0 0 24 24" stroke="<?= $isWishedSheet ? '#A8111C' : 'currentColor' ?>" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                </button>
+                <!-- Add to cart button -->
+                <button type="button" id="vsheet-add-btn"
+                    class="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm rounded-xl transition shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled
+                    onclick="variantSheetAddToCart()">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 11H4L5 9z"/></svg>
+                    <span id="vsheet-add-label">Add to Cart</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <script>
+        /* ─── Product Gallery Swipe Component ─── */
         function productGalleryComponent(firstUrl, imagesJson) {
             let images = [];
             if (Array.isArray(imagesJson) && imagesJson.length > 0) {
@@ -1113,6 +1253,526 @@ $boxItems = !empty($includedItems) ? array_column($includedItems, 'item_name') :
                 }
             };
         }
+
+        /* ══════════════════════════════════════════════════════════════
+         *  MOBILE VARIANT BOTTOM SHEET — JavaScript
+         *  All data comes from variationMatrix (PHP → JS, no hardcoding).
+         * ══════════════════════════════════════════════════════════════ */
+        <?php if (!empty($variationMatrix['colors'])): ?>
+        (function() {
+            'use strict';
+
+            /* ── Config strings (one place, no scattered literals) ── */
+            const STRINGS = {
+                addToCart:      'Add to Cart',
+                adding:         'Adding…',
+                selectFirst:    'Select size & quantity',
+                itemsSingular:  '1 item selected',
+                itemsPlural:    (n) => n + ' items selected',
+                toastSuccess:   'Added to cart!',
+                toastError:     'Error adding to cart. Try again.',
+                toastMinQty:    (moq) => 'Minimum order: ' + moq + ' pcs',
+                emptyVariants:  'No variants available for this color.',
+                outOfStock:     'Out of stock',
+                pieces:         '/ piece',
+            };
+
+            /* ── Data from PHP (no hardcoded prices, names, etc.) ── */
+            const MATRIX        = <?= json_encode($variationMatrix, JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+            const PRODUCT_ID    = <?= (int)$product['id'] ?>;
+            const CSRF_TOKEN    = '<?= csrf_token() ?>';
+            const CART_ADD_URL  = '<?= url('api/cart/add') ?>';
+
+            /* Product-level tiers (or empty array if none configured) */
+            const PRODUCT_TIERS = MATRIX.product_tiers || [];
+            /* Variant/size-level tiers map: { variantId: [{min_qty,max_qty,unit_price},...] } */
+            const VARIANT_TIERS = MATRIX.variant_tiers_map || {};
+
+            /* ── State ── */
+            let sheetOpen       = false;
+            let activeColorId   = null;
+            /* quantities[colorId][variantId] = number */
+            let quantities      = {};
+            let historyPushed   = false;
+
+            /* ── DOM refs (cached once sheet exists) ── */
+            const sheet         = document.getElementById('variant-sheet');
+            const overlay       = document.getElementById('variant-sheet-overlay');
+            const colorStrip    = document.getElementById('vsheet-color-strip');
+            const colorThumb    = document.getElementById('vsheet-color-thumb');
+            const tiersEl       = document.getElementById('vsheet-tiers');
+            const colorNameEl   = document.getElementById('vsheet-color-name');
+            const unitPriceEl   = document.getElementById('vsheet-unit-price');
+            const variantList   = document.getElementById('vsheet-variant-list');
+            const totalQtyEl    = document.getElementById('vsheet-total-qty-label');
+            const totalAmtEl    = document.getElementById('vsheet-total-amount');
+            const addBtn        = document.getElementById('vsheet-add-btn');
+            const addLabel      = document.getElementById('vsheet-add-label');
+
+            /* ── Utility: price formatter (mirrors PHP format_price — ₹ + en-IN) ── */
+            function fmtPrice(val) {
+                const n = parseFloat(val) || 0;
+                return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            /* ── Tiered pricing logic ── */
+            /**
+             * Given tiers array (sorted by min_qty ASC) and a totalQty,
+             * return the applicable unit_price (or fallback basePrice).
+             */
+            function resolveUnitPrice(tiers, totalQty, basePrice) {
+                if (!tiers || tiers.length === 0) return parseFloat(basePrice) || 0;
+                let price = parseFloat(basePrice) || 0;
+                for (const tier of tiers) {
+                    const minQ = parseInt(tier.min_qty);
+                    const maxQ = tier.max_qty !== null ? parseInt(tier.max_qty) : Infinity;
+                    if (totalQty >= minQ && totalQty <= maxQ) {
+                        price = parseFloat(tier.unit_price);
+                        break;
+                    }
+                }
+                return price;
+            }
+
+            /* ── Compute combined totals across ALL colors ── */
+            function computeTotals() {
+                let totalQty = 0;
+                let totalAmt = 0;
+
+                for (const [cid, vMap] of Object.entries(quantities)) {
+                    const color = MATRIX.colors.find(c => c.id == cid);
+                    if (!color) continue;
+
+                    for (const [vid, qty] of Object.entries(vMap)) {
+                        if (!qty || qty <= 0) continue;
+                        totalQty += qty;
+
+                        /* Determine base price for this variant */
+                        let basePrice = 0;
+                        if (MATRIX.variation_mode === 'single') {
+                            basePrice = parseFloat(color.price) || 0;
+                        } else {
+                            const sz = (color.sizes || []).find(s => s.id == vid);
+                            basePrice = sz ? (parseFloat(sz.price) || 0) : 0;
+                        }
+
+                        /* Use variant-level tiers if available, else product-level tiers */
+                        const tiers = VARIANT_TIERS[vid] || PRODUCT_TIERS;
+                        /* NOTE: tier is resolved per-combined-total (totalQty at this point is partial).
+                           We do a two-pass: first sum qty, then compute amounts. */
+                        totalAmt += basePrice * qty; /* placeholder; recalculated below */
+                    }
+                }
+
+                /* Two-pass: now we know totalQty, recompute amounts with correct tier */
+                totalAmt = 0;
+                for (const [cid, vMap] of Object.entries(quantities)) {
+                    const color = MATRIX.colors.find(c => c.id == cid);
+                    if (!color) continue;
+                    for (const [vid, qty] of Object.entries(vMap)) {
+                        if (!qty || qty <= 0) continue;
+                        let basePrice = 0;
+                        if (MATRIX.variation_mode === 'single') {
+                            basePrice = parseFloat(color.price) || 0;
+                        } else {
+                            const sz = (color.sizes || []).find(s => s.id == vid);
+                            basePrice = sz ? (parseFloat(sz.price) || 0) : 0;
+                        }
+                        const tiers = VARIANT_TIERS[vid] || PRODUCT_TIERS;
+                        const uPrice = resolveUnitPrice(tiers, totalQty, basePrice);
+                        totalAmt += uPrice * qty;
+                    }
+                }
+
+                return { totalQty, totalAmt };
+            }
+
+            /* ── Render tier pills ── */
+            function renderTiers(tiers, totalQty) {
+                if (!tiersEl) return;
+                if (!tiers || tiers.length === 0) {
+                    tiersEl.innerHTML = '';
+                    return;
+                }
+                tiersEl.innerHTML = tiers.map(tier => {
+                    const minQ  = parseInt(tier.min_qty);
+                    const maxQ  = tier.max_qty !== null ? parseInt(tier.max_qty) : null;
+                    const label = maxQ !== null ? minQ + '–' + maxQ + ' pcs' : minQ + '+ pcs';
+                    const price = fmtPrice(tier.unit_price);
+                    const inQ   = parseInt(tier.min_qty);
+                    const inEnd = tier.max_qty !== null ? parseInt(tier.max_qty) : Infinity;
+                    const active = totalQty >= inQ && totalQty <= inEnd;
+                    return `<div class="shrink-0 flex flex-col items-center px-2.5 py-1.5 rounded-xl border text-xs transition ${
+                        active
+                        ? 'border-red-600 bg-red-50 text-red-700'
+                        : 'border-gray-200 bg-white text-gray-600'
+                    }">
+                        <span class="font-bold">${price}</span>
+                        <span class="text-[10px] font-normal opacity-75">${label}</span>
+                    </div>`;
+                }).join('');
+            }
+
+            /* ── Render variant rows for active color ── */
+            function renderVariantRows(color) {
+                if (!variantList) return;
+
+                /* For 'single' mode, the color itself IS the variant */
+                const variants = MATRIX.variation_mode === 'single'
+                    ? [{ id: color.id, label: color.color_name, price: color.price, stock_qty: color.stock_qty, sku: color.sku, image: color.swatch_hex_or_image }]
+                    : (color.sizes || []).map(s => ({ id: s.id, label: s.size_label, price: s.price, stock_qty: s.stock_qty, sku: s.sku, image: color.swatch_hex_or_image }));
+
+                if (variants.length === 0) {
+                    variantList.innerHTML = `<div class="py-8 text-center text-sm text-gray-400">${STRINGS.emptyVariants}</div>`;
+                    return;
+                }
+
+                /* Ensure quantities map exists for this color */
+                if (!quantities[color.id]) quantities[color.id] = {};
+
+                variantList.innerHTML = variants.map(v => {
+                    const qty     = quantities[color.id][v.id] || 0;
+                    const stock   = parseInt(v.stock_qty) || 0;
+                    const oos     = stock <= 0;
+                    const imgSrc  = v.image && (v.image.startsWith('http') || v.image.startsWith('/')) ? v.image : '';
+                    const price   = parseFloat(v.price) || 0;
+                    return `
+                    <div class="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0" data-vid="${v.id}">
+                        <!-- Variant image -->
+                        <div class="w-12 h-12 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden shrink-0 flex items-center justify-center">
+                            ${imgSrc
+                                ? `<img src="${imgSrc}" class="w-full h-full object-cover" alt="${v.label}" onerror="this.parentNode.innerHTML='<span class=\'text-[9px] text-gray-400\'>${v.label.substring(0,4)}</span>'">`
+                                : `<span class="text-[10px] text-gray-400 font-medium text-center leading-tight px-1">${v.label.substring(0,6)}</span>`
+                            }
+                        </div>
+                        <!-- Label + price -->
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm font-medium text-gray-800 truncate">${v.label}</div>
+                            <div class="text-xs text-gray-500 mt-0.5">${oos ? '<span class="text-red-500">' + STRINGS.outOfStock + '</span>' : fmtPrice(price)}</div>
+                        </div>
+                        <!-- Stepper -->
+                        ${oos
+                            ? `<div class="text-xs text-gray-300 italic shrink-0">${STRINGS.outOfStock}</div>`
+                            : `<div class="flex items-center gap-1 shrink-0">
+                                <button type="button"
+                                    class="vsheet-minus w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-lg font-bold text-gray-600 hover:bg-gray-100 transition cursor-pointer select-none"
+                                    data-vid="${v.id}" data-stock="${stock}" aria-label="Decrease">
+                                    <svg class="w-4 h-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>
+                                </button>
+                                <input type="number"
+                                    class="vsheet-qty-input w-12 h-10 text-center border border-gray-200 rounded-lg text-sm font-semibold text-gray-900 bg-white focus:outline-none focus:border-red-500"
+                                    value="${qty}" min="0" max="${stock}" data-vid="${v.id}" data-stock="${stock}"
+                                    inputmode="numeric" pattern="[0-9]*">
+                                <button type="button"
+                                    class="vsheet-plus w-10 h-10 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center text-lg font-bold text-gray-600 hover:bg-gray-100 transition cursor-pointer select-none"
+                                    data-vid="${v.id}" data-stock="${stock}" aria-label="Increase">
+                                    <svg class="w-4 h-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                </button>
+                            </div>`
+                        }
+                    </div>`;
+                }).join('');
+
+                /* Attach stepper event listeners */
+                variantList.querySelectorAll('.vsheet-minus').forEach(btn => {
+                    btn.addEventListener('click', () => stepQty(color.id, btn.dataset.vid, -1, parseInt(btn.dataset.stock)));
+                });
+                variantList.querySelectorAll('.vsheet-plus').forEach(btn => {
+                    btn.addEventListener('click', () => stepQty(color.id, btn.dataset.vid, +1, parseInt(btn.dataset.stock)));
+                });
+                variantList.querySelectorAll('.vsheet-qty-input').forEach(inp => {
+                    inp.addEventListener('change', () => {
+                        let v = parseInt(inp.value) || 0;
+                        const max = parseInt(inp.dataset.stock);
+                        if (v < 0) v = 0;
+                        if (v > max) v = max;
+                        inp.value = v;
+                        setQty(color.id, inp.dataset.vid, v);
+                    });
+                    /* Prevent non-numeric input on mobile */
+                    inp.addEventListener('input', () => {
+                        inp.value = inp.value.replace(/[^0-9]/g, '');
+                    });
+                });
+            }
+
+            /* ── Stepper helpers ── */
+            function stepQty(colorId, variantId, delta, maxStock) {
+                const prev = (quantities[colorId] && quantities[colorId][variantId]) || 0;
+                let next = prev + delta;
+                if (next < 0) next = 0;
+                if (next > maxStock) { next = maxStock; }
+                setQty(colorId, variantId, next);
+                /* Update input field in DOM without full re-render */
+                const inp = variantList.querySelector(`.vsheet-qty-input[data-vid="${variantId}"]`);
+                if (inp) inp.value = next;
+                refreshTotalsUI();
+            }
+
+            function setQty(colorId, variantId, val) {
+                if (!quantities[colorId]) quantities[colorId] = {};
+                quantities[colorId][variantId] = val;
+                refreshTotalsUI();
+            }
+
+            /* ── Refresh totals + tier highlights + unit price ── */
+            function refreshTotalsUI() {
+                const { totalQty, totalAmt } = computeTotals();
+
+                /* Tier pills (product-level tiers for now; variant tiers shown per row) */
+                renderTiers(PRODUCT_TIERS, totalQty);
+
+                /* Unit price for active color */
+                if (activeColorId !== null) {
+                    const color = MATRIX.colors.find(c => c.id == activeColorId);
+                    if (color) {
+                        const basePrice = MATRIX.variation_mode === 'single'
+                            ? (parseFloat(color.price) || 0)
+                            : Math.min(...(color.sizes || []).filter(s => parseFloat(s.price) > 0).map(s => parseFloat(s.price)), Infinity);
+                        const tiers = PRODUCT_TIERS;
+                        const uPrice = resolveUnitPrice(tiers, totalQty, basePrice);
+                        if (unitPriceEl) unitPriceEl.textContent = fmtPrice(uPrice);
+                    }
+                }
+
+                /* Totals bar */
+                if (totalQtyEl) totalQtyEl.textContent = totalQty === 1 ? STRINGS.itemsSingular : STRINGS.itemsPlural(totalQty);
+                if (totalAmtEl) totalAmtEl.textContent = totalQty > 0 ? fmtPrice(totalAmt) : '—';
+
+                /* Add button enabled/disabled */
+                if (addBtn) {
+                    addBtn.disabled = totalQty <= 0;
+                }
+            }
+
+            /* ── Render color strip (in the sheet) ── */
+            function renderColorStrip(activeId) {
+                if (!colorStrip) return;
+                colorStrip.innerHTML = MATRIX.colors.map(color => {
+                    const isActive = color.id == activeId;
+                    const imgSrc   = color.swatch_hex_or_image && (color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/')) ? color.swatch_hex_or_image : '';
+                    const bgStyle  = color.swatch_hex_or_image && color.swatch_hex_or_image.startsWith('#') ? `background-color:${color.swatch_hex_or_image}` : '';
+                    return `<button type="button"
+                        class="shrink-0 w-11 h-11 rounded-xl border-2 overflow-hidden transition cursor-pointer focus:outline-none ${isActive ? 'border-red-600 ring-2 ring-red-300' : 'border-gray-200 hover:border-gray-400'}"
+                        title="${color.color_name}"
+                        onclick="window._vsheetSelectColor(${color.id})">
+                        ${imgSrc
+                            ? `<img src="${imgSrc}" class="w-full h-full object-cover" alt="${color.color_name}">`
+                            : bgStyle
+                                ? `<span class="block w-full h-full" style="${bgStyle}"></span>`
+                                : `<span class="block w-full h-full flex items-center justify-center text-[9px] text-gray-500 font-medium">${color.color_name.substring(0,4)}</span>`
+                        }
+                    </button>`;
+                }).join('');
+            }
+
+            /* ── Switch active color in sheet ── */
+            function selectColorInSheet(colorId) {
+                activeColorId = colorId;
+                const color   = MATRIX.colors.find(c => c.id == colorId);
+                if (!color) return;
+
+                /* Update header title */
+                if (colorNameEl) colorNameEl.textContent = color.color_name;
+
+                /* Update color thumb image */
+                if (colorThumb) {
+                    const imgSrc = color.swatch_hex_or_image && (color.swatch_hex_or_image.startsWith('http') || color.swatch_hex_or_image.startsWith('/')) ? color.swatch_hex_or_image : '';
+                    if (imgSrc) {
+                        colorThumb.src   = imgSrc;
+                        colorThumb.style.display = '';
+                    } else {
+                        colorThumb.style.display = 'none';
+                    }
+                }
+
+                /* Re-render color strip with new active */
+                renderColorStrip(colorId);
+
+                /* Re-render variant rows (quantities from existing state are preserved) */
+                renderVariantRows(color);
+
+                /* Refresh totals + tiers */
+                refreshTotalsUI();
+            }
+
+            /* Expose selectColor so inline onclick can call it */
+            window._vsheetSelectColor = selectColorInSheet;
+
+            /* ── Open sheet ── */
+            window.openVariantSheet = function(colorId) {
+                if (!sheet || !overlay) return;
+
+                /* Determine which color to show: passed colorId, or first color */
+                const startColor = colorId || (MATRIX.colors[0] && MATRIX.colors[0].id);
+
+                selectColorInSheet(startColor);
+                refreshTotalsUI();
+
+                /* Show overlay + animate sheet up */
+                overlay.classList.remove('hidden');
+                overlay.style.opacity = '0';
+                requestAnimationFrame(() => { overlay.style.opacity = '1'; });
+
+                sheet.style.transform = 'translateY(100%)';
+                sheet.setAttribute('aria-hidden', 'false');
+                requestAnimationFrame(() => { sheet.style.transform = 'translateY(0)'; });
+
+                /* Lock body scroll */
+                document.body.style.overflow = 'hidden';
+
+                sheetOpen = true;
+
+                /* Browser back closes sheet */
+                if (window.history && window.history.pushState) {
+                    history.pushState({ variantSheet: true }, '');
+                    historyPushed = true;
+                }
+            };
+
+            /* ── Close sheet ── */
+            window.variantSheetClose = function() {
+                if (!sheet || !overlay) return;
+                sheet.style.transform = 'translateY(100%)';
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.style.opacity = '';
+                    sheet.setAttribute('aria-hidden', 'true');
+                }, 280);
+                document.body.style.overflow = '';
+                sheetOpen = false;
+                /* Clear history state if we pushed one */
+                if (historyPushed) {
+                    historyPushed = false;
+                    /* popstate fires naturally; nothing to do */
+                }
+            };
+
+            /* Browser back button closes sheet */
+            window.addEventListener('popstate', (e) => {
+                if (sheetOpen && e.state && e.state.variantSheet) {
+                    variantSheetClose();
+                } else if (sheetOpen) {
+                    variantSheetClose();
+                }
+            });
+
+            /* ── Add to cart: sends one API call per selected variant ── */
+            window.variantSheetAddToCart = async function() {
+                const { totalQty } = computeTotals();
+                if (totalQty <= 0) return;
+
+                if (addBtn) {
+                    addBtn.disabled  = true;
+                    addLabel.textContent = STRINGS.adding;
+                }
+
+                /* Build list of { variation_id, quantity } for all non-zero entries */
+                const lines = [];
+                for (const [cid, vMap] of Object.entries(quantities)) {
+                    for (const [vid, qty] of Object.entries(vMap)) {
+                        if (qty > 0) lines.push({ variation_id: parseInt(vid), quantity: qty });
+                    }
+                }
+
+                /* Sequential API calls (one per line) */
+                let lastCart = null;
+                let allOk    = true;
+
+                for (const line of lines) {
+                    try {
+                        const res = await fetch(CART_ADD_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': CSRF_TOKEN,
+                            },
+                            body: JSON.stringify({
+                                product_id:   PRODUCT_ID,
+                                variation_id: line.variation_id,
+                                quantity:     line.quantity,
+                            }),
+                        });
+                        const data = await res.json();
+                        if (data.success || res.ok) {
+                            lastCart = data.cart;
+                        } else {
+                            allOk = false;
+                        }
+                    } catch (_) {
+                        allOk = false;
+                    }
+                }
+
+                /* Update global cart UI via existing Alpine helpers */
+                if (lastCart) {
+                    /* Try to call the Alpine updateGlobalCart if available */
+                    const alpineRoot = document.querySelector('[x-data]');
+                    if (alpineRoot && alpineRoot._x_dataStack) {
+                        const ctx = alpineRoot._x_dataStack[0];
+                        if (typeof ctx.updateGlobalCart === 'function') ctx.updateGlobalCart(lastCart);
+                    }
+                    /* Also update badge directly as fallback */
+                    const count = lastCart.item_count || 0;
+                    document.querySelectorAll('#header-cart-count, .cart-count-badge').forEach(b => {
+                        b.innerText = count;
+                        b.classList.toggle('hidden', count <= 0);
+                    });
+                    if (typeof renderCartDrawerUI === 'function') renderCartDrawerUI(lastCart);
+                }
+
+                /* Toast message */
+                const toastEl = document.getElementById('vsheet-toast');
+                if (allOk) {
+                    showToast(STRINGS.toastSuccess, 'success');
+                    /* Reset quantities */
+                    quantities = {};
+                    /* Close sheet after brief delay so user sees toast */
+                    setTimeout(variantSheetClose, 900);
+                } else {
+                    showToast(STRINGS.toastError, 'error');
+                }
+
+                if (addBtn) {
+                    addBtn.disabled = totalQty <= 0;
+                    addLabel.textContent = STRINGS.addToCart;
+                }
+            };
+
+            /* ── Simple toast (re-uses existing Alpine toast or creates its own) ── */
+            function showToast(msg, type) {
+                /* Try Alpine toast first */
+                const alpineRoot = document.querySelector('[x-data]');
+                if (alpineRoot && alpineRoot._x_dataStack) {
+                    const ctx = alpineRoot._x_dataStack[0];
+                    if (typeof ctx.triggerToast === 'function') {
+                        ctx.triggerToast(msg);
+                        return;
+                    }
+                }
+                /* Fallback: inline toast */
+                let el = document.getElementById('vsheet-toast-el');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'vsheet-toast-el';
+                    el.style.cssText = 'position:fixed;top:72px;left:50%;transform:translateX(-50%);z-index:9999;padding:10px 18px;border-radius:12px;font-size:13px;font-weight:500;white-space:nowrap;box-shadow:0 4px 24px rgba(0,0,0,0.18);pointer-events:none;transition:opacity 0.3s;';
+                    document.body.appendChild(el);
+                }
+                el.textContent = msg;
+                el.style.background = type === 'success' ? '#1a1a2e' : '#b91c1c';
+                el.style.color = '#fff';
+                el.style.opacity = '1';
+                clearTimeout(el._to);
+                el._to = setTimeout(() => { el.style.opacity = '0'; }, 2800);
+            }
+
+            /* ── Expose openVariantSheet to Alpine (for thumbnail click) ── */
+            /* Alpine calls this when color thumbnail on page is tapped */
+
+        })();
+        <?php endif; ?>
     </script>
 
     <?php

@@ -116,6 +116,73 @@ class ProductDetailController extends BaseController
             }
         }
 
+        // --- FETCH VARIATION MATRIX ---
+        $variationMatrix = $this->variantModel->getVariantMatrix($productId);
+        
+        // POLYFILL for legacy single-table variants (e.g. Color - Size)
+        $varCount = count($variants);
+        if (empty($variationMatrix['colors']) && $varCount > 0) {
+            $colorMap = [];
+            $polyCombinations = [];
+            $colorIdCounter = 1;
+            $isDoubleMode = false;
+            
+            foreach ($variants as $vi => $v) {
+                $parts = explode(' - ', $v['attribute_value'] ?? '');
+                if (count($parts) >= 2) {
+                    $isDoubleMode = true;
+                    $cName = trim($parts[0]);
+                    $sName = trim(implode(' - ', array_slice($parts, 1)));
+                    
+                    if (!isset($colorMap[$cName])) {
+                        $colorMap[$cName] = $colorIdCounter++;
+                        $variationMatrix['colors'][] = [
+                            'id' => $colorMap[$cName],
+                            'color_name' => $cName,
+                            'swatch_hex_or_image' => !empty($v['image_url']) ? asset($v['image_url']) : $mainImg,
+                            'sizes' => []
+                        ];
+                    }
+                    
+                    // Find color index
+                    $cIdx = -1;
+                    foreach ($variationMatrix['colors'] as $idx => $c) {
+                        if ($c['color_name'] === $cName) { $cIdx = $idx; break; }
+                    }
+                    
+                    $fakeSizeId = (int)$v['id']; // Use actual variant ID as size ID for cart compatibility
+                    
+                    if ($cIdx !== -1) {
+                        $variationMatrix['colors'][$cIdx]['sizes'][] = [
+                            'id' => $fakeSizeId,
+                            'size_label' => $sName,
+                            'price' => (float)$v['wholesale_price'],
+                            'stock_qty' => (int)$v['stock_quantity'],
+                            'sku' => $v['sku'] ?? $v['variant_code'] ?? null,
+                        ];
+                    }
+                    
+                    $polyCombinations[] = [
+                        'id' => $fakeSizeId,
+                        'color_id' => $colorMap[$cName],
+                        'size_id' => $fakeSizeId,
+                        'size_name' => $sName,
+                        'sku' => $v['sku'] ?? $v['variant_code'] ?? null,
+                        'wholesale_price' => (float)$v['wholesale_price'],
+                        'stock' => (int)$v['stock_quantity'],
+                        'image_url' => $v['image_url'] ?? null,
+                    ];
+                }
+            }
+            if ($isDoubleMode) {
+                $variationMatrix['variation_mode'] = 'double';
+                $variationMatrix['combinations'] = $polyCombinations;
+            }
+        }
+
+        $variationMatrix['product_tiers'] = $productTiers;
+        $variationMatrix['variant_tiers_map'] = $variantTiersMap;
+
         $this->renderView('web/product_detail', [
             'product' => $product,
             'variants' => $variants,
@@ -130,6 +197,7 @@ class ProductDetailController extends BaseController
             'whatsappNumber' => $whatsappNumber,
             'productTiers' => $productTiers,
             'variantTiersMap' => $variantTiersMap,
+            'variationMatrix' => $variationMatrix,
             'selectedVariantCode' => $selectedVariantCode,
             'hideGlobalHeader' => false,
             'hideMobileBottomNav' => true,

@@ -147,6 +147,33 @@ class ProductDetailController extends Controller {
         $pvModel = new \App\Models\ProductVariant();
         $variationMatrix = $pvModel->getVariantMatrix($pid);
 
+        // --- TIERED PRICING: Fetch & inject into variationMatrix for bottom sheet ---
+        // Product-level tiers (variant_id IS NULL) and variant-level tiers
+        $tiersStmt = $db->prepare(
+            "SELECT id, product_id, variant_id, min_qty, max_qty, unit_price
+             FROM tiered_prices
+             WHERE product_id = ?
+             ORDER BY min_qty ASC"
+        );
+        $tiersStmt->execute([$pid]);
+        $allTierRows = $tiersStmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Separate product-level tiers from variant/size-level tiers
+        $productTiers = [];
+        $variantTiersMap = []; // keyed by variant/size id
+        foreach ($allTierRows as $tierRow) {
+            if (empty($tierRow['variant_id'])) {
+                $productTiers[] = $tierRow;
+            } else {
+                $vid = (int) $tierRow['variant_id'];
+                $variantTiersMap[$vid][] = $tierRow;
+            }
+        }
+
+        // Inject tiers into variationMatrix so the view/JS can access them without extra PHP
+        $variationMatrix['product_tiers']   = $productTiers;
+        $variationMatrix['variant_tiers_map'] = $variantTiersMap;
+
         return $this->render('storefront/product', [
             'product'               => $product,
             'variationMatrix'       => $variationMatrix,

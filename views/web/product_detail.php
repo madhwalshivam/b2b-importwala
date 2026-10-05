@@ -14,6 +14,14 @@ $initialCartCount = $cartWishlistState['cart_count'];
 $initialWishlistProductIds = $cartWishlistState['wishlist_product_ids'] ?? [];
 $isWished = in_array((int)($product['id'] ?? 0), $initialWishlistProductIds);
 
+// Cart items (agar helper return karta hai) — bottom sheet me qty prefill ke liye
+$cartItemsForJs = $cartWishlistState['cart_items'] ?? ($cartWishlistState['items'] ?? []);
+if (!is_array($cartItemsForJs)) $cartItemsForJs = [];
+
+// IMPORTANT: similar products loop `$product` ko overwrite karta hai.
+// Isliye main product ko yahan save karte hain, loop ke baad restore karenge.
+$__mainProduct = $product;
+
 // Safe Description Formatting
 function formatProductDescription($text) {
     if (empty($text)) return '';
@@ -124,6 +132,10 @@ if (empty($variantsList)) {
 $variants = $variantsList;
 $varCount = count($variants);
 
+// Real variants (DB id wale) hain ya sirf fallback "Standard Model" row?
+$firstVariantRow = !empty($variants) ? reset($variants) : null;
+$hasRealVariants = !empty($firstVariantRow['id']);
+
 $isDoubleMode = ($product['variation_mode'] ?? '') === 'double';
 $groupedColors = [];
 if ($isDoubleMode) {
@@ -214,11 +226,36 @@ ob_start();
     display: block !important;
     transition: opacity 0.15s ease-in-out;
 }
+
+/* Variant selector visibility: mobile pe naya selector, desktop pe purana */
+@media (max-width: 767px) {
+    #variantSelectorBox { display: none !important; }
+    #mobileVariantSelectorBox { display: block !important; }
+}
+@media (min-width: 768px) {
+    #mobileVariantSelectorBox { display: none !important; }
+}
 @media (max-width: 767px) {
     .floating-need-help-btn { display: none !important; }
     .product-cover-card { border-radius: 0 !important; }
     #topHeaderWrapper { display: none !important; }
 }
+
+/* Tap highlight / focus ring hatao (sirf site ka orange accent rahe) */
+.vsheet-no-highlight {
+    -webkit-tap-highlight-color: transparent !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.vsheet-no-highlight:focus,
+.vsheet-no-highlight:active,
+.vsheet-no-highlight:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Sheet khuli ho to site ka bottom bar hide */
+body.vs-open #mobileBottomBar { display: none !important; }
 
 @media (min-width: 768px) {
     .mobile-custom-header { display: none !important; }
@@ -258,7 +295,7 @@ ob_start();
     .product-specs .spec-list {
         display: grid;
         grid-template-columns: 38% minmax(0, 1fr) !important;
-        column-gap: 12px;
+        column-gap: 0;
     }
     .product-specs dt, .product-specs dd {
         overflow-wrap: anywhere;
@@ -324,40 +361,49 @@ ob_start();
 
 .spec-list {
     display: grid;
-    grid-template-columns: 42% 1fr;
-    column-gap: 8px;
-    row-gap: 8px;
+    grid-template-columns: 40% minmax(0, 1fr);
+    column-gap: 0;
+    row-gap: 0;
     margin: 0;
     padding: 0;
+    border-top: 1px solid #f1f5f9;
 }
 .spec-list dt, .spec-list dd {
     margin: 0;
-    padding: 9px 12px;
-    font-size: 12.5px;
-    line-height: 1.35;
+    padding: 8px 4px;
+    font-size: 12px;
+    line-height: 1.4;
     min-width: 0;
     overflow-wrap: anywhere;
-    border-radius: 8px;
     display: flex;
     align-items: center;
+    border: 0;
+    border-bottom: 1px solid #f1f5f9;
+    border-radius: 0;
+    background: transparent;
 }
-.spec-list dt { 
-    color: #1e293b; 
-    font-weight: 700; 
-    background-color: #f8fafc;
-    border: 1.5px solid #cbd5e1;
+.spec-list dt {
+    color: #6b7280;
+    font-weight: 400;
+    padding-right: 12px;
 }
-.spec-list dd { 
-    color: #0f172a; 
-    font-weight: 800; 
-    text-align: left; 
-    background-color: #ffffff;
-    border: 1.5px solid #e2e8f0;
+.spec-list dd {
+    color: #1f2937;
+    font-weight: 500;
+    text-align: left;
 }
-@media (prefers-color-scheme: dark) {
-    .spec-list dt { background-color: #1e293b; border-color: #334155; color: #f8fafc; }
-    .spec-list dd { background-color: #0f172a; border-color: #1e293b; color: #ffffff; }
+
+/* Mobile: "Select variant & quantity" trigger */
+.vs-trigger {
+    display: flex; align-items: center; justify-content: space-between; width: 100%;
+    margin-top: 8px; padding: 9px 12px; background: #fff;
+    border: 1px solid #e5e7eb; border-radius: 10px; cursor: pointer;
+    font-size: 12px !important; font-weight: 500 !important; color: #374151; line-height: 1.2;
+    text-align: left;
 }
+.vs-trigger:active { background: #f9fafb; }
+.vs-trigger__count { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 400; color: #9ca3af; white-space: nowrap; }
+.vs-trigger__count svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 .view-more-btn {
     display: inline-flex;
@@ -564,9 +610,9 @@ ob_start();
                     </a>
                 </div>
 
-                <!-- Compact Variant Selector -->
+                <!-- DESKTOP VARIANT SELECTOR (Mobile pe hidden) -->
                 <?php if (!empty($variants)): ?>
-                    <div class="bg-white p-3 sm:p-4 md:p-5 md:rounded-2xl shadow-sm mb-1" id="variantSelectorBox">
+                    <div class="hidden md:block bg-white p-3 sm:p-4 md:p-5 md:rounded-2xl shadow-sm mb-1" id="variantSelectorBox">
                         <?php if ($isDoubleMode && !empty($groupedColors)): ?>
                             <!-- Colors -->
                             <div class="mb-3">
@@ -575,9 +621,9 @@ ob_start();
                                     <?php foreach ($groupedColors as $colorName => $colorData): ?>
                                         <button type="button"
                                             class="color-card flex-shrink-0 flex items-center justify-center p-0.5 rounded border border-gray-200 transition-all cursor-pointer relative"
-                                            data-color="<?= htmlspecialchars($colorName) ?>"
+                                            data-color="<?= htmlspecialchars((string)$colorName) ?>"
                                             data-color-image="<?= htmlspecialchars($colorData['image']) ?>"
-                                            onclick="selectColorCard('<?= htmlspecialchars(addslashes($colorName)) ?>')">
+                                            onclick="selectColorCard('<?= htmlspecialchars(addslashes((string)$colorName)) ?>')">
                                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-sm overflow-hidden bg-gray-100">
                                                 <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-cover">
                                             </div>
@@ -635,6 +681,32 @@ ob_start();
                         <?php endif; ?>
                     </div>
                 <?php endif; ?>
+
+                <!-- MOBILE VARIANT SELECTOR (sirf real variants wale products me) -->
+                <?php if ($hasRealVariants): ?>
+                    <div class="md:hidden bg-white p-3 shadow-sm mb-1" id="mobileVariantSelectorBox">
+                        <?php if ($isDoubleMode && !empty($groupedColors)): ?>
+                            <div class="text-[12px] font-medium text-gray-700 mb-1.5">Color <span class="text-gray-400 font-normal text-[11px] ml-1"><?= count($groupedColors) ?> options</span></div>
+                            <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+                                <?php foreach ($groupedColors as $colorName => $colorData): ?>
+                                    <button type="button"
+                                        class="vsheet-no-highlight shrink-0 w-11 h-11 rounded-lg border border-gray-200 overflow-hidden bg-gray-50 cursor-pointer p-0"
+                                        data-vs-open="1"
+                                        data-vs-color="<?= htmlspecialchars((string)$colorName) ?>"
+                                        title="<?= htmlspecialchars((string)$colorName) ?>">
+                                        <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-cover" alt="<?= htmlspecialchars((string)$colorName) ?>">
+                                    </button>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                        <button type="button" data-vs-open="1" data-vs-color="" class="vsheet-no-highlight vs-trigger">
+                            <span><?= ($isDoubleMode && !empty($groupedColors)) ? 'Select size &amp; quantity' : 'Select variant &amp; quantity' ?></span>
+                            <span class="vs-trigger__count"><?= $varCount ?> options
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                            </span>
+                        </button>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Specs Box -->
@@ -665,7 +737,7 @@ ob_start();
             if (!empty($validSpecs)): 
             ?>
             <div class="product-specs mx-3 sm:mx-0 bg-white border border-gray-200 rounded-2xl shadow-xs overflow-hidden mb-4 p-3.5 sm:p-4">
-                <h2 class="text-sm sm:text-base font-bold text-black mb-3 m-0" style="color: #000000 !important;">Specifications</h2>
+                <h2 class="text-[13px] font-semibold mb-2 m-0" style="color: #111827 !important;">Specifications</h2>
                 <div class="relative">
                     <div id="specsContent" class="overflow-hidden transition-all duration-300 relative" style="max-height: 195px;">
                         <dl class="spec-list">
@@ -677,7 +749,7 @@ ob_start();
                         <div id="specsFade" class="absolute bottom-0 left-0 right-0 h-[32px] bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                     </div>
                 </div>
-                <button type="button" id="specsToggleBtn" onclick="toggleSpecs()" class="view-more-btn hidden mt-2" style="color: #f05a29; font-weight: 600;">
+                <button type="button" id="specsToggleBtn" onclick="toggleSpecs()" class="view-more-btn hidden mt-1" style="color: #f05a29; font-weight: 500; font-size: 12px;">
                     <span>View More</span>
                     <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
@@ -717,7 +789,7 @@ ob_start();
             <!-- Description Box -->
             <?php if ($descHtml): ?>
                 <div class="product-description mx-3 sm:mx-0 bg-white border border-gray-200 rounded-2xl shadow-xs overflow-hidden mb-4 p-3.5 sm:p-4">
-                    <h2 class="text-sm sm:text-base font-bold text-black mb-3 m-0" style="color: #000000 !important;">Product Details</h2>
+                    <h2 class="text-[13px] font-semibold mb-2 m-0" style="color: #111827 !important;">Product Details</h2>
                     <div class="relative">
                         <div id="descContent" class="overflow-hidden transition-all duration-300 relative" style="max-height: 9em;">
                             <div class="text-[13px] text-gray-800 leading-relaxed font-sans max-w-none pb-1 font-normal">
@@ -726,7 +798,7 @@ ob_start();
                             <div id="descFade" class="absolute bottom-0 left-0 right-0 h-[32px] bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                         </div>
                     </div>
-                    <button type="button" id="descToggleBtn" onclick="toggleDesc()" class="view-more-btn hidden mt-2" style="color: #f05a29; font-weight: 600;">
+                    <button type="button" id="descToggleBtn" onclick="toggleDesc()" class="view-more-btn hidden mt-1" style="color: #f05a29; font-weight: 500; font-size: 12px;">
                         <span>View More</span>
                         <svg viewBox="0 0 24 24" fill="none"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                     </button>
@@ -833,6 +905,11 @@ ob_start();
                 endforeach; ?>
             </div>
         </div>
+        <?php
+        // Loop ne $product overwrite kiya tha — main product wapas set karo
+        // (warna neeche ke JS me product_id / factory link galat product ka ban jata tha)
+        $product = $__mainProduct;
+        ?>
     <?php endif; ?>
 
 </div>
@@ -1221,10 +1298,7 @@ ob_start();
     let isProductWishlisted = <?= $isWished ? 'true' : 'false' ?>;
 
     function handleAddToCartClick(source) {
-        if (<?= $isDoubleMode ? 'true' : 'false' ?> && currentColorSelection && selectedVariantIndex === null) {
-            alert('Please select a Size');
-            return;
-        }
+        // Variant/size select na ho to main product hi cart me jayega (variant_id nahi bhejte)
         let minQty = (currentMode === 'wholesale') ? <?= $moq ?> : 1;
         currentAtcQty = minQty;
         updateAtcStepperUI();
@@ -1410,7 +1484,11 @@ ob_start();
             const vId = VARIANTS_LIST[selectedVariantIndex].id;
             matchingItem = items.find(i => parseInt(i.product_id) === pId && parseInt(i.variant_id) === parseInt(vId));
         } else {
-            matchingItem = items.find(i => parseInt(i.product_id) === pId);
+            // Main product (bina variant) ka item; variants wale product me variant-items ignore
+            matchingItem = items.find(i => parseInt(i.product_id) === pId && !(parseInt(i.variant_id) > 0));
+            if (!matchingItem && !<?= $hasRealVariants ? 'true' : 'false' ?>) {
+                matchingItem = items.find(i => parseInt(i.product_id) === pId);
+            }
         }
 
         if (matchingItem) {
@@ -1457,6 +1535,7 @@ ob_start();
     }
 
     function updateWishlistUI() {
+        // Bottom bar heart
         const iconEl = document.getElementById('bottomWishlistIcon');
         if (iconEl) {
             if (isProductWishlisted) {
@@ -1467,6 +1546,7 @@ ob_start();
                 iconEl.setAttribute('stroke', '#6B7280');
             }
         }
+        // Sheet ke row hearts per-variant hain (wishMap), isliye yahan touch nahi karte
     }
 
     function changeDetailQty(delta) {
@@ -1527,7 +1607,11 @@ ob_start();
             variant_id: selectedV ? selectedV.id : null,
             variant_name: selectedV ? selectedV.value : '',
             price: selectedV ? (currentMode === 'wholesale' ? selectedV.wholesale_price : (selectedV.one_piece_price || selectedV.wholesale_price)) : (currentMode === 'wholesale' ? WS_START : OP_START),
-            moq: <?= $moq ?>
+            moq: <?= $moq ?>,
+            pricingMode: typeof currentMode !== 'undefined' ? currentMode : 'wholesale',
+            main_image: <?= json_encode(!empty($product['main_image']) ? asset($product['main_image']) : asset('assets/images/placeholder.jpg')) ?>,
+            variants: typeof VARIANTS_LIST !== 'undefined' ? VARIANTS_LIST : [],
+            selectedVariantIndex: selectedVariantIndex
         };
     };
 
@@ -1539,6 +1623,20 @@ ob_start();
             window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent('Hi, I want a quote for: ' + PRODUCT_NAME + (prodData.variant_name ? ' (' + prodData.variant_name + ')' : ''))}`, '_blank');
         }
     }
+
+    // Mobile bottom bar ka "Add cart":
+    //  - variant select hai to wahi variant, nahi to main product seedha cart me add
+    function handleMobileAtcClick() {
+        const list = (typeof VARIANTS_LIST !== 'undefined') ? VARIANTS_LIST : [];
+        const real = list.filter(function (v) { return v.id > 0; });
+
+        // Multiple variants hon tab bhi variant select karna zaroori nahi:
+        // selectedVariantIndex null ho to main product add hota hai.
+        if (real.length === 1) {
+            selectedVariantIndex = list.indexOf(real[0]);
+        }
+        handleAddToCartClick('mobile');
+    }
 </script>
 
 <!-- LIGHTBOX MODAL -->
@@ -1548,31 +1646,525 @@ ob_start();
 </div>
 
 <!-- Custom Mobile Bottom Bar -->
-<div class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-[999999] flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]" style="padding-bottom: max(8px, env(safe-area-inset-bottom));">
-    <a href="<?= !empty($product['factory_code']) ? url('factory/' . urlencode($product['factory_code'])) : '#' ?>" class="flex flex-col items-center justify-center w-[48px] sm:w-[52px] shrink-0 text-gray-500 hover:text-[#f05a29] transition-colors border-0" style="text-decoration:none;">
+<div id="mobileBottomBar" class="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 z-[999999] flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]" style="padding-bottom: max(8px, env(safe-area-inset-bottom));">
+    <a href="<?= !empty($product['factory_code']) ? url('factory/' . urlencode($product['factory_code'])) : '#' ?>" class="flex flex-col items-center justify-center w-[48px] sm:w-[52px] shrink-0 text-gray-500 hover:text-[#f05a29] transition-colors border-0 vsheet-no-highlight" style="text-decoration:none;">
         <svg class="w-5 h-5 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
         <span class="text-[9px] font-medium leading-none">Factory</span>
     </a>
-    <button type="button" onclick="toggleDetailWishlist(this)" id="mobileBottomWishlistBtn" class="flex flex-col items-center justify-center w-[48px] sm:w-[52px] shrink-0 text-gray-500 hover:text-[#f05a29] transition-colors border-0 bg-transparent p-0 cursor-pointer">
+    <button type="button" onclick="toggleDetailWishlist(this)" id="mobileBottomWishlistBtn" class="flex flex-col items-center justify-center w-[48px] sm:w-[52px] shrink-0 text-gray-500 hover:text-[#f05a29] transition-colors border-0 bg-transparent p-0 cursor-pointer vsheet-no-highlight">
         <svg id="bottomWishlistIcon" class="w-5 h-5 mb-0.5 transition-transform duration-150" fill="<?= $isWished ? '#f05a29' : 'none' ?>" stroke="<?= $isWished ? '#f05a29' : '#6B7280' ?>" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
         <span class="text-[9px] font-medium leading-none">Wishlist</span>
     </button>
     <div class="flex-1 flex items-stretch gap-2 h-[44px]">
         <div id="mobileCartBtnWrapper" class="flex-1 h-[44px] relative">
-            <button type="button" id="mobileAtcBtnInitial" onclick="handleAddToCartClick('mobile')" class="absolute inset-0 w-full h-full rounded-full font-bold text-[13px] text-orange-600 border-2 border-orange-600 bg-white active:bg-orange-50 flex items-center justify-center cursor-pointer shadow-xs">
+            <button type="button" id="mobileAtcBtnInitial" onclick="handleMobileAtcClick()" class="absolute inset-0 w-full h-full rounded-full font-bold text-[13px] text-[#f05a29] border border-[#f05a29] bg-white active:bg-orange-50 flex items-center justify-center cursor-pointer shadow-xs vsheet-no-highlight">
                 Add cart
             </button>
-            <div id="mobileAtcStepper" class="absolute inset-0 w-full h-full rounded-full border-2 border-orange-600 bg-white hidden items-center justify-between px-1 shadow-xs">
-                <button type="button" id="mobileAtcMinusBtn" onclick="changeAtcQty(-1)" class="w-8 sm:w-10 h-full flex items-center justify-center text-orange-600 text-xl font-bold cursor-pointer bg-transparent border-0 select-none pb-0.5">−</button>
+            <div id="mobileAtcStepper" class="absolute inset-0 w-full h-full rounded-full border border-[#f05a29] bg-white hidden items-center justify-between px-1 shadow-xs">
+                <button type="button" id="mobileAtcMinusBtn" onclick="changeAtcQty(-1)" class="w-8 sm:w-10 h-full flex items-center justify-center text-[#f05a29] text-xl font-bold cursor-pointer bg-transparent border-0 select-none pb-0.5 vsheet-no-highlight">−</button>
                 <span id="mobileAtcQtyText" class="font-bold text-sm text-gray-800 flex-1 text-center select-none">1</span>
-                <button type="button" id="mobileAtcPlusBtn" onclick="changeAtcQty(1)" class="w-8 sm:w-10 h-full flex items-center justify-center text-orange-600 text-xl font-bold cursor-pointer bg-transparent border-0 select-none pb-0.5">+</button>
+                <button type="button" id="mobileAtcPlusBtn" onclick="changeAtcQty(1)" class="w-8 sm:w-10 h-full flex items-center justify-center text-[#f05a29] text-xl font-bold cursor-pointer bg-transparent border-0 select-none pb-0.5 vsheet-no-highlight">+</button>
             </div>
         </div>
-        <button type="button" onclick="openRfqWithProducts()" class="flex-1 h-[44px] rounded-full font-bold text-[13px] text-white shadow-md active:scale-[0.98] transition-all border-0 cursor-pointer flex items-center justify-center" style="background: linear-gradient(135deg, #ff7a18 0%, #f05a29 100%); color: #ffffff;">
+        <button type="button" onclick="openRfqWithProducts()" class="flex-1 h-[44px] rounded-full font-bold text-[13px] text-white shadow-md active:scale-[0.98] transition-all border-0 cursor-pointer flex items-center justify-center vsheet-no-highlight" style="background: linear-gradient(to right, #ff7a18, #f05a29); color: #ffffff;">
             Get Quote
         </button>
     </div>
 </div>
+
+<?php if ($hasRealVariants): ?>
+<!-- ===================================================================
+     MOBILE VARIANT BOTTOM SHEET
+     Data source: VARIANTS_LIST (upar PHP se bana hua) — koi extra PHP variable nahi chahiye.
+     =================================================================== -->
+<style>
+@media (min-width: 768px) {
+    #vsOverlay, #vsSheet, #vsToast { display: none !important; }
+}
+#vsOverlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.5);
+    z-index: 1000000; opacity: 0; visibility: hidden;
+    transition: opacity .28s ease, visibility 0s linear .28s;
+}
+#vsOverlay.is-open { opacity: 1; visibility: visible; transition: opacity .28s ease; }
+
+#vsSheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000001;
+    background: #fff; border-radius: 20px 20px 0 0;
+    max-height: 85vh; display: flex; flex-direction: column;
+    transform: translateY(100%); visibility: hidden;
+    padding-bottom: env(safe-area-inset-bottom);
+    transition: transform .28s ease, visibility 0s linear .28s;
+}
+#vsSheet.is-open { transform: translateY(0); visibility: visible; transition: transform .28s ease; }
+
+#vsSheet button, #vsSheet input {
+    -webkit-tap-highlight-color: transparent; outline: none; box-shadow: none; font-family: inherit;
+}
+#vsSheet button:focus, #vsSheet input:focus,
+#vsSheet button:active, #vsSheet button:focus-visible { outline: none; box-shadow: none; }
+
+.vs-handle { display: flex; justify-content: center; padding: 8px 0 4px; flex-shrink: 0; }
+.vs-handle span { width: 40px; height: 4px; border-radius: 999px; background: #d1d5db; display: block; }
+.vs-top { display: flex; align-items: center; justify-content: space-between; padding: 0 16px 8px; flex-shrink: 0; border-bottom: 1px solid #f1f1f1; }
+.vs-title { font-size: 14px; font-weight: 600; color: #1f2937; margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vs-close { width: 34px; height: 34px; border: 0; border-radius: 999px; background: #f3f4f6; color: #4b5563; font-size: 16px; line-height: 1; cursor: pointer; flex-shrink: 0; position: relative; }
+.vs-close::after { content: ''; position: absolute; top: -6px; left: -6px; right: -6px; bottom: -6px; }
+
+.vs-colors { display: flex; gap: 8px; overflow-x: auto; padding: 10px 16px; flex-shrink: 0; border-bottom: 1px solid #f1f1f1; scrollbar-width: none; }
+.vs-colors::-webkit-scrollbar { display: none; }
+.vs-color { flex: 0 0 auto; width: 44px; height: 44px; padding: 0; border-radius: 10px; border: 1px solid #e5e7eb; background: #fff; cursor: pointer; position: relative; overflow: visible; }
+.vs-color img { width: 100%; height: 100%; object-fit: cover; border-radius: 9px; display: block; }
+.vs-color.is-active { border: 2px solid #f05a29; }
+.vs-color i { position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #f05a29; color: #fff; font-style: normal; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-sizing: border-box; }
+
+.vs-list { flex: 1; overflow-y: auto; padding: 0 16px 8px; -webkit-overflow-scrolling: touch; }
+.vs-row { padding: 8px 0; border-bottom: 1px solid #f1f1f1; display: flex; flex-direction: row; align-items: center; gap: 6px; }
+.vs-row:last-child { border-bottom: 0; }
+.vs-row.is-oos .vs-rimg, .vs-row.is-oos .vs-rname { opacity: .55; }
+.vs-r1, .vs-r2 { display: contents; }
+.vs-rimg { width: 34px; height: 34px; border-radius: 6px; object-fit: cover; background: #f1f5f9; border: 1px solid #eee; flex-shrink: 0; }
+.vs-rname { flex: 1; min-width: 0; font-size: 12px; font-weight: 500; color: #1f2937; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.vs-rprice { font-size: 12px; font-weight: 600; color: #111827; white-space: nowrap; flex-shrink: 0; }
+.vs-oos { display: block; font-size: 10px; color: #ef4444; }
+
+/* Row controls: stepper + cart + wishlist -- sabki height same (--vs-h) */
+#vsSheet { --vs-h: 30px; }
+.vs-step { display: flex; align-items: stretch; width: 84px; height: var(--vs-h); border: 1px solid #d1d5db; border-radius: 7px; background: #fff; overflow: hidden; flex-shrink: 0; box-sizing: border-box; }
+.vs-step button { position: relative; flex: 0 0 26px; width: 26px; height: 100%; border: 0; background: #f3f4f6; padding: 0; margin: 0; color: #111827; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.vs-step button::after { content: ''; position: absolute; top: -8px; bottom: -8px; left: -4px; right: -4px; }
+.vs-step button:active:not(:disabled) { background: #e5e7eb; }
+.vs-step button svg { width: 14px; height: 14px; display: block; flex-shrink: 0; stroke-width: 3; pointer-events: none; }
+.vs-step button:disabled { color: #9ca3af; cursor: not-allowed; }
+.vs-step input { flex: 1 1 auto; min-width: 0; width: auto; height: 100%; border: 0; padding: 0; margin: 0; text-align: center; font-size: 13px; font-weight: 600; color: #111827; background: #fff; border-radius: 0; -moz-appearance: textfield; appearance: textfield; }
+.vs-step input::-webkit-outer-spin-button, .vs-step input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.vs-step.is-disabled { opacity: .5; pointer-events: none; }
+
+.vs-ic { position: relative; width: var(--vs-h); height: var(--vs-h); border: 0; border-radius: 7px; background: #f3f4f6; color: #4b5563; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: background .15s, color .15s; }
+.vs-ic::after { content: ''; position: absolute; top: -6px; bottom: -6px; left: -4px; right: -4px; }
+.vs-ic svg { width: 16px; height: 16px; display: block; pointer-events: none; }
+.vs-ic.is-added { background: #f05a29; color: #fff; }
+.vs-ic.is-busy { opacity: .5; pointer-events: none; }
+.vs-ic:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Site ke global button/input rules (min-width/min-height/padding) ko override karne ke liye (#vsSheet + !important) */
+#vsSheet .vs-step { box-sizing: border-box !important; display: flex !important; align-items: stretch !important; width: 90px !important; height: 30px !important; min-height: 0 !important; }
+#vsSheet .vs-step button { box-sizing: border-box !important; display: flex !important; align-items: center !important; justify-content: center !important; flex: 0 0 28px !important; width: 28px !important; min-width: 0 !important; height: 30px !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; line-height: 1 !important; font-size: 0 !important; }
+#vsSheet .vs-step button svg { width: 14px !important; height: 14px !important; margin: 0 !important; display: block !important; }
+#vsSheet .vs-step input { box-sizing: border-box !important; flex: 1 1 0 !important; width: 0 !important; min-width: 0 !important; height: 30px !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; border: 0 !important; text-align: center !important; font-size: 14px !important; line-height: 30px !important; font-weight: 600 !important; color: #111827 !important; -webkit-text-fill-color: #111827 !important; opacity: 1 !important; background: #fff !important; }
+#vsSheet .vs-ic { box-sizing: border-box !important; width: 30px !important; min-width: 0 !important; height: 30px !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; }
+#vsSheet .vs-ic svg { width: 16px !important; height: 16px !important; margin: 0 !important; display: block !important; }
+
+.vs-empty { padding: 28px 0; text-align: center; font-size: 13px; color: #9ca3af; }
+
+#vsToast {
+    position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%);
+    z-index: 1000002; max-width: 86vw; padding: 9px 16px; border-radius: 10px;
+    background: #111827; color: #fff; font-size: 12.5px; font-weight: 500; text-align: center;
+    opacity: 0; pointer-events: none; transition: opacity .25s ease;
+}
+#vsToast.is-show { opacity: 1; }
+</style>
+
+<div id="vsOverlay"></div>
+<div id="vsSheet" role="dialog" aria-modal="true" aria-label="Select options" aria-hidden="true">
+    <div class="vs-handle"><span></span></div>
+    <div class="vs-top">
+        <h2 class="vs-title" id="vsTitle"></h2>
+        <button type="button" class="vs-close" id="vsCloseBtn" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="vs-colors" id="vsColors"></div>
+    <div class="vs-list" id="vsList"></div>
+</div>
+<div id="vsToast"></div>
+
+<script>
+(function () {
+    'use strict';
+
+    // ---------- CONFIG ----------
+    var DEBUG = false;   // true karo to console me payload / response dikhega
+    var TXT = {
+        title: 'Select options',
+        oos: 'Out of stock',
+        noOptions: 'No options available',
+        maxStock: 'Maximum available stock reached',
+        minQty: function (n) { return 'Minimum quantity is ' + n; },
+        added: 'Added to cart',
+        failed: 'Could not add to cart',
+        netErr: 'Network error. Please try again.',
+        wishAdded: 'Added to wishlist',
+        wishRemoved: 'Removed from wishlist',
+        wishFailed: 'Could not update wishlist'
+    };
+    var PRODUCT_TIERS = <?= json_encode($prodTiers ?? []) ?>;
+    var MOQ = <?= (int) $moq ?>;
+    var CART_ADD_URL = <?= json_encode(url('cart/add')) ?>;
+    var WISHLIST_URL = <?= json_encode(url('wishlist/toggle')) ?>;
+    var IS_DOUBLE = <?= $isDoubleMode ? 'true' : 'false' ?>;
+    var INITIAL_CART = <?= json_encode($cartItemsForJs) ?>;
+    // Per-variant wishlist: helper agar 'wishlist_variant_ids' deta hai to initial hearts wahi se bharte hain
+    var INITIAL_WISH_VARIANTS = <?= json_encode(array_values(array_map('intval', (array) ($cartWishlistState['wishlist_variant_ids'] ?? [])))) ?>;
+    // true = row ki qty cart me "exact" set hoti hai (page ke bottom stepper jaisa behaviour)
+    var SEND_EXACT_QTY = true;
+
+    var ICON_CART = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>';
+    var ICON_CHECK = '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+    var ICON_MINUS = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4"/></svg>';
+    var ICON_PLUS = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>';
+    var HEART_PATH = 'M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z';
+
+    // ---------- STATE ----------
+    var qtyMap = {};     // variantIndex -> qty
+    var cartMap = {};    // variantId -> qty jo cart me hai
+    var wishMap = {};    // variantId -> true (sirf wahi variant wishlist me)
+    INITIAL_WISH_VARIANTS.forEach(function (id) { if (id > 0) wishMap[id] = true; });
+    var activeColor = '';
+    var isOpen = false;
+    var busy = false;
+    var wishBusy = false;
+    var historyPushed = false;
+    var toastTimer = null;
+
+    var el = function (id) { return document.getElementById(id); };
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+    function money(n) { return '\u20B9' + formatNum(n); }
+    function minQty() { return currentMode === 'wholesale' ? Math.max(1, MOQ) : 1; }
+
+    function toast(msg) {
+        if (isOpen) {
+            var t = el('vsToast');
+            t.textContent = msg;
+            t.classList.add('is-show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function () { t.classList.remove('is-show'); }, 2400);
+        } else if (typeof showCartToast === 'function') {
+            showCartToast(msg);
+        } else {
+            alert(msg);
+        }
+    }
+
+    // ---------- CART MAP ----------
+    function ingestCart(items) {
+        if (!Array.isArray(items)) return;
+        cartMap = {};
+        items.forEach(function (i) {
+            if (parseInt(i.product_id) === PRODUCT_ID && parseInt(i.variant_id) > 0) {
+                cartMap[parseInt(i.variant_id)] = parseInt(i.quantity) || 0;
+            }
+        });
+    }
+    ingestCart(INITIAL_CART);
+
+    // ---------- DATA HELPERS ----------
+    function colorList() {
+        var seen = {}, out = [];
+        VARIANTS_LIST.forEach(function (v) {
+            var c = v.color;
+            if (!IS_DOUBLE || v.is_active === 0 || !c || c.toLowerCase() === 'default' || seen[c]) return;
+            seen[c] = true;
+            out.push({ name: c, image: v.image });
+        });
+        return out;
+    }
+    function variantsForActive() {
+        var colors = colorList(), out = [];
+        VARIANTS_LIST.forEach(function (v, i) {
+            if (v.is_active === 0 || !(v.id > 0)) return;
+            if (IS_DOUBLE && colors.length && v.color !== activeColor) return;
+            out.push(i);
+        });
+        return out;
+    }
+    function totalQty() {
+        var t = 0;
+        Object.keys(qtyMap).forEach(function (k) { t += qtyMap[k] || 0; });
+        return t;
+    }
+    function colorQty(name) {
+        var t = 0;
+        VARIANTS_LIST.forEach(function (v, i) { if (v.color === name) t += qtyMap[i] || 0; });
+        return t;
+    }
+    function tiersFor(v) {
+        var t = (v && v.tiers && v.tiers.length) ? v.tiers : PRODUCT_TIERS;
+        return (t || []).map(function (x) {
+            return { min: parseInt(x.min_qty) || 0, max: x.max_qty ? parseInt(x.max_qty) : null, price: parseFloat(x.unit_price) || 0 };
+        }).sort(function (a, b) { return a.min - b.min; });
+    }
+    function unitPrice(v, total) {
+        if (currentMode === 'wholesale') {
+            var tiers = tiersFor(v);
+            if (tiers.length) {
+                var idx = 0;
+                tiers.forEach(function (t, i) { if (total >= t.min) idx = i; });
+                return tiers[idx].price;
+            }
+            return v.wholesale_price > 0 ? v.wholesale_price : WS_START;
+        }
+        return v.one_piece_price > 0 ? v.one_piece_price : (v.wholesale_price > 0 ? v.wholesale_price : OP_START);
+    }
+
+    // ---------- QTY LOGIC ----------
+    function setQty(idx, val, notify) {
+        var v = VARIANTS_LIST[idx];
+        if (!v) return;
+        val = parseInt(val);
+        if (isNaN(val) || val < 0) val = 0;
+        var max = v.stock > 0 ? v.stock : 0;
+        var min = minQty();
+        if (val > 0 && val < min) val = min;
+        if (val > max) {
+            val = max;
+            if (notify) toast(TXT.maxStock + ' (' + max + ')');
+        }
+        if (val > 0 && val < min) val = 0;
+        if (val > 0) qtyMap[idx] = val; else delete qtyMap[idx];
+        render();
+    }
+    function inc(idx) {
+        var cur = qtyMap[idx] || 0;
+        setQty(idx, cur === 0 ? minQty() : cur + 1, true);
+    }
+    function dec(idx) {
+        var cur = qtyMap[idx] || 0;
+        setQty(idx, cur <= minQty() ? 0 : cur - 1, false);
+    }
+
+    // ---------- RENDER ----------
+    function render() {
+        var colors = colorList();
+        var idxs = variantsForActive();
+        var total = totalQty();
+        var showStrip = IS_DOUBLE && colors.length > 1;
+
+        el('vsTitle').textContent = (showStrip && activeColor) ? activeColor : TXT.title;
+
+        // color strip
+        var stripEl = el('vsColors');
+        if (showStrip) {
+            stripEl.style.display = '';
+            stripEl.innerHTML = colors.map(function (c) {
+                var q = colorQty(c.name);
+                return '<button type="button" class="vs-color' + (c.name === activeColor ? ' is-active' : '') +
+                       '" data-color="' + esc(c.name) + '" title="' + esc(c.name) + '"><img src="' + esc(c.image) + '" alt="">' +
+                       (q > 0 ? '<i>' + q + '</i>' : '') + '</button>';
+            }).join('');
+        } else {
+            stripEl.style.display = 'none';
+            stripEl.innerHTML = '';
+        }
+
+        // variant rows
+        var listEl = el('vsList');
+        if (!idxs.length) {
+            listEl.innerHTML = '<div class="vs-empty">' + esc(TXT.noOptions) + '</div>';
+            return;
+        }
+        listEl.innerHTML = idxs.map(function (i) {
+            var v = VARIANTS_LIST[i];
+            var q = qtyMap[i] || 0;
+            var oos = v.stock <= 0;
+            var name = IS_DOUBLE ? (v.size || v.value) : v.value;
+            var added = !oos && q > 0 && cartMap[v.id] === q;
+            var wished = !!wishMap[v.id];
+            return '<div class="vs-row' + (oos ? ' is-oos' : '') + '" data-idx="' + i + '">' +
+                '<div class="vs-r1">' +
+                    '<img class="vs-rimg" src="' + esc(v.image) + '" alt="">' +
+                    '<div class="vs-rname">' + esc(name) + (oos ? '<span class="vs-oos">' + esc(TXT.oos) + '</span>' : '') + '</div>' +
+                    '<div class="vs-rprice">' + esc(money(unitPrice(v, total))) + '</div>' +
+                '</div>' +
+                '<div class="vs-r2">' +
+                    '<div class="vs-step' + (oos ? ' is-disabled' : '') + '">' +
+                        '<button type="button" data-act="dec" aria-label="Decrease"' + (q <= 0 ? ' disabled' : '') + '>' + ICON_MINUS + '</button>' +
+                        '<input type="number" inputmode="numeric" min="0" max="' + (v.stock > 0 ? v.stock : 0) + '" value="' + q + '" data-act="input">' +
+                        '<button type="button" data-act="inc" aria-label="Increase">' + ICON_PLUS + '</button>' +
+                    '</div>' +
+                    '<button type="button" class="vs-ic' + (added ? ' is-added' : '') + '" data-act="cart" aria-label="Add to cart"' + (oos ? ' disabled' : '') + '>' +
+                        (added ? ICON_CHECK : ICON_CART) + '</button>' +
+                    '<button type="button" class="vs-ic" data-act="wish" aria-label="Wishlist">' +
+                        '<svg class="vs-heart-icon" viewBox="0 0 24 24" fill="' + (wished ? '#f05a29' : 'none') + '" stroke="' + (wished ? '#f05a29' : '#6B7280') + '" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="' + HEART_PATH + '"/></svg>' +
+                    '</button>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    // ---------- ROW ADD TO CART ----------
+    async function addRow(idx, btn) {
+        if (busy) return;
+        var v = VARIANTS_LIST[idx];
+        if (!v) return;
+        var min = minQty();
+        var stock = v.stock > 0 ? v.stock : 0;
+        if (stock <= 0) { toast(TXT.oos); return; }
+
+        var q = qtyMap[idx] || 0;
+        if (q === 0) q = min;
+        if (q > stock) q = stock;
+        if (q < min) { toast(TXT.minQty(min)); return; }
+        qtyMap[idx] = q;
+
+        busy = true;
+        if (btn) btn.classList.add('is-busy');
+
+        var payload = new URLSearchParams();
+        payload.append('product_id', PRODUCT_ID);
+        if (v.id) payload.append('variant_id', v.id);
+        payload.append('quantity', q);
+        if (SEND_EXACT_QTY) payload.append('set_exact_qty', '1');
+        payload.append('pricing_mode', currentMode);
+        if (DEBUG) console.log('[sheet] payload:', payload.toString());
+
+        try {
+            var res = await fetch(CART_ADD_URL, { method: 'POST', body: payload });
+            var raw = await res.text();
+            if (DEBUG) console.log('[sheet] response:', raw);
+            var data = null;
+            try { data = JSON.parse(raw); } catch (e) { data = null; }
+
+            if (data && data.success) {
+                var cCount = data.cart_count || data.count || 0;
+                if (typeof updateHeaderCartBadge === 'function') updateHeaderCartBadge(cCount);
+                var mb = el('mobileCustomCartCount');
+                if (mb) { mb.textContent = cCount; mb.style.display = cCount > 0 ? 'flex' : 'none'; }
+                if (typeof renderCartDrawerUI === 'function') renderCartDrawerUI(data.items, data.subtotal, cCount);
+                ingestCart(data.items);
+                cartMap[v.id] = q;
+                toast(TXT.added);
+            } else {
+                toast((data && data.message) || TXT.failed);
+            }
+        } catch (err) {
+            if (DEBUG) console.error(err);
+            toast(TXT.netErr);
+        } finally {
+            busy = false;
+            render();
+        }
+    }
+
+    // ---------- ROW WISHLIST (product-level) ----------
+    async function wishRow(idx, btn) {
+        if (wishBusy) return;
+        var v = VARIANTS_LIST[idx];
+        if (!v) return;
+        wishBusy = true;
+        if (btn) btn.classList.add('is-busy');
+        var payload = new URLSearchParams();
+        payload.append('product_id', PRODUCT_ID);
+        if (v.id) payload.append('variant_id', v.id);
+        try {
+            var res = await fetch(WISHLIST_URL, { method: 'POST', body: payload });
+            var data = await res.json();
+            if (data && data.success) {
+                var saved = !!data.saved;
+                if (saved) wishMap[v.id] = true; else delete wishMap[v.id];
+                toast(data.message || (saved ? TXT.wishAdded : TXT.wishRemoved));
+            } else {
+                toast((data && data.message) || TXT.wishFailed);
+            }
+        } catch (e) {
+            toast(TXT.netErr);
+        } finally {
+            wishBusy = false;
+            render();
+        }
+    }
+
+    // ---------- OPEN / CLOSE ----------
+    function open(colorName) {
+        var colors = colorList();
+        if (IS_DOUBLE && colors.length) {
+            var ok = colors.some(function (c) { return c.name === colorName; });
+            activeColor = ok ? colorName : colors[0].name;
+        } else {
+            activeColor = '';
+        }
+        // cart me jo pehle se hai uski qty prefill
+        qtyMap = {};
+        VARIANTS_LIST.forEach(function (v, i) { if (cartMap[v.id] > 0) qtyMap[i] = cartMap[v.id]; });
+
+        isOpen = true;
+        render();
+        el('vsOverlay').classList.add('is-open');
+        el('vsSheet').classList.add('is-open');
+        el('vsSheet').setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('vs-open');
+        try { history.pushState({ vsheet: 1 }, ''); historyPushed = true; } catch (e) {}
+        el('vsList').scrollTop = 0;
+    }
+    function close(fromPop) {
+        if (!isOpen) return;
+        isOpen = false;
+        el('vsOverlay').classList.remove('is-open');
+        el('vsSheet').classList.remove('is-open');
+        el('vsSheet').setAttribute('aria-hidden', 'true');
+        el('vsToast').classList.remove('is-show');
+        document.body.style.overflow = '';
+        document.body.classList.remove('vs-open');
+        if (!fromPop && historyPushed) {
+            historyPushed = false;
+            try { history.back(); } catch (e) {}
+        } else {
+            historyPushed = false;
+        }
+    }
+    window.openVariantSheet = open;
+    window.variantSheetClose = function () { close(false); };
+
+    // ---------- EVENTS ----------
+    // Page ke color thumbnails / "Select size & quantity" button
+    document.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-vs-open]');
+        if (!b) return;
+        e.preventDefault();
+        open(b.getAttribute('data-vs-color') || '');
+    });
+
+    el('vsCloseBtn').addEventListener('click', function () { close(false); });
+    el('vsOverlay').addEventListener('click', function () { close(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && isOpen) close(false); });
+    window.addEventListener('popstate', function () { if (isOpen) { historyPushed = false; close(true); } });
+
+    // Color switch: sirf user ke tap pe
+    el('vsColors').addEventListener('click', function (e) {
+        var b = e.target.closest('.vs-color');
+        if (!b) return;
+        activeColor = b.getAttribute('data-color');
+        render();
+        el('vsList').scrollTop = 0;
+    });
+
+    var listEl = el('vsList');
+    listEl.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-act]');
+        if (!b || b.disabled) return;
+        var row = b.closest('.vs-row');
+        if (!row) return;
+        var idx = parseInt(row.getAttribute('data-idx'));
+        var act = b.getAttribute('data-act');
+        if (act === 'inc') inc(idx);
+        else if (act === 'dec') dec(idx);
+        else if (act === 'cart') addRow(idx, b);
+        else if (act === 'wish') wishRow(idx, b);
+    });
+    listEl.addEventListener('change', function (e) {
+        var inp = e.target.closest('input[data-act="input"]');
+        if (!inp) return;
+        var row = inp.closest('.vs-row');
+        if (!row) return;
+        setQty(parseInt(row.getAttribute('data-idx')), inp.value, true);
+    });
+})();
+</script>
+<?php endif; ?>
 
 <?php
 $content = ob_get_clean();
