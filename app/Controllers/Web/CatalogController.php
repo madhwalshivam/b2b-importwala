@@ -395,7 +395,7 @@ class CatalogController extends BaseController
 
         // Fetch sample inspiration products for mobile category browser
         $inspStmt = $db->query("
-            SELECT p.id, p.name, p.slug, p.main_image, p.price, p.sale_price, p.base_price, p.moq, c.slug as category_slug
+            SELECT p.id, p.name, p.slug, p.main_image, p.price, p.sale_price, p.moq, c.slug as category_slug
             FROM products p
             LEFT JOIN categories c ON p.category_id = c.id
             WHERE p.status = 'active' AND p.main_image IS NOT NULL AND p.main_image != ''

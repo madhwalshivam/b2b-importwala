@@ -310,10 +310,10 @@ class CartController extends BaseController
     {
         $db = Database::getInstance();
         if ($userId) {
-            $stmt = $db->prepare("SELECT c.*, p.name as product_name, p.slug as product_slug, p.main_image, p.sku as product_sku, v.attribute_label, v.attribute_value, v.image_url as variant_image, v.variant_code FROM cart_items c JOIN products p ON c.product_id = p.id LEFT JOIN product_variants v ON c.variant_id = v.id WHERE c.user_id = ? ORDER BY c.id DESC");
+            $stmt = $db->prepare("SELECT c.*, p.name as product_name, p.slug as product_slug, p.main_image, p.sku as product_sku, v.attribute_label, v.attribute_value, v.image_url as variant_image, v.sku as variant_code FROM cart_items c JOIN products p ON c.product_id = p.id LEFT JOIN product_variants v ON c.variant_id = v.id WHERE c.user_id = ? ORDER BY c.id DESC");
             $stmt->execute([$userId]);
         } else {
-            $stmt = $db->prepare("SELECT c.*, p.name as product_name, p.slug as product_slug, p.main_image, p.sku as product_sku, v.attribute_label, v.attribute_value, v.image_url as variant_image, v.variant_code FROM cart_items c JOIN products p ON c.product_id = p.id LEFT JOIN product_variants v ON c.variant_id = v.id WHERE c.session_id = ? ORDER BY c.id DESC");
+            $stmt = $db->prepare("SELECT c.*, p.name as product_name, p.slug as product_slug, p.main_image, p.sku as product_sku, v.attribute_label, v.attribute_value, v.image_url as variant_image, v.sku as variant_code FROM cart_items c JOIN products p ON c.product_id = p.id LEFT JOIN product_variants v ON c.variant_id = v.id WHERE c.session_id = ? ORDER BY c.id DESC");
             $stmt->execute([$sessionId]);
         }
         $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);

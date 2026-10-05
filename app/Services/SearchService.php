@@ -176,12 +176,12 @@ class SearchService extends BaseService
         }
 
         if (isset($filters['min_price']) && $filters['min_price'] !== '' && $filters['min_price'] !== null) {
-            $where[] = "COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) >= :min_price";
+            $where[] = "COALESCE(NULLIF(p.`sale_price`, 0), p.`price`) >= :min_price";
             $params['min_price'] = (float)$filters['min_price'];
         }
 
         if (isset($filters['max_price']) && $filters['max_price'] !== '' && $filters['max_price'] !== null) {
-            $where[] = "COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) <= :max_price";
+            $where[] = "COALESCE(NULLIF(p.`sale_price`, 0), p.`price`) <= :max_price";
             $params['max_price'] = (float)$filters['max_price'];
         }
 
@@ -221,8 +221,8 @@ class SearchService extends BaseService
         }
 
         $sortClause = match ($filters['sort'] ?? 'relevance') {
-            'price_asc', 'price_low_high' => 'ORDER BY COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) ASC, p.`id` ASC',
-            'price_desc', 'price_high_low' => 'ORDER BY COALESCE(NULLIF(p.`sale_price`, 0), p.`base_price`, p.`price`) DESC, p.`id` DESC',
+            'price_asc', 'price_low_high' => 'ORDER BY COALESCE(NULLIF(p.`sale_price`, 0), p.`price`) ASC, p.`id` ASC',
+            'price_desc', 'price_high_low' => 'ORDER BY COALESCE(NULLIF(p.`sale_price`, 0), p.`price`) DESC, p.`id` DESC',
             'newest'     => 'ORDER BY p.`id` DESC',
             'popular'    => 'ORDER BY p.`sales_count` DESC, p.`id` DESC',
             default      => (!empty($query) ? 'ORDER BY relevance_score DESC, p.`is_featured` DESC, p.`sales_count` DESC, p.`id` DESC' : 'ORDER BY p.`sales_count` DESC, p.`id` DESC'),
@@ -258,7 +258,7 @@ class SearchService extends BaseService
         $categories = $stmt->fetchAll();
 
         // Calculate price and MOQ bounds
-        $statsStmt = $db->prepare("SELECT MIN(COALESCE(NULLIF(p.sale_price, 0), p.base_price, p.price)) as min_price, MAX(COALESCE(NULLIF(p.sale_price, 0), p.base_price, p.price)) as max_price, MIN(p.moq) as min_moq, MAX(p.moq) as max_moq FROM `products` p WHERE p.status = 'active'");
+        $statsStmt = $db->prepare("SELECT MIN(COALESCE(NULLIF(p.sale_price, 0), p.price)) as min_price, MAX(COALESCE(NULLIF(p.sale_price, 0), p.price)) as max_price, MIN(p.moq) as min_moq, MAX(p.moq) as max_moq FROM `products` p WHERE p.status = 'active'");
         $statsStmt->execute();
         $stats = $statsStmt->fetch(PDO::FETCH_ASSOC) ?: [];
 

@@ -104,8 +104,8 @@ class ProductRepository extends BaseRepository implements ProductRepositoryInter
     public function getByCategory(int $categoryId, int $limit = 24, int $offset = 0, string $sort = 'default'): array
     {
         $orderClause = match ($sort) {
-            'price_low_high' => 'ORDER BY `base_price` ASC',
-            'price_high_low' => 'ORDER BY `base_price` DESC',
+            'price_low_high' => 'ORDER BY COALESCE(NULLIF(`sale_price`, 0), `price`) ASC',
+            'price_high_low' => 'ORDER BY COALESCE(NULLIF(`sale_price`, 0), `price`) DESC',
             'newest'         => 'ORDER BY `id` DESC',
             'popular'        => 'ORDER BY `sales_count` DESC',
             default          => 'ORDER BY `is_featured` DESC, `id` DESC',
