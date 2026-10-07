@@ -10,6 +10,13 @@ require_once __DIR__ . '/layouts/sidebar.php';
     </div>
 
     <div class="p-6 overflow-y-auto flex-1">
+        <?php if (isset($_GET['retry_processed'])): ?>
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl mb-6 shadow-sm text-sm font-medium">
+                Retried <?= (int) $_GET['retry_processed'] ?> failed image<?= (int) $_GET['retry_processed'] === 1 ? '' : 's' ?>:
+                <?= (int) ($_GET['retry_done'] ?? 0) ?> saved,
+                <?= (int) ($_GET['retry_failed'] ?? 0) ?> still failed.
+            </div>
+        <?php endif; ?>
         <?php if (!$tableExists): ?>
             <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl mb-6 shadow-sm">
                 <h3 class="font-bold text-red-800 mb-2">Error: Missing Queue Table</h3>
@@ -42,8 +49,14 @@ require_once __DIR__ . '/layouts/sidebar.php';
             <?php if (!empty($recentErrors)): ?>
                 <!-- Recent Errors -->
                 <div class="bg-white border border-slate-200 p-0 rounded-xl shadow-sm mb-6 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50">
+                    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
                         <h3 class="font-bold text-slate-800">Recent Failed Syncs</h3>
+                        <form method="POST" action="<?= url('admin/image-sync-status/retry') ?>">
+                            <?= csrf_field() ?>
+                            <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg bg-[#f05a29] text-white text-xs font-bold hover:bg-[#d94e22]">
+                                Retry failed
+                            </button>
+                        </form>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600">
@@ -57,7 +70,7 @@ require_once __DIR__ . '/layouts/sidebar.php';
                             <tbody class="divide-y divide-slate-100">
                                 <?php foreach ($recentErrors as $err): ?>
                                     <tr class="hover:bg-slate-50 transition">
-                                        <td class="px-6 py-4 max-w-xs truncate" title="<?= htmlspecialchars($err['source_url']) ?>">
+                                        <td class="px-6 py-4 break-all max-w-xl" title="<?= htmlspecialchars($err['source_url']) ?>">
                                             <a href="<?= htmlspecialchars($err['source_url']) ?>" target="_blank" class="text-blue-600 hover:underline"><?= htmlspecialchars($err['source_url']) ?></a>
                                         </td>
                                         <td class="px-6 py-4 text-center font-mono"><?= $err['attempts'] ?></td>

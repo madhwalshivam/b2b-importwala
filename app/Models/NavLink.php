@@ -10,19 +10,39 @@ class NavLink extends Model {
      * Get menu tree (parent links with nested 'children' array).
      */
     public function getTree(bool $activeOnly = false): array {
-        $where = $activeOnly ? "WHERE parent_id IS NULL AND is_active = 1" : "WHERE parent_id IS NULL";
-        $stmt = $this->db->query("SELECT * FROM nav_links {$where} ORDER BY sort_order ASC, id ASC");
-        $parents = $stmt->fetchAll() ?: [];
+        $cacheKey = 'nav_links:tree:' . ($activeOnly ? 'active' : 'all');
+        return \App\Infrastructure\Cache\CacheManager::getInstance()->remember($cacheKey, 1800, function () use ($activeOnly) {
+            // One query for all links, then nest in PHP (avoids N+1 children queries)
+            $sql = $activeOnly
+                ? "SELECT * FROM nav_links WHERE is_active = 1 ORDER BY sort_order ASC, id ASC"
+                : "SELECT * FROM nav_links ORDER BY sort_order ASC, id ASC";
+            $stmt = $this->db->query($sql);
+            $all = $stmt->fetchAll() ?: [];
 
-        foreach ($parents as &$parent) {
-            $childWhere = $activeOnly ? "WHERE parent_id = ? AND is_active = 1" : "WHERE parent_id = ?";
-            $childStmt = $this->db->prepare("SELECT * FROM nav_links {$childWhere} ORDER BY sort_order ASC, id ASC");
-            $childStmt->execute([$parent['id']]);
-            $parent['children'] = $childStmt->fetchAll() ?: [];
-        }
-        unset($parent);
+            $parents = [];
+            $childrenByParent = [];
+            foreach ($all as $row) {
+                if (empty($row['parent_id'])) {
+                    $row['children'] = [];
+                    $parents[(int) $row['id']] = $row;
+                } else {
+                    $childrenByParent[(int) $row['parent_id']][] = $row;
+                }
+            }
+            foreach ($parents as $id => &$parent) {
+                $parent['children'] = $childrenByParent[$id] ?? [];
+            }
+            unset($parent);
 
-        return $parents;
+            return array_values($parents);
+        });
+    }
+
+    private function clearTreeCache(): void
+    {
+        $cache = \App\Infrastructure\Cache\CacheManager::getInstance();
+        $cache->forget('nav_links:tree:active');
+        $cache->forget('nav_links:tree:all');
     }
 
     /**
@@ -74,6 +94,7 @@ class NavLink extends Model {
             $openInNewTab
         ]);
 
+        $this->clearTreeCache();
         return (int)$this->db->lastInsertId();
     }
 
@@ -102,7 +123,7 @@ class NavLink extends Model {
             SET label = ?, url = ?, type = ?, parent_id = ?, sort_order = ?, is_active = ?, open_in_new_tab = ?
             WHERE id = ?
         ");
-        return $stmt->execute([
+        $ok = $stmt->execute([
             $label,
             $url,
             $type,
@@ -112,6 +133,10 @@ class NavLink extends Model {
             $openInNewTab,
             $id
         ]);
+        if ($ok) {
+            $this->clearTreeCache();
+        }
+        return $ok;
     }
 
     /**
@@ -119,7 +144,11 @@ class NavLink extends Model {
      */
     public function deleteLink(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM nav_links WHERE id = ?");
-        return $stmt->execute([$id]);
+        $ok = $stmt->execute([$id]);
+        if ($ok) {
+            $this->clearTreeCache();
+        }
+        return $ok;
     }
 
     /**
@@ -127,7 +156,11 @@ class NavLink extends Model {
      */
     public function toggleStatus(int $id): bool {
         $stmt = $this->db->prepare("UPDATE nav_links SET is_active = IF(is_active = 1, 0, 1) WHERE id = ?");
-        return $stmt->execute([$id]);
+        $ok = $stmt->execute([$id]);
+        if ($ok) {
+            $this->clearTreeCache();
+        }
+        return $ok;
     }
 
     /**
@@ -138,6 +171,7 @@ class NavLink extends Model {
         foreach ($orderedIds as $index => $id) {
             $stmt->execute([$index + 1, (int)$id]);
         }
+        $this->clearTreeCache();
         return true;
     }
 

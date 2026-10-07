@@ -65,8 +65,9 @@ class ImageMirrorService
         $httpCode = 0;
         $errorMsg = '';
 
+        $fetchUrl = \App\Helpers\ImageMirror::normalizeFetchUrl($url);
         for ($i = 0; $i <= $maxRetries; $i++) {
-            $ch = curl_init($url);
+            $ch = curl_init($fetchUrl);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36');

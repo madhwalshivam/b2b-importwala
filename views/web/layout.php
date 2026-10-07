@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="csrf-token" content="<?= csrf_token() ?>">
+  <meta name="csrf-token" content="<?= htmlspecialchars($csrfToken ?? csrf_token(), ENT_QUOTES, 'UTF-8') ?>">
   <?php
   $pageTitle = $title ?? $seoOptions['title'] ?? 'ImportWale | World-Scale B2B Wholesale Platform';
   $pageDesc = $seoDescription ?? $seoOptions['description'] ?? 'ImportWale - India\'s premier wholesale supply platform for factory-direct products.';
@@ -16,19 +16,28 @@
     <link rel="canonical" href="<?= htmlspecialchars($pageCanonical) ?>" />
     <meta property="og:url" content="<?= htmlspecialchars($pageCanonical) ?>" />
   <?php endif; ?>
+  <?php if (!empty($noindex) || (($seoOptions['robots'] ?? '') === 'noindex, nofollow')): ?>
+    <meta name="robots" content="noindex, nofollow">
+  <?php endif; ?>
   <meta property="og:title" content="<?= htmlspecialchars($pageTitle) ?>" />
-  <!-- Favicon Icons -->
-  <link rel="icon" type="image/png" href="<?= asset('assets/images/favicon.png') ?>?v=<?= time() ?>">
-  <link rel="shortcut icon" href="<?= asset('assets/images/favicon.ico') ?>?v=<?= time() ?>">
-  <link rel="apple-touch-icon" href="<?= asset('assets/images/favicon.png') ?>?v=<?= time() ?>">
+  <!-- Favicon Icons (filemtime cache-bust — not time(), which busts every request) -->
+  <?php
+    $assetVer = static function (string $rel): int {
+      $path = dirname(__DIR__, 2) . '/public/' . ltrim($rel, '/');
+      return is_file($path) ? (int) filemtime($path) : 1;
+    };
+  ?>
+  <link rel="icon" type="image/png" href="<?= asset('assets/images/favicon.png') ?>?v=<?= $assetVer('assets/images/favicon.png') ?>">
+  <link rel="shortcut icon" href="<?= asset('assets/images/favicon.ico') ?>?v=<?= $assetVer('assets/images/favicon.ico') ?>">
+  <link rel="apple-touch-icon" href="<?= asset('assets/images/favicon.png') ?>?v=<?= $assetVer('assets/images/favicon.png') ?>">
 
   <!-- Compiled Production Tailwind CSS -->
-  <link rel="stylesheet" href="<?= asset('assets/css/tailwind.min.css') ?>">
+  <link rel="stylesheet" href="<?= asset('assets/css/tailwind.min.css') ?>?v=<?= $assetVer('assets/css/tailwind.min.css') ?>">
 
   <!-- Site Stylesheets -->
-  <link rel="stylesheet" href="<?= asset('css/everful-theme.css') ?>?v=<?= time() ?>">
-  <link rel="stylesheet" href="<?= asset('css/product-card-unified.css') ?>?v=<?= time() ?>">
-  <link rel="stylesheet" href="<?= asset('css/theme.css') ?>?v=<?= time() ?>">
+  <link rel="stylesheet" href="<?= asset('css/everful-theme.css') ?>?v=<?= $assetVer('assets/css/everful-theme.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/product-card-unified.css') ?>?v=<?= $assetVer('assets/css/product-card-unified.css') ?>">
+  <link rel="stylesheet" href="<?= asset('css/theme.css') ?>?v=<?= $assetVer('assets/css/theme.css') ?>">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

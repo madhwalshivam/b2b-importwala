@@ -29,14 +29,41 @@ class ProductColor extends Model
         $colors = $stmt->fetchAll() ?: [];
 
         if ($withSizes && !empty($colors)) {
-            $pcsModel = new ProductColorSize();
+            $colorIds = array_map(static fn($c) => (int) $c['id'], $colors);
+            $sizesByColor = $this->getSizesForColorIds($colorIds);
             foreach ($colors as &$c) {
-                $c['sizes'] = $pcsModel->getByColor((int)$c['id']);
+                $c['sizes'] = $sizesByColor[(int) $c['id']] ?? [];
             }
             unset($c);
         }
 
         return $colors;
+    }
+
+    /**
+     * Batch-load nested sizes for many colors (avoids N+1).
+     *
+     * @param  int[] $colorIds
+     * @return array<int, array>
+     */
+    private function getSizesForColorIds(array $colorIds): array
+    {
+        $colorIds = array_values(array_filter(array_map('intval', $colorIds)));
+        if (empty($colorIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($colorIds), '?'));
+        $stmt = $this->db->prepare(
+            "SELECT * FROM `product_color_sizes` WHERE `color_id` IN ({$placeholders}) ORDER BY `display_order` ASC, `id` ASC"
+        );
+        $stmt->execute($colorIds);
+
+        $grouped = [];
+        foreach ($stmt->fetchAll() ?: [] as $row) {
+            $grouped[(int) $row['color_id']][] = $row;
+        }
+        return $grouped;
     }
 
     /**

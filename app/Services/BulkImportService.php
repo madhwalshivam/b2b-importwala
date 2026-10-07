@@ -870,6 +870,7 @@ class BulkImportService
     {
         $createdProducts     = 0;
         $mergedProducts      = 0;
+        $touchedProductIds   = [];
         $createdVariants     = 0;
         $updatedVariants     = 0;
         $createdFactories    = 0;
@@ -1220,6 +1221,10 @@ class BulkImportService
                 }
 
                 $vService->syncToFlatVariants($productId, $varMode);
+
+                if (!empty($productId)) {
+                    $touchedProductIds[(int) $productId] = true;
+                }
             }
 
             // ---- commit ----
@@ -1227,6 +1232,11 @@ class BulkImportService
 
             // flush cache
             try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
+
+            // NOTE: visual-search feature indexing is intentionally NOT done here.
+            // It downloads + hashes every image and would block the commit response
+            // for minutes on large sheets. The controller runs it after the HTTP
+            // response has been flushed (see BulkProductImportController::commit).
 
         } catch (\Throwable $e) {
             if ($this->db->inTransaction()) {
@@ -1256,6 +1266,7 @@ class BulkImportService
             'created_factories' => $createdFactories,
             'errors'            => [],
             'image_stats'       => ['mirrored' => $imageMirrored, 'failed' => 0],
+            'visual_index_product_ids' => array_keys($touchedProductIds),
             'summary'           => [
                 'created_products' => $createdProducts,
                 'updated_products' => $mergedProducts,

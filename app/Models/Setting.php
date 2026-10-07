@@ -25,18 +25,23 @@ class Setting extends Model {
                 ON DUPLICATE KEY UPDATE setting_value = ?
             ");
             $stmt->execute([$key, (string)$value, (string)$value]);
+            \App\Infrastructure\Cache\CacheManager::getInstance()->forget('setting:' . $key);
+            \App\Core\Cache::forget('setting:' . $key);
         } catch (\Throwable $e) {
             error_log("Error saving setting {$key}: " . $e->getMessage());
         }
     }
 
     public static function get(string $key, mixed $default = null): mixed {
+        $cacheKey = 'setting:' . $key;
         try {
-            $db = \App\Core\Database::getInstance();
-            $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = ? LIMIT 1");
-            $stmt->execute([$key]);
-            $val = $stmt->fetchColumn();
-            return ($val !== false && $val !== null && $val !== '') ? $val : $default;
+            return \App\Infrastructure\Cache\CacheManager::getInstance()->remember($cacheKey, 1800, function () use ($key, $default) {
+                $db = \App\Core\Database::getInstance();
+                $stmt = $db->prepare("SELECT setting_value FROM settings WHERE setting_key = ? LIMIT 1");
+                $stmt->execute([$key]);
+                $val = $stmt->fetchColumn();
+                return ($val !== false && $val !== null && $val !== '') ? $val : $default;
+            });
         } catch (\Throwable $e) {
             return $default;
         }

@@ -53,6 +53,51 @@ class ImageMirror
     }
 
     /**
+     * Rebuild a remote image URL so query values survive the request.
+     * Bulkflow image tokens are base64. A literal "+" is often stored as a
+     * space, and curl then rejects the URL (HTTP 0, empty body). A bare "%"
+     * makes the image host answer HTTP 400 with an empty body.
+     */
+    public static function normalizeFetchUrl(string $url): string
+    {
+        $url = trim(str_replace(["\0", "\r", "\n", "\t"], '', $url));
+        $qpos = strpos($url, '?');
+        if ($qpos === false) {
+            return $url;
+        }
+
+        $prefix = substr($url, 0, $qpos);
+        $query = substr($url, $qpos + 1);
+        $fragment = '';
+        $hpos = strpos($query, '#');
+        if ($hpos !== false) {
+            $fragment = substr($query, $hpos);
+            $query = substr($query, 0, $hpos);
+        }
+        if ($query === '') {
+            return $url;
+        }
+
+        $isBulkflow = stripos($prefix, 'bulkflowai.com') !== false;
+        $pairs = [];
+        foreach (explode('&', $query) as $pair) {
+            if ($pair === '') {
+                continue;
+            }
+            $kv = explode('=', $pair, 2);
+            $key = rawurldecode(str_replace('+', '%2B', $kv[0]));
+            $val = isset($kv[1]) ? rawurldecode(str_replace('+', '%2B', $kv[1])) : '';
+            if ($isBulkflow && $key === 'i') {
+                // Spaces in this token are "+" that were decoded in transit.
+                $val = str_replace(' ', '+', $val);
+            }
+            $pairs[] = rawurlencode($key) . '=' . rawurlencode($val);
+        }
+
+        return $prefix . '?' . implode('&', $pairs) . $fragment;
+    }
+
+    /**
      * Triggers the background worker non-blocking:
      *  1. Via PHP CLI exec (works on VPS / local)
      *  2. Falls back to HTTP fire-and-forget (works on shared hosting like Hostinger)

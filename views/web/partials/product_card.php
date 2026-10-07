@@ -8,7 +8,10 @@
 if (empty($product) || !is_array($product)) return;
 
 $slug           = htmlspecialchars($product['slug'] ?? $product['id'] ?? '');
-$productUrl     = url('product/' . $slug);
+$productUrl     = url('product/' . ($product['slug'] ?? $product['id'] ?? ''));
+if (!empty($product['url_query'])) {
+    $productUrl .= (strpos($productUrl, '?') !== false ? '&' : '?') . ltrim((string) $product['url_query'], '?&');
+}
 $name           = htmlspecialchars($product['name'] ?? $product['title'] ?? 'Wholesale Product');
 $basePrice      = (float)($product['price'] ?? $product['base_price'] ?? 0);
 $salePrice      = !empty($product['sale_price']) ? (float)$product['sale_price'] : null;
@@ -18,10 +21,15 @@ $discountPct    = ($salePrice && $basePrice > $salePrice)
     ? round((($basePrice - $salePrice) / $basePrice) * 100)
     : 0;
 
-$images        = get_product_images($product);
-$sliderImages  = $images;
-if (empty($sliderImages)) {
-    $sliderImages = [asset('assets/images/placeholder.jpg')];
+if (!empty($product['_force_image'])) {
+    $forceImg = $product['_force_image'];
+    $sliderImages = [preg_match('~^https?://~i', $forceImg) ? $forceImg : asset($forceImg)];
+} else {
+    $images        = get_product_images($product);
+    $sliderImages  = $images;
+    if (empty($sliderImages)) {
+        $sliderImages = [asset('assets/images/placeholder.jpg')];
+    }
 }
 $cardId        = 'pcard_' . ($product['id'] ?? rand(1000, 9999)) . '_' . rand(100, 999);
 

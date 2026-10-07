@@ -122,6 +122,10 @@ $router->post('/visual_search.php', 'Api\VisualSearchController@search');
 $router->get('/visual_search.php', 'Api\VisualSearchController@search');
 $router->get('/api/visual-search/reindex', 'Api\VisualSearchController@reindex');
 
+// Dedicated Image Search Results page (persistent sid)
+$router->get('/image-search', 'Web\ImageSearchController@index');
+$router->get('/image-search/thumb', 'Web\ImageSearchController@thumb');
+
 // Visual Search Hidden Admin Debug View
 $router->get('/admin/visual-search/debug', 'Admin\VisualSearchDebugController@index', [AdminMiddleware::class]);
 $router->post('/admin/visual-search/debug', 'Admin\VisualSearchDebugController@index', [AdminMiddleware::class]);
@@ -350,6 +354,7 @@ $router->post('/admin/products/import/sync-images', 'Admin\BulkProductImportCont
 $router->post('/admin/images/mirror-batch', 'Admin\ImageMirrorController@batch', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/images/mirror-batch-cli', 'Admin\ImageMirrorController@batch', [AdminMiddleware::class]);
 $router->get('/admin/image-sync-status', 'Admin\ImageMirrorController@statusPage', [AdminMiddleware::class]);
+$router->post('/admin/image-sync-status/retry', 'Admin\ImageMirrorController@retryFailed', [AdminMiddleware::class, CsrfMiddleware::class]);
 $router->post('/admin/image-sync-status/selftest', 'Admin\ImageMirrorController@runSelftest', [AdminMiddleware::class, CsrfMiddleware::class]);
 // Factory / Manufacturer Management Routes
 $router->get('/admin/factories', 'Admin\FactoryController@index', [AdminMiddleware::class]);

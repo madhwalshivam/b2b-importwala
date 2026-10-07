@@ -1088,6 +1088,15 @@ class ProductController extends Controller
         // 1. Delete record from DB and handle primary re-assignment
         $url = $this->imageModel->delete($imageId);
 
+        // Remove visual-search feature row for this image
+        try {
+            $featureUrl = trim($img['image_url'] ?: ($img['image_path'] ?? ''));
+            if ($featureUrl !== '') {
+                (new \App\Services\VisualSearchService())->removeFeaturesByImageUrl($featureUrl, $productId);
+            }
+        } catch (\Throwable $e) {
+        }
+
         // 2. Physical File Cleanup on Server Storage or R2
         if (!empty($url)) {
             if (strpos($url, 'importwala-images/') !== false) {
@@ -1319,6 +1328,10 @@ class ProductController extends Controller
             } else {
                 $newId = $variantModel->createVariant($data);
                 echo json_encode(['success' => true, 'message' => 'Variant created successfully', 'variant_id' => $newId]);
+            }
+            try {
+                (new \App\Services\VisualSearchService())->indexProduct($id, true);
+            } catch (\Throwable $e) {
             }
         } catch (\Throwable $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);

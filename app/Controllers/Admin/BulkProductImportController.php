@@ -148,7 +148,80 @@ class BulkProductImportController extends BaseController
         // Flush page/product cache
         try { \App\Infrastructure\Cache\CacheManager::getInstance()->flush(); } catch (\Throwable $e) {}
 
-        echo json_encode(array_merge($result, ['finished' => true]));
+        $indexIds = $result['visual_index_product_ids'] ?? [];
+        unset($result['visual_index_product_ids']);
+
+        // Send the response NOW so the admin UI is not stuck on
+        // "Committing transaction..." while images are downloaded and hashed.
+        $this->sendJsonAndFinishRequest(array_merge($result, ['finished' => true]));
+
+        // Post-response work: visual-search feature indexing for imported products.
+        $this->indexVisualSearchAfterResponse($indexIds);
+    }
+
+    /**
+     * Echo a JSON payload and terminate the HTTP response from the client's
+     * point of view, while keeping the PHP process alive for background work.
+     * Works under FPM (fastcgi_finish_request) and mod_php / shared hosting
+     * (Content-Length + Connection: close + flush).
+     */
+    private function sendJsonAndFinishRequest(array $payload): void
+    {
+        $body = json_encode($payload);
+
+        @ignore_user_abort(true);
+        @set_time_limit(0);
+
+        // Release the session lock so other admin requests are not blocked.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
+        // Discard any stray buffered output so Content-Length is exact.
+        while (ob_get_level() > 0) {
+            @ob_end_clean();
+        }
+
+        if (!headers_sent()) {
+            header('Content-Type: application/json');
+            header('Content-Length: ' . strlen($body));
+            header('Connection: close');
+        }
+
+        echo $body;
+        flush();
+
+        if (function_exists('fastcgi_finish_request')) {
+            @fastcgi_finish_request();
+        } elseif (function_exists('litespeed_finish_request')) {
+            @litespeed_finish_request();
+        }
+    }
+
+    /**
+     * Build visual-search features for the given product IDs.
+     * Intended to run only after the HTTP response has been flushed.
+     *
+     * @param int[] $productIds
+     */
+    private function indexVisualSearchAfterResponse(array $productIds): void
+    {
+        if (empty($productIds)) {
+            return;
+        }
+
+        try {
+            $vs = new \App\Services\VisualSearchService();
+            foreach ($productIds as $pid) {
+                try {
+                    $vs->indexProduct((int) $pid, true);
+                } catch (\Throwable $e) {
+                    error_log('[BulkImport] VisualSearch index failed for product ' . $pid . ': ' . $e->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('[BulkImport] VisualSearch index failed: ' . $e->getMessage());
+        }
     }
 
     // ------------------------------------------------------------------ error report download

@@ -64,6 +64,26 @@ class ImageMirrorController extends Controller
         ]);
     }
 
+    public function retryFailed()
+    {
+        $db = Database::getInstance();
+        $reset = $db->prepare("UPDATE image_mirror_queue SET status = 'pending', attempts = 0, last_error = NULL, updated_at = '2000-01-01 00:00:00' WHERE status = 'failed'");
+        $reset->execute();
+        $count = $reset->rowCount();
+
+        $result = ['processed' => 0, 'done' => 0, 'failed' => 0];
+        if ($count > 0) {
+            $worker = new ImageMirrorWorker();
+            $result = $worker->run(max(1, min(20, $count)), 35);
+        }
+
+        $this->redirect(url('admin/image-sync-status') . '?' . http_build_query([
+            'retry_processed' => (int) $result['processed'],
+            'retry_done' => (int) $result['done'],
+            'retry_failed' => (int) $result['failed'],
+        ]));
+    }
+
     public function runSelftest()
     {
         header('Content-Type: application/json');

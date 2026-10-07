@@ -9,10 +9,10 @@ $canonicalUrl = url('product/' . ($product['slug'] ?? $product['id']));
 $initialVariantCode = $selectedVariantCode ?? $_GET['variant'] ?? '';
 $moq = (int) ($product['moq'] ?? 1);
 
-$cartWishlistState = get_cart_and_wishlist_state();
-$initialCartCount = $cartWishlistState['cart_count'];
-$initialWishlistProductIds = $cartWishlistState['wishlist_product_ids'] ?? [];
-$isWished = in_array((int)($product['id'] ?? 0), $initialWishlistProductIds);
+$cartWishlistState = $cartWishlistState ?? get_cart_and_wishlist_state();
+$initialCartCount = $cartWishlistState['cart_count'] ?? 0;
+$initialWishlistProductIds = $cartWishlistState['wishlist_product_ids'] ?? ($cartWishlistState['wishlist_ids'] ?? []);
+$isWished = in_array((int)($product['id'] ?? 0), $initialWishlistProductIds, true);
 
 // Cart items (agar helper return karta hai) — bottom sheet me qty prefill ke liye
 $cartItemsForJs = $cartWishlistState['cart_items'] ?? ($cartWishlistState['items'] ?? []);
@@ -489,6 +489,8 @@ body.vs-open #mobileBottomBar { display: none !important; }
             <div id="mainImgCardWrapper" class="product-cover-card relative w-full aspect-square bg-slate-50 overflow-hidden group/mainimg">
                 <img id="mainProductImage" src="<?= htmlspecialchars($mainImage) ?>" alt="<?= $productName ?>"
                     width="600" height="600"
+                    fetchpriority="high"
+                    decoding="async"
                     class="w-full h-full object-cover cursor-zoom-in"
                     onclick="openLightbox(this.src)">
             </div>
@@ -625,7 +627,7 @@ body.vs-open #mobileBottomBar { display: none !important; }
                                             data-color-image="<?= htmlspecialchars($colorData['image']) ?>"
                                             onclick="selectColorCard('<?= htmlspecialchars(addslashes((string)$colorName)) ?>')">
                                             <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-sm overflow-hidden bg-gray-100">
-                                                <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-cover">
+                                                <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-cover" width="48" height="48" loading="lazy" decoding="async" alt="">
                                             </div>
                                         </button>
                                     <?php endforeach; ?>
@@ -671,7 +673,7 @@ body.vs-open #mobileBottomBar { display: none !important; }
                                         data-img="<?= htmlspecialchars($vImg) ?>"
                                         onclick="selectAmazonVariant(<?= $vi ?>)">
                                         <?php if ($vImg != $mainImage): ?>
-                                            <img src="<?= htmlspecialchars($vImg) ?>" class="w-6 h-6 sm:w-8 sm:h-8 rounded overflow-hidden object-cover border border-gray-200">
+                                            <img src="<?= htmlspecialchars($vImg) ?>" class="w-6 h-6 sm:w-8 sm:h-8 rounded overflow-hidden object-cover border border-gray-200" width="32" height="32" loading="lazy" decoding="async" alt="">
                                         <?php endif; ?>
                                         <span class="flex-1 text-left"><?= htmlspecialchars($v['attribute_value']) ?></span>
                                         <span id="vQtyVal_<?= $vi ?>" class="hidden">0</span>
@@ -694,7 +696,7 @@ body.vs-open #mobileBottomBar { display: none !important; }
                                         data-vs-open="1"
                                         data-vs-color="<?= htmlspecialchars((string)$colorName) ?>"
                                         title="<?= htmlspecialchars((string)$colorName) ?>">
-                                        <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-cover" alt="<?= htmlspecialchars((string)$colorName) ?>">
+                                        <img src="<?= htmlspecialchars($colorData['image']) ?>" class="w-full h-full object-cover" width="44" height="44" loading="lazy" decoding="async" alt="<?= htmlspecialchars((string)$colorName) ?>">
                                     </button>
                                 <?php endforeach; ?>
                             </div>
@@ -894,8 +896,11 @@ body.vs-open #mobileBottomBar { display: none !important; }
 
     </div>
     
-    <!-- Similar Products -->
-    <?php if (!empty($visuallySimilar)): ?>
+    <!-- Similar to your photo / Related products (session-backed when arriving from image search) -->
+    <?php require __DIR__ . '/partials/similar_to_photo.php'; ?>
+
+    <!-- Similar Products (visual index) — hidden when image-search rail is shown -->
+    <?php if (empty($fromImageSearch) && !empty($visuallySimilar)): ?>
         <div class="mt-2 sm:mt-4 bg-white p-3 sm:p-4 md:p-6 md:rounded-2xl">
             <h2 class="text-xs sm:text-sm md:text-base font-bold text-gray-900 tracking-tight mb-3">Similar Products</h2>
             <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
@@ -1275,14 +1280,21 @@ body.vs-open #mobileBottomBar { display: none !important; }
         // Set DEFAULT MODE to 'onepiece' (Single Price)
         setPricingMode('onepiece');
 
+        const urlParams = new URLSearchParams(window.location.search);
         let urlVariantCode = <?= json_encode($initialVariantCode ?? '') ?>;
         if (!urlVariantCode) {
-            const urlParams = new URLSearchParams(window.location.search);
             urlVariantCode = urlParams.get('variant');
         }
+        const urlVariantId = parseInt(<?= json_encode((int) ($initialVariantId ?? 0)) ?> || urlParams.get('variant_id') || '0', 10);
 
-        if (urlVariantCode && VARIANTS_LIST && VARIANTS_LIST.length > 0) {
-            const foundIdx = VARIANTS_LIST.findIndex(v => v.code && v.code.toLowerCase() === urlVariantCode.toLowerCase());
+        if (VARIANTS_LIST && VARIANTS_LIST.length > 0) {
+            let foundIdx = -1;
+            if (urlVariantId > 0) {
+                foundIdx = VARIANTS_LIST.findIndex(v => parseInt(v.id, 10) === urlVariantId);
+            }
+            if (foundIdx === -1 && urlVariantCode) {
+                foundIdx = VARIANTS_LIST.findIndex(v => v.code && v.code.toLowerCase() === urlVariantCode.toLowerCase());
+            }
             if (foundIdx !== -1) {
                 selectAmazonVariant(foundIdx);
                 const chip = document.querySelector(`.size-chip[data-variant-idx="${foundIdx}"]`);
@@ -2208,5 +2220,8 @@ body.vs-open #mobileBottomBar { display: none !important; }
 
 <?php
 $content = ob_get_clean();
+if (!empty($pdpPerfDebugHtml)) {
+    $content .= $pdpPerfDebugHtml;
+}
 include __DIR__ . '/layout.php';
 ?>

@@ -20,11 +20,25 @@ class ProductVariant extends Model {
         $stmt->execute([$productId]);
         $variants = $stmt->fetchAll() ?: [];
 
-        // Enrich each variant with its attribute values
-        $avModel = new VariationAttributeValue();
+        if (empty($variants)) {
+            return [];
+        }
+
+        // Batch-load attribute values for all variants (avoids N+1)
+        $variantIds = array_map(static fn($v) => (int) $v['id'], $variants);
+        $attrsByVariant = $this->getAttributesForVariantIds($variantIds);
+
         foreach ($variants as &$v) {
-            $v['attributes'] = $avModel->getForVariant((int)$v['id']);
-            $v['variant_label'] = $avModel->getLabelForVariant((int)$v['id']);
+            $vid = (int) $v['id'];
+            $v['attributes'] = $attrsByVariant[$vid] ?? [];
+            if (!empty($v['attributes'])) {
+                $v['variant_label'] = implode(', ', array_map(
+                    static fn($a) => $a['attribute_name'] . ': ' . $a['value'],
+                    $v['attributes']
+                ));
+            } else {
+                $v['variant_label'] = '';
+            }
             // Backward-compat: if no new-style attributes mapped, fall back to flat columns
             if (empty($v['attributes']) && !empty($v['attribute_value'])) {
                 $v['attributes'] = [[
@@ -40,6 +54,45 @@ class ProductVariant extends Model {
         unset($v);
 
         return $variants;
+    }
+
+    /**
+     * Single-query attribute enrichment for many variants.
+     *
+     * @param  int[] $variantIds
+     * @return array<int, array>
+     */
+    private function getAttributesForVariantIds(array $variantIds): array
+    {
+        $variantIds = array_values(array_filter(array_map('intval', $variantIds)));
+        if (empty($variantIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($variantIds), '?'));
+        $stmt = $this->db->prepare("
+            SELECT
+                pvam.variation_id,
+                va.name               AS attribute_name,
+                va.attribute_type,
+                vav.id                AS value_id,
+                vav.value,
+                vav.swatch_hex_or_image
+            FROM `product_variation_attribute_map` pvam
+            JOIN `variation_attribute_values` vav ON vav.id = pvam.attribute_value_id
+            JOIN `variation_attributes`      va  ON va.id  = vav.attribute_id
+            WHERE pvam.variation_id IN ({$placeholders})
+            ORDER BY va.display_order ASC, va.name ASC
+        ");
+        $stmt->execute($variantIds);
+
+        $grouped = [];
+        foreach ($stmt->fetchAll() ?: [] as $row) {
+            $vid = (int) $row['variation_id'];
+            unset($row['variation_id']);
+            $grouped[$vid][] = $row;
+        }
+        return $grouped;
     }
 
     /**
@@ -112,18 +165,23 @@ class ProductVariant extends Model {
 
         // Fallback to legacy product_variants if product_colors is empty
         $vaModel  = new VariationAttribute();
-        $avModel  = new VariationAttributeValue();
 
         $attributes    = $vaModel->getAttributesForProduct($productId);
         $variants      = $this->getByProduct($productId, true);
 
         $combinations = [];
         foreach ($variants as $v) {
-            $valueIds = $avModel->getValueIdsForVariant((int)$v['id']);
+            // Reuse attributes already batch-loaded by getByProduct (no per-variant query)
+            $valueIds = [];
+            foreach ($v['attributes'] ?? [] as $attr) {
+                if (isset($attr['value_id']) && $attr['value_id'] !== null) {
+                    $valueIds[] = (int) $attr['value_id'];
+                }
+            }
             $combinations[] = [
                 'variation_id'       => (int)$v['id'],
                 'sku'                => $v['sku'] ?? $v['variant_code'] ?? null,
-                'attribute_value_ids'=> array_map('intval', $valueIds),
+                'attribute_value_ids'=> $valueIds,
                 'wholesale_price'    => (float)$v['wholesale_price'],
                 'one_piece_price'    => (float)$v['one_piece_price'],
                 'stock'              => (int)$v['stock_quantity'],

@@ -15,8 +15,8 @@ include __DIR__ . '/../layouts/header.php';
                     </svg>
                 </div>
                 <div>
-                    <h2 class="text-xl font-bold text-gray-900 leading-snug">Visual Search Feature Embedding & Matching Debugger</h2>
-                    <p class="text-xs text-gray-500 font-medium mt-0.5">Inspect raw 128-dim vectors, dHash signatures, and exact Cosine Similarity float scores (0.000 to 1.000)</p>
+                    <h2 class="text-xl font-bold text-gray-900 leading-snug">Visual Search Index & Matching Debugger</h2>
+                    <p class="text-xs text-gray-500 font-medium mt-0.5">Pure-PHP dHash + aHash + HSV histogram scoring (no external API)</p>
                 </div>
             </div>
         </div>
@@ -27,14 +27,14 @@ include __DIR__ . '/../layouts/header.php';
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                <span>Reindex All Catalog Images</span>
+                <span>Rebuild Image Search Index</span>
             </button>
         </div>
     </div>
 
     <?php if (!empty($_GET['reindexed'])): ?>
         <div class="bg-green-50 border border-green-200 text-green-800 p-4 rounded-xl text-xs font-semibold flex items-center justify-between">
-            <span>✓ Catalog product image embeddings reindexed successfully! All active products are populated in database index.</span>
+            <span>✓ Image search index rebuilt successfully.</span>
             <button onclick="this.parentElement.remove()" class="text-green-600 hover:text-green-900">&times;</button>
         </div>
     <?php endif; ?>
@@ -48,9 +48,9 @@ include __DIR__ . '/../layouts/header.php';
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Indexed Embeddings</span>
-            <div class="text-2xl font-black text-blue-600 mt-1"><?= $analysis['total_indexed_products'] ?? 0 ?></div>
-            <span class="text-[11px] text-gray-500 font-medium">Product Vectors in DB</span>
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Indexed Images</span>
+            <div class="text-2xl font-black text-blue-600 mt-1"><?= $analysis['total_feature_rows'] ?? $analysis['total_indexed_products'] ?? 0 ?></div>
+            <span class="text-[11px] text-gray-500 font-medium">Feature rows in DB</span>
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
@@ -69,10 +69,10 @@ include __DIR__ . '/../layouts/header.php';
         </div>
 
         <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Embedding Engine</span>
-            <div class="text-lg font-bold text-gray-900 mt-1">Flask Microservice</div>
+            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Search Engine</span>
+            <div class="text-lg font-bold text-gray-900 mt-1">Pure PHP (GD)</div>
             <span class="inline-block px-2 py-0.5 mt-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-md">
-                Port 5005 (Active)
+                dHash + aHash + HSV
             </span>
         </div>
     </div>
@@ -245,19 +245,19 @@ include __DIR__ . '/../layouts/header.php';
 function triggerCatalogReindex() {
     const btn = document.getElementById('reindexBtn');
     btn.disabled = true;
-    btn.innerHTML = '<span class="animate-spin">&circlearrowright;</span> Reindexing Catalog...';
+    btn.innerHTML = '<span class="animate-spin">&circlearrowright;</span> Rebuilding Index...';
 
-    fetch('<?= url("admin/visual-search/reindex") ?>', {
+    fetch('<?= url("admin/visual-search/reindex") ?>?force=1', {
         method: 'GET',
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
     .then(r => r.json())
     .then(data => {
-        alert(data.message || 'Reindex complete!');
+        alert(data.message || 'Rebuild complete!');
         window.location.reload();
     })
     .catch(err => {
-        alert('Reindex completed.');
+        alert('Rebuild request finished — reload to see stats.');
         window.location.reload();
     });
 }

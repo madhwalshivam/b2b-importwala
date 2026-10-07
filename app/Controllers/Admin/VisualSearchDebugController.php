@@ -82,13 +82,15 @@ class VisualSearchDebugController extends Controller
             $this->redirect(url('admin/login'));
         }
 
-        $stats = $this->visualService->indexAllProducts(true);
+        @set_time_limit(0);
+        $stats = $this->visualService->indexAllProducts(true, 50);
 
         if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
             $this->jsonResponse([
                 'success' => true,
-                'message' => "Reindex complete! Indexed {$stats['total_images_indexed']} images across {$stats['indexed']} of {$stats['total']} products.",
-                'stats'   => $stats
+                'message' => "Rebuild complete! Indexed {$stats['total_images_indexed']} images across {$stats['indexed']} of {$stats['total']} products.",
+                'stats'   => $stats,
+                'diagnostics' => $this->visualService->getIndexStats(),
             ]);
             return;
         }
