@@ -231,11 +231,11 @@ if (!empty($products) && count($products) > 1) {
                                                     </form>
 
                                                     <!-- Buy Now Button -->
-                                                    <button type="button" onclick="if(typeof showComingSoonModal==='function')showComingSoonModal();else alert('This option is coming soon.');"
+                                                    <a href="<?= url('checkout?buy_product=' . (int)$p['id'] . '&buy_qty=1&buy_mode=onepiece') ?>"
                                                         class="w-full h-8 bg-gray-800 hover:bg-gray-700 text-gray-200 font-semibold text-[11px] rounded-xl transition flex items-center justify-center space-x-1 border border-gray-700 cursor-pointer">
                                                         <i data-lucide="zap" class="w-3 h-3 text-amber-400"></i>
                                                         <span>Buy Now</span>
-                                                    </button>
+                                                    </a>
                                                 </div>
 
                                             </div>
@@ -535,7 +535,7 @@ if (!empty($products) && count($products) > 1) {
                                                 ?>
                                             </span>
                                         </div>
-                                        <a href="<?= url('product/' . $p['slug']) ?>"
+                                        <a href="<?= url('checkout?buy_product=' . (int)($p['id'] ?? 0) . '&buy_qty=1&buy_mode=onepiece') ?>"
                                             class="text-white/90 text-[10px] font-semibold hover:text-white transition underline underline-offset-2">
                                             Buy Now →
                                         </a>

@@ -114,6 +114,14 @@ class ProductController extends Controller
         $price = (float) $this->request->input('price', 0);
         $salePrice = $this->request->input('sale_price') ? (float) $this->request->input('sale_price') : null;
 
+        try {
+            $gstFields = $this->gstFieldsForSave(null);
+        } catch (\InvalidArgumentException $e) {
+            $this->setFlash('error', $e->getMessage());
+            $this->redirect(url('admin/products/create'));
+            return;
+        }
+
         $categoryIds = $_POST['categories'] ?? [];
         $brandIds = $_POST['brands'] ?? [];
 
@@ -212,7 +220,8 @@ class ProductController extends Controller
             'slug' => $slug,
             'sku' => $sku,
             'barcode' => $this->request->input('barcode'),
-            'hsn_code' => $this->request->input('hsn_code'),
+            'hsn_code' => $gstFields['hsn_code'],
+            'gst_rate' => $gstFields['gst_rate'],
             'category_id' => $primaryCategoryId,
             'subcategory_id' => $subcategoryId,
             'brand_id' => $primaryBrandId,
@@ -222,7 +231,7 @@ class ProductController extends Controller
             'moq' => $moq,
             'total_sold' => $totalSold,
             'sales_count' => $totalSold,
-            'tax_percent' => (float) $this->request->input('tax_percent', 18),
+            'tax_percent' => $gstFields['tax_percent'],
             'stock' => $stock,
             'main_image' => $mainImage,
             'video_url' => $videoUrl,
@@ -331,6 +340,7 @@ class ProductController extends Controller
         (new \App\Services\FilterAttributeService())->syncProductSpecificationsToFilterAttributes($productId);
 
         activity_log('Create Product', 'Products', $productId, "Created product: {$name} (SKU: {$sku})");
+        $this->syncResolvedTaxPercent($productId, null, null, $gstFields);
 
         // Auto-index visual feature embedding vector
         try {
@@ -463,6 +473,14 @@ class ProductController extends Controller
             $this->redirect(url('admin/products'));
         }
 
+        try {
+            $gstFields = $this->gstFieldsForSave($product);
+        } catch (\InvalidArgumentException $e) {
+            $this->setFlash('error', $e->getMessage());
+            $this->redirect(url('admin/products/edit/' . $id));
+            return;
+        }
+
         $name = htmlspecialchars_decode($this->request->input('name'));
         $sku = trim($this->request->input('sku'));
         $price = (float) $this->request->input('price', 0);
@@ -546,7 +564,8 @@ class ProductController extends Controller
             'name' => $name,
             'sku' => $sku,
             'barcode' => $this->request->input('barcode'),
-            'hsn_code' => $this->request->input('hsn_code'),
+            'hsn_code' => $gstFields['hsn_code'],
+            'gst_rate' => $gstFields['gst_rate'],
             'category_id' => $primaryCategoryId,
             'subcategory_id' => $subcategoryId,
             'brand_id' => $primaryBrandId,
@@ -556,7 +575,7 @@ class ProductController extends Controller
             'moq' => $moq,
             'total_sold' => $totalSold,
             'sales_count' => $totalSold,
-            'tax_percent' => (float) $this->request->input('tax_percent', 18),
+            'tax_percent' => $gstFields['tax_percent'],
             'stock' => (int) $this->request->input('stock', 0),
             'video_url' => $videoUrl,
             'video_thumbnail' => $videoThumbnail,
@@ -612,6 +631,7 @@ class ProductController extends Controller
         }
 
         $this->productModel->update($id, $data);
+        $this->syncResolvedTaxPercent($id, $product['hsn_code'] ?? null, $product['gst_rate'] ?? null, $gstFields);
         $this->productModel->syncProductCategories($id, $categoryIds);
         $this->productModel->syncProductBrands($id, $brandIds);
 
@@ -1704,5 +1724,61 @@ class ProductController extends Controller
             'errors'  => $errors
         ]);
         exit;
+    }
+
+    /**
+     * Product HSN / GST are overrides. Empty means the category rate is used.
+     *
+     * @return array{hsn_code: ?string, gst_rate: ?float, tax_percent: float}
+     */
+    private function gstFieldsForSave(?array $existing): array
+    {
+        $fallbackRate = (float) ($existing['tax_percent'] ?? $this->request->input('tax_percent', 18));
+        if (!array_key_exists('override_gst', $_POST)) {
+            $hsn = \App\Services\GstCalculator::parseHsn($this->request->input('hsn_code', $existing['hsn_code'] ?? ''));
+            return [
+                'hsn_code' => $hsn,
+                'gst_rate' => array_key_exists('gst_rate', $existing ?? []) ? $existing['gst_rate'] : null,
+                'tax_percent' => $fallbackRate,
+            ];
+        }
+
+        if ((string) $this->request->input('override_gst') !== '1') {
+            return [
+                'hsn_code' => null,
+                'gst_rate' => null,
+                'tax_percent' => $fallbackRate,
+            ];
+        }
+
+        $hsn = \App\Services\GstCalculator::parseHsn($this->request->input('hsn_code', ''));
+        $rate = \App\Services\GstCalculator::parseRate(
+            $this->request->input('gst_rate', ''),
+            $this->request->input('gst_rate_custom', '')
+        );
+        if ($rate === null) {
+            throw new \InvalidArgumentException('Choose a GST rate for the override, or turn the override off.');
+        }
+        return [
+            'hsn_code' => $hsn,
+            'gst_rate' => $rate,
+            'tax_percent' => $rate,
+        ];
+    }
+
+    private function syncResolvedTaxPercent(int $productId, $oldHsn, $oldRate, array $gstFields): void
+    {
+        $resolved = (new \App\Services\GstService())->resolveMany([$productId]);
+        $rate = $resolved[$productId]['gst_rate'] ?? $gstFields['tax_percent'];
+        $this->productModel->update($productId, ['tax_percent' => $rate]);
+        (new \App\Services\GstService())->audit(
+            'product',
+            $productId,
+            $oldHsn !== null ? (string) $oldHsn : null,
+            $gstFields['hsn_code'],
+            $oldRate,
+            $gstFields['gst_rate'],
+            isset($_SESSION['admin_user_id']) ? (int) $_SESSION['admin_user_id'] : null
+        );
     }
 }

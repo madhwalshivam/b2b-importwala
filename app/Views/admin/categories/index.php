@@ -31,11 +31,15 @@ include __DIR__ . '/../layouts/header.php';
             <p class="text-xs text-slate-500 mt-1">Manage scooter accessory categories, parent-child hierarchies, and
                 image assets.</p>
         </div>
-        <button @click="openAddModal()"
-            class="h-10 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center space-x-2 shrink-0 cursor-pointer">
-            <i data-lucide="plus" class="w-4 h-4"></i>
-            <span>Add New Category</span>
-        </button>
+        <div class="flex items-center gap-2">
+            <a href="<?= url('admin/gst/bulk') ?>" class="h-10 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl inline-flex items-center">Bulk GST</a>
+            <a href="<?= url('admin/gst/warnings') ?>" class="h-10 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl inline-flex items-center">HSN Warnings</a>
+            <button @click="openAddModal()"
+                class="h-10 px-4 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-xs rounded-xl shadow-xs transition flex items-center space-x-2 shrink-0 cursor-pointer">
+                <i data-lucide="plus" class="w-4 h-4"></i>
+                <span>Add New Category</span>
+            </button>
+        </div>
     </div>
 
     <!-- MAIN CATEGORIES TABLE CARD -->
@@ -62,6 +66,8 @@ include __DIR__ . '/../layouts/header.php';
                         <th class="py-3 px-4 text-center w-16">Image</th>
                         <th class="py-3 px-4">Category Name</th>
                         <th class="py-3 px-4">Slug</th>
+                        <th class="py-3 px-4">HSN / quick edit</th>
+                        <th class="py-3 px-4">GST %</th>
                         <th class="py-3 px-4 text-center">Linked Products</th>
                         <th class="py-3 px-4 text-center">Sort Order</th>
                         <th class="py-3 px-4 text-center">Status</th>
@@ -71,7 +77,7 @@ include __DIR__ . '/../layouts/header.php';
                 <tbody class="divide-y divide-slate-100 text-slate-700">
                     <?php if (empty($categories)): ?>
                         <tr>
-                            <td colspan="7" class="p-8 text-center text-slate-500">
+                            <td colspan="9" class="p-8 text-center text-slate-500">
                                 <div class="flex flex-col items-center justify-center space-y-2">
                                     <i data-lucide="folder-open" class="w-8 h-8 text-slate-300"></i>
                                     <span class="font-medium text-slate-600">No categories found</span>
@@ -121,6 +127,35 @@ include __DIR__ . '/../layouts/header.php';
                                 <td class="py-3 px-4">
                                     <span
                                         class="font-mono text-[11px] text-slate-500 bg-slate-100/70 px-2 py-0.5 rounded-md border border-slate-200/50"><?= htmlspecialchars($cat['slug']) ?></span>
+                                </td>
+
+                                <td class="py-3 px-4">
+                                    <form method="POST" action="<?= url('admin/categories/gst/' . (int) $cat['id']) ?>" class="flex items-center gap-1">
+                                        <?= csrf_field() ?>
+                                        <input type="text" name="hsn_code" value="<?= htmlspecialchars($cat['hsn_code'] ?? '') ?>" maxlength="8" inputmode="numeric" placeholder="HSN"
+                                            class="w-16 h-8 px-2 bg-white border border-slate-200 rounded-lg font-mono text-[11px]">
+                                        <select name="gst_rate" class="h-8 px-1 bg-white border border-slate-200 rounded-lg text-[11px]">
+                                            <option value="inherit" <?= ($cat['gst_rate'] ?? null) === null ? 'selected' : '' ?>>Inherit</option>
+                                            <?php foreach ([0, 3, 5, 12, 18, 28] as $rate): ?>
+                                                <option value="<?= $rate ?>" <?= isset($cat['gst_rate']) && $cat['gst_rate'] !== null && (float) $cat['gst_rate'] == $rate ? 'selected' : '' ?>><?= $rate ?>%</option>
+                                            <?php endforeach; ?>
+                                            <?php
+                                            $customRate = isset($cat['gst_rate']) && $cat['gst_rate'] !== null && !in_array((float) $cat['gst_rate'], [0.0, 3.0, 5.0, 12.0, 18.0, 28.0], true);
+                                            ?>
+                                            <option value="custom" <?= $customRate ? 'selected' : '' ?>>Custom</option>
+                                        </select>
+                                        <input type="number" name="gst_rate_custom" min="0" max="100" step="0.01" value="<?= $customRate ? htmlspecialchars((string) $cat['gst_rate']) : '' ?>" placeholder="%" class="w-14 h-8 px-1 border border-slate-200 rounded-lg text-[11px]">
+                                        <input type="hidden" name="is_gst_active" value="0">
+                                        <input type="checkbox" name="is_gst_active" value="1" <?= !isset($cat['is_gst_active']) || (int) $cat['is_gst_active'] === 1 ? 'checked' : '' ?> title="GST active">
+                                        <button type="submit" class="h-8 px-2 bg-slate-900 text-white rounded-lg text-[10px] font-semibold">Save</button>
+                                    </form>
+                                </td>
+                                <td class="py-3 px-4 font-semibold text-slate-800">
+                                    <?php if (!isset($cat['gst_rate']) || $cat['gst_rate'] === null || $cat['gst_rate'] === ''): ?>
+                                        Inherit
+                                    <?php else: ?>
+                                        <?= rtrim(rtrim(number_format((float) $cat['gst_rate'], 2), '0'), '.') ?>%
+                                    <?php endif; ?>
                                 </td>
 
                                 <!-- Linked Products Count -->
@@ -309,6 +344,33 @@ include __DIR__ . '/../layouts/header.php';
                     <textarea x-model="formData.description" rows="2"
                         placeholder="Brief description of products in this category..."
                         class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-red-600 focus:bg-white transition text-xs"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-orange-50/60 p-3.5 rounded-xl border border-orange-100">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">HSN Code</label>
+                        <input type="text" x-model="formData.hsn_code" inputmode="numeric" maxlength="8" placeholder="4, 6 or 8 digits"
+                            class="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg font-mono text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">GST Rate</label>
+                        <select x-model="formData.gst_rate" class="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-xs font-semibold">
+                            <option value="inherit">Inherit from parent</option>
+                            <option value="0">0%</option>
+                            <option value="3">3%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18">18%</option>
+                            <option value="28">28%</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                        <input type="number" x-show="formData.gst_rate === 'custom'" x-model="formData.gst_rate_custom" min="0" max="100" step="0.01" placeholder="Custom %"
+                            class="mt-2 w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-xs">
+                    </div>
+                    <div class="flex items-center space-x-2 pt-5">
+                        <input type="checkbox" id="cat_gst_active" x-model="formData.is_gst_active" class="rounded text-red-600 w-4 h-4">
+                        <label for="cat_gst_active" class="font-semibold text-slate-700">GST rate active</label>
+                    </div>
                 </div>
 
                 <!-- Display & Status Options -->
@@ -557,7 +619,11 @@ include __DIR__ . '/../layouts/header.php';
                 is_featured: false,
                 sort_order: 0,
                 meta_title: '',
-                meta_description: ''
+                meta_description: '',
+                hsn_code: '',
+                gst_rate: '18',
+                gst_rate_custom: '',
+                is_gst_active: true
             },
 
             viewData: {},
@@ -646,7 +712,11 @@ include __DIR__ . '/../layouts/header.php';
                     is_featured: false,
                     sort_order: 0,
                     meta_title: '',
-                    meta_description: ''
+                    meta_description: '',
+                    hsn_code: '',
+                    gst_rate: '18',
+                    gst_rate_custom: '',
+                    is_gst_active: true
                 };
                 this.modalOpen = true;
             },
@@ -677,7 +747,11 @@ include __DIR__ . '/../layouts/header.php';
                                 is_featured: c.is_featured == 1,
                                 sort_order: c.sort_order || 0,
                                 meta_title: c.meta_title || '',
-                                meta_description: c.meta_description || ''
+                                meta_description: c.meta_description || '',
+                                hsn_code: c.hsn_code || '',
+                                gst_rate: (c.gst_rate === null || c.gst_rate === undefined || c.gst_rate === '') ? 'inherit' : (['0','3','5','12','18','28'].includes(String(parseFloat(c.gst_rate))) ? String(parseFloat(c.gst_rate)) : 'custom'),
+                                gst_rate_custom: (c.gst_rate === null || ['0','3','5','12','18','28'].includes(String(parseFloat(c.gst_rate)))) ? '' : c.gst_rate,
+                                is_gst_active: String(c.is_gst_active) !== '0'
                             };
                             this.modalOpen = true;
                         } else {
@@ -724,6 +798,10 @@ include __DIR__ . '/../layouts/header.php';
                 formPayload.append('sort_order', (this.formData && this.formData.sort_order) ? parseInt(this.formData.sort_order) : 0);
                 formPayload.append('meta_title', (this.formData && this.formData.meta_title) ? String(this.formData.meta_title).trim() : '');
                 formPayload.append('meta_description', (this.formData && this.formData.meta_description) ? String(this.formData.meta_description).trim() : '');
+                formPayload.append('hsn_code', (this.formData && this.formData.hsn_code) ? String(this.formData.hsn_code).trim() : '');
+                formPayload.append('gst_rate', (this.formData && this.formData.gst_rate) ? String(this.formData.gst_rate) : '18');
+                formPayload.append('gst_rate_custom', (this.formData && this.formData.gst_rate_custom) ? String(this.formData.gst_rate_custom) : '');
+                formPayload.append('is_gst_active', (this.formData && this.formData.is_gst_active) ? '1' : '0');
                 if (this.formData && this.formData.is_featured) {
                     formPayload.append('is_featured', '1');
                 }

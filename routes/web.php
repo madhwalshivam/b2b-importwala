@@ -77,8 +77,11 @@ $router->post('/api/cart/inquiry-submit', 'Web\CartController@submitInquiry');
 $router->post('/cart/inquiry-submit', 'Web\CartController@submitInquiry');
 
 $router->get('/checkout', 'Web\CheckoutController@index');
-$router->post('/checkout/create-order', 'Web\CheckoutController@createOrder');
-$router->post('/checkout/razorpay-verify', 'Web\CheckoutController@verifyRazorpay');
+$router->post('/checkout/prepare-buy-now', 'Web\CheckoutController@prepareBuyNow', [CsrfMiddleware::class]);
+$router->post('/checkout/create-order', 'Web\CheckoutController@createOrder', [CsrfMiddleware::class]);
+$router->post('/checkout/gst-quote', 'Web\CheckoutController@gstQuote', [CsrfMiddleware::class]);
+$router->post('/checkout/razorpay-verify', 'Web\CheckoutController@verifyRazorpay', [CsrfMiddleware::class]);
+$router->post('/checkout/payment-failed', 'Web\CheckoutController@paymentFailed', [CsrfMiddleware::class]);
 $router->get('/checkout/success/{id}', 'Web\CheckoutController@success');
 
 // Cart Coupon Actions
@@ -388,6 +391,15 @@ $router->post('/admin/categories/update/{id}', 'Admin\CategoryController@update'
 $router->get('/admin/categories/delete/{id}', 'Admin\CategoryController@delete', [AdminMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
 $router->post('/admin/categories/delete/{id}', 'Admin\CategoryController@delete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
 $router->post('/admin/categories/reassign-delete/{id}', 'Admin\CategoryController@reassignAndDelete', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.delete'))->execute()]);
+$router->post('/admin/categories/gst/{id}', 'Admin\CategoryController@updateGst', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('categories.edit'))->execute()]);
+
+$router->get('/admin/gst/settings', 'Admin\GstController@settings', [AdminMiddleware::class, fn() => (new PermissionMiddleware('gst.view'))->execute()]);
+$router->post('/admin/gst/settings', 'Admin\GstController@saveSettings', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('gst.edit'))->execute()]);
+$router->get('/admin/gst/bulk', 'Admin\GstController@bulk', [AdminMiddleware::class, fn() => (new PermissionMiddleware('gst.view'))->execute()]);
+$router->post('/admin/gst/bulk', 'Admin\GstController@bulkUpdate', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('gst.edit'))->execute()]);
+$router->get('/admin/gst/export', 'Admin\GstController@exportCsv', [AdminMiddleware::class, fn() => (new PermissionMiddleware('gst.view'))->execute()]);
+$router->post('/admin/gst/import', 'Admin\GstController@importCsv', [AdminMiddleware::class, CsrfMiddleware::class, fn() => (new PermissionMiddleware('gst.edit'))->execute()]);
+$router->get('/admin/gst/warnings', 'Admin\GstController@warnings', [AdminMiddleware::class, fn() => (new PermissionMiddleware('gst.view'))->execute()]);
 
 // Sub-categories Management
 $router->get('/admin/subcategories', 'Admin\SubcategoryController@index', [AdminMiddleware::class]);
@@ -460,6 +472,7 @@ $router->get('/admin/activity-logs', 'Admin\ActivityLogController@index', [Admin
 $router->post('/api/checkout/create-order', 'CheckoutApiController@createOrder');
 $router->post('/api/checkout/verify-payment', 'CheckoutApiController@verifyPayment');
 $router->post('/api/webhooks/razorpay', 'CheckoutApiController@razorpayWebhook');
+$router->post('/webhook/razorpay', 'CheckoutApiController@razorpayWebhook');
 $router->get('/api/webhooks/razorpay', 'CheckoutApiController@razorpayWebhook');
 $router->post('/api/webhooks/shiprocket', 'CheckoutApiController@shiprocketWebhook');
 $router->get('/api/webhooks/shiprocket', 'CheckoutApiController@shiprocketWebhook');

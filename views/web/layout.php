@@ -3177,9 +3177,9 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
         <a href="<?= url('cart') ?>"
           class="py-2.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-900 font-semibold text-xs rounded-xl text-center transition flex items-center justify-center">View
           Cart</a>
-        <button type="button" onclick="showComingSoonModal()"
+        <a href="<?= url('checkout') ?>"
           class="py-2.5 px-3 bg-[#f05a29] hover:bg-[#d94e20] text-white font-semibold text-xs rounded-xl text-center transition shadow-xs flex items-center justify-center border-0 cursor-pointer">Checkout
-          &rarr;</button>
+          &rarr;</a>
       </div>
     </div>
   </div>
@@ -3552,9 +3552,11 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
       function adjustTopHeaderSpacer() {
         const topHeader = document.getElementById('topHeaderWrapper');
         const spacer = document.getElementById('topHeaderSpacer');
+        const headerHeight = topHeader ? topHeader.offsetHeight : 0;
+        document.documentElement.style.setProperty('--header-height', headerHeight + 'px');
         if (topHeader && spacer) {
           spacer.style.display = 'block';
-          spacer.style.height = topHeader.offsetHeight + 'px';
+          spacer.style.height = headerHeight + 'px';
         }
       }
 

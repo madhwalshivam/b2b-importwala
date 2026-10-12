@@ -5,13 +5,16 @@
  * Clean Scroll Affordance, Admin-Managed Dynamic Attributes, Server-Side Combined SQL Filtering.
  */
 
-$pageTitle = $pageHeading ?? "All Wholesale Products";
-$seoTitle = $seoOptions['title'] ?? ($pageTitle . " | ImportWale");
+$pageTitle = $pageHeading ?? 'All Products';
+$seoTitle = $seoOptions['title'] ?? ($pageTitle . ' Wholesale | ImportWale');
 $title = $seoTitle;
 $baseUrl = $seoOptions['canonical'] ?? url('shop');
+$listingPathParent = $listingPathParent ?? null;
+$listingPathParentUrl = $listingPathParentUrl ?? null;
+$listingPathChild = $listingPathChild ?? null;
 
-$activeCatId = (int) ($filters['category_id'] ?? 0);
-$activeSubId = (int) ($filters['subcategory_id'] ?? 0);
+$activeCatId = (int) (!empty($activeCategory['id']) ? $activeCategory['id'] : ($filters['category_id'] ?? 0));
+$activeSubId = (int) (!empty($activeSubcategory['id']) ? $activeSubcategory['id'] : ($filters['subcategory_id'] ?? 0));
 $isMobileUA = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i', $_SERVER['HTTP_USER_AGENT'] ?? '');
 $defaultPerPage = $isMobileUA ? 24 : 25;
 $reqPerPage = (int) ($filters['per_page'] ?? $_GET['per_page'] ?? 0);
@@ -105,14 +108,114 @@ if (!empty($dynamicFilterAttributes) && !empty($selectedAttrs)) {
 $activeFilterCount = count($activeChips);
 $sidebarOpenByDefault = false;
 
+// Category and subcategory pages show only the open main category.
+// Shop and search keep the full tree.
+$sidebarScoped = !empty($activeCategory['id']);
+$sidebarCategories = $categoriesTree ?? [];
+if ($sidebarScoped) {
+  $scopeRootId = (int) $activeCategory['id'];
+  $activeParentId = (int) ($activeCategory['parent_id'] ?? 0);
+  if ($activeParentId > 0) {
+    $scopeRootId = $activeParentId;
+  }
+
+  $narrowed = [];
+  foreach ($sidebarCategories as $treeCat) {
+    if ((int) ($treeCat['id'] ?? 0) === $scopeRootId) {
+      $narrowed[] = $treeCat;
+      break;
+    }
+  }
+  if ($narrowed === []) {
+    $activeCategoryId = (int) $activeCategory['id'];
+    foreach ($sidebarCategories as $treeCat) {
+      foreach ($treeCat['subcategories'] ?? [] as $treeSub) {
+        if ((int) ($treeSub['parent_id'] ?? 0) > 0 && (int) ($treeSub['id'] ?? 0) === $activeCategoryId) {
+          $narrowed[] = $treeCat;
+          break 2;
+        }
+      }
+    }
+  }
+  if ($narrowed !== []) {
+    $sidebarCategories = $narrowed;
+  } else {
+    $sidebarScoped = false;
+  }
+}
+
+// Carry price, MOQ, attribute, and sort filters onto category links.
+// Category scope stays in the path, so these links never fall back to /shop?category_id=.
+$listingFilterQuery = static function (string $path): string {
+  $keep = [];
+  foreach (['min_price', 'max_price', 'min_moq', 'max_moq', 'sort', 'per_page'] as $key) {
+    if (!isset($_GET[$key]) || $_GET[$key] === '' || $_GET[$key] === null) {
+      continue;
+    }
+    if ($key === 'sort' && (string) $_GET[$key] === 'relevance') {
+      continue;
+    }
+    if ($key === 'per_page' && in_array((int) $_GET[$key], [24, 25], true)) {
+      continue;
+    }
+    $keep[$key] = $_GET[$key];
+  }
+  if (!empty($_GET['attr']) && is_array($_GET['attr'])) {
+    $keep['attr'] = $_GET['attr'];
+  }
+  $qs = http_build_query($keep);
+  return $path . ($qs !== '' ? ('?' . $qs) : '');
+};
+$shopUrl = url('shop');
+
 ob_start();
 ?>
 
 <!-- Shop Page Wrapper -->
 <style>
+  /* Hide filters before the sidebar HTML paints (CSS below the markup is too late). */
+  #shopSidebar {
+    display: none;
+  }
+
+  @media (max-width: 991px) {
+    #shopSidebar {
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      right: auto;
+      bottom: 0;
+      left: 0;
+      width: min(88vw, 360px);
+      max-width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      z-index: 1000001;
+      transform: translateX(-105%);
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #shopSidebar.is-open {
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
+    }
+  }
+
+  @media (min-width: 992px) {
+    .shop-main-layout.sidebar-is-open #shopSidebar,
+    #shopSidebar.is-open {
+      display: block;
+    }
+  }
+
   @media (max-width: 767px) {
     .shop-page-wrapper {
-      padding: 10px 0 !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
+      padding-bottom: 10px !important;
     }
 
     .shop-main-layout {
@@ -120,92 +223,129 @@ ob_start();
       gap: 16px !important;
     }
 
-    #shopSidebar {
-      width: 100% !important;
-      position: static !important;
-      max-height: none !important;
-      border-bottom: 1px solid #e2e8f0;
-      padding-bottom: 16px !important;
+    .shop-listing-chrome {
+      padding: 4px 10px 6px !important;
+      min-width: 0 !important;
+      overflow: hidden;
     }
 
-    .shop-top-bar {
-      flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 10px !important;
+    .shop-chip,
+    .shop-chip-clear {
+      min-height: 34px !important;
+      height: 34px !important;
+      font-size: 12px !important;
+      border-radius: 8px !important;
+    }
+
+    .shop-active-chips {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+    }
+
+    .shop-chip-clear {
+      display: none !important;
     }
 
     .shop-top-controls-mobile {
       display: flex !important;
       align-items: center !important;
-      gap: 8px !important;
-      width: 100% !important;
+      width: auto !important;
+      flex: 0 0 auto !important;
     }
 
-    .shop-top-controls-mobile #filterToggleBtn {
-      flex: 1 !important;
-      justify-content: center !important;
+    .shop-listing-head {
+      flex: 0 1 auto !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      text-align: left !important;
+      justify-content: flex-start !important;
     }
 
-    .shop-top-controls-mobile .sort-dropdown-wrap {
-      flex: 1 !important;
+    .shop-listing-chrome:has(.shop-active-chips) .shop-listing-head {
+      flex: 0 0 auto !important;
+      max-width: 30% !important;
     }
 
-    .shop-top-controls-mobile #sortSelect {
-      width: 100% !important;
-      text-align: center !important;
+    .shop-listing-h1 {
+      display: inline-block !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      line-height: 1.2 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
+      padding-bottom: 3px !important;
+      vertical-align: bottom;
+    }
+
+    .shop-listing-h1::after {
+      height: 1.5px;
+    }
+
+    .shop-chrome-btn {
+      min-height: 34px !important;
+      height: 34px !important;
+      font-size: 12px !important;
+      padding: 0 11px !important;
+      gap: 5px !important;
+      flex-shrink: 0 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+
+    .shop-chrome-btn svg {
+      width: 13px !important;
+      height: 13px !important;
+    }
+
+    #filterToggleText {
+      font-size: 0 !important;
+      line-height: 0 !important;
+    }
+
+    #filterToggleText::after {
+      content: 'Filters';
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.2;
+      color: inherit;
     }
   }
 </style>
 <div class="shop-page-wrapper"
-  style="max-width: 1440px; margin: 0 auto; padding: 16px 0 12px 0; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+  data-page-title="<?= htmlspecialchars($seoTitle, ENT_QUOTES, 'UTF-8') ?>"
+  style="max-width: 1440px; margin: 0 auto; padding: 0 0 12px 0; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
 
-  <!-- ============================================================
-       1. TOP CONTROL BAR (TOGGLE BTN + CHIPS + RESULT COUNT + SORT)
-       ============================================================ -->
-  <div class="shop-top-bar"
-    style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; padding: 8px 0;">
-
-    <!-- Info Line: Result Count + Active Filter Chips -->
-    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-      <span style="font-size: 13.5px; color: #64748b; font-weight: 500; white-space: nowrap;">
-        <?= $startItem ?>-<?= $endItem ?> of <?= number_format($totalCount) ?> results
-      </span>
-
-      <!-- REMOVABLE FILTER CHIPS/TAGS -->
-      <?php if (!empty($activeChips)): ?>
-        <div class="shop-active-chips" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-          <?php foreach ($activeChips as $chip): ?>
-            <span class="shop-chip"
-              style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #fff7ed; border: 1px solid #fdba74; color: #ea580c; border-radius: 9999px; font-size: 12px; font-weight: 600;">
-              <span><?= $chip['label'] ?></span>
-              <button type="button"
-                onclick="removeFilterChip('<?= $chip['type'] ?>', '<?= $chip['attr_id'] ?? '' ?>', '<?= $chip['option_id'] ?? '' ?>')"
-                style="background: none; border: none; color: #ea580c; font-size: 14px; font-weight: 700; cursor: pointer; padding: 0 2px; line-height: 1;"
-                title="Remove filter">&times;</button>
-            </span>
-          <?php endforeach; ?>
-
-          <a href="<?= htmlspecialchars($baseUrl) ?>"
-            style="font-size: 12.5px; font-weight: 600; color: #ef4444; text-decoration: none; margin-left: 4px;"
-            onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
-            Clear All
-          </a>
-        </div>
-      <?php endif; ?>
+  <div class="shop-listing-chrome">
+    <div class="shop-listing-head">
+      <h1 class="shop-listing-h1"><?= htmlspecialchars((string) $pageTitle, ENT_QUOTES, 'UTF-8') ?></h1>
     </div>
 
-    <!-- Side-by-side Mobile Controls: Show Filters & Featured Sort Dropdown -->
-    <div class="shop-top-controls-mobile" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <?php if (!empty($activeChips)): ?>
+      <div class="shop-active-chips">
+        <?php foreach ($activeChips as $chip): ?>
+          <span class="shop-chip">
+            <span class="shop-chip-label"><?= $chip['label'] ?></span>
+            <button type="button" class="shop-chip-remove"
+              onclick="removeFilterChip('<?= $chip['type'] ?>', '<?= $chip['attr_id'] ?? '' ?>', '<?= $chip['option_id'] ?? '' ?>')"
+              title="Remove filter" aria-label="Remove filter">&times;</button>
+          </span>
+        <?php endforeach; ?>
+        <a href="<?= htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8') ?>" class="shop-chip-clear">Clear all</a>
+      </div>
+    <?php endif; ?>
+
+    <div class="shop-top-controls-mobile">
       <button type="button" id="filterToggleBtn" onclick="toggleShopSidebar()"
-        class="<?= $sidebarOpenByDefault ? 'is-open' : '' ?>"
-        style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 9999px; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; <?= $sidebarOpenByDefault ? 'background: #1e293b; color: #ffffff; border: 1px solid #1e293b;' : 'background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1;' ?>">
+        class="shop-chrome-btn <?= $sidebarOpenByDefault ? 'is-open' : '' ?>">
         <span id="filterToggleIcon">
           <?php if ($sidebarOpenByDefault): ?>
             <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
             </svg>
           <?php else: ?>
-            <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
             </svg>
@@ -213,22 +353,6 @@ ob_start();
         </span>
         <span id="filterToggleText"><?= $sidebarOpenByDefault ? 'Hide Filters' : 'Show Filters' ?></span>
       </button>
-
-      <div class="sort-dropdown-wrap" style="position: relative; display: inline-block;">
-        <select id="sortSelect" onchange="changeSort(this.value)"
-          style="appearance: none; -webkit-appearance: none; background: #ffffff; color: #0f172a; font-size: 13px; font-weight: 600; padding: 7px 34px 7px 16px; border-radius: 9999px; border: 1px solid #cbd5e1; cursor: pointer; outline: none; font-family: 'Inter', system-ui, sans-serif;">
-          <option value="relevance" <?= $currentSort === 'relevance' ? 'selected' : '' ?>>Featured</option>
-          <option value="price_asc" <?= ($currentSort === 'price_asc' || $currentSort === 'price_low_high') ? 'selected' : '' ?>>Price: Low to High</option>
-          <option value="price_desc" <?= ($currentSort === 'price_desc' || $currentSort === 'price_high_low') ? 'selected' : '' ?>>Price: High to Low</option>
-          <option value="newest" <?= $currentSort === 'newest' ? 'selected' : '' ?>>Newest</option>
-          <option value="popular" <?= $currentSort === 'popular' ? 'selected' : '' ?>>Best Selling</option>
-        </select>
-        <svg
-          style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #64748b; pointer-events: none;"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
     </div>
 
   </div>
@@ -240,17 +364,23 @@ ob_start();
     class="shop-main-layout <?= $sidebarOpenByDefault ? 'sidebar-is-open' : 'sidebar-is-closed' ?>"
     style="display: flex; gap: 24px; align-items: start;">
 
-    <!-- ============================================================
-         LEFT SIDEBAR FILTERS (SINGLE SIDEBAR SCROLL + VIEWPORT FIT)
-         ============================================================ -->
-    <aside id="shopSidebar"
-      style="width: 250px; flex-shrink: 0; display: <?= $sidebarOpenByDefault ? 'block' : 'none' ?>; background: #ffffff; padding: 8px 12px 12px 4px; position: sticky; top: 80px; max-height: calc(100vh - 95px); overflow-y: auto; overscroll-behavior: contain;">
+    <div id="shopFilterOverlay" class="shop-filter-overlay" onclick="closeShopFilters()" hidden></div>
 
-      <!-- Sidebar Header -->
+    <!-- ============================================================
+         LEFT SIDEBAR FILTERS (DESKTOP STICKY + MOBILE DRAWER)
+         ============================================================ -->
+    <aside id="shopSidebar" class="shop-sidebar <?= $sidebarOpenByDefault ? 'is-open' : '' ?>">
+
+      <div class="shop-sidebar-head">
+        <span class="shop-sidebar-head-title">Filters</span>
+        <button type="button" class="shop-sidebar-close" onclick="closeShopFilters()" aria-label="Close filters">&times;</button>
+      </div>
+
+      <div class="shop-sidebar-body" id="shopSidebarBody">
       <?php if ($activeFilterCount > 0): ?>
-        <div
+        <div class="shop-sidebar-desktop-clear"
           style="display: flex; align-items: center; justify-content: flex-end; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9;">
-          <a href="<?= htmlspecialchars($baseUrl) ?>"
+          <a href="<?= htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8') ?>"
             style="font-size: 12.5px; font-weight: 600; color: #1e293b; text-decoration: underline;">
             Clear All
           </a>
@@ -259,6 +389,12 @@ ob_start();
 
       <!-- FILTER FORM -->
       <form id="shopFilterForm" action="<?= htmlspecialchars($baseUrl) ?>" method="GET">
+        <?php if (!$sidebarScoped && !empty($filters['category_id'])): ?>
+          <input type="hidden" name="category_id" value="<?= (int) $filters['category_id'] ?>">
+        <?php endif; ?>
+        <?php if (!$sidebarScoped && !empty($filters['subcategory_id'])): ?>
+          <input type="hidden" name="subcategory_id" value="<?= (int) $filters['subcategory_id'] ?>">
+        <?php endif; ?>
         <?php if (!empty($searchQuery)): ?>
           <input type="hidden" name="q" value="<?= htmlspecialchars($searchQuery) ?>">
         <?php endif; ?>
@@ -279,20 +415,32 @@ ob_start();
 
           <div class="shop-accordion-content" style="margin-top: 10px;">
             <div class="shop-scroll-area" style="display: flex; flex-direction: column; gap: 2px;">
-              <label
-                style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: <?= empty($activeCatId) ? '#f05a29' : '#334155' ?>; font-weight: <?= empty($activeCatId) ? '600' : '400' ?>; cursor: pointer; padding: 3px 0;">
-                <input type="radio" name="category_id" value="" <?= empty($activeCatId) ? 'checked' : '' ?>
-                  onchange="window.location.href='<?= url('shop') ?>'"
-                  style="accent-color: #f05a29; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
-                <span>All Categories</span>
-              </label>
+              <?php if ($sidebarScoped): ?>
+                <label
+                  style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #334155; font-weight: 400; cursor: pointer; padding: 3px 0;">
+                  <input type="radio" name="category_nav" value=""
+                    onchange="window.location.href='<?= htmlspecialchars($shopUrl, ENT_QUOTES) ?>'"
+                    style="accent-color: #f05a29; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
+                  <a href="<?= htmlspecialchars($shopUrl) ?>" onclick="event.stopPropagation();"
+                    style="color: inherit; text-decoration: none;">Back to all categories</a>
+                </label>
+              <?php else: ?>
+                <label
+                  style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: <?= empty($activeCatId) ? '#f05a29' : '#334155' ?>; font-weight: <?= empty($activeCatId) ? '600' : '400' ?>; cursor: pointer; padding: 3px 0;">
+                  <input type="radio" name="category_nav" value="" <?= empty($activeCatId) ? 'checked' : '' ?>
+                    onchange="window.location.href='<?= htmlspecialchars($shopUrl, ENT_QUOTES) ?>'"
+                    style="accent-color: #f05a29; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
+                  <span>All Categories</span>
+                </label>
+              <?php endif; ?>
 
-              <?php if (!empty($categoriesTree)): ?>
-                <?php foreach ($categoriesTree as $cat): ?>
+              <?php if (!empty($sidebarCategories)): ?>
+                <?php foreach ($sidebarCategories as $cat): ?>
                   <?php
                   $catCount = (int) ($cat['product_count'] ?? 0);
                   $isCatChecked = ($activeCatId === (int) $cat['id'] && empty($activeSubId));
                   $hasActiveSub = ($activeCatId === (int) $cat['id'] && !empty($activeSubId));
+                  $catUrl = $listingFilterQuery(category_url($cat));
 
                   // Filter subcategories to show only those with products > 0 or currently active
                   $visibleSubcategories = [];
@@ -316,10 +464,10 @@ ob_start();
                     <label
                       style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; font-size: 13px; color: <?= ($isCatChecked || $hasActiveSub) ? '#f05a29' : '#334155' ?>; font-weight: <?= ($isCatChecked || $hasActiveSub) ? '500' : '400' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
                       <span style="display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0;">
-                        <input type="radio" name="category_id" value="<?= $cat['id'] ?>" <?= $isCatChecked ? 'checked' : '' ?> onchange="window.location.href='<?= category_url($cat) ?>'"
+                        <input type="radio" name="category_nav" value="<?= $cat['id'] ?>" <?= $isCatChecked ? 'checked' : '' ?> onchange="window.location.href='<?= htmlspecialchars($catUrl, ENT_QUOTES) ?>'"
                           style="accent-color: #f05a29; margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
                         <span style="flex: 1; min-width: 0; word-break: break-word; line-height: 1.35;"
-                          onclick="window.location.href='<?= category_url($cat) ?>'"><?= htmlspecialchars($cat['name']) ?></span>
+                          onclick="window.location.href='<?= htmlspecialchars($catUrl, ENT_QUOTES) ?>'"><?= htmlspecialchars($cat['name']) ?></span>
                       </span>
                     </label>
 
@@ -330,14 +478,14 @@ ob_start();
                           <?php
                           $subId = (int) $sub['id'];
                           $isSubActive = ($activeSubId === $subId || (isset($activeSubcategory['id']) && (int) $activeSubcategory['id'] === $subId));
-                          $subUrl = subcategory_url($cat, $sub);
+                          $subUrl = $listingFilterQuery(subcategory_url($cat, $sub));
                           ?>
-                          <label onclick="window.location.href='<?= $subUrl ?>'"
+                          <label onclick="window.location.href='<?= htmlspecialchars($subUrl, ENT_QUOTES) ?>'"
                             style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; color: <?= $isSubActive ? '#f05a29' : '#64748b' ?>; font-weight: <?= $isSubActive ? '500' : '400' ?>; cursor: pointer; padding: 2px 0;">
                             <span style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
                               <span
                                 style="width: 5px; height: 5px; border-radius: 50%; background: <?= $isSubActive ? '#f05a29' : '#cbd5e1' ?>; flex-shrink: 0;"></span>
-                              <a href="<?= $subUrl ?>" onclick="event.stopPropagation();"
+                              <a href="<?= htmlspecialchars($subUrl) ?>" onclick="event.stopPropagation();"
                                 style="color: inherit; text-decoration: none; flex: 1; min-width: 0; word-break: break-word;"
                                 onmouseover="this.style.color='#f05a29'"
                                 onmouseout="this.style.color='<?= $isSubActive ? '#f05a29' : '#64748b' ?>'"><?= htmlspecialchars($sub['name']) ?></a>
@@ -455,7 +603,7 @@ ob_start();
                     ?>
                     <label
                       style="display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: <?= $isChecked ? '#f05a29' : '#334155' ?>; font-weight: <?= $isChecked ? '500' : '400' ?>; cursor: pointer; padding: 3px 0; line-height: 1.35;">
-                      <input type="checkbox" name="attr[<?= $attrId ?>][]" value="<?= $optId ?>" <?= $isChecked ? 'checked' : '' ?> onchange="this.form.submit()"
+                      <input type="checkbox" name="attr[<?= $attrId ?>][]" value="<?= $optId ?>" <?= $isChecked ? 'checked' : '' ?> onchange="submitShopFilterForm()"
                         style="accent-color: #f05a29; margin-top: 2px; flex-shrink: 0; width: 14px; height: 14px; cursor: pointer;">
                       <span
                         style="flex: 1; min-width: 0; word-break: break-word; line-height: 1.35;"><?= htmlspecialchars($opt['value']) ?></span>
@@ -475,6 +623,14 @@ ob_start();
         <input type="hidden" name="per_page" id="shopPerPageInput" value="<?= $currentPerPage ?>">
         <input type="hidden" name="page" id="shopPageInput" value="1">
       </form>
+      </div>
+
+      <div class="shop-sidebar-foot">
+        <a href="<?= htmlspecialchars($baseUrl, ENT_QUOTES, 'UTF-8') ?>" class="shop-sidebar-clear-btn">Clear all</a>
+        <button type="button" class="shop-sidebar-apply-btn" onclick="applyShopFiltersAndClose()">
+          Show <?= number_format($totalCount) ?> results
+        </button>
+      </div>
 
     </aside>
 
@@ -542,9 +698,12 @@ ob_start();
            ============================================================ -->
       <?php if ($totalPages > 1): ?>
         <?php
-        $buildPageUrl = function ($targetPage) use ($baseUrl) {
+        $buildPageUrl = function ($targetPage) use ($baseUrl, $sidebarScoped) {
           $params = $_GET;
-          unset($params['ajax']);
+          unset($params['ajax'], $params['category_nav']);
+          if ($sidebarScoped) {
+            unset($params['category_id'], $params['subcategory_id'], $params['category']);
+          }
           if (isset($params['per_page']) && ((int) $params['per_page'] === 24 || (int) $params['per_page'] === 25)) {
             unset($params['per_page']);
           }
@@ -827,24 +986,259 @@ ob_start();
     }
   }
 
+  .shop-page-wrapper {
+    --shop-listing-chrome: 52px;
+    --shop-sidebar-bottom-gap: 16px;
+  }
+
+  .shop-listing-chrome {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    flex-wrap: nowrap;
+    width: 100%;
+    margin: 0;
+    padding: 6px 16px 8px;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .shop-listing-head {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+    box-sizing: border-box;
+  }
+
+  .shop-listing-chrome:has(.shop-active-chips) .shop-listing-head {
+    flex: 0 0 auto;
+    max-width: 34%;
+    min-width: 0;
+  }
+
+  .shop-listing-h1 {
+    position: relative;
+    display: block;
+    margin: 0;
+    max-width: 100%;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: #f05a29;
+    line-height: 1.15;
+    padding-bottom: 5px;
+    box-shadow: none;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .shop-listing-h1::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: #f05a29;
+    border-radius: 2px;
+  }
+
+  .shop-listing-path {
+    display: none !important;
+  }
+
+  .shop-chrome-btn {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 14px;
+    min-height: 36px;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .shop-chrome-btn:hover {
+    border-color: #f05a29;
+    color: #f05a29;
+  }
+
+  .shop-chrome-btn.is-open {
+    background: #fff7ed;
+    border-color: #f05a29;
+    color: #f05a29;
+  }
+
+  .shop-top-controls-mobile {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    min-width: 0;
+    margin-left: auto;
+  }
+
+  .shop-active-chips {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .shop-active-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shop-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    max-width: min(280px, 70vw);
+    height: 36px;
+    min-height: 36px;
+    padding: 0 8px 0 12px;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .shop-chip-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .shop-chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: #64748b;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  .shop-chip:hover {
+    border-color: #f05a29;
+    color: #f05a29;
+  }
+
+  .shop-chip:hover .shop-chip-remove {
+    color: #f05a29;
+  }
+
+  .shop-chip-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 12px;
+    box-sizing: border-box;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .shop-chip-clear:hover {
+    border-color: #f05a29;
+    color: #f05a29;
+  }
+
+  .shop-page-wrapper,
+  .shop-main-layout,
+  .shop-grid-area {
+    overflow: visible;
+    transform: none;
+  }
+
+  .shop-scroll-area {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  html.shop-filters-scroll-lock,
+  html.shop-filters-scroll-lock body {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  .shop-filter-overlay {
+    display: none;
+  }
+
+  #shopSidebar {
+    background: #ffffff;
+  }
+
+  #shopSidebar,
+  .shop-sidebar-body {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
   #shopSidebar::-webkit-scrollbar,
-  .shop-scroll-area::-webkit-scrollbar {
+  .shop-sidebar-body::-webkit-scrollbar {
     width: 5px;
   }
 
   #shopSidebar::-webkit-scrollbar-thumb,
-  .shop-scroll-area::-webkit-scrollbar-thumb {
+  .shop-sidebar-body::-webkit-scrollbar-thumb {
     background: #cbd5e1;
     border-radius: 4px;
   }
 
   #shopSidebar::-webkit-scrollbar-thumb:hover,
-  .shop-scroll-area::-webkit-scrollbar-thumb:hover {
+  .shop-sidebar-body::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
 
   #shopSidebar::-webkit-scrollbar-track,
-  .shop-scroll-area::-webkit-scrollbar-track {
+  .shop-sidebar-body::-webkit-scrollbar-track {
     background: transparent;
   }
 
@@ -866,7 +1260,271 @@ ob_start();
     }
   }
 
-  @media (max-width: 1200px) {
+  @media (min-width: 992px) {
+    #shopSidebar {
+      width: 250px;
+      flex: 0 0 250px;
+      flex-shrink: 0;
+      display: none;
+      box-sizing: border-box;
+      padding: 8px 12px 12px 4px;
+      position: sticky;
+      top: calc(var(--header-height, 140px) + 16px);
+      height: calc(100vh - var(--header-height, 140px) - var(--shop-listing-chrome, 52px) - var(--shop-sidebar-bottom-gap, 16px));
+      height: calc(100dvh - var(--header-height, 140px) - var(--shop-listing-chrome, 52px) - var(--shop-sidebar-bottom-gap, 16px));
+      max-height: calc(100vh - var(--header-height, 140px) - var(--shop-listing-chrome, 52px) - var(--shop-sidebar-bottom-gap, 16px));
+      max-height: calc(100dvh - var(--header-height, 140px) - var(--shop-listing-chrome, 52px) - var(--shop-sidebar-bottom-gap, 16px));
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      align-self: flex-start;
+    }
+
+    .shop-main-layout.sidebar-is-open #shopSidebar,
+    #shopSidebar.is-open {
+      display: block;
+    }
+
+    .shop-sidebar-head,
+    .shop-sidebar-foot,
+    .shop-filter-overlay {
+      display: none !important;
+    }
+
+    .shop-sidebar-body {
+      overflow: visible;
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 991px) {
+    .shop-filter-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      z-index: 1000000;
+      border: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    .shop-filter-overlay.is-open {
+      display: block;
+    }
+
+    #shopSidebar {
+      position: fixed;
+      top: 0;
+      right: auto;
+      bottom: 0;
+      left: 0;
+      width: min(88vw, 360px);
+      max-width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      max-height: 100vh;
+      max-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      z-index: 1000001;
+      transform: translateX(-105%);
+      visibility: hidden;
+      pointer-events: none;
+      transition: transform 0.22s ease, visibility 0.22s ease;
+      padding: 0;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      overflow: hidden;
+      overscroll-behavior: contain;
+      box-shadow: none;
+    }
+
+    #shopSidebar.is-open {
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    .shop-sidebar-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #ffffff;
+    }
+
+    .shop-sidebar-head-title {
+      font-size: 16px;
+      font-weight: 500;
+      color: #0f172a;
+    }
+
+    #shopSidebar .shop-sidebar-close {
+      background: none;
+      border: none;
+      font-size: 26px;
+      line-height: 1;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0 4px;
+      min-height: 36px;
+      min-width: 36px;
+    }
+
+    .shop-sidebar-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding: 8px 16px 16px;
+    }
+
+    .shop-sidebar-desktop-clear {
+      display: none !important;
+    }
+
+    .shop-sidebar-foot {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-top: 1px solid #e2e8f0;
+      background: #ffffff;
+    }
+
+    .shop-sidebar-clear-btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      color: #1e293b;
+      font-size: 13.5px;
+      font-weight: 600;
+      text-decoration: none;
+      background: #ffffff;
+    }
+
+    .shop-sidebar-apply-btn {
+      flex: 1.4;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 8px;
+      background: #f05a29;
+      color: #ffffff;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .shop-main-layout.sidebar-is-open .product-grid,
+    .shop-main-layout.sidebar-is-closed .product-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 359px) {
+    #shopSidebar {
+      width: 100% !important;
+    }
+  }
+
+  @media (max-width: 991px) and (min-width: 768px) {
+    .shop-listing-chrome {
+      padding: 6px 12px 8px;
+      column-gap: 8px;
+    }
+
+    .shop-listing-h1 {
+      font-size: 18px;
+    }
+
+    .shop-chrome-btn {
+      padding: 6px 12px;
+      font-size: 12.5px;
+      min-height: 34px;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .shop-listing-chrome {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 4px 10px 6px;
+      gap: 6px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .shop-listing-head {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-align: left;
+      padding: 0;
+    }
+
+    .shop-listing-chrome:has(.shop-active-chips) .shop-listing-head {
+      flex: 0 0 auto;
+      max-width: 30%;
+    }
+
+    .shop-listing-h1 {
+      display: inline-block !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      line-height: 1.2 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      max-width: 100% !important;
+      padding-bottom: 3px !important;
+      vertical-align: bottom;
+    }
+
+    .shop-top-controls-mobile {
+      flex: 0 0 auto;
+      margin-left: auto;
+    }
+
+    .shop-active-chips {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .shop-chip,
+    .shop-chip-clear {
+      height: 34px;
+      min-height: 34px;
+      font-size: 12px;
+      border-radius: 8px;
+    }
+
+    .shop-chip-clear {
+      display: none;
+    }
+
+    .shop-main-layout.sidebar-is-open .product-grid,
+    .shop-main-layout.sidebar-is-closed .product-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+
+  @media (max-width: 1200px) and (min-width: 992px) {
 
     .shop-main-layout.sidebar-is-closed .product-grid,
     .shop-main-layout.sidebar-is-open .product-grid {
@@ -875,11 +1533,6 @@ ob_start();
   }
 
   @media (max-width: 768px) {
-    #shopSidebar {
-      width: 100% !important;
-      position: static !important;
-    }
-
     .shop-main-layout.sidebar-is-closed .product-grid,
     .shop-main-layout.sidebar-is-open .product-grid,
     .product-grid {
@@ -924,36 +1577,140 @@ ob_start();
     }
   }
 
-  function toggleShopSidebar() {
-    const sb = document.getElementById('shopSidebar');
-    const layout = document.getElementById('shopMainLayout');
+  function isShopFilterDrawer() {
+    return window.matchMedia('(max-width: 991px)').matches;
+  }
+
+  function lockShopPageScroll() {
+    if (document.documentElement.classList.contains('shop-filters-scroll-lock')) {
+      return;
+    }
+    const y = window.scrollY || window.pageYOffset || 0;
+    document.documentElement.classList.add('shop-filters-scroll-lock');
+    document.body.classList.add('shop-filters-scroll-lock');
+    document.body.style.position = 'fixed';
+    document.body.style.top = '-' + y + 'px';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.dataset.shopScrollY = String(y);
+  }
+
+  function unlockShopPageScroll() {
+    const wasLocked = document.documentElement.classList.contains('shop-filters-scroll-lock')
+      || document.body.classList.contains('shop-filters-scroll-lock')
+      || document.body.style.position === 'fixed';
+    const y = parseInt(document.body.dataset.shopScrollY || '0', 10);
+    document.documentElement.classList.remove('shop-filters-scroll-lock');
+    document.body.classList.remove('shop-filters-scroll-lock');
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    delete document.body.dataset.shopScrollY;
+    if (wasLocked && !Number.isNaN(y)) {
+      window.scrollTo(0, y);
+    }
+  }
+
+  function syncFilterToggleUi(isOpen) {
     const btn = document.getElementById('filterToggleBtn');
     const textSpan = document.getElementById('filterToggleText');
     const iconSpan = document.getElementById('filterToggleIcon');
-
-    if (!sb || !layout || !btn) return;
-
-    const isOpen = (sb.style.display === 'block');
-
-    if (isOpen) {
-      sb.style.display = 'none';
-      layout.classList.remove('sidebar-is-open');
-      layout.classList.add('sidebar-is-closed');
-      btn.style.background = '#ffffff';
-      btn.style.color = '#1e293b';
-      btn.style.border = '1px solid #cbd5e1';
-      if (textSpan) textSpan.innerText = 'Show Filters';
-      if (iconSpan) iconSpan.innerHTML = '<svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>';
-    } else {
-      sb.style.display = 'block';
-      layout.classList.remove('sidebar-is-closed');
-      layout.classList.add('sidebar-is-open');
-      btn.style.background = '#1e293b';
-      btn.style.color = '#ffffff';
-      btn.style.border = '1px solid #1e293b';
+    if (!btn) return;
+    if (isOpen && !isShopFilterDrawer()) {
+      btn.classList.add('is-open');
       if (textSpan) textSpan.innerText = 'Hide Filters';
       if (iconSpan) iconSpan.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>';
+    } else {
+      btn.classList.remove('is-open');
+      if (textSpan) textSpan.innerText = 'Show Filters';
+      if (iconSpan) iconSpan.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>';
     }
+  }
+
+  function setShopFiltersOpen(isOpen, restoreScroll) {
+    const sb = document.getElementById('shopSidebar');
+    const layout = document.getElementById('shopMainLayout');
+    const overlay = document.getElementById('shopFilterOverlay');
+    if (!sb || !layout) return;
+
+    window.__shopFiltersOpen = !!isOpen;
+    sb.classList.toggle('is-open', !!isOpen);
+    if (overlay) {
+      overlay.classList.toggle('is-open', !!isOpen && isShopFilterDrawer());
+      overlay.hidden = !(isOpen && isShopFilterDrawer());
+    }
+
+    if (isShopFilterDrawer()) {
+      layout.classList.remove('sidebar-is-open');
+      layout.classList.add('sidebar-is-closed');
+      if (isOpen) {
+        lockShopPageScroll();
+        const body = document.getElementById('shopSidebarBody');
+        if (body && typeof restoreScroll === 'number') {
+          body.scrollTop = restoreScroll;
+        }
+      } else {
+        unlockShopPageScroll();
+      }
+    } else {
+      unlockShopPageScroll();
+      if (isOpen) {
+        layout.classList.add('sidebar-is-open');
+        layout.classList.remove('sidebar-is-closed');
+      } else {
+        layout.classList.remove('sidebar-is-open');
+        layout.classList.add('sidebar-is-closed');
+      }
+    }
+
+    syncFilterToggleUi(!!isOpen);
+  }
+
+  function openShopFilters(restoreScroll) {
+    setShopFiltersOpen(true, restoreScroll);
+  }
+
+  function closeShopFilters() {
+    setShopFiltersOpen(false);
+  }
+
+  function toggleShopSidebar() {
+    const sb = document.getElementById('shopSidebar');
+    const isOpen = !!(sb && sb.classList.contains('is-open')) || !!window.__shopFiltersOpen;
+    setShopFiltersOpen(!isOpen);
+  }
+
+  function applyShopFiltersAndClose() {
+    window.__shopKeepDrawerOpen = false;
+    closeShopFilters();
+    submitShopFilterForm();
+  }
+
+  function restoreShopFiltersAfterAjax(keepOpen, savedScroll) {
+    if (keepOpen) {
+      setShopFiltersOpen(true, savedScroll);
+    } else {
+      setShopFiltersOpen(false);
+    }
+    syncShopListingChrome();
+  }
+
+  function syncShopListingChrome() {
+    const wrapper = document.querySelector('.shop-page-wrapper');
+    const chromeEl = document.querySelector('.shop-listing-chrome');
+    if (!wrapper || !chromeEl) {
+      return;
+    }
+    const wrapCs = window.getComputedStyle(wrapper);
+    const chrome = chromeEl.offsetHeight + (parseFloat(wrapCs.paddingTop) || 0);
+    wrapper.style.setProperty('--shop-listing-chrome', Math.max(0, Math.round(chrome)) + 'px');
   }
 
   function removeFilterChip(type, attrId, optId) {
@@ -1019,22 +1776,26 @@ ob_start();
 
   function submitShopFilterForm() {
     const form = document.getElementById('shopFilterForm');
+    if (!form) return;
     const formData = new FormData(form);
     const params = new URLSearchParams();
 
     for (const [key, value] of formData.entries()) {
+      if (key === 'category_nav') continue;
       if (value !== '' && value !== null) {
         params.append(key, value);
       }
     }
 
-    if (form.action.includes('/category/')) {
-      params.delete('category_id');
-      params.delete('subcategory_id');
-    }
-
     const queryString = params.toString();
     const targetUrl = form.action + (queryString ? ('?' + queryString) : '');
+    const keepOpen = window.__shopKeepDrawerOpen !== false && !!window.__shopFiltersOpen && isShopFilterDrawer();
+    const bodyEl = document.getElementById('shopSidebarBody');
+    const savedScroll = bodyEl ? bodyEl.scrollTop : 0;
+    const keepDesktop = !isShopFilterDrawer() && !!window.__shopFiltersOpen;
+    window.__shopKeepDrawerOpen = true;
+    window.__shopFilterReq = (window.__shopFilterReq || 0) + 1;
+    const reqId = window.__shopFilterReq;
 
     const grid = document.getElementById('shopProductGrid');
     const skeleton = document.getElementById('shopSkeletonGrid');
@@ -1059,7 +1820,11 @@ ob_start();
         return res.text();
       })
       .then(html => {
+        if (reqId !== window.__shopFilterReq) {
+          return;
+        }
         if (!html) {
+          unlockShopPageScroll();
           window.location.href = targetUrl;
           return;
         }
@@ -1069,16 +1834,59 @@ ob_start();
         const currentContainer = document.querySelector('.shop-page-wrapper');
 
         if (newContent && currentContainer) {
+          const newTitle = newContent.getAttribute('data-page-title') || doc.title;
           currentContainer.innerHTML = newContent.innerHTML;
-          window.scrollTo({ top: 0, behavior: 'smooth' });
+          if (newTitle) {
+            document.title = newTitle;
+          }
+          restoreShopFiltersAfterAjax(keepOpen || keepDesktop, savedScroll);
         } else {
+          unlockShopPageScroll();
           window.location.href = targetUrl;
         }
       })
       .catch(() => {
+        unlockShopPageScroll();
         window.location.href = targetUrl;
       });
   }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && window.__shopFiltersOpen && isShopFilterDrawer()) {
+      closeShopFilters();
+    }
+  });
+
+  window.addEventListener('resize', function () {
+    if (typeof window.adjustTopHeaderSpacer === 'function') {
+      window.adjustTopHeaderSpacer();
+    }
+    syncShopListingChrome();
+    if (window.__shopFiltersOpen) {
+      setShopFiltersOpen(true);
+    } else if (document.documentElement.classList.contains('shop-filters-scroll-lock')) {
+      unlockShopPageScroll();
+    }
+  });
+
+  function initShopListingUi() {
+    setShopFiltersOpen(false);
+    syncShopListingChrome();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initShopListingUi);
+  } else {
+    initShopListingUi();
+  }
+
+  window.addEventListener('pagehide', unlockShopPageScroll);
+  window.addEventListener('beforeunload', unlockShopPageScroll);
+  window.addEventListener('pageshow', function () {
+    setShopFiltersOpen(false);
+    unlockShopPageScroll();
+    syncShopListingChrome();
+  });
 </script>
 
 <?php

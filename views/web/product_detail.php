@@ -869,9 +869,12 @@ body.vs-open #mobileBottomBar { display: none !important; }
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                         Get Quote
                     </button>
-                    <button onclick="addToCartFromDetail()" class="w-full h-11 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold text-sm rounded shadow-sm transition cursor-pointer flex items-center justify-center gap-2">
+                    <button type="button" onclick="addToCartFromDetail()" class="w-full h-11 bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-bold text-sm rounded shadow-sm transition cursor-pointer flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                         Add to Cart
+                    </button>
+                    <button type="button" onclick="buyNowFromDetail()" class="w-full h-11 bg-[#0f172a] hover:bg-black text-white font-bold text-sm rounded shadow-sm transition cursor-pointer border-0 flex items-center justify-center">
+                        Buy Now
                     </button>
                 </div>
             </div>
@@ -1488,6 +1491,55 @@ body.vs-open #mobileBottomBar { display: none !important; }
         }
     }
 
+    const BUY_NOW_CSRF = <?= json_encode(csrf_token()) ?>;
+    let buyNowBusy = false;
+    window.startProductBuyNow = async function (lines) {
+        if (buyNowBusy) return;
+        if (!lines || !lines.length) {
+            if (typeof showCartToast === 'function') showCartToast('Set a quantity, then tap Buy Now');
+            return;
+        }
+        buyNowBusy = true;
+        const body = new URLSearchParams();
+        body.append('_csrf_token', BUY_NOW_CSRF);
+        body.append('product_id', String(PRODUCT_ID));
+        body.append('pricing_mode', currentMode || 'onepiece');
+        lines.forEach(function (line, i) {
+            body.append('lines[' + i + '][variant_id]', String(line.variant_id || ''));
+            body.append('lines[' + i + '][qty]', String(line.qty || 1));
+        });
+        try {
+            const res = await fetch(<?= json_encode(url('checkout/prepare-buy-now')) ?>, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': BUY_NOW_CSRF },
+                body: body
+            });
+            const data = await res.json();
+            if (data.success && data.redirect_url) {
+                window.location.href = data.redirect_url;
+                return;
+            }
+            if (typeof showCartToast === 'function') showCartToast(data.message || 'Could not start checkout');
+            else alert(data.message || 'Could not start checkout');
+        } catch (err) {
+            if (typeof showCartToast === 'function') showCartToast('Network error. Please try again.');
+        } finally {
+            buyNowBusy = false;
+        }
+    };
+    function buyNowFromDetail() {
+        let qty = 1;
+        const qtyInp = document.getElementById('detailQtyInput');
+        if (qtyInp && parseInt(qtyInp.value, 10) > 0) qty = parseInt(qtyInp.value, 10);
+        else if (typeof currentAtcQty !== 'undefined' && currentAtcQty > 0) qty = currentAtcQty;
+        else qty = (currentMode === 'wholesale') ? <?= (int)$moq ?> : 1;
+        const line = { variant_id: 0, qty: qty };
+        if (selectedVariantIndex !== null && VARIANTS_LIST[selectedVariantIndex] && VARIANTS_LIST[selectedVariantIndex].id) {
+            line.variant_id = VARIANTS_LIST[selectedVariantIndex].id;
+        }
+        window.startProductBuyNow([line]);
+    }
+
     window.syncProductDetailCartState = function(items, count) {
         if (!items || !Array.isArray(items)) return;
         const pId = <?= (int)($product['id'] ?? 0) ?>;
@@ -1683,7 +1735,10 @@ body.vs-open #mobileBottomBar { display: none !important; }
                 <button type="button" id="mobileAtcPlusBtn" onclick="changeAtcQty(1)" class="w-8 sm:w-10 h-full flex items-center justify-center text-[#f05a29] text-xl font-bold cursor-pointer bg-transparent border-0 select-none pb-0.5 vsheet-no-highlight">+</button>
             </div>
         </div>
-        <button type="button" onclick="openRfqWithProducts()" class="flex-1 h-[44px] rounded-full font-bold text-[13px] text-white shadow-md active:scale-[0.98] transition-all border-0 cursor-pointer flex items-center justify-center vsheet-no-highlight" style="background: linear-gradient(to right, #ff7a18, #f05a29); color: #ffffff;">
+        <button type="button" onclick="buyNowFromDetail()" class="flex-1 h-[44px] rounded-full font-bold text-[12px] text-white bg-[#0f172a] active:bg-black shadow-md border-0 cursor-pointer flex items-center justify-center vsheet-no-highlight">
+            Buy Now
+        </button>
+        <button type="button" onclick="openRfqWithProducts()" class="flex-1 h-[44px] rounded-full font-bold text-[12px] text-white shadow-md active:scale-[0.98] transition-all border-0 cursor-pointer flex items-center justify-center vsheet-no-highlight" style="background: linear-gradient(to right, #ff7a18, #f05a29); color: #ffffff;">
             Get Quote
         </button>
     </div>
@@ -1784,6 +1839,9 @@ body.vs-open #mobileBottomBar { display: none !important; }
 #vsSheet .vs-ic { box-sizing: border-box !important; width: 30px !important; min-width: 0 !important; height: 30px !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; }
 #vsSheet .vs-ic svg { width: 16px !important; height: 16px !important; margin: 0 !important; display: block !important; }
 
+.vs-foot { flex-shrink: 0; padding: 10px 16px 12px; border-top: 1px solid #f1f1f1; background: #fff; }
+.vs-buy { width: 100%; height: 42px; border: 0; border-radius: 999px; background: #0f172a; color: #fff; font-size: 13px; font-weight: 700; cursor: pointer; }
+.vs-buy:active { background: #000; }
 .vs-empty { padding: 28px 0; text-align: center; font-size: 13px; color: #9ca3af; }
 
 #vsToast {
@@ -1804,6 +1862,9 @@ body.vs-open #mobileBottomBar { display: none !important; }
     </div>
     <div class="vs-colors" id="vsColors"></div>
     <div class="vs-list" id="vsList"></div>
+    <div class="vs-foot">
+        <button type="button" class="vs-buy" id="vsBuyNow">Buy Now</button>
+    </div>
 </div>
 <div id="vsToast"></div>
 <div id="vsPreview" role="dialog" aria-modal="true" aria-label="Variant image" aria-hidden="true">
@@ -2174,6 +2235,17 @@ body.vs-open #mobileBottomBar { display: none !important; }
         if (e.target.id !== 'vsPreviewImg') closePreview();
     });
 
+    el('vsBuyNow').addEventListener('click', function () {
+        var lines = [];
+        Object.keys(qtyMap).forEach(function (i) {
+            var q = qtyMap[i] || 0;
+            if (q > 0 && VARIANTS_LIST[i]) {
+                lines.push({ variant_id: VARIANTS_LIST[i].id || 0, qty: q });
+            }
+        });
+        if (!lines.length) { toast('Set a quantity, then tap Buy Now'); return; }
+        if (typeof window.startProductBuyNow === 'function') window.startProductBuyNow(lines);
+    });
     el('vsCloseBtn').addEventListener('click', function () { close(false); });
     el('vsOverlay').addEventListener('click', function () { close(false); });
     document.addEventListener('keydown', function (e) {

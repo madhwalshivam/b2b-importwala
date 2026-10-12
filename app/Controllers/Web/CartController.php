@@ -4,6 +4,7 @@ namespace App\Controllers\Web;
 
 use App\Controllers\BaseController;
 use App\Core\Database;
+use App\Services\GstService;
 use App\Core\Auth;
 
 class CartController extends BaseController
@@ -115,6 +116,9 @@ class CartController extends BaseController
             'product_name'=> $product['name'],
             'cart_count'  => $cartInfo['total_count'],
             'subtotal'    => number_format($cartInfo['subtotal'], 2),
+            'tax'         => number_format($cartInfo['tax'], 2),
+            'grand_total' => number_format($cartInfo['total'], 2),
+            'gst_rows'    => $cartInfo['gst']['rows'] ?? [],
             'items'       => $cartInfo['items']
         ]);
     }
@@ -132,6 +136,9 @@ class CartController extends BaseController
             'success'    => true,
             'count'      => $cartInfo['total_count'],
             'subtotal'   => number_format($cartInfo['subtotal'], 2),
+            'tax'        => number_format($cartInfo['tax'], 2),
+            'grand_total'=> number_format($cartInfo['total'], 2),
+            'gst_rows'   => $cartInfo['gst']['rows'] ?? [],
             'items'      => $cartInfo['items']
         ]);
     }
@@ -171,6 +178,9 @@ class CartController extends BaseController
             'success'    => true,
             'cart_count' => $cartInfo['total_count'],
             'subtotal'   => number_format($cartInfo['subtotal'], 2),
+            'tax'        => number_format($cartInfo['tax'], 2),
+            'grand_total'=> number_format($cartInfo['total'], 2),
+            'gst_rows'   => $cartInfo['gst']['rows'] ?? [],
             'items'      => $cartInfo['items']
         ]);
     }
@@ -214,6 +224,9 @@ class CartController extends BaseController
             'cart_qty'     => 0,
             'cart_count'   => $cartInfo['total_count'],
             'subtotal'     => number_format($cartInfo['subtotal'], 2),
+            'tax'          => number_format($cartInfo['tax'], 2),
+            'grand_total'  => number_format($cartInfo['total'], 2),
+            'gst_rows'     => $cartInfo['gst']['rows'] ?? [],
             'items'        => $cartInfo['items']
         ]);
     }
@@ -230,8 +243,9 @@ class CartController extends BaseController
             'cartItems' => $cartInfo['items'],
             'cartCount' => $cartInfo['total_count'],
             'subtotal'  => $cartInfo['subtotal'],
-            'tax'       => $cartInfo['subtotal'] * 0.18,
-            'total'     => $cartInfo['subtotal'] * 1.18,
+            'tax'       => $cartInfo['tax'],
+            'total'     => $cartInfo['total'],
+            'gst'       => $cartInfo['gst'],
         ]);
     }
 
@@ -327,7 +341,7 @@ class CartController extends BaseController
         foreach ($rows as $r) {
             $qty       = (int)$r['quantity'];
             $unitPrice = (float)($r['unit_price'] ?? $r['price'] ?? 0);
-            $itemTotal = $qty * $unitPrice;
+            $itemTotal = round($qty * $unitPrice, 2);
             $img       = !empty($r['variant_image']) ? asset($r['variant_image']) : (!empty($r['main_image']) ? asset($r['main_image']) : asset('assets/images/placeholder.jpg'));
 
             $vLabel = '';
@@ -357,9 +371,14 @@ class CartController extends BaseController
             $subtotal   += $itemTotal;
         }
 
+        $quote = (new GstService())->quote($items, null);
+
         return [
             'total_count' => $totalCount,
-            'subtotal'    => $subtotal,
+            'subtotal'    => $quote['items_total'],
+            'tax'         => $quote['total_gst'],
+            'total'       => $quote['grand_total'],
+            'gst'         => $quote,
             'items'       => $items,
         ];
     }

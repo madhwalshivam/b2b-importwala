@@ -17,6 +17,7 @@
   --gray-100: #f3f4f6;
   --gray-50: #f9fafb;
   --white: #ffffff;
+  --header-height: 140px;
 
   --font-serif: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -792,7 +793,9 @@ a {
   /* Give padding back to text/header elements inside zero-padding container */
   .main-container .section-header-title,
   .main-container .shop-top-bar,
-  .main-container .shop-page-wrapper .shop-top-bar {
+  .main-container .shop-page-wrapper .shop-top-bar,
+  .main-container .shop-page-wrapper .shop-listing-head,
+  .main-container .shop-page-wrapper .shop-listing-chrome {
     padding-left: 10px !important;
     padding-right: 10px !important;
   }

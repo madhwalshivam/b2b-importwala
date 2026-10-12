@@ -186,17 +186,24 @@
                 <tbody class="text-xs divide-y divide-slate-200 font-medium">
                     <?php foreach ($items as $idx => $item):
                         $grossPrice = (float) ($item['price'] ?? 0);
-                        $gstPercent = (float) ($item['tax_percent'] ?? 18);
+                        $gstPercent = (float) ($item['gst_rate'] ?? $item['tax_percent'] ?? 18);
                         $qty = (int) ($item['quantity'] ?? 1);
+                        $hasSnapshot = array_key_exists('taxable_amount', $item) && $item['taxable_amount'] !== null;
 
-                        $unitBasePrice = $grossPrice / (1 + ($gstPercent / 100));
-                        $unitGstAmt = $grossPrice - $unitBasePrice;
-
-                        $lineTaxAmt = isset($item['tax_amount']) && (float) $item['tax_amount'] > 0
-                            ? (float) $item['tax_amount']
-                            : ($unitGstAmt * $qty);
-
-                        $lineGrossTotal = (float) ($item['total_amount'] ?? ($grossPrice * $qty));
+                        if ($hasSnapshot) {
+                            $lineTaxAmt = (float) ($item['total_gst_amount'] ?? $item['tax_amount'] ?? 0);
+                            $lineGrossTotal = (float) ($item['total_amount'] ?? 0);
+                            $lineTaxable = (float) $item['taxable_amount'];
+                        } else {
+                            $unitBasePrice = $gstPercent > 0 ? $grossPrice / (1 + ($gstPercent / 100)) : $grossPrice;
+                            $unitGstAmt = $grossPrice - $unitBasePrice;
+                            $lineTaxAmt = isset($item['tax_amount']) && (float) $item['tax_amount'] > 0
+                                ? (float) $item['tax_amount']
+                                : ($unitGstAmt * $qty);
+                            $lineGrossTotal = (float) ($item['total_amount'] ?? ($grossPrice * $qty));
+                            $lineTaxable = max(0, $lineGrossTotal - $lineTaxAmt);
+                        }
+                        $hsn = trim((string) ($item['hsn_code'] ?? ''));
                         ?>
                         <tr class="hover:bg-slate-50 transition">
                             <td class="py-3 px-2.5 text-center text-slate-400 font-mono font-semibold"><?= $idx + 1 ?></td>
@@ -208,7 +215,7 @@
                             <td class="py-3 px-2.5 text-center">
                                 <span
                                     class="bg-slate-100 border border-slate-300 text-slate-800 font-mono font-semibold px-1.5 py-0.5 rounded text-[10px]">
-                                    <?= htmlspecialchars($item['hsn_code'] ?? '8714.99.90') ?>
+                                    <?= $hsn !== '' ? htmlspecialchars($hsn) : '—' ?>
                                 </span>
                             </td>
                             <td class="py-3 px-2.5 text-right font-mono text-slate-900 font-semibold">
@@ -247,8 +254,16 @@
                         <span>Statutory Tax Declaration</span>
                     </h4>
                     <p class="text-xs text-slate-700 font-semibold leading-relaxed">
-                        * Certified that the particulars given above are true and correct. All product prices are
-                        <strong>INCLUSIVE OF GST</strong> as per Central &amp; State GST Tax Acts.
+                        * Certified that the particulars given above are true and correct.
+                        <?php if (!empty($order['total_gst'])): ?>
+                            Taxable value <?= format_price($order['total_taxable_amount'] ?? 0) ?>,
+                            CGST <?= format_price($order['total_cgst'] ?? 0) ?>,
+                            SGST <?= format_price($order['total_sgst'] ?? 0) ?>,
+                            IGST <?= format_price($order['total_igst'] ?? 0) ?>.
+                            Shipping state: <?= htmlspecialchars($order['shipping_state'] ?? '') ?>.
+                        <?php else: ?>
+                            GST on this older invoice follows the tax stored when the order was placed.
+                        <?php endif; ?>
                     </p>
                 </div>
 
@@ -262,6 +277,24 @@
             <!-- Right 5 cols: Order Totals Box -->
             <div class="md:col-span-5 bg-slate-50 rounded-xl p-5 border border-slate-200 shadow-xs">
                 <div class="space-y-2.5 text-xs">
+                    <?php if (isset($order['total_taxable_amount']) && $order['total_taxable_amount'] !== null): ?>
+                        <div class="flex justify-between text-slate-600 font-medium">
+                            <span>Taxable value</span>
+                            <span class="font-mono font-semibold text-slate-900"><?= format_price($order['total_taxable_amount']) ?></span>
+                        </div>
+                        <div class="flex justify-between text-slate-600 font-medium">
+                            <span>CGST</span>
+                            <span class="font-mono font-semibold text-slate-900"><?= format_price($order['total_cgst'] ?? 0) ?></span>
+                        </div>
+                        <div class="flex justify-between text-slate-600 font-medium">
+                            <span>SGST</span>
+                            <span class="font-mono font-semibold text-slate-900"><?= format_price($order['total_sgst'] ?? 0) ?></span>
+                        </div>
+                        <div class="flex justify-between text-slate-600 font-medium">
+                            <span>IGST</span>
+                            <span class="font-mono font-semibold text-slate-900"><?= format_price($order['total_igst'] ?? 0) ?></span>
+                        </div>
+                    <?php else: ?>
                     <div class="flex justify-between text-slate-600 font-medium">
                         <span>Subtotal</span>
                         <span
@@ -272,6 +305,7 @@
                         <span
                             class="font-mono font-semibold text-brand-red font-semibold"><?= format_price($taxTotal) ?></span>
                     </div>
+                    <?php endif; ?>
                     <div class="flex justify-between text-slate-600 font-medium">
                         <span>Shipping Charge</span>
                         <span

@@ -135,21 +135,40 @@ class CheckoutApiController extends Controller {
                 INSERT INTO order_items (order_id, product_id, product_name, sku, price, tax_percent, tax_amount, quantity, total_amount, weight_kg)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-            foreach ($cartData['items'] as $item) {
-                $lineSub = $item['price'] * $item['quantity'];
-                $lineTax = $lineSub * ($item['tax_percent'] / 100);
-                $stmtItem->execute([
-                    $orderId,
-                    $item['id'],
-                    $item['name'],
-                    $item['sku'],
-                    $item['price'],
-                    $item['tax_percent'],
-                    $lineTax,
-                    $item['quantity'],
-                    $lineSub + $lineTax,
-                    0.50
-                ]);
+            $gstQuote = (new \App\Services\GstService())->quote(array_map(static function ($item) {
+                return [
+                    'product_id' => (int) ($item['id'] ?? 0),
+                    'unit_price' => (float) ($item['price'] ?? 0),
+                    'quantity' => (int) ($item['quantity'] ?? 1),
+                ];
+            }, $cartData['items']), $state);
+            $hasHsn = $this->orderColumnExists($db, 'order_items', 'hsn_code');
+            foreach ($gstQuote['lines'] as $idx => $item) {
+                $src = $cartData['items'][$idx] ?? [];
+                $name = (string) ($src['name'] ?? '');
+                $sku = (string) ($src['sku'] ?? '');
+                if ($hasHsn) {
+                    $db->prepare("INSERT INTO order_items (order_id, product_id, product_name, sku, hsn_code, price, tax_percent, tax_amount, gst_rate, taxable_amount, cgst_amount, sgst_amount, igst_amount, total_gst_amount, quantity, total_amount, weight_kg) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                        ->execute([
+                            $orderId, $item['product_id'], $name, $sku,
+                            ($item['hsn_code'] ?? '') !== '' ? $item['hsn_code'] : null,
+                            $item['unit_price'], $item['gst_rate'], $item['total_gst_amount'],
+                            $item['gst_rate'], $item['taxable_amount'], $item['cgst_amount'], $item['sgst_amount'],
+                            $item['igst_amount'], $item['total_gst_amount'], $item['quantity'], $item['gross_amount'], 0.50,
+                        ]);
+                } else {
+                    $stmtItem->execute([
+                        $orderId, $item['product_id'], $name, $sku, $item['unit_price'],
+                        $item['gst_rate'], $item['total_gst_amount'], $item['quantity'], $item['gross_amount'], 0.50,
+                    ]);
+                }
+            }
+            if ($this->orderColumnExists($db, 'orders', 'shipping_state')) {
+                $db->prepare('UPDATE orders SET total_taxable_amount = ?, total_cgst = ?, total_sgst = ?, total_igst = ?, total_gst = ?, shipping_state = ?, tax_total = ? WHERE id = ?')
+                    ->execute([
+                        $gstQuote['total_taxable_amount'], $gstQuote['total_cgst'], $gstQuote['total_sgst'],
+                        $gstQuote['total_igst'], $gstQuote['total_gst'], $state, $gstQuote['total_gst'], $orderId,
+                    ]);
             }
 
             $db->commit();
@@ -278,54 +297,41 @@ class CheckoutApiController extends Controller {
      * Razorpay Webhook Endpoint (/api/webhooks/razorpay)
      */
     public function razorpayWebhook(): void {
-        $rawBody = file_get_contents('php://input');
+        $rawBody = file_get_contents('php://input') ?: '';
         $signature = $_SERVER['HTTP_X_RAZORPAY_SIGNATURE'] ?? '';
 
-        if (empty($rawBody) || empty($signature)) {
+        $gateway = new \App\Services\RazorpayService();
+        if (!$gateway->verifyWebhook($rawBody, $signature)) {
             http_response_code(400);
-            echo "Missing webhook body or signature header.";
+            echo "Invalid webhook signature.";
             exit;
-        }
-
-        $pgSettings = PaymentGatewayFactory::getSettings();
-        $webhookSecret = \App\Helpers\Encryption::decrypt($pgSettings['webhook_secret'] ?? '');
-
-        if (!empty($webhookSecret)) {
-            $expectedSignature = hash_hmac('sha256', $rawBody, $webhookSecret);
-            if (!hash_equals($expectedSignature, $signature)) {
-                http_response_code(400);
-                echo "Invalid webhook signature.";
-                exit;
-            }
         }
 
         $payload = json_decode($rawBody, true);
         $event = $payload['event'] ?? '';
+        $paymentEntity = $payload['payload']['payment']['entity'] ?? [];
+        $orderEntity = $payload['payload']['order']['entity'] ?? [];
+        $razorpayOrderId = $paymentEntity['order_id'] ?? ($orderEntity['id'] ?? '');
+        $razorpayPaymentId = $paymentEntity['id'] ?? '';
+        $method = $paymentEntity['method'] ?? null;
+        $fulfill = new \App\Services\PaymentFulfillmentService();
 
-        if (in_array($event, ['payment.captured', 'order.paid'])) {
-            $paymentEntity = $payload['payload']['payment']['entity'] ?? [];
-            $razorpayOrderId = $paymentEntity['order_id'] ?? '';
-            $razorpayPaymentId = $paymentEntity['id'] ?? '';
-
-            if (!empty($razorpayOrderId)) {
-                $db = Database::getInstance();
-                $stmt = $db->prepare("SELECT id, payment_status FROM orders WHERE razorpay_order_id = ? LIMIT 1");
-                $stmt->execute([$razorpayOrderId]);
-                $order = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-                if ($order && $order['payment_status'] !== 'paid') {
-                    $orderId = (int)$order['id'];
-                    $stmtUp = $db->prepare("UPDATE orders SET payment_status = 'paid', order_status = 'confirmed', razorpay_payment_id = ? WHERE id = ?");
-                    $stmtUp->execute([$razorpayPaymentId, $orderId]);
-
-                    // Automatically Push to Shiprocket
-                    self::pushOrderToShiprocket($orderId);
+        if (in_array($event, ['payment.captured', 'order.paid'], true) && $razorpayOrderId !== '') {
+            $result = $fulfill->markPaid($razorpayOrderId, $razorpayPaymentId, 'webhook:' . $event, $method);
+            if (!empty($result['newly_paid'])) {
+                try {
+                    self::pushOrderToShiprocket((int)$result['order_id']);
+                } catch (\Throwable $e) {
+                    error_log('Shiprocket push from webhook: ' . $e->getMessage());
                 }
             }
+        } elseif ($event === 'payment.failed' && $razorpayOrderId !== '') {
+            $reason = $paymentEntity['error_description'] ?? 'payment.failed';
+            $fulfill->markFailed($razorpayOrderId, $razorpayPaymentId, (string)$reason);
         }
 
         http_response_code(200);
-        echo "Webhook processed.";
+        echo "ok";
         exit;
     }
 
@@ -577,6 +583,13 @@ class CheckoutApiController extends Controller {
             error_log("Push to Shiprocket exception: " . $e->getMessage());
             return ['success' => false, 'message' => $e->getMessage()];
         }
+    }
+
+    private function orderColumnExists(\PDO $db, string $table, string $column): bool
+    {
+        $stmt = $db->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?');
+        $stmt->execute([$table, $column]);
+        return ((int) $stmt->fetchColumn()) > 0;
     }
 
     private function getCartData(): array {

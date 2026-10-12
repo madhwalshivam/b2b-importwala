@@ -299,12 +299,42 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
 
-                    <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">HSN Code</label>
-                        <input type="text" name="hsn_code"
-                            value="<?= htmlspecialchars($product['hsn_code'] ?? '8714.99.90') ?>"
-                            placeholder="e.g. 8714.99.90"
-                            class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
+                    <?php
+                    $gstInherited = (new \App\Services\GstService())->inheritanceForProduct($product);
+                    $overrideOn = ($product['gst_rate'] ?? null) !== null && $product['gst_rate'] !== '' || trim((string) ($product['hsn_code'] ?? '')) !== '';
+                    $overrideRate = ($product['gst_rate'] ?? null) !== null && $product['gst_rate'] !== '' ? (float) $product['gst_rate'] : null;
+                    $presetRates = [0, 3, 5, 12, 18, 28];
+                    $overrideIsCustom = $overrideRate !== null && !in_array($overrideRate, $presetRates, false);
+                    ?>
+                    <div class="sm:col-span-2 bg-orange-50/50 border border-orange-100 rounded-xl p-4 space-y-3">
+                        <input type="hidden" name="override_gst" value="0">
+                        <label class="flex items-center gap-2 font-bold text-slate-800 uppercase">
+                            <input type="checkbox" name="override_gst" value="1" <?= $overrideOn ? 'checked' : '' ?> onchange="document.getElementById('gstOverrideFields').classList.toggle('hidden', !this.checked)">
+                            Override category GST / HSN
+                        </label>
+                        <p class="text-[11px] text-slate-500">Inherited from <?= htmlspecialchars($gstInherited['source']) ?>:
+                            HSN <?= $gstInherited['hsn_code'] !== '' ? htmlspecialchars($gstInherited['hsn_code']) : 'not set' ?>,
+                            GST <?= rtrim(rtrim(number_format((float) $gstInherited['gst_rate'], 2), '0'), '.') ?>%.
+                            Leave this off to keep using that value.</p>
+                        <div id="gstOverrideFields" class="grid grid-cols-1 sm:grid-cols-2 gap-3 <?= $overrideOn ? '' : 'hidden' ?>">
+                            <div>
+                                <label class="block font-bold text-slate-700 uppercase mb-1">HSN Code</label>
+                                <input type="text" name="hsn_code" inputmode="numeric" maxlength="8"
+                                    value="<?= htmlspecialchars(preg_replace('/\D+/', '', (string) ($product['hsn_code'] ?? ''))) ?>"
+                                    placeholder="4, 6 or 8 digits"
+                                    class="w-full h-11 px-4 bg-white border border-slate-200 rounded-xl font-mono font-bold text-slate-900">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 uppercase mb-1">GST Rate (%)</label>
+                                <select name="gst_rate" class="w-full h-11 px-4 bg-white border border-slate-200 rounded-xl font-semibold text-slate-900 text-xs">
+                                    <?php foreach ($presetRates as $rate): ?>
+                                        <option value="<?= $rate ?>" <?= $overrideRate !== null && !$overrideIsCustom && (float) $overrideRate == $rate ? 'selected' : '' ?>><?= $rate ?>%</option>
+                                    <?php endforeach; ?>
+                                    <option value="custom" <?= $overrideIsCustom ? 'selected' : '' ?>>Custom</option>
+                                </select>
+                                <input type="number" name="gst_rate_custom" min="0" max="100" step="0.01" value="<?= $overrideIsCustom ? htmlspecialchars((string) $overrideRate) : '' ?>" placeholder="Custom %" class="mt-2 w-full h-10 px-3 border border-slate-200 rounded-xl text-xs">
+                            </div>
+                        </div>
                     </div>
 
                     <div>
@@ -321,19 +351,6 @@ $productDescClean = htmlspecialchars_decode($product['description'] ?? '');
                             class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-900 focus:outline-none focus:border-slate-900 focus:bg-white transition">
                     </div>
 
-                    <div>
-                        <label class="block font-bold text-slate-700 uppercase mb-1">GST Rate (%) <span
-                                class="text-rose-500">*</span></label>
-                        <select name="tax_percent" required
-                            class="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900 focus:bg-white text-xs focus:outline-none focus:border-slate-900 transition">
-                            <?php $currentGst = (float) ($product['tax_percent'] ?? 18); ?>
-                            <option value="0" <?= $currentGst == 0 ? 'selected' : '' ?>>0% (Exempt / Nil Rated)</option>
-                            <option value="5" <?= $currentGst == 5 ? 'selected' : '' ?>>5% GST</option>
-                            <option value="12" <?= $currentGst == 12 ? 'selected' : '' ?>>12% GST</option>
-                            <option value="18" <?= $currentGst == 18 ? 'selected' : '' ?>>18% GST (Default)</option>
-                            <option value="28" <?= $currentGst == 28 ? 'selected' : '' ?>>28% GST</option>
-                        </select>
-                    </div>
                 </div>
 
                 <div class="pt-2">

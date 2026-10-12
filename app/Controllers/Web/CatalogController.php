@@ -135,18 +135,36 @@ class CatalogController extends BaseController
         $subSlug = slugify($subSlug);
 
         $category = $this->categoryRepo->findBySlug($catSlug);
-        $subcategory = $this->findSubcategoryBySlug($subSlug);
 
-        if (!$category && $subcategory) {
-            $category = $this->categoryRepo->findById((int) $subcategory['category_id']);
+        if (!$category) {
+            $this->search($subSlug);
+            return;
         }
 
+        $parentId = (int) $category['id'];
+        $subcategory = $this->findSubcategoryForCategory($subSlug, $parentId);
+
         if (!$subcategory) {
-            if ($category) {
-                $this->category($catSlug);
+            $childCategory = $this->findChildCategoryBySlug($parentId, $subSlug);
+            if ($childCategory) {
+                $catName = $category['name'] ?? 'Catalog';
+                $seoTitle = $childCategory['name'] . ' - ' . $catName . ' Wholesale | ImportWale';
+                $seoDesc = 'Shop wholesale ' . $childCategory['name'] . ' under ' . $catName . ' at factory rates on ImportWale.';
+                $canonical = subcategory_url($category, $childCategory);
+
+                $this->renderCatalogPage([
+                    'category_id' => (int) $childCategory['id'],
+                    'active_category' => $category,
+                    'active_subcategory' => $childCategory,
+                    'seo_title' => $seoTitle,
+                    'seo_description' => $seoDesc,
+                    'canonical_url' => $canonical,
+                    'page_heading' => $childCategory['name'] . ' (' . $catName . ')',
+                ]);
                 return;
             }
-            $this->search($subSlug);
+
+            $this->category($catSlug);
             return;
         }
 
@@ -622,6 +640,14 @@ class CatalogController extends BaseController
         $q = trim($options['q'] ?? $_GET['q'] ?? '');
         $catId = (int) ($options['category_id'] ?? $_GET['category_id'] ?? 0);
         $subId = (int) ($options['subcategory_id'] ?? $_GET['subcategory_id'] ?? 0);
+        if ($subId > 0 && $catId > 0) {
+            $ownerStmt = Database::getReadConnection()->prepare("SELECT `category_id` FROM `subcategories` WHERE `id` = ? LIMIT 1");
+            $ownerStmt->execute([$subId]);
+            $ownerId = (int) $ownerStmt->fetchColumn();
+            if (!in_array($ownerId, $this->searchService->categoryScopeIds($catId), true)) {
+                $subId = 0;
+            }
+        }
         $collectionId = (int) ($options['collection_id'] ?? $_GET['collection_id'] ?? $_GET['collection'] ?? 0);
         $sectionId = (int) ($options['section_id'] ?? $_GET['section_id'] ?? $_GET['section'] ?? 0);
         $brandId = (int) ($options['brand_id'] ?? $_GET['brand_id'] ?? 0);
@@ -699,6 +725,9 @@ class CatalogController extends BaseController
 
         $filterService = new \App\Services\FilterAttributeService();
         $dynamicFilterAttributes = $filterService->getAttributesForCategory($catId ?: null);
+        if ($catId > 0) {
+            $dynamicFilterAttributes = $this->limitFiltersToCategory($dynamicFilterAttributes, $catId);
+        }
 
         $totalItems = (int) ($searchResults['total'] ?? 0);
         $totalPages = max(1, (int) ceil($totalItems / $perPage));
@@ -711,9 +740,11 @@ class CatalogController extends BaseController
         $pageWindow = $this->getPageWindow($page, $totalPages);
         $mobilePageWindow = $this->getMobilePageWindow($page, $totalPages);
 
+        $listing = $this->buildListingPresentation($options, $q);
+
         $seoOptions = [
-            'title' => $options['seo_title'] ?? 'Shop All Wholesale Products | ImportWale',
-            'description' => $options['seo_description'] ?? 'Browse all wholesale products with direct factory pricing and low MOQ.',
+            'title' => $listing['seo_title'],
+            'description' => $listing['seo_description'],
             'canonical' => $options['canonical_url'] ?? url('shop'),
         ];
 
@@ -733,7 +764,10 @@ class CatalogController extends BaseController
             'mobilePageWindow' => $mobilePageWindow,
             'seoOptions' => $seoOptions,
             'dynamicFilterAttributes' => $dynamicFilterAttributes,
-            'pageHeading' => $options['page_heading'] ?? null,
+            'pageHeading' => $listing['h1'],
+            'listingPathParent' => $listing['path_parent'],
+            'listingPathParentUrl' => $listing['path_parent_url'],
+            'listingPathChild' => $listing['path_child'],
             'activeCategory' => $options['active_category'] ?? null,
             'activeSubcategory' => $options['active_subcategory'] ?? null,
         ];
@@ -759,6 +793,131 @@ class CatalogController extends BaseController
     }
 
     /**
+     * Visible H1, path label, and unique SEO title/description from DB names.
+     * Jewellery prefixes are derived from the parent category name, never from IDs or slugs.
+     *
+     * @return array{h1:string,path_parent:?string,path_parent_url:?string,path_child:?string,seo_title:string,seo_description:string}
+     */
+    private function buildListingPresentation(array $options, string $q): array
+    {
+        $category = $options['active_category'] ?? null;
+        $subcategory = $options['active_subcategory'] ?? null;
+
+        $pathParent = null;
+        $pathParentUrl = null;
+        $pathChild = null;
+
+        if (!empty($subcategory) && !empty($category)) {
+            $catName = trim((string) ($category['name'] ?? ''));
+            $subName = trim((string) ($subcategory['name'] ?? ''));
+            $h1 = $this->subcategoryHeading($catName, $subName);
+            $pathParent = $catName !== '' ? $catName : null;
+            $pathParentUrl = $pathParent !== null ? category_url($category) : null;
+            $pathChild = $subName !== '' ? $subName : null;
+            $seoTitle = $this->firstNonEmptyString(
+                $subcategory['meta_title'] ?? null,
+                $h1 . ' Wholesale | ImportWale'
+            );
+            $seoDesc = $this->firstNonEmptyString(
+                $subcategory['meta_description'] ?? null,
+                'Buy wholesale ' . $h1 . ' at factory-direct prices from ImportWale.'
+            );
+        } elseif (!empty($category)) {
+            $h1 = trim((string) ($category['name'] ?? 'All Products'));
+            if ($h1 === '') {
+                $h1 = 'All Products';
+            }
+            $seoTitle = $this->firstNonEmptyString(
+                $category['meta_title'] ?? null,
+                $h1 . ' Wholesale | ImportWale'
+            );
+            $seoDesc = $this->firstNonEmptyString(
+                $category['meta_description'] ?? null,
+                'Buy wholesale ' . $h1 . ' at factory-direct prices from ImportWale.'
+            );
+        } elseif ($q !== '') {
+            $h1 = 'Results for "' . $q . '"';
+            $seoTitle = $h1 . ' | ImportWale';
+            $seoDesc = 'Browse wholesale results for "' . $q . '" on ImportWale.';
+        } elseif (!empty($options['page_heading'])) {
+            $h1 = (string) $options['page_heading'];
+            $seoTitle = $this->firstNonEmptyString(
+                $options['seo_title'] ?? null,
+                $h1 . ' | ImportWale'
+            );
+            $seoDesc = $this->firstNonEmptyString(
+                $options['seo_description'] ?? null,
+                'Browse wholesale ' . $h1 . ' at factory-direct prices from ImportWale.'
+            );
+        } else {
+            $h1 = 'All Products';
+            $seoTitle = $this->firstNonEmptyString(
+                $options['seo_title'] ?? null,
+                'All Products Wholesale | ImportWale'
+            );
+            $seoDesc = $this->firstNonEmptyString(
+                $options['seo_description'] ?? null,
+                'Browse all wholesale products with direct factory pricing and low MOQ.'
+            );
+        }
+
+        return [
+            'h1' => $h1,
+            'path_parent' => $pathParent,
+            'path_parent_url' => $pathParentUrl,
+            'path_child' => $pathChild,
+            'seo_title' => $seoTitle,
+            'seo_description' => $seoDesc,
+        ];
+    }
+
+    /**
+     * Subcategory H1 from the parent category name.
+     * "Men's Jewellery" + "Rings" -> "Men's Rings"
+     * "Jewellery" + "Ring" -> "Ring"
+     * Any other parent -> subcategory name only (parent stays in the path label).
+     */
+    private function subcategoryHeading(string $parentName, string $subName): string
+    {
+        $qualifier = $this->jewelleryQualifier($parentName);
+        if ($qualifier === null || $subName === '') {
+            return $subName;
+        }
+        $prefix = $qualifier . ' ';
+        if (mb_stripos($subName, $prefix) === 0) {
+            return $subName;
+        }
+        return $qualifier . ' ' . $subName;
+    }
+
+    /**
+     * Qualifier before a trailing "Jewellery"/"Jewelry" word, or null when there is none.
+     */
+    private function jewelleryQualifier(string $parentName): ?string
+    {
+        $name = trim($parentName);
+        if ($name === '') {
+            return null;
+        }
+        if (preg_match('/^(.+?)\s+jewell?ery$/iu', $name, $m)) {
+            $qualifier = trim((string) ($m[1] ?? ''));
+            return $qualifier !== '' ? $qualifier : null;
+        }
+        return null;
+    }
+
+    private function firstNonEmptyString(?string ...$values): string
+    {
+        foreach ($values as $value) {
+            $value = trim((string) $value);
+            if ($value !== '') {
+                return $value;
+            }
+        }
+        return '';
+    }
+
+    /**
      * Get active categories tree with subcategories & product counts
      */
     private function getCategoryTreeWithCounts(): array
@@ -766,11 +925,7 @@ class CatalogController extends BaseController
         try {
             $db = Database::getReadConnection();
             $cats = $db->query("
-                SELECT c.*, 
-                       (SELECT COUNT(DISTINCT p.id) 
-                        FROM products p 
-                        WHERE (p.category_id = c.id OR p.subcategory_id IN (SELECT id FROM subcategories WHERE category_id = c.id)) 
-                          AND p.status = 'active') as product_count
+                SELECT c.*
                 FROM categories c
                 WHERE (c.status = 'active' OR c.status = 'enabled') 
                   AND (c.parent_id IS NULL OR c.parent_id = 0)
@@ -778,25 +933,33 @@ class CatalogController extends BaseController
             ")->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
             foreach ($cats as &$cat) {
+                $cat['product_count'] = $this->countProductsInCategoryScope((int) $cat['id']);
+
                 $subStmt = $db->prepare("
-                    SELECT s.*, 
-                           (SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.subcategory_id = s.id AND p.status = 'active') as product_count
+                    SELECT s.*
                     FROM subcategories s
                     WHERE s.category_id = ? AND (s.status = 'active' OR s.status = 'enabled')
                     ORDER BY s.sort_order ASC, s.name ASC
                 ");
                 $subStmt->execute([$cat['id']]);
                 $rawSub1 = $subStmt->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+                foreach ($rawSub1 as &$subRow) {
+                    $subRow['product_count'] = $this->countProductsInSubcategory((int) $subRow['id'], (int) $subRow['category_id']);
+                }
+                unset($subRow);
 
                 $subStmt2 = $db->prepare("
-                    SELECT c.*, 
-                           (SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.category_id = c.id AND p.status = 'active') as product_count
+                    SELECT c.*
                     FROM categories c
                     WHERE c.parent_id = ? AND (c.status = 'active' OR c.status = 'enabled')
                     ORDER BY c.sort_order ASC, c.name ASC
                 ");
                 $subStmt2->execute([$cat['id']]);
                 $rawSub2 = $subStmt2->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+                foreach ($rawSub2 as &$childRow) {
+                    $childRow['product_count'] = $this->countProductsInCategoryScope((int) $childRow['id']);
+                }
+                unset($childRow);
 
                 $mergedSubs = array_merge($rawSub1, $rawSub2);
 
@@ -932,6 +1095,142 @@ class CatalogController extends BaseController
             $clean = substr($clean, 0, -1);
         }
         return $clean;
+    }
+
+    /**
+     * Category and Subcategory filter choices are limited to the open category.
+     * Other attributes stay, but only options that belong to this category remain selectable.
+     */
+    private function limitFiltersToCategory(array $attributes, int $categoryId): array
+    {
+        $scope = $this->searchService->categoryScopeIds($categoryId);
+        if (empty($scope)) {
+            return $attributes;
+        }
+        $in = implode(',', array_map('intval', $scope));
+        $db = Database::getReadConnection();
+        $categoryNames = $db->query("SELECT `name` FROM `categories` WHERE `id` IN ({$in})")->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+        $subcategoryNames = $db->query("SELECT `name` FROM `subcategories` WHERE `category_id` IN ({$in}) AND (`status` = 'active' OR `status` = 'enabled')")->fetchAll(\PDO::FETCH_COLUMN) ?: [];
+
+        foreach ($attributes as &$attr) {
+            $slug = strtolower((string) ($attr['slug'] ?? ''));
+            if ($slug !== 'category' && $slug !== 'subcategory') {
+                continue;
+            }
+            $allowed = $slug === 'category' ? $categoryNames : $subcategoryNames;
+            $attr['options'] = array_values(array_filter($attr['options'] ?? [], function ($opt) use ($allowed) {
+                foreach ($allowed as $name) {
+                    if ($this->filterLabelsMatch((string) ($opt['value'] ?? ''), (string) $name)) {
+                        return true;
+                    }
+                }
+                return false;
+            }));
+        }
+        unset($attr);
+
+        return array_values(array_filter($attributes, static fn($attr) => !empty($attr['options'])));
+    }
+
+    private function filterLabelsMatch(string $left, string $right): bool
+    {
+        $norm = static function (string $value): string {
+            $value = strtolower(trim($value));
+            $value = preg_replace('/[^a-z0-9]+/', '', $value) ?? '';
+            if (str_ends_with($value, 'ies') && strlen($value) > 4) {
+                $value = substr($value, 0, -3) . 'y';
+            } elseif (str_ends_with($value, 's') && !str_ends_with($value, 'ss') && strlen($value) > 3) {
+                $value = substr($value, 0, -1);
+            }
+            return $value;
+        };
+        return $norm($left) !== '' && $norm($left) === $norm($right);
+    }
+
+    /**
+     * Products assigned to this category, its child categories, or the product-category mapping.
+     */
+    private function countProductsInCategoryScope(int $categoryId): int
+    {
+        $scope = $this->searchService->categoryScopeIds($categoryId);
+        $match = $this->productCategoryMatchSql($scope);
+        if ($match === '1 = 0') {
+            return 0;
+        }
+        $db = Database::getReadConnection();
+        return (int) $db->query("SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.status = 'active' AND {$match}")->fetchColumn();
+    }
+
+    /**
+     * Subcategory counts stay inside the subcategory's own category family.
+     */
+    private function countProductsInSubcategory(int $subcategoryId, int $ownerCategoryId): int
+    {
+        $scope = $this->searchService->categoryScopeIds($ownerCategoryId);
+        $match = $this->productCategoryMatchSql($scope);
+        if ($match === '1 = 0') {
+            return 0;
+        }
+        $db = Database::getReadConnection();
+        $stmt = $db->prepare("SELECT COUNT(DISTINCT p.id) FROM products p WHERE p.status = 'active' AND p.subcategory_id = ? AND {$match}");
+        $stmt->execute([$subcategoryId]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * @param int[] $scopeIds
+     */
+    private function productCategoryMatchSql(array $scopeIds): string
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $scopeIds))));
+        if (empty($ids)) {
+            return '1 = 0';
+        }
+        $in = implode(',', $ids);
+        return "(p.category_id IN ({$in}) OR p.id IN (SELECT product_id FROM product_categories WHERE category_id IN ({$in})))";
+    }
+
+    /**
+     * Subcategory slug resolved only within the open category (and its children).
+     */
+    private function findSubcategoryForCategory(string $slug, int $categoryId): ?array
+    {
+        $scope = $this->searchService->categoryScopeIds($categoryId);
+        if (empty($scope)) {
+            return null;
+        }
+        $in = implode(',', array_map('intval', $scope));
+        try {
+            $db = Database::getReadConnection();
+            $stmt = $db->prepare("SELECT * FROM `subcategories` WHERE `slug` = ? AND `category_id` IN ({$in}) AND (`status` = 'active' OR `status` = 'enabled') ORDER BY (`category_id` = ?) DESC LIMIT 1");
+            $stmt->execute([$slug, $categoryId]);
+            $res = $stmt->fetch();
+            return $res ?: null;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Child category used as a nested catalog link under the open category.
+     */
+    private function findChildCategoryBySlug(int $parentId, string $slug): ?array
+    {
+        $scope = $this->searchService->categoryScopeIds($parentId);
+        $childIds = array_values(array_filter($scope, static fn(int $id): bool => $id !== $parentId));
+        if (empty($childIds)) {
+            return null;
+        }
+        $in = implode(',', array_map('intval', $childIds));
+        try {
+            $db = Database::getReadConnection();
+            $stmt = $db->prepare("SELECT * FROM `categories` WHERE `slug` = ? AND `id` IN ({$in}) AND (`status` = 'active' OR `status` = 'enabled') ORDER BY (`parent_id` = ?) DESC LIMIT 1");
+            $stmt->execute([$slug, $parentId]);
+            $res = $stmt->fetch();
+            return $res ?: null;
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**

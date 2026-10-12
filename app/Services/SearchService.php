@@ -11,6 +11,8 @@ class SearchService extends BaseService
     private ProductRepository $productRepo;
     private bool $useElasticsearch = false;
     private ?string $esEndpoint = null;
+    /** @var array<int, int[]> */
+    private array $scopeCache = [];
 
     public function __construct()
     {
@@ -27,7 +29,7 @@ class SearchService extends BaseService
      */
     public function search(string $query, array $filters = [], int $limit = 24, int $offset = 0): array
     {
-        $cacheKey = "search:" . md5($query . json_encode($filters) . "_{$limit}_{$offset}");
+        $cacheKey = "search:v3:" . md5($query . json_encode($filters) . "_{$limit}_{$offset}");
         
         return $this->cache->remember($cacheKey, 600, function () use ($query, $filters, $limit, $offset) {
             if ($this->useElasticsearch) {
@@ -97,14 +99,7 @@ class SearchService extends BaseService
             }
         }
 
-        if (!empty($filters['subcategory_id'])) {
-            $where[] = "p.`subcategory_id` = :subcat_id";
-            $params['subcat_id'] = (int)$filters['subcategory_id'];
-        } elseif (!empty($filters['category_id'])) {
-            $where[] = "(p.`category_id` = :cat_id OR p.`subcategory_id` IN (SELECT id FROM subcategories WHERE category_id = :cat_id_sub))";
-            $params['cat_id'] = (int)$filters['category_id'];
-            $params['cat_id_sub'] = (int)$filters['category_id'];
-        }
+        $this->applyCategoryScope($where, $params, $filters, $db);
 
         if (!empty($filters['brand_id'])) {
             $where[] = "p.`brand_id` = :brand_id";
@@ -195,8 +190,12 @@ class SearchService extends BaseService
             $params['max_moq'] = (int)$filters['max_moq'];
         }
 
-        // Dynamic Filter Attributes (AND logic across attributes, OR logic within options)
+        // Dynamic Filter Attributes (AND logic across attributes, OR logic within options).
+        // Applied only after the category scope above.
         if (!empty($filters['attr']) && is_array($filters['attr'])) {
+            $categoryIdForAttrs = (int) ($filters['category_id'] ?? 0);
+            $scopeIds = $categoryIdForAttrs > 0 ? $this->categoryScopeIds($categoryIdForAttrs) : [];
+            $scopeIn = implode(',', array_map('intval', $scopeIds));
             $attrParamIdx = 1;
             foreach ($filters['attr'] as $attrIdOrSlug => $selectedOpts) {
                 if (empty($selectedOpts)) continue;
@@ -205,18 +204,53 @@ class SearchService extends BaseService
                     $selectedOpts = array_filter(array_map('trim', explode(',', (string)$selectedOpts)));
                 }
 
-                $numericOptIds = array_filter(array_map('intval', $selectedOpts));
+                $numericOptIds = array_values(array_filter(array_map('intval', $selectedOpts)));
+                if (empty($numericOptIds)) continue;
 
-                if (!empty($numericOptIds)) {
-                    $inPlaceholders = [];
-                    foreach ($numericOptIds as $optVal) {
-                        $pKey = "attr_opt_" . $attrParamIdx++;
-                        $inPlaceholders[] = ":" . $pKey;
-                        $params[$pKey] = $optVal;
-                    }
-                    $inSql = implode(',', $inPlaceholders);
-                    $where[] = "p.`id` IN (SELECT `product_id` FROM `product_filter_attribute_values` WHERE `option_id` IN ({$inSql}))";
+                $attrSlug = '';
+                if (is_numeric($attrIdOrSlug) && (int) $attrIdOrSlug > 0) {
+                    $slugStmt = $db->prepare("SELECT `slug` FROM `filter_attributes` WHERE `id` = ? LIMIT 1");
+                    $slugStmt->execute([(int) $attrIdOrSlug]);
+                    $attrSlug = strtolower((string) $slugStmt->fetchColumn());
                 }
+
+                if ($attrSlug === 'subcategory' || $attrSlug === 'category') {
+                    $optionValues = $this->optionValuesByIds($db, $numericOptIds);
+                    if ($attrSlug === 'subcategory') {
+                        $matchedIds = $this->matchingSubcategoryIds($db, $optionValues, $scopeIds);
+                        if (empty($matchedIds)) {
+                            $where[] = '1 = 0';
+                        } else {
+                            $where[] = 'p.`subcategory_id` IN (' . implode(',', $matchedIds) . ')';
+                        }
+                    } else {
+                        $matchedIds = $this->matchingCategoryIds($db, $optionValues, $scopeIds);
+                        if (empty($matchedIds)) {
+                            $where[] = '1 = 0';
+                        } else {
+                            $where[] = 'p.`category_id` IN (' . implode(',', $matchedIds) . ')';
+                        }
+                    }
+                    continue;
+                }
+
+                $inPlaceholders = [];
+                foreach ($numericOptIds as $optVal) {
+                    $pKey = "attr_opt_" . $attrParamIdx++;
+                    $inPlaceholders[] = ":" . $pKey;
+                    $params[$pKey] = $optVal;
+                }
+                $inSql = implode(',', $inPlaceholders);
+                $attrClause = "`option_id` IN ({$inSql})";
+                if (is_numeric($attrIdOrSlug) && (int) $attrIdOrSlug > 0) {
+                    $attrKey = "attr_id_" . $attrParamIdx++;
+                    $params[$attrKey] = (int) $attrIdOrSlug;
+                    $attrClause = "`attribute_id` = :{$attrKey} AND " . $attrClause;
+                }
+                if ($scopeIn !== '') {
+                    $attrClause .= " AND `product_id` IN (SELECT `id` FROM `products` WHERE `category_id` IN ({$scopeIn}) OR `id` IN (SELECT `product_id` FROM `product_categories` WHERE `category_id` IN ({$scopeIn})))";
+                }
+                $where[] = "p.`id` IN (SELECT `product_id` FROM `product_filter_attribute_values` WHERE {$attrClause})";
             }
         }
 
@@ -248,6 +282,165 @@ class SearchService extends BaseService
             'offset' => $offset,
             'facets' => $this->generateFacetsMySql($whereSql, $params),
         ];
+    }
+
+    /**
+     * Selected category plus nested child categories.
+     * Sibling categories are never included.
+     *
+     * @return int[]
+     */
+    public function categoryScopeIds(int $categoryId): array
+    {
+        if ($categoryId <= 0) {
+            return [];
+        }
+        if (isset($this->scopeCache[$categoryId])) {
+            return $this->scopeCache[$categoryId];
+        }
+
+        $db = Database::getReadConnection();
+        $ids = [$categoryId];
+        $frontier = [$categoryId];
+
+        for ($depth = 0; $depth < 6 && !empty($frontier); $depth++) {
+            $in = implode(',', array_map('intval', $frontier));
+            $rows = $db->query("SELECT `id` FROM `categories` WHERE `parent_id` IN ({$in})")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+            $frontier = [];
+            foreach ($rows as $id) {
+                $id = (int) $id;
+                if ($id > 0 && !in_array($id, $ids, true)) {
+                    $ids[] = $id;
+                    $frontier[] = $id;
+                }
+            }
+        }
+
+        $this->scopeCache[$categoryId] = $ids;
+        return $ids;
+    }
+
+    /**
+     * Category membership is applied before attribute filters.
+     * A subcategory filter never replaces the category constraint.
+     */
+    private function applyCategoryScope(array &$where, array &$params, array $filters, PDO $db): void
+    {
+        $categoryId = (int) ($filters['category_id'] ?? 0);
+        $subcategoryId = (int) ($filters['subcategory_id'] ?? 0);
+
+        if ($subcategoryId > 0) {
+            $subStmt = $db->prepare("SELECT `id`, `category_id` FROM `subcategories` WHERE `id` = ? LIMIT 1");
+            $subStmt->execute([$subcategoryId]);
+            $subRow = $subStmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$subRow) {
+                $where[] = '1 = 0';
+                return;
+            }
+
+            $ownerId = (int) $subRow['category_id'];
+            if ($categoryId > 0) {
+                $scope = $this->categoryScopeIds($categoryId);
+                if (!in_array($ownerId, $scope, true)) {
+                    $where[] = '1 = 0';
+                    return;
+                }
+            } else {
+                $categoryId = $ownerId;
+            }
+
+            $where[] = "p.`subcategory_id` = :subcat_id";
+            $params['subcat_id'] = $subcategoryId;
+        }
+
+        if ($categoryId > 0) {
+            $scope = $this->categoryScopeIds($categoryId);
+            $in = implode(',', array_map('intval', $scope));
+            $where[] = "(p.`category_id` IN ({$in}) OR p.`id` IN (SELECT `product_id` FROM `product_categories` WHERE `category_id` IN ({$in})))";
+        }
+    }
+
+    /**
+     * @param int[] $optionIds
+     * @return string[]
+     */
+    private function optionValuesByIds(PDO $db, array $optionIds): array
+    {
+        $ids = array_values(array_filter(array_map('intval', $optionIds)));
+        if (empty($ids)) {
+            return [];
+        }
+        $in = implode(',', $ids);
+        $rows = $db->query("SELECT `value` FROM `filter_attribute_options` WHERE `id` IN ({$in})")->fetchAll(PDO::FETCH_COLUMN) ?: [];
+        return array_values(array_filter(array_map('strval', $rows)));
+    }
+
+    /**
+     * Subcategory rows for the selected labels, limited to the open category when one is set.
+     *
+     * @param string[] $values
+     * @param int[] $scopeIds
+     * @return int[]
+     */
+    private function matchingSubcategoryIds(PDO $db, array $values, array $scopeIds): array
+    {
+        $sql = "SELECT `id`, `name` FROM `subcategories` WHERE (`status` = 'active' OR `status` = 'enabled')";
+        if (!empty($scopeIds)) {
+            $sql .= ' AND `category_id` IN (' . implode(',', array_map('intval', $scopeIds)) . ')';
+        }
+        $rows = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $ids = [];
+        foreach ($rows as $row) {
+            foreach ($values as $value) {
+                if ($this->filterLabelsMatch((string) $row['name'], $value)) {
+                    $ids[] = (int) $row['id'];
+                    break;
+                }
+            }
+        }
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Category rows for the selected labels. Inside a category page, labels outside that category are dropped.
+     *
+     * @param string[] $values
+     * @param int[] $scopeIds
+     * @return int[]
+     */
+    private function matchingCategoryIds(PDO $db, array $values, array $scopeIds): array
+    {
+        $sql = "SELECT `id`, `name` FROM `categories` WHERE (`status` = 'active' OR `status` = 'enabled')";
+        if (!empty($scopeIds)) {
+            $sql .= ' AND `id` IN (' . implode(',', array_map('intval', $scopeIds)) . ')';
+        }
+        $rows = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $ids = [];
+        foreach ($rows as $row) {
+            foreach ($values as $value) {
+                if ($this->filterLabelsMatch((string) $row['name'], $value)) {
+                    $ids[] = (int) $row['id'];
+                    break;
+                }
+            }
+        }
+        return array_values(array_unique($ids));
+    }
+
+    private function filterLabelsMatch(string $left, string $right): bool
+    {
+        $norm = static function (string $value): string {
+            $value = strtolower(trim($value));
+            $value = preg_replace('/[^a-z0-9]+/', '', $value) ?? '';
+            if (str_ends_with($value, 'ies') && strlen($value) > 4) {
+                $value = substr($value, 0, -3) . 'y';
+            } elseif (str_ends_with($value, 's') && !str_ends_with($value, 'ss') && strlen($value) > 3) {
+                $value = substr($value, 0, -1);
+            }
+            return $value;
+        };
+        return $norm($left) !== '' && $norm($left) === $norm($right);
     }
 
     private function generateFacetsMySql(string $whereSql, array $params): array

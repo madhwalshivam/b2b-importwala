@@ -238,33 +238,41 @@ class CartController extends Controller {
                 $hasOutOfStock = true;
             }
 
-            // GST INCLUSIVE Calculation Formula:
-            // sale_price is GST INCLUSIVE
-            // base_price = sale_price / (1 + gst_percent / 100)
-            // gst_amount = sale_price - base_price
-            $unitPrice = (float)($item['price'] ?? 0);
-            $gstRate = (float)($item['tax_percent'] ?? 18);
-            $qty = (int)($item['quantity'] ?? 1);
-
-            $unitBase = $unitPrice / (1 + ($gstRate / 100));
-            $unitGst = $unitPrice - $unitBase;
-
-            $lineGross = $unitPrice * $qty;
-            $lineBase = $unitBase * $qty;
-            $lineGst = $unitGst * $qty;
-
-            $item['unit_base_price'] = $unitBase;
-            $item['unit_gst_amount'] = $unitGst;
-            $item['line_gross_total'] = $lineGross;
-            $item['line_base_total'] = $lineBase;
-            $item['line_gst_total'] = $lineGst;
-
-            $grossSubtotal += $lineGross;
-            $subtotal += $lineBase;
-            $taxTotal += $lineGst;
-            $itemCount += $qty;
+            $itemCount += (int) ($item['quantity'] ?? 1);
         }
         unset($item);
+
+        $gstLines = [];
+        foreach ($items as $item) {
+            $gstLines[] = [
+                'product_id' => (int) ($item['id'] ?? 0),
+                'unit_price' => (float) ($item['price'] ?? 0),
+                'quantity' => (int) ($item['quantity'] ?? 1),
+                'name' => (string) ($item['name'] ?? ''),
+                'sku' => (string) ($item['sku'] ?? ''),
+            ];
+        }
+        $quote = (new \App\Services\GstService())->quote($gstLines, null);
+        $grossSubtotal = 0.0;
+        $subtotal = (float) $quote['total_taxable_amount'];
+        $taxTotal = (float) $quote['total_gst'];
+        foreach ($items as $idx => &$item) {
+            $line = $quote['lines'][$idx] ?? null;
+            if (!$line) {
+                continue;
+            }
+            $item['tax_percent'] = $line['gst_rate'];
+            $item['hsn_code'] = $line['hsn_code'];
+            $item['unit_base_price'] = $line['quantity'] > 0 ? $line['taxable_amount'] / $line['quantity'] : 0;
+            $item['unit_gst_amount'] = $line['quantity'] > 0 ? $line['gst_amount'] / $line['quantity'] : 0;
+            $item['line_gross_total'] = $line['gross_amount'];
+            $item['line_base_total'] = $line['taxable_amount'];
+            $item['line_gst_total'] = $line['gst_amount'];
+            $item['gst_line'] = $line;
+            $grossSubtotal += ($quote['price_mode'] === 'inclusive') ? $line['gross_amount'] : $line['taxable_amount'];
+        }
+        unset($item);
+        $grossSubtotal = \App\Services\GstCalculator::roundMoney($grossSubtotal);
 
         $discount = 0;
         $applicableProductIds = [];
@@ -295,9 +303,10 @@ class CartController extends Controller {
         $shippingThreshold = (float)($GLOBALS['app_config']['company']['free_shipping_threshold'] ?? 999);
         $shippingCharge = ($grossSubtotal >= $shippingThreshold || $grossSubtotal == 0) ? 0 : 79;
 
-        // GST INCLUSIVE GRAND TOTAL:
-        // Customer pays: Gross Subtotal + Shipping - Discount (GST is ALREADY included in Gross Subtotal)
-        $grandTotal = max(0, $grossSubtotal + $shippingCharge - $discount);
+        $goodsTotal = ($quote['price_mode'] ?? 'exclusive') === 'inclusive'
+            ? $grossSubtotal
+            : \App\Services\GstCalculator::roundMoney($grossSubtotal + $taxTotal);
+        $grandTotal = max(0, \App\Services\GstCalculator::roundMoney($goodsTotal + $shippingCharge - $discount));
 
         return [
             'items' => array_values($items),

@@ -38,7 +38,16 @@ ob_start();
         </div>
     </div>
 
+    <?php if (!empty($checkoutError)): ?>
+        <div class="max-w-xl mx-auto bg-white border border-orange-200 rounded-2xl p-6 text-sm text-gray-800">
+            <h2 class="text-base font-semibold text-gray-900 mb-2">Checkout unavailable</h2>
+            <p><?= htmlspecialchars($checkoutError) ?></p>
+            <a href="<?= url('catalog') ?>" class="inline-block mt-4 px-4 py-2 bg-[#f05a29] text-white text-xs font-semibold rounded-xl">Continue browsing</a>
+        </div>
+    <?php else: ?>
     <form id="checkoutForm" onsubmit="processCheckout(event)" class="flex flex-col lg:flex-row gap-8 items-start">
+        <?= csrf_field() ?>
+        <input type="hidden" name="source" value="<?= htmlspecialchars($source ?? 'cart') ?>">
 
         <!-- Left: Shipping Address & Contact Details -->
         <div class="flex-1 space-y-5 w-full">
@@ -67,7 +76,7 @@ ob_start();
                         <label class="block font-semibold text-gray-700 uppercase mb-1">Full Name / Company Name
                             *</label>
                         <input type="text" name="customer_name" value="<?= htmlspecialchars($user['name'] ?? '') ?>"
-                            required placeholder="e.g. Shivam Madhwal / Apex Trading Co."
+                            required placeholder="Full name or company name"
                             class="w-full h-11 px-4 bg-gray-50/80 border border-gray-300 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
                     </div>
 
@@ -75,14 +84,14 @@ ob_start();
                         <label class="block font-semibold text-gray-700 uppercase mb-1">Mobile / WhatsApp Number
                             *</label>
                         <input type="tel" name="customer_phone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>"
-                            required placeholder="e.g. 9876543210"
+                            required placeholder="10-digit mobile number"
                             class="w-full h-11 px-4 bg-gray-50/80 border border-gray-300 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
                     </div>
 
                     <div>
                         <label class="block font-semibold text-gray-700 uppercase mb-1">Email Address *</label>
                         <input type="email" name="customer_email" value="<?= htmlspecialchars($user['email'] ?? '') ?>"
-                            required placeholder="e.g. shivam@example.com"
+                            required placeholder="Email address"
                             class="w-full h-11 px-4 bg-gray-50/80 border border-gray-300 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
                     </div>
 
@@ -90,28 +99,43 @@ ob_start();
                         <label class="block font-semibold text-gray-700 uppercase mb-1">Flat / House No., Building /
                             Area *</label>
                         <input type="text" name="shipping_address" required
-                            placeholder="9b sec 1 vaishali ghaziabad, Near gurudwara"
+                            placeholder="House no., street, area"
                             class="w-full h-11 px-4 bg-gray-50/80 border border-gray-300 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
                     </div>
 
                     <div>
                         <label class="block font-semibold text-gray-700 uppercase mb-1">City *</label>
-                        <input type="text" name="city" required placeholder="e.g. Ghaziabad"
+                        <input type="text" name="city" required placeholder="City"
                             class="w-full h-11 px-4 bg-gray-50/80 border border-gray-300 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
                     </div>
 
                     <div>
                         <label class="block font-semibold text-gray-700 uppercase mb-1">State *</label>
-                        <input type="text" name="state" required placeholder="e.g. Uttar Pradesh"
+                        <select name="state" id="checkoutState" required
                             class="w-full h-11 px-4 bg-gray-50/80 border border-gray-300 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
+                            <option value="">Select state</option>
+                            <?php foreach (($states ?? \App\Services\GstCalculator::STATES) as $stateName): ?>
+                                <option value="<?= htmlspecialchars($stateName) ?>"><?= htmlspecialchars($stateName) ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div>
                         <label class="block font-semibold text-gray-700 uppercase mb-1">Pincode *</label>
-                        <input type="text" name="pincode" required placeholder="e.g. 201010"
+                        <input type="text" name="pincode" required placeholder="6-digit PIN code"
                             class="w-full h-11 px-4 bg-gray-50/80 border border-gray-300 rounded-xl font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29] focus:bg-white transition">
                     </div>
                 </div>
+
+                <?php if (!empty($paymentMessage)): ?>
+                    <div class="rounded-xl border border-orange-200 bg-orange-50 px-3 py-2 text-xs text-gray-800"><?= htmlspecialchars($paymentMessage) ?></div>
+                <?php endif; ?>
+                <?php if (($displayCurrency ?? 'INR') !== 'INR'): ?>
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-700">
+                        Your display currency is <?= htmlspecialchars($displayCurrency) ?>. Razorpay charges Indian Rupees only, so this order is billed at the INR catalog total shown here.
+                    </div>
+                <?php endif; ?>
+                <div id="payMessage" class="hidden rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-800"></div>
 
                 <div class="pt-2 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-600">
                     <input type="checkbox" id="billingCheck" checked
@@ -183,22 +207,32 @@ ob_start();
             <div class="space-y-2.5 text-xs text-gray-600 border-t border-b border-gray-100 py-3">
                 <div class="flex justify-between">
                     <span>Item(s) Total</span>
-                    <span class="font-semibold text-gray-900">₹<?= number_format($subtotal, 2) ?></span>
+                    <span class="font-semibold text-gray-900" id="checkoutItemsTotal">₹<?= number_format($subtotal, 2) ?></span>
+                </div>
+                <div id="gstBreakdown" class="space-y-2.5">
+                    <?php foreach (($gst['rows'] ?? []) as $gstRow): ?>
+                        <div class="flex justify-between">
+                            <span><?= htmlspecialchars($gstRow['label']) ?></span>
+                            <span class="font-semibold text-gray-900">₹<?= number_format((float) $gstRow['amount'], 2) ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                    <?php if (empty($gst['rows'])): ?>
+                        <div class="flex justify-between">
+                            <span>Estimated GST</span>
+                            <span class="font-semibold text-gray-900">₹<?= number_format((float) ($tax ?? 0), 2) ?></span>
+                        </div>
+                    <?php endif; ?>
                 </div>
                 <div class="flex justify-between">
                     <span>Procurement Charges</span>
                     <span class="font-semibold text-emerald-600">₹0 (Free Shipping)</span>
-                </div>
-                <div class="flex justify-between">
-                    <span>Estimated GST (18%)</span>
-                    <span class="font-semibold text-gray-900">₹<?= number_format($tax, 2) ?></span>
                 </div>
             </div>
 
             <!-- Grand Total Highlight Box -->
             <div class="bg-orange-50/60 border border-orange-100 p-3.5 rounded-xl flex items-center justify-between">
                 <span class="text-xs font-semibold text-gray-900">Grand Total</span>
-                <span class="text-xl font-semibold text-[#f05a29]">₹<?= number_format($total, 2) ?></span>
+                <span class="text-xl font-semibold text-[#f05a29]" id="checkoutGrandTotal">₹<?= number_format($total, 2) ?></span>
             </div>
 
             <!-- Safe & Secure Payments Notice -->
@@ -244,23 +278,87 @@ ob_start();
                 </div>
             </div>
 
-            <button type="submit" id="payBtn"
-                class="w-full py-3.5 bg-[#f05a29] hover:bg-[#d94e20] text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer border-0">
+            <button type="submit" id="payBtn" <?= empty($paymentReady) ? 'disabled' : '' ?>
+                class="w-full py-3.5 bg-[#f05a29] hover:bg-[#d94e20] disabled:bg-gray-300 disabled:cursor-not-allowed text-white text-xs font-semibold rounded-xl shadow-xs transition flex items-center justify-center gap-2 cursor-pointer border-0">
                 <span>Continue &amp; Pay Now</span>
                 <span class="text-sm">&rarr;</span>
             </button>
         </div>
 
     </form>
+    <?php endif; ?>
 
 </div>
 
 <script>
+    const CHECKOUT_CSRF = <?= json_encode(csrf_token()) ?>;
+    let checkoutBusy = false;
+
+    function inr(amount) {
+        return '₹' + Number(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function paintGst(data) {
+        const box = document.getElementById('gstBreakdown');
+        const items = document.getElementById('checkoutItemsTotal');
+        const grand = document.getElementById('checkoutGrandTotal');
+        if (items) items.textContent = inr(data.items_total);
+        if (grand) grand.textContent = inr(data.grand_total);
+        if (!box) return;
+        const rows = Array.isArray(data.rows) ? data.rows : [];
+        box.innerHTML = rows.map((row) => (
+            '<div class="flex justify-between"><span>' + row.label + '</span><span class="font-semibold text-gray-900">' + inr(row.amount) + '</span></div>'
+        )).join('');
+    }
+
+    const checkoutState = document.getElementById('checkoutState');
+    if (checkoutState) {
+        checkoutState.addEventListener('change', async () => {
+            const body = new URLSearchParams();
+            body.append('_csrf_token', CHECKOUT_CSRF);
+            body.append('state', checkoutState.value);
+            body.append('source', document.querySelector('#checkoutForm [name="source"]')?.value || 'cart');
+            try {
+                const res = await fetch('<?= url('checkout/gst-quote') ?>', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CHECKOUT_CSRF },
+                    body
+                });
+                const data = await res.json();
+                if (data.success) paintGst(data);
+            } catch (err) {}
+        });
+    }
+
+    function setPayMessage(text) {
+        const box = document.getElementById('payMessage');
+        if (!box) return;
+        if (!text) {
+            box.classList.add('hidden');
+            box.textContent = '';
+            return;
+        }
+        box.textContent = text;
+        box.classList.remove('hidden');
+    }
+
+    function resetPayBtn() {
+        const payBtn = document.getElementById('payBtn');
+        if (!payBtn) return;
+        payBtn.disabled = false;
+        payBtn.innerHTML = 'Continue &amp; Pay Now &rarr;';
+        checkoutBusy = false;
+    }
+
     async function processCheckout(e) {
         e.preventDefault();
+        if (checkoutBusy) return;
         const payBtn = document.getElementById('payBtn');
+        if (!payBtn || payBtn.disabled) return;
+        checkoutBusy = true;
         payBtn.disabled = true;
         payBtn.innerHTML = 'Initializing Payment...';
+        setPayMessage('');
 
         const form = document.getElementById('checkoutForm');
         const formData = new FormData(form);
@@ -268,14 +366,14 @@ ob_start();
         try {
             const res = await fetch('<?= url('checkout/create-order') ?>', {
                 method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CHECKOUT_CSRF },
                 body: formData
             });
             const data = await res.json();
 
             if (!data.success) {
-                alert(data.message || 'Error initializing checkout');
-                payBtn.disabled = false;
-                payBtn.innerHTML = 'Continue &amp; Pay Now &rarr;';
+                setPayMessage(data.message || 'Payment could not be started.');
+                resetPayBtn();
                 return;
             }
 
@@ -289,22 +387,24 @@ ob_start();
                 "handler": async function (response) {
                     payBtn.innerHTML = 'Verifying Payment...';
                     const verifyPayload = new URLSearchParams();
+                    verifyPayload.append('_csrf_token', CHECKOUT_CSRF);
                     verifyPayload.append('order_id', data.order_id);
-                    verifyPayload.append('razorpay_order_id', response.razorpay_order_id || data.razorpay_order_id);
-                    verifyPayload.append('razorpay_payment_id', response.razorpay_payment_id || ('pay_mock_' + Math.random().toString(36).substring(7)));
-                    verifyPayload.append('razorpay_signature', response.razorpay_signature || ('mock_sig_' + Math.random().toString(36).substring(7)));
+                    verifyPayload.append('source', formData.get('source') || 'cart');
+                    verifyPayload.append('razorpay_order_id', response.razorpay_order_id || '');
+                    verifyPayload.append('razorpay_payment_id', response.razorpay_payment_id || '');
+                    verifyPayload.append('razorpay_signature', response.razorpay_signature || '');
 
                     const vRes = await fetch('<?= url('checkout/razorpay-verify') ?>', {
                         method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CHECKOUT_CSRF },
                         body: verifyPayload
                     });
                     const vData = await vRes.json();
-                    if (vData.success) {
+                    if (vData.success && vData.redirect_url) {
                         window.location.href = vData.redirect_url;
                     } else {
-                        alert(vData.message || 'Payment verification failed');
-                        payBtn.disabled = false;
-                        payBtn.innerHTML = 'Continue &amp; Pay Now &rarr;';
+                        setPayMessage(vData.message || 'Payment verification failed. You can try again.');
+                        resetPayBtn();
                     }
                 },
                 "prefill": {
@@ -312,29 +412,35 @@ ob_start();
                     "email": data.customer_email,
                     "contact": data.customer_phone
                 },
-                "theme": {
-                    "color": "#f05a29"
-                },
+                "theme": { "color": "#f05a29" },
                 "modal": {
                     "ondismiss": function () {
-                        payBtn.disabled = false;
-                        payBtn.innerHTML = 'Continue &amp; Pay Now &rarr;';
+                        setPayMessage('Payment window closed. Your order is still unpaid — you can try again.');
+                        resetPayBtn();
                     }
                 }
             };
 
             const rzp = new Razorpay(options);
             rzp.on('payment.failed', function (response) {
-                alert("Payment failed: " + (response.error.description || 'Transaction declined'));
-                payBtn.disabled = false;
-                payBtn.innerHTML = 'Continue &amp; Pay Now &rarr;';
+                const reason = (response.error && response.error.description) ? response.error.description : 'Payment was declined.';
+                const failBody = new URLSearchParams();
+                failBody.append('_csrf_token', CHECKOUT_CSRF);
+                failBody.append('razorpay_order_id', data.razorpay_order_id);
+                failBody.append('razorpay_payment_id', (response.error && response.error.metadata && response.error.metadata.payment_id) ? response.error.metadata.payment_id : '');
+                failBody.append('reason', reason);
+                fetch('<?= url('checkout/payment-failed') ?>', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CHECKOUT_CSRF },
+                    body: failBody
+                });
+                setPayMessage(reason + ' You can try again.');
+                resetPayBtn();
             });
             rzp.open();
-
         } catch (err) {
-            alert('Connection error. Please try again.');
-            payBtn.disabled = false;
-            payBtn.innerHTML = 'Continue &amp; Pay Now &rarr;';
+            setPayMessage('Connection error. Please try again.');
+            resetPayBtn();
         }
     }
 </script>

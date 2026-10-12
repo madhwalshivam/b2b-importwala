@@ -1882,12 +1882,17 @@
     }
 
     async function buyNowFromDetail() {
-        // No variant required — null selectedVariantIndex means main product (variant_id = null)
-        if (typeof showComingSoonModal === 'function') {
-            showComingSoonModal();
-        } else {
-            alert('This option is coming soon. Please request a quote and we will get back to you.');
+        const qtyInp = document.getElementById('detailQtyInput');
+        const qty = parseInt(qtyInp ? qtyInp.value : '1', 10) || 1;
+        let variant = '';
+        if (typeof VARIANTS_LIST !== 'undefined' && VARIANTS_LIST && typeof selectedVariantIndex !== 'undefined' && VARIANTS_LIST[selectedVariantIndex]) {
+            variant = VARIANTS_LIST[selectedVariantIndex].id || '';
         }
+        const mode = (typeof currentMode !== 'undefined' && currentMode) ? currentMode : 'wholesale';
+        window.location.href = <?= json_encode(url('checkout')) ?>
+            + '?buy_product=<?= (int)($product['id'] ?? 0) ?>&buy_qty=' + encodeURIComponent(qty)
+            + '&buy_variant=' + encodeURIComponent(variant)
+            + '&buy_mode=' + encodeURIComponent(mode);
     }
 
     async function checkDetailWishlistStatus() {

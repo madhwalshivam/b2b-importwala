@@ -4,6 +4,8 @@ namespace App\Controllers\Admin;
 use App\Core\Controller;
 use App\Core\Auth;
 use App\Models\Category;
+use App\Services\GstCalculator;
+use App\Services\GstService;
 
 class CategoryController extends Controller {
     protected Category $categoryModel;
@@ -112,6 +114,7 @@ class CategoryController extends Controller {
             $parentId = $this->request->input('parent_id');
             $parentId = ($parentId !== '' && $parentId !== null && (int)$parentId > 0) ? (int)$parentId : null;
 
+            $gst = $this->gstFieldsFromRequest();
             $id = $this->categoryModel->insert([
                 'name'             => $name,
                 'slug'             => $slug,
@@ -125,9 +128,13 @@ class CategoryController extends Controller {
                 'meta_description' => trim($this->request->input('meta_description', '')),
                 'is_featured'      => isset($_POST['is_featured']) && $_POST['is_featured'] == '1' ? 1 : 0,
                 'sort_order'       => (int)$this->request->input('sort_order', 0),
-                'status'           => $this->request->input('status', 'active')
+                'status'           => $this->request->input('status', 'active'),
+                'hsn_code'         => $gst['hsn_code'],
+                'gst_rate'         => $gst['gst_rate'],
+                'is_gst_active'    => $gst['is_gst_active'],
             ]);
 
+            (new GstService())->audit('category', (int) $id, null, $gst['hsn_code'], null, $gst['gst_rate'], $this->adminId());
             activity_log('Create Category', 'Categories', $id, "Added category: {$name}");
 
             try {
@@ -230,6 +237,7 @@ class CategoryController extends Controller {
                 }
             }
 
+            $gst = $this->gstFieldsFromRequest();
             $data = [
                 'name'             => $name,
                 'slug'             => $slug,
@@ -243,10 +251,14 @@ class CategoryController extends Controller {
                 'meta_description' => trim($this->request->input('meta_description', '')),
                 'is_featured'      => isset($_POST['is_featured']) && $_POST['is_featured'] == '1' ? 1 : 0,
                 'sort_order'       => (int)$this->request->input('sort_order', 0),
-                'status'           => $this->request->input('status', 'active')
+                'status'           => $this->request->input('status', 'active'),
+                'hsn_code'         => $gst['hsn_code'],
+                'gst_rate'         => $gst['gst_rate'],
+                'is_gst_active'    => $gst['is_gst_active'],
             ];
 
             $this->categoryModel->update($id, $data);
+            (new GstService())->audit('category', $id, $existing['hsn_code'] ?? null, $gst['hsn_code'], $existing['gst_rate'] ?? null, $gst['gst_rate'], $this->adminId());
 
             activity_log('Update Category', 'Categories', $id, "Updated category: {$name}");
 
@@ -409,6 +421,61 @@ class CategoryController extends Controller {
 
         $this->setFlash('success', 'Products reassigned and category deleted successfully.');
         $this->redirect(url('admin/categories'));
+    }
+
+    public function updateGst(int $id): void
+    {
+        $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+        if (!Auth::hasPermission('categories.edit')) {
+            $this->gstFail($isAjax, 'Permission denied.');
+            return;
+        }
+        $existing = $this->categoryModel->find($id);
+        if (!$existing) {
+            $this->gstFail($isAjax, 'Category not found.');
+            return;
+        }
+        try {
+            $gst = $this->gstFieldsFromRequest();
+        } catch (\InvalidArgumentException $e) {
+            $this->gstFail($isAjax, $e->getMessage());
+            return;
+        }
+        $this->categoryModel->update($id, $gst);
+        (new GstService())->audit('category', $id, $existing['hsn_code'] ?? null, $gst['hsn_code'], $existing['gst_rate'] ?? null, $gst['gst_rate'], $this->adminId());
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => true, 'message' => 'GST details saved.']);
+            exit;
+        }
+        $this->setFlash('success', 'GST details saved.');
+        $this->redirect(url('admin/categories'));
+    }
+
+    private function gstFieldsFromRequest(): array
+    {
+        return [
+            'hsn_code' => GstCalculator::parseHsn($this->request->input('hsn_code', '')),
+            'gst_rate' => GstCalculator::parseRate($this->request->input('gst_rate', '18'), $this->request->input('gst_rate_custom', '')),
+            'is_gst_active' => !array_key_exists('is_gst_active', $_POST) || (string) $_POST['is_gst_active'] === '1' ? 1 : 0,
+        ];
+    }
+
+    private function gstFail(bool $isAjax, string $message): void
+    {
+        if ($isAjax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $message]);
+            exit;
+        }
+        $this->setFlash('danger', $message);
+        $this->redirect(url('admin/categories'));
+    }
+
+    private function adminId(): ?int
+    {
+        $id = $_SESSION['admin_user_id'] ?? null;
+        return $id !== null && $id !== '' ? (int) $id : null;
     }
 
     /**

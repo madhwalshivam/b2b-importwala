@@ -45,13 +45,25 @@ ob_start();
                         <div>
                             <div class="font-semibold text-gray-900"><?= htmlspecialchars($item['product_name']) ?></div>
                             <div class="text-[11px] text-gray-400">SKU: <?= htmlspecialchars($item['sku']) ?> &bull; Qty:
-                                <?= $item['quantity'] ?></div>
+                                <?= $item['quantity'] ?>
+                                <?php if (!empty($item['hsn_code'])): ?> &bull; HSN <?= htmlspecialchars($item['hsn_code']) ?><?php endif; ?>
+                                <?php if (isset($item['gst_rate'])): ?> &bull; GST <?= rtrim(rtrim(number_format((float) $item['gst_rate'], 2), '0'), '.') ?>%<?php endif; ?>
+                            </div>
                         </div>
                         <div class="font-semibold text-gray-900">₹<?= number_format((float) $item['total_amount'], 2) ?>
                         </div>
                     </div>
                 <?php endforeach; ?>
             </div>
+
+            <?php if (isset($order['total_gst']) && $order['total_gst'] !== null): ?>
+                <div class="text-xs text-gray-600 space-y-1 bg-gray-50 border border-gray-100 rounded-lg p-3">
+                    <div class="flex justify-between"><span>Taxable value</span><span>₹<?= number_format((float) $order['total_taxable_amount'], 2) ?></span></div>
+                    <div class="flex justify-between"><span>CGST</span><span>₹<?= number_format((float) ($order['total_cgst'] ?? 0), 2) ?></span></div>
+                    <div class="flex justify-between"><span>SGST</span><span>₹<?= number_format((float) ($order['total_sgst'] ?? 0), 2) ?></span></div>
+                    <div class="flex justify-between"><span>IGST</span><span>₹<?= number_format((float) ($order['total_igst'] ?? 0), 2) ?></span></div>
+                </div>
+            <?php endif; ?>
 
             <div class="pt-2 text-xs text-gray-600">
                 <strong class="text-gray-900 block mb-1">Shipping Address:</strong>

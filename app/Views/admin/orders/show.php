@@ -180,16 +180,32 @@ include __DIR__ . '/../layouts/header.php';
                 <tbody>
                     <?php foreach ($items as $item):
                         $grossPrice = (float) ($item['price'] ?? 0);
-                        $gstPercent = (float) ($item['tax_percent'] ?? 18);
+                        $gstPercent = (float) ($item['gst_rate'] ?? $item['tax_percent'] ?? 0);
                         $qty = (int) ($item['quantity'] ?? 1);
-                        $unitBase = $grossPrice / (1 + ($gstPercent / 100));
-                        $unitTax = $grossPrice - $unitBase;
-                        $lineTaxAmt = isset($item['tax_amount']) && (float) $item['tax_amount'] > 0 ? (float) $item['tax_amount'] : ($unitTax * $qty);
+                        $hasSnapshot = array_key_exists('taxable_amount', $item) && $item['taxable_amount'] !== null;
+                        if ($hasSnapshot) {
+                            $lineTaxAmt = (float) ($item['total_gst_amount'] ?? 0);
+                        } else {
+                            $unitBase = $gstPercent > 0 ? $grossPrice / (1 + ($gstPercent / 100)) : $grossPrice;
+                            $unitTax = $grossPrice - $unitBase;
+                            $lineTaxAmt = isset($item['tax_amount']) && (float) $item['tax_amount'] > 0 ? (float) $item['tax_amount'] : ($unitTax * $qty);
+                        }
+                        $hsn = trim((string) ($item['hsn_code'] ?? ''));
                         ?>
                         <tr class="border-b">
-                            <td class="p-3 font-semibold text-gray-900"><?= htmlspecialchars($item['product_name']) ?></td>
+                            <td class="p-3 font-semibold text-gray-900">
+                                <?= htmlspecialchars($item['product_name']) ?>
+                                <?php if ($hasSnapshot): ?>
+                                    <div class="text-[10px] text-gray-500 font-medium mt-1">
+                                        Taxable <?= format_price($item['taxable_amount']) ?>
+                                        · CGST <?= format_price($item['cgst_amount'] ?? 0) ?>
+                                        · SGST <?= format_price($item['sgst_amount'] ?? 0) ?>
+                                        · IGST <?= format_price($item['igst_amount'] ?? 0) ?>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
                             <td class="p-3 font-mono font-semibold text-gray-700">
-                                <?= htmlspecialchars($item['hsn_code'] ?? '8714.99.90') ?></td>
+                                <?= $hsn !== '' ? htmlspecialchars($hsn) : '—' ?></td>
                             <td class="p-3 font-mono text-gray-500"><?= htmlspecialchars($item['sku']) ?></td>
                             <td class="p-3 font-mono font-semibold"><?= format_price($grossPrice) ?></td>
                             <td class="p-3 font-mono"><?= number_format($gstPercent, 0) ?>%</td>

@@ -231,16 +231,19 @@ ob_start();
                         <span class="font-semibold text-gray-900">₹0</span>
                     </div>
 
-                    <div class="flex items-center justify-between text-gray-600">
-                        <span class="flex items-center gap-1.5">
-                            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M9 14.25l6-6m4.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 6a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-                            </svg>
-                            GST (18%)
-                        </span>
-                        <span class="font-semibold text-gray-900" id="summaryTaxTotal">₹<?= number_format($tax, 2) ?></span>
+                    <div id="gstRows" class="space-y-3">
+                        <?php foreach (($gst['rows'] ?? []) as $gstRow): ?>
+                            <div class="flex items-center justify-between text-gray-600">
+                                <span><?= htmlspecialchars($gstRow['label']) ?></span>
+                                <span class="font-semibold text-gray-900">₹<?= number_format((float) $gstRow['amount'], 2) ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (empty($gst['rows'])): ?>
+                            <div class="flex items-center justify-between text-gray-600">
+                                <span>Estimated GST</span>
+                                <span class="font-semibold text-gray-900" id="summaryTaxTotal">₹<?= number_format($tax, 2) ?></span>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -318,10 +321,10 @@ ob_start();
 
                 <!-- Action Buttons: Single Row (Place Order & Send Inquiry side-by-side) -->
                 <div class="grid grid-cols-2 gap-2.5 pt-1">
-                    <button type="button" onclick="showComingSoonModal()"
+                    <a href="<?= url('checkout') ?>"
                         class="block w-full py-3 bg-[#f05a29] hover:bg-[#d94e20] text-white text-xs font-semibold text-center rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center border-0">
                         Place Order
-                    </button>
+                    </a>
 
                     <button type="button" onclick="openCartInquiryModal()"
                         class="block w-full py-3 bg-[#0F172A] hover:bg-black text-white text-xs font-semibold text-center rounded-xl shadow-xs transition cursor-pointer border-0 flex items-center justify-center gap-1.5">
@@ -556,6 +559,15 @@ if ($currentUserId) {
         }
     }
 
+    function paintGstRows(rows) {
+        const box = document.getElementById('gstRows');
+        if (!box || !Array.isArray(rows) || !rows.length) return;
+        const money = (n) => '₹' + Number(n || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        box.innerHTML = rows.map((row) => (
+            '<div class="flex items-center justify-between text-gray-600"><span>' + row.label + '</span><span class="font-semibold text-gray-900">' + money(row.amount) + '</span></div>'
+        )).join('');
+    }
+
     async function updatePageCartQty(cartItemId, delta) {
         const span = document.getElementById('itemQtyVal_' + cartItemId);
         if (!span) return;
@@ -587,11 +599,12 @@ if ($currentUserId) {
                 if (itemQtyText) itemQtyText.textContent = newQty + ' units';
             }
 
-            const rawSubtotal = parseFloat(data.subtotal.replace(/,/g, '')) || 0;
-            const computedTax = rawSubtotal * 0.18;
-            const computedTotal = rawSubtotal + computedTax;
+            const rawSubtotal = parseFloat(String(data.subtotal).replace(/,/g, '')) || 0;
+            const computedTax = data.tax ? (parseFloat(String(data.tax).replace(/,/g, '')) || 0) : rawSubtotal * 0.18;
+            const computedTotal = data.grand_total ? (parseFloat(String(data.grand_total).replace(/,/g, '')) || 0) : (rawSubtotal + computedTax);
 
             if (sub) sub.textContent = '₹' + rawSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            paintGstRows(data.gst_rows, computedTax);
             if (taxTot) taxTot.textContent = '₹' + computedTax.toLocaleString('en-IN', { minimumFractionDigits: 2 });
             if (tot) tot.textContent = '₹' + computedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 
@@ -617,11 +630,12 @@ if ($currentUserId) {
             const taxTot = document.getElementById('summaryTaxTotal');
             const tot = document.getElementById('summaryTotal');
 
-            const rawSubtotal = parseFloat(data.subtotal.replace(/,/g, '')) || 0;
-            const computedTax = rawSubtotal * 0.18;
-            const computedTotal = rawSubtotal + computedTax;
+            const rawSubtotal = parseFloat(String(data.subtotal).replace(/,/g, '')) || 0;
+            const computedTax = data.tax ? (parseFloat(String(data.tax).replace(/,/g, '')) || 0) : rawSubtotal * 0.18;
+            const computedTotal = data.grand_total ? (parseFloat(String(data.grand_total).replace(/,/g, '')) || 0) : (rawSubtotal + computedTax);
 
             if (sub) sub.textContent = '₹' + rawSubtotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            paintGstRows(data.gst_rows, computedTax);
             if (taxTot) taxTot.textContent = '₹' + computedTax.toLocaleString('en-IN', { minimumFractionDigits: 2 });
             if (tot) tot.textContent = '₹' + computedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 });
 

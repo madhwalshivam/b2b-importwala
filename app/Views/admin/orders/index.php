@@ -66,6 +66,9 @@ include __DIR__ . '/../layouts/header.php';
                                     <?php if ($o['payment_status'] === 'paid'): ?>
                                         <span
                                             class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold text-[10px] uppercase">Paid</span>
+                                    <?php elseif ($o['payment_status'] === 'failed'): ?>
+                                        <span
+                                            class="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-full font-semibold text-[10px] uppercase">Failed</span>
                                     <?php else: ?>
                                         <span
                                             class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-semibold text-[10px] uppercase"><?= htmlspecialchars($o['payment_status']) ?></span>
@@ -169,10 +172,14 @@ include __DIR__ . '/../layouts/header.php';
         const o = data.order;
         activeModalOrderNum = o.order_number;
         document.getElementById('modalOrderNum').textContent = o.order_number;
+        const payId = o.razorpay_payment_id ? ('Razorpay: ' + o.razorpay_payment_id) : 'Razorpay payment id: not paid yet';
         document.getElementById('modalCustomer').innerHTML = `
             <div>${o.customer_name}</div>
             <div>Phone: ${o.customer_phone}</div>
             <div>Email: ${o.customer_email || 'N/A'}</div>
+            <div>Payment: ${(o.payment_status || 'pending').toUpperCase()}</div>
+            <div>Amount: ₹${parseFloat(o.total_amount || 0).toFixed(2)}</div>
+            <div>${payId}</div>
         `;
         let addrStr = o.shipping_address;
         try {

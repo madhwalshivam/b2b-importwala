@@ -104,26 +104,29 @@ include __DIR__ . '/../layouts/header.php';
                     </select>
                 </div>
 
-                <div>
-                    <label class="block font-semibold text-gray-700 uppercase mb-1">HSN Code</label>
-                    <input type="text" name="hsn_code" value="8714.99.90" placeholder="e.g. 8714.99.90"
-                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-mono font-semibold text-gray-900 focus:outline-none focus:border-[#f05a29]">
-                </div>
-
-                <div>
-                    <label class="block font-semibold text-gray-700 uppercase mb-1">GST Rate (%) *</label>
-                    <select name="tax_percent" required
-                        class="w-full h-11 px-4 bg-gray-50 border border-slate-200 rounded-xl font-semibold text-gray-900 focus:bg-white text-xs focus:outline-none focus:border-[#f05a29]">
-                        <option value="0">0% (Exempt / Nil Rated)</option>
-                        <option value="5">5% GST</option>
-                        <option value="12">12% GST</option>
-                        <option value="18" selected>18% GST (Default)</option>
-                        <option value="28">28% GST</option>
-                    </select>
+                <div class="sm:col-span-2 bg-orange-50/50 border border-orange-100 rounded-xl p-4 space-y-3">
+                    <input type="hidden" name="override_gst" value="0">
+                    <label class="flex items-center gap-2 text-xs font-semibold text-gray-800 uppercase">
+                        <input type="checkbox" name="override_gst" value="1" onchange="document.getElementById('createGstOverride').classList.toggle('hidden', !this.checked)">
+                        Override category GST / HSN
+                    </label>
+                    <p class="text-[11px] text-gray-500">Leave this off to use the category HSN and GST rate. A missing HSN does not block the order.</p>
+                    <div id="createGstOverride" class="grid grid-cols-1 sm:grid-cols-2 gap-3 hidden">
+                        <input type="text" name="hsn_code" inputmode="numeric" maxlength="8" placeholder="HSN: 4, 6 or 8 digits" class="w-full h-11 px-4 bg-white border border-slate-200 rounded-xl font-mono text-xs">
+                        <select name="gst_rate" class="w-full h-11 px-4 bg-white border border-slate-200 rounded-xl text-xs font-semibold">
+                            <option value="0">0%</option>
+                            <option value="3">3%</option>
+                            <option value="5">5%</option>
+                            <option value="12">12%</option>
+                            <option value="18" selected>18%</option>
+                            <option value="28">28%</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <p class="text-[11px] text-gray-500 font-medium italic mt-2">
-                * All product prices are treated as <strong>GST INCLUSIVE</strong>.
+                GST is calculated from the category rate unless this product overrides it. Price mode (tax extra or included) is set in GST Settings.
             </p>
         </div>
 
