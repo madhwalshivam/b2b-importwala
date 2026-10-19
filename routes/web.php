@@ -55,12 +55,20 @@ $router->get('/login', 'AuthController@customerLogin');
 $router->post('/login', 'AuthController@customerLogin', [CsrfMiddleware::class]);
 $router->get('/signup', 'AuthController@customerSignup');
 $router->post('/signup', 'AuthController@customerSignup', [CsrfMiddleware::class]);
+$router->post('/auth/google', 'AuthController@google', [CsrfMiddleware::class]);
+$router->get('/complete-profile', 'AuthController@completeProfile');
+$router->post('/complete-profile', 'AuthController@completeProfile', [CsrfMiddleware::class]);
 $router->get('/forgot-password', 'AuthController@customerForgotPassword');
 $router->post('/forgot-password', 'AuthController@processCustomerForgotPassword', [CsrfMiddleware::class]);
 $router->get('/reset-password', 'AuthController@customerResetPassword');
 $router->post('/reset-password', 'AuthController@processCustomerResetPassword', [CsrfMiddleware::class]);
 $router->get('/logout', 'AuthController@customerLogout');
 $router->get('/account', 'AuthController@account');
+$router->get('/account/history', 'Web\ProductHistoryController@index');
+$router->post('/account/history/clear', 'Web\ProductHistoryController@clear', [CsrfMiddleware::class]);
+$router->post('/account/history/remove', 'Web\ProductHistoryController@remove', [CsrfMiddleware::class]);
+$router->get('/api/history/recent', 'Web\ProductHistoryController@recent');
+$router->get('/api/home-feed', 'Api\HomeFeedController@index');
 
 // Wishlist Routes (AJAX & Page View)
 $router->get('/wishlist', 'Web\WishlistController@index');
@@ -150,6 +158,8 @@ $router->get('/api/refresh-token', 'AuthController@refreshToken');
 // ----------------------------------------------------
 $router->get('/admin/login', 'AuthController@login');
 $router->post('/admin/login', 'AuthController@processLogin', [CsrfMiddleware::class]);
+$router->get('/admin/customers', 'Admin\CustomerUserController@index', [AdminMiddleware::class]);
+$router->get('/admin/customers/export', 'Admin\CustomerUserController@exportCsv', [AdminMiddleware::class]);
 $router->get('/admin/forgot-password', 'AuthController@adminForgotPassword');
 $router->post('/admin/forgot-password', 'AuthController@processAdminForgotPassword', [CsrfMiddleware::class]);
 $router->get('/admin/reset-password', 'AuthController@adminResetPassword');

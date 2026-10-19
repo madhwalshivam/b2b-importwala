@@ -13,6 +13,7 @@ class CheckoutController extends BaseController
 {
     public function index(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('checkout', 'order');
         $source = ($_GET['source'] ?? '') === 'buynow' ? 'buynow' : 'cart';
         if (!empty($_GET['buy_product'])) {
             $built = $this->buildBuyNow(
@@ -79,6 +80,7 @@ class CheckoutController extends BaseController
 
     public function prepareBuyNow(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('checkout', 'order');
         $this->jsonHeaders();
         $productId = (int)($_POST['product_id'] ?? 0);
         $mode = (string)($_POST['pricing_mode'] ?? 'onepiece');
@@ -116,6 +118,7 @@ class CheckoutController extends BaseController
 
     public function createOrder(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('checkout', 'order');
         $this->jsonHeaders();
         $gateway = new RazorpayService();
         if (!$gateway->isReady()) {
@@ -270,6 +273,7 @@ class CheckoutController extends BaseController
 
     public function gstQuote(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('checkout', 'order');
         $this->jsonHeaders();
         $source = (($_POST['source'] ?? '') === 'buynow') ? 'buynow' : 'cart';
         if ($source === 'buynow') {
@@ -298,6 +302,7 @@ class CheckoutController extends BaseController
 
     public function verifyRazorpay(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('checkout', 'order');
         $this->jsonHeaders();
         $orderId = (int)($_POST['order_id'] ?? 0);
         $rzOrder = trim((string)($_POST['razorpay_order_id'] ?? ''));
@@ -540,11 +545,13 @@ class CheckoutController extends BaseController
 
         try {
             $db = Database::getInstance();
-            $stmt = $db->prepare("SELECT id, first_name, last_name, email, phone FROM users WHERE id = ? LIMIT 1");
+            $stmt = $db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
             $stmt->execute([(string)$id]);
             $row = $stmt->fetch(\PDO::FETCH_ASSOC);
             if ($row) {
-                $row['name'] = trim((string)($row['first_name'] ?? '') . ' ' . (string)($row['last_name'] ?? ''));
+                if (empty($row['name'])) {
+                    $row['name'] = trim((string)($row['first_name'] ?? '') . ' ' . (string)($row['last_name'] ?? ''));
+                }
                 return $row;
             }
 

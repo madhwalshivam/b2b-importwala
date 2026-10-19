@@ -1,36 +1,36 @@
-/* Mudsor Central Theme Configuration & Design System */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* The Only Snacks — theme tokens. Legacy --color-* names stay so existing utilities keep working. */
+@import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Lilita+One&family=Nunito:wght@400;600;700;800&display=swap');
 
 :root {
-  /* Brand Red Palette */
-  --color-primary: #A8111C;
-  /* Main brand red — buttons, active nav, links */
-  --color-primary-dark: #6E0D14;
-  /* Hover states, gradients, announcement bar bg */
+  /* TOS yellow is the brand primary. Maroon is the text/icon/heading color (legacy --color-primary). */
+  --primary: #FFD800;
+  --primary-dark: #E6C200;
+  --primary-soft: #FBEBA0;
+  --secondary: #7A1410;
+  --secondary-dark: #5C0E0B;
+  --cream: #FFF8EE;
+  --bg: #FFFBF3;
+  --text: #2A0A08;
+  --on-primary: #7A1410;
+  --on-secondary: #FFF8EE;
+  --orange: #F28C28;
+  --green: #1F8A4C;
+  --teal: #2BA3C0;
+  --tomato: #D7261E;
 
-  /* Brand Charcoal & Chrome Palette */
-  --color-secondary: #1A1A1A;
-  /* Black/Charcoal — headings, footer bg, admin sidebar */
-  --color-accent: #C0C0C0;
-  /* Chrome/Silver — borders, icon strokes, dividers */
+  --color-primary: var(--secondary);
+  --color-primary-dark: var(--secondary-dark);
+  --color-secondary: var(--text);
+  --color-accent: #E7D3A8;
 
-  /* Backgrounds & Canvas (Light Theme System) */
-  --bg-body: #FFF5F4;
-  /* Main page background tint */
-  --bg-body-soft: #FEF0EF;
-  /* Alternate section background tint */
-  --bg-card: #FFFFFF;
-  /* Card & content background */
+  --bg-body: var(--bg);
+  --bg-body-soft: var(--primary-soft);
+  --bg-card: var(--cream);
   --color-bg: var(--bg-body);
-  /* Main background */
   --color-bg-soft: var(--bg-body-soft);
-  /* Alternate section background */
 
-  /* Text & Typography */
-  --color-text: #1F1F1F;
-  /* Body text */
-  --color-text-muted: #6B6B6B;
-  /* Secondary text, SKU, timestamps */
+  --color-text: var(--text);
+  --color-text-muted: #6B4038;
 
   /* Status Indicators */
   --color-success: #1E7E34;
@@ -44,8 +44,8 @@
   --color-highlight-gold: #D4A017;
   /* Winner tags, star ratings, badges */
 
-  /* Typography Tokens */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Nunito', system-ui, sans-serif;
+  --font-display: 'Lilita One', 'Fredoka', system-ui, sans-serif;
   color-scheme: light;
 }
 
@@ -97,13 +97,16 @@ svg.lucide,
 
 /* Dynamic Helper Utilities referencing CSS variables */
 .btn-primary {
-  background-color: var(--color-primary, #A8111C) !important;
-  color: #FFFFFF !important;
+  background-color: var(--primary, #FFD800) !important;
+  color: var(--on-primary, #7A1410) !important;
+  border: 2px solid var(--secondary, #7A1410) !important;
+  border-radius: 999px !important;
 }
 
 .btn-primary:hover {
-  background-color: var(--color-primary-dark, #6E0D14) !important;
-  color: #FFFFFF !important;
+  background-color: var(--primary-dark, #E6C200) !important;
+  color: var(--on-primary, #7A1410) !important;
+  transform: translateY(-2px);
 }
 
 .bg-theme-primary {

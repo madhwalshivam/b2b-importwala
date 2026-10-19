@@ -4,8 +4,8 @@ namespace App\Controllers\Web;
 
 use App\Controllers\BaseController;
 use App\Core\Database;
+use App\Services\EmbeddingSearchService;
 use App\Services\ImageSearchStoreService;
-use App\Services\VisualSearchService;
 use PDO;
 
 class ImageSearchController extends BaseController
@@ -51,17 +51,27 @@ class ImageSearchController extends BaseController
             return;
         }
 
-        $results = $this->withSimilarStyle($search['results']);
-        $hydrated = $this->hydrateProducts($results);
-        $categoryOptions = $this->buildCategoryOptions($hydrated);
+        $searchNotice = '';
+        $noCloseMatches = false;
+        $minScore = EmbeddingSearchService::minScore();
+        $results = array_values(array_filter($search['results'], static function ($row) use ($minScore) {
+            return (float) ($row['score'] ?? 0) >= $minScore;
+        }));
 
+        // Category is a Qdrant payload filter on the cached query vector, not a PHP filter.
         if ($categoryFilter > 0) {
-            $hydrated = array_values(array_filter($hydrated, static function ($p) use ($categoryFilter) {
-                return (int) ($p['category_id'] ?? 0) === $categoryFilter
-                    || (int) ($p['subcategory_id'] ?? 0) === $categoryFilter;
-            }));
+            $abs = $store->absoluteImagePath($search['uploaded_image_path']);
+            $queried = (new EmbeddingSearchService())->searchByToken($search['token'], $abs, $categoryFilter);
+            if (!empty($queried['unavailable'])) {
+                $searchNotice = 'Image search is temporarily unavailable. Please try again in a few minutes.';
+                $results = [];
+            } else {
+                $results = $queried['items'];
+            }
         }
 
+        $hydrated = $this->hydrateProducts($results);
+        $categoryOptions = $this->allCategoryOptions();
         $hydrated = $this->sortProducts($hydrated, $sort);
 
         $totalCount = count($hydrated);
@@ -72,13 +82,14 @@ class ImageSearchController extends BaseController
         $offset = ($page - 1) * self::PER_PAGE;
         $pageItems = array_slice($hydrated, $offset, self::PER_PAGE);
 
-        // Best-match badge from stored score (works even if older rows have has_confident_match=0)
         $topScore = 0.0;
-        if (!empty($hydrated[0])) {
-            $topScore = (float) ($hydrated[0]['_score'] ?? $hydrated[0]['score'] ?? $hydrated[0]['raw_score'] ?? 0);
+        foreach ($hydrated as $row) {
+            $topScore = max($topScore, (float) ($row['_score'] ?? 0));
         }
-        $hasConfident = !empty($search['has_confident_match']) || $topScore >= 0.85;
-        if ($page === 1 && $sort === 'best' && $categoryFilter <= 0 && !empty($pageItems) && $topScore >= 0.85) {
+        $hasConfident = $searchNotice === '' && $topScore > 0 && $totalCount > 0;
+        $showSimilarStyle = $hasConfident && $totalCount > 1;
+        $noCloseMatches = $searchNotice === '' && $totalCount === 0;
+        if ($page === 1 && $sort === 'best' && !empty($pageItems) && $hasConfident) {
             $pageItems[0]['_is_best_match'] = true;
         }
 
@@ -104,48 +115,12 @@ class ImageSearchController extends BaseController
             'categoryFilter' => $categoryFilter,
             'categoryOptions' => $categoryOptions,
             'hasConfidentMatch' => $hasConfident,
+            'showSimilarStyle' => $showSimilarStyle,
+            'noCloseMatches' => $noCloseMatches,
+            'searchNotice' => $searchNotice,
             'queryImageUrl' => $queryImageUrl,
             'hideMobileBottomNav' => false,
         ]);
-    }
-
-    /**
-     * Older searches stored only the exact photo hit. Fill in same-type products
-     * (other anklets, other bracelets) so the results page is not a single card.
-     *
-     * @param array<int, array{product_id:int,variant_id:?int,score:float}> $results
-     * @return array<int, array{product_id:int,variant_id:?int,score:float}>
-     */
-    private function withSimilarStyle(array $results): array
-    {
-        if (count($results) >= 8) {
-            return $results;
-        }
-        $topId = (int) ($results[0]['product_id'] ?? 0);
-        $topScore = (float) ($results[0]['score'] ?? 0);
-        if ($topId <= 0 || $topScore < 0.85) {
-            return $results;
-        }
-
-        try {
-            $extra = (new VisualSearchService())->similarStyleProductIds($topId, 36);
-        } catch (\Throwable $e) {
-            return $results;
-        }
-
-        $seen = [];
-        foreach ($results as $row) {
-            $seen[(int) ($row['product_id'] ?? 0)] = true;
-        }
-        foreach ($extra as $row) {
-            $pid = (int) ($row['product_id'] ?? 0);
-            if ($pid <= 0 || isset($seen[$pid])) {
-                continue;
-            }
-            $seen[$pid] = true;
-            $results[] = $row;
-        }
-        return $results;
     }
 
     /**
@@ -282,6 +257,28 @@ class ImageSearchController extends BaseController
         }
 
         return $ordered;
+    }
+
+    private function allCategoryOptions(): array
+    {
+        try {
+            $rows = Database::getInstance()->query("
+                SELECT id, name FROM categories
+                WHERE status = 'active'
+                ORDER BY name ASC
+            ")->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+        $out = [];
+        foreach ($rows as $row) {
+            $id = (int) ($row['id'] ?? 0);
+            $name = trim((string) ($row['name'] ?? ''));
+            if ($id > 0 && $name !== '') {
+                $out[] = ['id' => $id, 'name' => $name];
+            }
+        }
+        return $out;
     }
 
     private function buildCategoryOptions(array $products): array

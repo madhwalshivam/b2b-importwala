@@ -133,7 +133,7 @@ class ImageMirrorService
                     'Key' => $cleanKey,
                     'Body' => $imgData,
                     'ContentType' => $mime,
-                    'CacheControl' => 'public, max-age=31536000'
+                    'CacheControl' => 'public, max-age=31536000, immutable'
                 ]);
 
                 // Verify upload succeeded

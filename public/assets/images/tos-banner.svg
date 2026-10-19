@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="600" viewBox="0 0 900 600" role="img" aria-label="PLACEHOLDER lifestyle photo">
+  <rect width="900" height="600" fill="#C4783A"/>
+  <ellipse cx="620" cy="340" rx="180" ry="120" fill="#F2D2A9"/>
+  <rect x="80" y="360" width="280" height="160" rx="16" fill="#FFD800" stroke="#7A1410" stroke-width="6"/>
+  <text x="40" y="70" font-family="Arial, sans-serif" font-size="28" fill="#1A0A08">PLACEHOLDER banner photo</text>
+</svg>

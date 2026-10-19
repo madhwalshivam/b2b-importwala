@@ -30,7 +30,7 @@ $totalCount = count($products ?? []);
       </div>
       <h3 style="font-size:20px; font-weight:800; color:#0f172a; margin:0 0 8px 0;">Your Wishlist is Empty</h3>
       <p style="font-size:14px; color:#64748b; margin:0 0 20px 0;">Heart icons par click karke apne pasandida wholesale products wishlist mein add karein.</p>
-      <a href="<?= url('catalog') ?>" style="display:inline-block; background:#0f172a; color:#fff; font-weight:700; padding:12px 24px; border-radius:12px; text-decoration:none; font-size:14px;">
+      <a href="<?= url('catalog') ?>" style="display:inline-block; background:#f05a29; color:#fff; font-weight:700; padding:12px 24px; border-radius:12px; text-decoration:none; font-size:14px;">
         Browse Wholesale Catalog &rarr;
       </a>
     </div>

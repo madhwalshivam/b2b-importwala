@@ -50,6 +50,18 @@ class ProductDetailController extends BaseController
         }
 
         $productId = (int) $product['id'];
+        $guestGate = \App\Services\GuestProductViewService::consume($productId);
+        if (!empty($guestGate['blocked'])) {
+            $_SESSION['guest_login_popup'] = 1;
+            header('Location: ' . \App\Services\GuestProductViewService::bounceUrl());
+            exit;
+        }
+        if (!empty($_SESSION['user_id'])) {
+            try {
+                \App\Services\ProductHistoryService::record($_SESSION['user_id'], $productId);
+            } catch (\Throwable $e) {
+            }
+        }
 
         // Session-dependent reads first, then release lock before heavy DB / visual work.
         $t0 = microtime(true);

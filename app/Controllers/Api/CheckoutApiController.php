@@ -16,6 +16,7 @@ class CheckoutApiController extends BaseController
 
     public function process(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('checkout', 'order');
         header('Content-Type: application/json');
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 

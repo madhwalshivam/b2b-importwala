@@ -4,7 +4,9 @@ namespace App\Controllers\Api;
 
 use App\Controllers\BaseController;
 use App\Core\Database;
+use App\Services\EmbeddingSearchService;
 use App\Services\ImageSearchStoreService;
+use App\Services\RateLimiter;
 use App\Services\VisualSearchService;
 use PDO;
 
@@ -74,25 +76,40 @@ class VisualSearchController extends BaseController
                 return;
             }
 
-            if (($file['size'] ?? 0) > 10 * 1024 * 1024) {
+            if (($file['size'] ?? 0) > 5 * 1024 * 1024) {
                 $this->jsonResponse([
                     'success' => false,
                     'error_code' => 'file_too_large',
-                    'message' => 'Image file too large (max 10MB).',
+                    'message' => 'Image file too large. Please use a JPG, PNG, or WEBP photo under 5MB.',
                 ], 400);
                 return;
             }
 
-            $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
-            $allowed = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-            $finfoMime = function_exists('mime_content_type') ? @mime_content_type($file['tmp_name']) : ($file['type'] ?? '');
-            $mimeOk = preg_match('~^image/(jpeg|png|webp|gif)~i', (string) $finfoMime);
+            $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '0');
+            try {
+                if (RateLimiter::tooMany('image-search:' . $ip, EmbeddingSearchService::rateLimitPerHour(), 3600)) {
+                    $this->jsonResponse([
+                        'success' => false,
+                        'error_code' => 'rate_limited',
+                        'message' => 'Too many image searches. Please try again in a little while.',
+                    ], 429);
+                    return;
+                }
+            } catch (\Throwable $e) {
+                error_log('[VisualSearch] rate limit check failed: ' . $e->getMessage());
+            }
 
-            if ($ext && !in_array($ext, $allowed, true) && !$mimeOk) {
+            $ext = strtolower(pathinfo($file['name'] ?? '', PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+            $finfoMime = function_exists('mime_content_type') ? @mime_content_type($file['tmp_name']) : ($file['type'] ?? '');
+            $mimeOk = preg_match('~^image/(jpeg|png|webp)~i', (string) $finfoMime);
+
+            $extOk = in_array($ext, $allowed, true);
+            if (($ext !== '' && !$extOk) || (!$extOk && !$mimeOk)) {
                 $this->jsonResponse([
                     'success' => false,
                     'error_code' => 'unsupported_format',
-                    'message' => 'Unsupported image format. Use JPG, PNG, WEBP or GIF.',
+                    'message' => 'Unsupported image format. Use JPG, PNG, or WEBP.',
                 ], 400);
                 return;
             }
@@ -126,17 +143,37 @@ class VisualSearchController extends BaseController
             @copy($tempFile, $persistSource);
 
             try {
-                $result = $this->visualService->searchByUploadedImage($tempFile, $category ?: null, $limit);
+                $found = (new EmbeddingSearchService())->searchFile($tempFile);
             } catch (\Throwable $e) {
                 @unlink($persistSource);
                 error_log('[VisualSearch] search exception: ' . $e->getMessage() . ' @ ' . $e->getFile() . ':' . $e->getLine());
                 $this->jsonResponse([
                     'success' => false,
                     'error_code' => 'search_failed',
-                    'message' => 'Image search failed unexpectedly. Please try another photo.',
-                ], 500);
+                    'message' => 'Image search is temporarily unavailable. Please try again in a few minutes.',
+                ], 503);
                 return;
             }
+
+            if (!empty($found['unavailable']) || !empty($found['bad_image'])) {
+                @unlink($persistSource);
+                $this->jsonResponse([
+                    'success' => false,
+                    'error_code' => !empty($found['bad_image']) ? 'unsupported_or_corrupt' : 'search_unavailable',
+                    'message' => $found['message'] ?? 'Image search is temporarily unavailable. Please try again in a few minutes.',
+                    'items' => [],
+                ], !empty($found['bad_image']) ? 422 : 503);
+                return;
+            }
+
+            $result = [
+                'items' => $found['items'],
+                'has_matches' => !empty($found['items']),
+                'is_fallback' => false,
+                'headline' => !empty($found['items']) ? 'Visually similar products' : 'No close matches found',
+                'total' => count($found['items']),
+                'image_parse_error' => false,
+            ];
 
             if (!empty($result['image_parse_error'])) {
                 @unlink($persistSource);
@@ -154,6 +191,13 @@ class VisualSearchController extends BaseController
 
             // Persist results + image → dedicated results page (never auto-open a product)
             $post = $this->persistSearchForResultsPage($result, $persistSource);
+            if (!empty($post['sid']) && !empty($found['vector']) && is_array($found['vector'])) {
+                try {
+                    (new EmbeddingSearchService())->rememberVector((string) $post['sid'], $found['vector']);
+                } catch (\Throwable $e) {
+                    error_log('[VisualSearch] vector cache failed: ' . $e->getMessage());
+                }
+            }
             @unlink($persistSource);
 
             $this->jsonResponse([
@@ -264,17 +308,7 @@ class VisualSearchController extends BaseController
         $topScore = !empty($activeItems)
             ? (float) ($activeItems[0]['raw_score'] ?? $activeItems[0]['score'] ?? 0)
             : 0.0;
-        $secondScore = isset($activeItems[1])
-            ? (float) ($activeItems[1]['raw_score'] ?? $activeItems[1]['score'] ?? 0)
-            : 0.0;
-        // Confident = strong top hit. Near-duplicates (same catalog photo) usually score ≥0.93
-        // with a wide gap; relax gap when the top score itself is extremely high.
-        $gapOk = $secondScore <= 0
-            || ($topScore - $secondScore) >= VisualSearchService::EXACT_SCORE_GAP
-            || $topScore >= 0.95;
-        $hasConfident = empty($result['is_fallback'])
-            && $topScore >= VisualSearchService::EXACT_THRESHOLD
-            && $gapOk;
+        $hasConfident = empty($result['is_fallback']) && $topScore >= EmbeddingSearchService::minScore();
 
         if (!is_file($persistSourcePath)) {
             error_log('[VisualSearch] persist source missing');

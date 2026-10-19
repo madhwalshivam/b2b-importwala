@@ -34,6 +34,9 @@ class CartApiController extends BaseController
 
     public function addItem(): void
     {
+        if (\App\Services\CustomerAccess::blockIncompleteCart()) {
+            return;
+        }
         header('Content-Type: application/json');
         $input = json_decode(file_get_contents('php://input'), true) ?? $_POST;
 

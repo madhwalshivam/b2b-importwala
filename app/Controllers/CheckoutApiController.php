@@ -29,7 +29,22 @@ class CheckoutApiController extends Controller {
         }
 
         if (empty($_SESSION['user_id'])) {
-            echo json_encode(['success' => false, 'message' => 'Please login to complete your order.']);
+            http_response_code(401);
+            echo json_encode([
+                'success' => false,
+                'code' => 'login_required',
+                'message' => 'Please login to complete your order.',
+            ]);
+            exit;
+        }
+        if (!\App\Services\CustomerAccess::profileComplete()) {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'code' => 'profile_incomplete',
+                'message' => 'Add your mobile number before placing an order.',
+                'redirect' => url('complete-profile?return=checkout'),
+            ]);
             exit;
         }
 

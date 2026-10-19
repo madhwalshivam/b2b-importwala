@@ -391,6 +391,11 @@ class HomeSection extends Model {
 
         foreach ($sections as $section) {
             $displayCount = (int)($section['homepage_display_count'] ?? 0);
+            // Old homepage rows were 5 across. Keep the same number of rows on a 6-column desktop.
+            $legacyFiveCol = [5 => 6, 10 => 12, 15 => 18, 20 => 24, 25 => 30];
+            if (isset($legacyFiveCol[$displayCount])) {
+                $displayCount = $legacyFiveCol[$displayCount];
+            }
             $limitParam = $displayCount > 0 ? $displayCount : null;
             $products = $this->getSectionProducts((int)$section['id'], $limitParam, true);
             $section['products'] = $products;

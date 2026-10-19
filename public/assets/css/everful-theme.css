@@ -508,6 +508,51 @@ a {
   gap: 4px;
 }
 
+.header-account-wrap {
+  position: relative;
+}
+
+.header-account-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  min-width: 188px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.12);
+  padding: 6px;
+  z-index: 80;
+}
+
+.header-account-wrap:hover .header-account-menu,
+.header-account-wrap:focus-within .header-account-menu {
+  display: block;
+}
+
+.header-account-menu a {
+  display: block;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+  text-decoration: none;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.header-account-menu a:hover {
+  background: #fff7ed;
+  color: #f05a29;
+}
+
+@media (max-width: 1023px) {
+  .header-account-menu {
+    display: none !important;
+  }
+}
+
 .header-icon-item {
   color: #1e293b;
   position: relative;

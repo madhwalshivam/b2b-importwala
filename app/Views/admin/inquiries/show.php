@@ -92,6 +92,12 @@ $cleanPhone = preg_replace('/[^0-9]/', '', $inquiry['phone']);
                             WhatsApp</span>
                         <span
                             class="text-xs font-semibold text-slate-900 block mt-0.5"><?= htmlspecialchars($inquiry['phone']) ?></span>
+                        <?php if (!empty($cleanPhone)): ?>
+                            <span class="mt-1 flex gap-3">
+                                <a class="text-[#f05a29] font-semibold" href="tel:+<?= htmlspecialchars(strlen($cleanPhone) === 10 ? '91' . $cleanPhone : $cleanPhone) ?>">Call</a>
+                                <a class="text-emerald-700 font-semibold" target="_blank" rel="noopener" href="https://wa.me/<?= htmlspecialchars(strlen($cleanPhone) === 10 ? '91' . $cleanPhone : $cleanPhone) ?>">WhatsApp</a>
+                            </span>
+                        <?php endif; ?>
                     </div>
 
                     <?php if (!empty($inquiry['email'])): ?>

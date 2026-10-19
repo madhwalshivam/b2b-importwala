@@ -91,6 +91,17 @@ $mainImage     = $sliderImages[0] ?? asset('assets/images/placeholder.jpg');
 $totalImages   = count($sliderImages);
 // Limit to 6 images max on card for performance
 $cardImages    = array_slice($sliderImages, 0, 6);
+$cardPlaceholder = asset('assets/images/placeholder.jpg');
+$cardImageEager = false;
+if (!empty($GLOBALS['iw_home_eager_cards'])) {
+    if (!isset($GLOBALS['iw_home_eager_left'])) {
+        $GLOBALS['iw_home_eager_left'] = 6;
+    }
+    if ($GLOBALS['iw_home_eager_left'] > 0) {
+        $GLOBALS['iw_home_eager_left']--;
+        $cardImageEager = true;
+    }
+}
 
 // ── Real Variant Count (product_colors first, fallback to product_variants) ──
 static $variantCountCache = [];
@@ -129,15 +140,35 @@ $variantCount = ($prodId > 0) ? ($variantCountCache[$prodId] ?? 0) : 0;
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
+    <?php elseif (!empty($isHistoryPage)): ?>
+      <button type="button"
+              class="ef-wishlist-btn iw-history-remove-btn"
+              data-product-id="<?= $prodId ?>"
+              aria-label="Remove from history"
+              title="Remove from history"
+              onclick="event.preventDefault(); event.stopPropagation(); if (typeof iwHistoryRemove === 'function') iwHistoryRemove(<?= $prodId ?>, this);">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#111827" stroke-width="2.5" style="display:block;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
     <?php endif; ?>
     <div class="ef-swipe-track" id="track_<?= $cardId ?>">
-      <?php foreach ($cardImages as $sIdx => $sUrl): ?>
-        <a href="<?= $productUrl ?>" class="ef-swipe-slide" draggable="false">
-          <img src="<?= htmlspecialchars($sUrl) ?>"
+      <?php foreach ($cardImages as $sIdx => $sUrl):
+          $imgUrl = htmlspecialchars((string) $sUrl, ENT_QUOTES, 'UTF-8');
+          $isFirst = $sIdx === 0;
+          $loadEager = $isFirst && $cardImageEager;
+      ?>
+        <a href="<?= $productUrl ?>" class="ef-swipe-slide" draggable="false" data-product-id="<?= $prodId ?>">
+          <img class="iw-card-img"
+               <?php if ($isFirst): ?>src="<?= $imgUrl ?>"<?php else: ?>data-src="<?= $imgUrl ?>"<?php endif; ?>
                alt="<?= $name ?>"
-               loading="<?= $sIdx === 0 ? 'eager' : 'lazy' ?>"
+               width="400"
+               height="400"
+               decoding="async"
+               loading="<?= $loadEager ? 'eager' : 'lazy' ?>"
+               <?php if ($loadEager): ?>fetchpriority="high"<?php endif; ?>
                draggable="false"
-               onerror="this.onerror=null;this.src='<?= asset('assets/images/placeholder.jpg') ?>';">
+               <?php if ($isFirst): ?>onerror="this.onerror=null;this.src='<?= htmlspecialchars($cardPlaceholder, ENT_QUOTES, 'UTF-8') ?>';this.classList.add('is-loaded');"<?php endif; ?>>
         </a>
       <?php endforeach; ?>
     </div>
@@ -172,7 +203,7 @@ $variantCount = ($prodId > 0) ? ($variantCountCache[$prodId] ?? 0) : 0;
     <?php endif; ?>
 
     <!-- Title: single line, ellipsis -->
-    <a href="<?= $productUrl ?>" class="ef-title-link">
+    <a href="<?= $productUrl ?>" class="ef-title-link" data-product-id="<?= $prodId ?>">
       <h3 class="ef-product-title">
         <?php if ($isNew): ?><span class="ef-badge-new">NEW</span><?php endif; ?>
         <?= $name ?>

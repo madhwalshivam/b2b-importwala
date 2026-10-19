@@ -17,12 +17,20 @@ ob_start();
       </div>
     <?php endif; ?>
 
+    <?php $buttonId = 'iw-google-signup'; include __DIR__ . '/partials/google_button.php'; ?>
+    <?php if (!empty($googleEnabled) && !empty($googleClientId)): ?>
+      <div style="display:flex; align-items:center; gap:10px; color:#9ca3af; font-size:12px; margin-bottom:16px;">
+        <span style="flex:1; height:1px; background:#e5e7eb;"></span> or create an account <span style="flex:1; height:1px; background:#e5e7eb;"></span>
+      </div>
+    <?php endif; ?>
+
     <form action="<?= url('signup') ?>" method="POST" style="display: flex; flex-direction: column; gap: 16px;">
       <?= csrf_field() ?>
+      <input type="hidden" name="return" value="<?= htmlspecialchars($returnUrl ?? 'account') ?>">
 
       <div>
         <label style="display: block; font-size: 12.5px; font-weight: 600; color: #374151; margin-bottom: 6px;">Full Name</label>
-        <input type="text" name="name" required placeholder="John Doe"
+        <input type="text" name="name" required placeholder="John Doe" value="<?= htmlspecialchars($old['name'] ?? '') ?>"
           style="width: 100%; height: 44px; padding: 0 14px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; color: #111827; outline: none; transition: border-color 0.2s, box-shadow 0.2s;"
           onfocus="this.style.borderColor='#f05a29'; this.style.boxShadow='0 0 0 3px rgba(240, 90, 41, 0.15)';"
           onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none';">
@@ -30,16 +38,25 @@ ob_start();
 
       <div>
         <label style="display: block; font-size: 12.5px; font-weight: 600; color: #374151; margin-bottom: 6px;">Email Address</label>
-        <input type="email" name="email" required placeholder="you@example.com"
+        <input type="email" name="email" required placeholder="you@example.com" value="<?= htmlspecialchars($old['email'] ?? '') ?>"
           style="width: 100%; height: 44px; padding: 0 14px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; color: #111827; outline: none; transition: border-color 0.2s, box-shadow 0.2s;"
           onfocus="this.style.borderColor='#f05a29'; this.style.boxShadow='0 0 0 3px rgba(240, 90, 41, 0.15)';"
           onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none';">
       </div>
 
       <div>
-        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #374151; margin-bottom: 6px;">Phone Number (Optional)</label>
-        <input type="tel" name="phone" placeholder="+91 98765 43210"
+        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #374151; margin-bottom: 6px;">Mobile number</label>
+        <input type="tel" name="phone" required placeholder="9876543210" value="<?= htmlspecialchars($old['phone'] ?? '') ?>"
           style="width: 100%; height: 44px; padding: 0 14px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; color: #111827; outline: none; transition: border-color 0.2s, box-shadow 0.2s;"
+          onfocus="this.style.borderColor='#f05a29'; this.style.boxShadow='0 0 0 3px rgba(240, 90, 41, 0.15)';"
+          onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none';">
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 12.5px; font-weight: 600; color: #374151; margin-bottom: 6px;">GST Number (optional)</label>
+        <input type="text" name="gst_number" maxlength="15" placeholder="22AAAAA0000A1Z5" value="<?= htmlspecialchars($old['gst_number'] ?? '') ?>"
+          autocomplete="off" autocapitalize="characters"
+          style="width: 100%; height: 44px; padding: 0 14px; background: #ffffff; border: 1px solid #d1d5db; border-radius: 10px; font-size: 14px; color: #111827; outline: none; text-transform: uppercase; transition: border-color 0.2s, box-shadow 0.2s;"
           onfocus="this.style.borderColor='#f05a29'; this.style.boxShadow='0 0 0 3px rgba(240, 90, 41, 0.15)';"
           onblur="this.style.borderColor='#d1d5db'; this.style.boxShadow='none';">
       </div>
@@ -71,6 +88,11 @@ ob_start();
           </div>
         </div>
       </div>
+
+      <label style="display:flex; gap:8px; align-items:flex-start; font-size:13px; color:#374151;">
+        <input type="checkbox" name="contact_consent" value="1" required>
+        <span>I agree to be contacted by Importwale via call/WhatsApp regarding my inquiries and orders. See the <a href="<?= url('terms-and-conditions') ?>" style="color:#f05a29;">Terms</a> and <a href="<?= url('privacy-policy') ?>" style="color:#f05a29;">Privacy Policy</a>.</span>
+      </label>
 
       <button type="submit"
         style="width: 100%; height: 46px; background: #f05a29; color: #ffffff; font-weight: 600; font-size: 14px; border: none; border-radius: 10px; cursor: pointer; transition: background 0.2s; margin-top: 4px;"

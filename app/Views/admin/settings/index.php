@@ -255,6 +255,50 @@ include __DIR__ . '/../layouts/header.php';
                 </div>
             </div>
 
+            <!-- Customer access -->
+            <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+                <div class="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
+                    <i data-lucide="shield" class="w-5 h-5 text-red-600"></i>
+                    <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Customer login & guest views</h3>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1.5">Guest product view limit</label>
+                        <input type="number" min="1" name="guest_product_view_limit" value="<?= htmlspecialchars($settings['guest_product_view_limit'] ?? '3') ?>"
+                            class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900">
+                        <p class="text-slate-500 mt-1">Unique product pages a guest can open before login. Default 3. Put GOOGLE_CLIENT_ID in the server .env file; never expose the client secret in the browser.</p>
+                    </div>
+                    <div class="space-y-3 pt-6">
+                        <input type="hidden" name="google_login_enabled" value="0">
+                        <label class="flex items-center gap-2 font-semibold text-slate-700">
+                            <input type="checkbox" name="google_login_enabled" value="1" <?= ($settings['google_login_enabled'] ?? '1') === '1' ? 'checked' : '' ?>>
+                            Google login on
+                        </label>
+                        <input type="hidden" name="require_phone_otp" value="0">
+                        <label class="flex items-center gap-2 font-semibold text-slate-700">
+                            <input type="checkbox" name="require_phone_otp" value="1" <?= ($settings['require_phone_otp'] ?? '0') === '1' ? 'checked' : '' ?>>
+                            Require phone OTP
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+                <div class="flex items-center space-x-2.5 border-b border-slate-100 pb-3">
+                    <i data-lucide="search" class="w-5 h-5 text-red-600"></i>
+                    <h3 class="text-sm font-semibold text-slate-900 uppercase tracking-wider">Image search</h3>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1.5">Minimum similarity (0.50–0.95)</label>
+                        <input type="number" min="0.50" max="0.95" step="0.01" name="image_search_min_score"
+                            value="<?= htmlspecialchars($settings['image_search_min_score'] ?? '0.70') ?>"
+                            class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl font-semibold text-slate-900">
+                        <p class="text-slate-500 mt-1">Products below this cosine score are dropped. Start at 0.70. Leave blank in the database to use IMAGE_SEARCH_MIN_SCORE from .env.</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Submit Button Row -->
             <div class="flex items-center justify-end pt-2">
                 <button type="submit"

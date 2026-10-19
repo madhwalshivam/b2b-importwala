@@ -47,20 +47,16 @@ class NotificationService {
     public static function sendEmail(string $eventType, string $toEmail, string $subject, string $messageBody): bool {
         if (empty($toEmail)) return false;
 
-        $headers = "MIME-Version: 1.0" . "\r\n";
-        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        $headers .= "From: Mudsor Notifications <no-reply@mudsor.com>" . "\r\n";
-
         try {
-            $success = @mail($toEmail, $subject, $messageBody, $headers);
+            $success = Mailer::send($toEmail, $subject, $messageBody);
             if ($success) {
                 self::logNotification($eventType, 'email', $toEmail, 'sent');
                 return true;
-            } else {
-                self::logNotification($eventType, 'email', $toEmail, 'failed', 'PHP mail() function returned false');
-                return false;
             }
-        } catch (\Exception $e) {
+            self::logNotification($eventType, 'email', $toEmail, 'failed', 'Mailer returned false');
+            return false;
+        } catch (\Throwable $e) {
+            error_log('Notification email failed: ' . $e->getMessage());
             self::logNotification($eventType, 'email', $toEmail, 'failed', $e->getMessage());
             return false;
         }

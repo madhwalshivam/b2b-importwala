@@ -347,6 +347,11 @@ class ProductController extends Controller
             (new \App\Services\VisualSearchService())->indexProduct($productId);
         } catch (\Throwable $e) {
         }
+        try {
+            (new \App\Services\EmbeddingQueueService())->enqueueUpsert((int) $productId);
+        } catch (\Throwable $e) {
+            error_log('[EmbeddingQueue] create: ' . $e->getMessage());
+        }
 
         // Flush Cache
         try {
@@ -732,6 +737,20 @@ class ProductController extends Controller
             (new \App\Services\VisualSearchService())->indexProduct($id);
         } catch (\Throwable $e) {
         }
+        try {
+            $queue = new \App\Services\EmbeddingQueueService();
+            $fresh = $this->productModel->find($id) ?: $product;
+            $imageNow = trim((string) ($fresh['main_image'] ?? ''));
+            $imageThen = trim((string) ($product['main_image'] ?? ''));
+            $statusNow = (string) ($data['status'] ?? ($fresh['status'] ?? 'active'));
+            if ($statusNow !== 'active') {
+                $queue->removeProductVector((int) $id);
+            } elseif ($imageNow !== $imageThen || (string) ($product['status'] ?? '') !== 'active' || (string) ($product['embedding_status'] ?? '') !== 'done') {
+                $queue->enqueueUpsert((int) $id);
+            }
+        } catch (\Throwable $e) {
+            error_log('[EmbeddingQueue] update: ' . $e->getMessage());
+        }
 
         // Flush Cache
         try {
@@ -858,6 +877,10 @@ class ProductController extends Controller
                     $db->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
                     
                     $db->commit();
+                    try {
+                        (new \App\Services\EmbeddingQueueService())->enqueueDelete((int) $id);
+                    } catch (\Throwable $e) {
+                    }
                     $deletedCount++;
 
                     if ($r2 && $deleteR2 && !empty($r2Keys)) {
@@ -1070,6 +1093,10 @@ class ProductController extends Controller
         ]);
         if ($isPrimary) {
             $this->productModel->update($productId, ['main_image' => $url]);
+            try {
+                (new \App\Services\EmbeddingQueueService())->enqueueUpsert((int) $productId);
+            } catch (\Throwable $e) {
+            }
         }
 
         $this->jsonResponse(['success' => true, 'image_id' => $imageId, 'image_url' => $url, 'is_primary' => $isPrimary]);

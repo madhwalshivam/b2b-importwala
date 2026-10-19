@@ -8,6 +8,7 @@ use App\Services\NotificationService;
 class WholesaleController {
 
     public function submit() {
+        \App\Services\CustomerAccess::requireCommerce('inquiry', 'quote');
         $response = new Response();
 
         $name = trim($_POST['name'] ?? '');

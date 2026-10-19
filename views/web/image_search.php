@@ -17,6 +17,9 @@ $sort = $sort ?? 'best';
 $categoryFilter = (int) ($categoryFilter ?? 0);
 $categoryOptions = is_array($categoryOptions ?? null) ? $categoryOptions : [];
 $hasConfidentMatch = !empty($hasConfidentMatch);
+$showSimilarStyle = !empty($showSimilarStyle);
+$noCloseMatches = !empty($noCloseMatches);
+$searchNotice = trim((string) ($searchNotice ?? ''));
 $queryImageUrl = $queryImageUrl ?? null;
 $countLabel = ($totalCount === 1)
     ? '1 product found'
@@ -357,7 +360,9 @@ ob_start();
         <?php if ($hasConfidentMatch): ?>
           <span class="isr-chip is-best">Best Match</span>
         <?php endif; ?>
-        <span class="isr-chip">Similar Style</span>
+        <?php if ($showSimilarStyle): ?>
+          <span class="isr-chip">Similar Style</span>
+        <?php endif; ?>
       </div>
 
       <div class="isr-header-right">
@@ -399,15 +404,17 @@ ob_start();
       </div>
     </form>
 
-    <?php if (!$hasConfidentMatch): ?>
-      <div class="isr-note">Showing closest visually similar products. For a tighter match, try a clear product photo on a plain background.</div>
+    <?php if ($searchNotice !== ''): ?>
+      <div class="isr-note"><?= htmlspecialchars($searchNotice) ?></div>
     <?php endif; ?>
 
     <!-- Product grid -->
     <?php if (empty($products)): ?>
       <div class="isr-empty">
-        <h2>No products to show</h2>
-        <p>Try uploading a clearer product photo on a plain background.</p>
+        <h2><?= $noCloseMatches ? 'No close matches found' : 'No products to show' ?></h2>
+        <p><?= $noCloseMatches
+            ? 'Try a clear product photo on a plain background. Lifestyle shots and busy backgrounds are harder to match.'
+            : 'Try uploading a clearer product photo on a plain background.' ?></p>
         <button type="button" class="isr-change-btn" onclick="typeof triggerVisualSearchModal==='function'&&triggerVisualSearchModal()">
           Upload a new image
         </button>

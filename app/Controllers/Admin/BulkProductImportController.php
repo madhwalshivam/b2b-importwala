@@ -211,6 +211,15 @@ class BulkProductImportController extends BaseController
         }
 
         try {
+            $queue = new \App\Services\EmbeddingQueueService();
+            foreach ($productIds as $pid) {
+                $queue->enqueueUpsert((int) $pid);
+            }
+        } catch (\Throwable $e) {
+            error_log('[BulkImport] embedding queue failed: ' . $e->getMessage());
+        }
+
+        try {
             $vs = new \App\Services\VisualSearchService();
             foreach ($productIds as $pid) {
                 try {

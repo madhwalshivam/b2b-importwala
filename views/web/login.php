@@ -23,6 +23,13 @@ ob_start();
       </div>
     <?php endif; ?>
 
+    <?php $buttonId = 'iw-google-login'; include __DIR__ . '/partials/google_button.php'; ?>
+    <?php if (!empty($googleEnabled) && !empty($googleClientId)): ?>
+      <div style="display:flex; align-items:center; gap:10px; color:#9ca3af; font-size:12px; margin-bottom:16px;">
+        <span style="flex:1; height:1px; background:#e5e7eb;"></span> or sign in with email <span style="flex:1; height:1px; background:#e5e7eb;"></span>
+      </div>
+    <?php endif; ?>
+
     <form action="<?= url('login') ?>" method="POST" style="display: flex; flex-direction: column; gap: 18px;">
       <?= csrf_field() ?>
       <input type="hidden" name="return" value="<?= htmlspecialchars($returnUrl ?? 'account') ?>">

@@ -16,6 +16,7 @@ class InquiryViewController extends BaseController
 
     public function index(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('inquiry', 'quote');
         $categories = $this->categoryRepo->getTree();
         $this->renderView('web/inquiry', [
             'categories' => $categories,

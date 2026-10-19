@@ -1,0 +1,333 @@
+/* The Only Snacks — buttons, cards, header, footer, badges. */
+
+html,
+body {
+  background: var(--bg) !important;
+  color: var(--text);
+  font-family: var(--font-body) !important;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+.tos-display {
+  font-family: var(--font-display);
+  color: var(--secondary);
+  letter-spacing: 0.01em;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* ---- Buttons ---- */
+.tos-btn,
+.robu-cart-btn,
+button.bg-red-600,
+a.bg-red-600,
+button.bg-theme-primary,
+a.bg-theme-primary {
+  border-radius: 999px !important;
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+  border: 2px solid var(--secondary) !important;
+  font-family: "Fredoka", var(--font-body);
+  font-weight: 700;
+  transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.tos-btn i,
+.tos-btn span,
+.robu-cart-btn i,
+.robu-cart-btn span {
+  color: var(--on-primary) !important;
+}
+
+.tos-btn:hover,
+.robu-cart-btn:hover,
+button.bg-red-600:hover,
+a.bg-red-600:hover,
+button.bg-theme-primary:hover,
+a.bg-theme-primary:hover {
+  background: var(--primary-dark) !important;
+  color: var(--on-primary) !important;
+  transform: translateY(-2px);
+}
+
+.tos-btn-maroon,
+.tos-btn-maroon:hover,
+button.tos-btn-maroon,
+a.tos-btn-maroon {
+  background: var(--secondary) !important;
+  color: var(--on-secondary) !important;
+  border: 2px solid var(--secondary-dark) !important;
+  border-radius: 999px !important;
+  font-family: "Fredoka", var(--font-body);
+  font-weight: 700;
+}
+
+.tos-btn-maroon:hover,
+button.tos-btn-maroon:hover,
+a.tos-btn-maroon:hover {
+  background: var(--secondary-dark) !important;
+  color: var(--on-secondary) !important;
+  transform: translateY(-2px);
+}
+
+.bg-red-600,
+.bg-red-700,
+.hover\:bg-red-700:hover,
+.hover\:bg-red-600:hover {
+  background-color: var(--primary) !important;
+  color: var(--on-primary) !important;
+}
+
+.bg-red-600 i,
+.bg-red-600 span,
+.bg-red-700 i,
+.bg-red-700 span,
+button.bg-red-600,
+a.bg-red-600 {
+  color: var(--on-primary) !important;
+}
+
+.tos-btn-maroon,
+.tos-btn-maroon i,
+.tos-btn-maroon span {
+  color: var(--on-secondary) !important;
+}
+
+/* Discount stickers stay yellow with maroon type */
+.bg-red-600.uppercase,
+span.bg-red-600 {
+  background: var(--primary) !important;
+  color: var(--secondary) !important;
+  border: 2px solid var(--secondary);
+  border-radius: 999px !important;
+  transform: rotate(-6deg);
+  font-family: "Fredoka", sans-serif;
+}
+
+/* ---- Header ---- */
+#site-global-header,
+#desktop-sticky-header,
+#mobile-sticky-search,
+.main-desktop-nav {
+  background: var(--primary) !important;
+  border-color: transparent !important;
+  color: var(--secondary);
+}
+
+#desktop-sticky-header.fixed,
+#site-global-header {
+  box-shadow: 0 6px 18px rgba(122, 20, 16, 0.12);
+}
+
+.tos-logo {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 10px;
+  line-height: 0;
+}
+
+.tos-logo img {
+  height: 44px;
+  width: auto;
+  max-height: 44px;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .tos-logo {
+    padding: 12px 14px;
+  }
+
+  .tos-logo img {
+    height: 60px;
+    max-height: 64px;
+  }
+}
+
+.tos-footer-logo {
+  height: 86px;
+  width: auto;
+  max-width: 280px;
+  object-fit: contain;
+  margin: 12px auto;
+  display: block;
+}
+
+#desktop-sticky-header .text-gray-700,
+#desktop-sticky-header .text-gray-800,
+#desktop-sticky-header .text-gray-900,
+.main-desktop-nav,
+.main-desktop-nav a {
+  color: var(--secondary);
+}
+
+.main-desktop-nav a {
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.main-desktop-nav a.border-b-2,
+.main-desktop-nav a.border-theme-primary {
+  border-color: var(--secondary) !important;
+}
+
+#desktop-sticky-header input,
+#mobile-sticky-search input {
+  background: var(--cream) !important;
+  color: var(--text) !important;
+  border-radius: 999px;
+}
+
+#desktop-sticky-header .border-theme-primary,
+#mobile-sticky-search .border-gray-300 {
+  border-color: var(--secondary) !important;
+  border-radius: 999px !important;
+  background: var(--cream);
+}
+
+.cart-count-badge,
+.wishlist-count-badge,
+.compare-count-badge {
+  background: var(--secondary) !important;
+  color: var(--cream) !important;
+  border-color: var(--primary) !important;
+}
+
+.tos-b2b {
+  display: none !important;
+}
+
+/* Announcement strip: yellow, maroon text */
+[x-show="topAnnouncement"] {
+  background: var(--primary) !important;
+  color: var(--secondary) !important;
+  border-bottom: 2px solid var(--secondary);
+}
+
+[x-show="topAnnouncement"] .announcement-marquee-track,
+[x-show="topAnnouncement"] span {
+  color: var(--secondary) !important;
+}
+
+/* ---- Cards ---- */
+.robu-product-card,
+.page-card,
+.bg-white.rounded-2xl,
+.bg-white.rounded-3xl {
+  border-radius: var(--tos-radius-card) !important;
+  box-shadow: var(--tos-shadow);
+}
+
+.robu-product-card {
+  background: var(--cream) !important;
+  border: 2px solid transparent !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.robu-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--tos-shadow-hover);
+}
+
+.robu-product-card h3,
+.robu-product-card h4,
+.robu-product-card h3 a,
+.robu-product-card h4 a {
+  color: var(--secondary) !important;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+}
+
+.robu-wishlist-btn {
+  background: var(--cream) !important;
+  border-radius: 999px !important;
+}
+
+/* Homepage slider cards cycle accent backgrounds. Names stay cream. */
+.tos-home .swiper-slide:nth-child(4n + 1) .robu-product-card { background: var(--orange) !important; }
+.tos-home .swiper-slide:nth-child(4n + 2) .robu-product-card { background: var(--teal) !important; }
+.tos-home .swiper-slide:nth-child(4n + 3) .robu-product-card { background: var(--green) !important; }
+.tos-home .swiper-slide:nth-child(4n + 4) .robu-product-card { background: var(--tomato) !important; }
+
+.tos-home .swiper-slide .robu-product-card h3,
+.tos-home .swiper-slide .robu-product-card h4,
+.tos-home .swiper-slide .robu-product-card h3 a,
+.tos-home .swiper-slide .robu-product-card h4 a,
+.tos-home .swiper-slide .robu-product-card span,
+.tos-home .swiper-slide .robu-product-card .text-gray-400,
+.tos-home .swiper-slide .robu-product-card .text-gray-900 {
+  color: var(--cream) !important;
+}
+
+.tos-home .swiper-slide .robu-product-card .robu-cart-btn,
+.tos-home .swiper-slide .robu-product-card .robu-cart-btn span,
+.tos-home .swiper-slide .robu-product-card .robu-cart-btn i {
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+}
+
+.carousel-nav-btn {
+  background: var(--primary) !important;
+  color: var(--secondary) !important;
+  border: 2px solid var(--secondary) !important;
+  border-radius: 999px !important;
+}
+
+/* ---- Footer ---- */
+footer.tos-footer,
+footer.tos-footer .bg-white,
+footer.tos-footer .bg-gray-100,
+footer.tos-footer .bg-gray-900 {
+  background: var(--secondary) !important;
+  color: var(--cream) !important;
+  border-color: rgba(255, 248, 238, 0.15) !important;
+}
+
+footer.tos-footer a,
+footer.tos-footer p,
+footer.tos-footer li,
+footer.tos-footer span,
+footer.tos-footer h3,
+footer.tos-footer button {
+  color: var(--cream);
+}
+
+footer.tos-footer a:hover {
+  color: var(--primary) !important;
+}
+
+footer.tos-footer input {
+  background: var(--cream) !important;
+  color: var(--text) !important;
+  border-radius: 999px !important;
+  border: 2px solid var(--primary) !important;
+}
+
+footer.tos-footer button[type="submit"],
+footer.tos-footer .bg-red-600 {
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+  border-radius: 999px !important;
+  border: 2px solid var(--primary-dark) !important;
+}
+
+/* Hide the old floating wholesale WhatsApp chip if present */
+footer.tos-footer + a[href*="wholesale"],
+a[href*="wholesale%20scooter"],
+a[href*="wholesale%20order"] {
+  display: none !important;
+}

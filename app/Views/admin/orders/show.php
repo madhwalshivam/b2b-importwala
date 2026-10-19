@@ -132,8 +132,14 @@ include __DIR__ . '/../layouts/header.php';
                 </div>
                 <div>
                     <span class="text-gray-400 font-semibold block">Contact Phone</span>
-                    <span
-                        class="font-semibold text-gray-900 text-sm"><?= htmlspecialchars($order['customer_phone']) ?></span>
+                    <span class="font-semibold text-gray-900 text-sm"><?= htmlspecialchars($order['customer_phone']) ?></span>
+                    <?php $orderPhone = preg_replace('/\D+/', '', (string)($order['customer_phone'] ?? '')); $orderDial = strlen($orderPhone) === 10 ? '91' . $orderPhone : $orderPhone; ?>
+                    <?php if ($orderDial !== ''): ?>
+                        <span class="mt-1 flex gap-3">
+                            <a class="text-[#f05a29] font-semibold" href="tel:+<?= htmlspecialchars($orderDial) ?>">Call</a>
+                            <a class="text-emerald-700 font-semibold" target="_blank" rel="noopener" href="https://wa.me/<?= htmlspecialchars($orderDial) ?>">WhatsApp</a>
+                        </span>
+                    <?php endif; ?>
                 </div>
                 <div>
                     <span class="text-gray-400 font-semibold block">Email Address</span>

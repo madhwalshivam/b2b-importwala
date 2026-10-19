@@ -1,0 +1,424 @@
+/* The Only Snacks — page layout: hero, shop grid, product, cart, checkout. */
+
+.tos-home .mobile-hero-section {
+  background: var(--primary) !important;
+  padding-bottom: 0 !important;
+  position: relative;
+}
+
+.tos-home .mobile-hero-section > div {
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.tos-hero-fallback {
+  background: var(--primary) !important;
+  min-height: 420px !important;
+  max-height: none !important;
+  border-radius: 0 0 48% 48% / 0 0 70px 70px;
+}
+
+.tos-home .mobile-hero-section::after {
+  content: "";
+  display: block;
+  height: 70px;
+  margin-top: -1px;
+  background: var(--primary);
+  border-radius: 0 0 50% 50% / 0 0 70px 70px;
+}
+
+.tos-display {
+  font-size: clamp(40px, 7vw, 72px);
+  line-height: 0.95;
+  color: var(--secondary);
+}
+
+.tos-kicker {
+  display: inline-block;
+  transform: rotate(-2deg);
+  background: var(--cream);
+  color: var(--secondary);
+  border: 2px solid var(--secondary);
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.tos-banner {
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--primary);
+  border-radius: 28px;
+  overflow: hidden;
+  margin: 28px auto;
+  max-width: 1200px;
+}
+
+@media (min-width: 768px) {
+  .tos-banner {
+    grid-template-columns: 1.1fr 0.9fr;
+    min-height: 280px;
+  }
+}
+
+.tos-banner-copy {
+  padding: 36px 28px;
+  color: var(--secondary);
+}
+
+.tos-banner-copy h2 {
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 0.95;
+  color: var(--secondary);
+}
+
+.tos-banner-visual {
+  min-height: 220px;
+  background:
+    radial-gradient(circle at 30% 40%, var(--cream), transparent 55%),
+    var(--primary-dark);
+}
+
+.tos-why {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  max-width: 1100px;
+  margin: 10px auto 28px;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .tos-why {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.tos-why article {
+  background: var(--cream);
+  border-radius: 24px;
+  padding: 18px 16px;
+  box-shadow: var(--tos-shadow);
+  text-align: center;
+}
+
+.tos-why h3 {
+  font-family: "Fredoka", sans-serif;
+  font-size: 18px;
+  margin-top: 8px;
+}
+
+.tos-why p {
+  font-size: 13px;
+  color: #5c332c;
+}
+
+.tos-icon-blob {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--secondary);
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--secondary);
+  font-size: 22px;
+}
+
+.tos-reviews {
+  max-width: 1100px;
+  margin: 10px auto 36px;
+  padding: 0 16px;
+  display: grid;
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .tos-reviews {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.tos-review-card {
+  background: var(--cream);
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: var(--tos-shadow);
+}
+
+.tos-stars {
+  color: var(--secondary);
+  letter-spacing: 2px;
+  font-weight: 800;
+}
+
+.tos-social-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  max-width: 1100px;
+  margin: 0 auto 40px;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .tos-social-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.tos-social-tile {
+  aspect-ratio: 1;
+  border-radius: 22px;
+  display: grid;
+  place-items: end start;
+  padding: 14px;
+  color: var(--cream);
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+  background: var(--secondary);
+}
+
+.tos-social-tile:nth-child(4n + 1) { background: var(--orange); }
+.tos-social-tile:nth-child(4n + 2) { background: var(--teal); }
+.tos-social-tile:nth-child(4n + 3) { background: var(--tomato); }
+.tos-social-tile:nth-child(4n + 4) { background: var(--green); }
+
+.tos-social-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 12px 0 18px;
+}
+
+.tos-social-row a {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--secondary);
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--secondary);
+  font-weight: 800;
+}
+
+/* Shop grid: 2 mobile, 3 tablet, 4 desktop */
+@media (min-width: 768px) {
+  .tos-shop-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .tos-shop-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Product page sticky mobile bar already exists; restyle it */
+#mobile-sticky-atc,
+.lg\:hidden.fixed.bottom-0 {
+  background: var(--cream) !important;
+  border-top: 2px solid var(--primary) !important;
+}
+
+/* Checkout cards */
+form.checkout-form,
+.checkout-card {
+  background: var(--cream);
+  border-radius: 24px;
+}
+
+/* Category tiles */
+.swiper-categories .swiper-slide a,
+.swiper-categories .swiper-slide > div {
+  border-radius: 22px !important;
+  overflow: hidden;
+}
+
+.tos-cat-fallback {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 1100px;
+  margin: 0 auto 28px;
+  padding: 0 16px;
+}
+
+@media (min-width: 768px) {
+  .tos-cat-fallback {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.tos-cat-tile {
+  position: relative;
+  min-height: 150px;
+  border-radius: 24px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+  color: #fff;
+  font-family: "Fredoka", sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.tos-cat-tile span.tos-arrow {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--secondary);
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  text-shadow: none;
+}
+
+/* Live storefront (views/web) */
+.tos-site {
+  background: var(--bg) !important;
+  color: var(--text);
+  font-family: "Nunito", sans-serif !important;
+}
+
+.tos-site .header-container,
+.tos-site .nav-categories-bar,
+.tos-site .header-main {
+  background: var(--primary) !important;
+  color: var(--secondary);
+}
+
+.tos-site .brand-logo {
+  padding: 8px 10px;
+}
+
+.tos-site .brand-logo {
+  flex-shrink: 0;
+}
+
+.tos-site .brand-logo-img {
+  height: 44px !important;
+  width: auto !important;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+@media (min-width: 768px) {
+  .tos-site .brand-logo {
+    padding: 12px 14px;
+  }
+
+  .tos-site .brand-logo-img {
+    height: 60px !important;
+    max-height: 64px;
+  }
+}
+
+.tos-site .nav-category-link {
+  color: var(--secondary) !important;
+  font-family: "Fredoka", sans-serif;
+  font-weight: 700;
+}
+
+.tos-site .nav-category-link.active {
+  background: var(--secondary);
+  color: var(--cream) !important;
+  border-radius: 999px;
+}
+
+.tos-site .search-bar-wrapper {
+  background: var(--cream) !important;
+  border: 2px solid var(--secondary);
+  border-radius: 999px !important;
+}
+
+.tos-site .header-icon-item {
+  color: var(--secondary);
+}
+
+.tos-site .cart-pill-count {
+  background: var(--secondary) !important;
+  color: var(--cream) !important;
+}
+
+.tos-site .footer-container,
+.tos-site .footer-trust-strip,
+.tos-site .footer-main-wrapper,
+.tos-site .footer-bottom {
+  background: var(--secondary) !important;
+  color: var(--cream) !important;
+}
+
+.tos-site .footer-container a,
+.tos-site .footer-desc,
+.tos-site .footer-trust-title,
+.tos-site .footer-trust-desc,
+.tos-site .footer-col h4 {
+  color: var(--cream) !important;
+}
+
+.tos-site .footer-logo-img {
+  height: 86px !important;
+  width: auto;
+  max-width: 280px;
+}
+
+.tos-site .footer-newsletter-input {
+  background: var(--cream) !important;
+  color: var(--text) !important;
+  border-radius: 999px !important;
+}
+
+.tos-site .footer-newsletter-btn,
+.tos-site .search-submit-btn {
+  background: var(--primary) !important;
+  color: var(--on-primary) !important;
+  border-radius: 999px !important;
+}
+
+.tos-site .everful-card,
+.tos-site .product-card {
+  border-radius: 24px !important;
+  box-shadow: 0 10px 28px rgba(122, 20, 16, 0.08);
+}
+
+.tos-site h1,
+.tos-site h2 {
+  font-family: "Lilita One", "Fredoka", sans-serif;
+  color: var(--secondary);
+}
+
+.tos-site .top-announcement-bar {
+  background: var(--primary) !important;
+  color: var(--secondary) !important;
+  border-bottom: 2px solid var(--secondary) !important;
+}
+
+.tos-site .top-announcement-bar,
+.tos-site .top-announcement-bar a,
+.tos-site .top-announcement-bar span {
+  color: var(--secondary) !important;
+  background-color: transparent;
+}
+
+.tos-site #mobileBottomNav,
+.tos-site .mobile-bottom-nav {
+  background: var(--cream) !important;
+  border-top: 2px solid var(--primary) !important;
+}
+
+.tos-site .mobile-nav-item,
+.tos-site .mobile-nav-item span {
+  color: var(--secondary) !important;
+}

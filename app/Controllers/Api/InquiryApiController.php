@@ -288,6 +288,7 @@ class InquiryApiController extends BaseController
      */
     public function submit(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('inquiry', 'quote');
         header('Content-Type: application/json');
         $this->getSessionKey();
 

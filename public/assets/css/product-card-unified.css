@@ -15,7 +15,7 @@
 
 .product-grid {
   display: grid !important;
-  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
   gap: 16px 5px !important;
   padding: 0 4px !important;
   width: 100% !important;
@@ -102,6 +102,17 @@
   pointer-events: none !important;
   user-select: none !important;
   -webkit-user-drag: none !important;
+  background: #e9edf2 !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+html.iw-card-img-js .ef-swipe-slide img.iw-card-img {
+  opacity: 0 !important;
+  transition: opacity 0.28s ease !important;
+}
+
+html.iw-card-img-js .ef-swipe-slide img.iw-card-img.is-loaded {
+  opacity: 1 !important;
 }
 
 /* Dot Indicators */
@@ -653,7 +664,7 @@
 /* Responsive Media Queries */
 @media (max-width: 1400px) {
   .product-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
     gap: 14px 4px !important;
   }
 }
@@ -794,5 +805,226 @@
     min-height: 16px !important;
     max-width: 16px !important;
     max-height: 16px !important;
+  }
+}
+
+.iw-history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+  flex-wrap: nowrap;
+}
+
+h1.iw-history-title,
+.iw-history-title {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  min-width: 0;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.01em;
+  color: #6b7280 !important;
+  line-height: 1.2 !important;
+  white-space: nowrap;
+}
+
+.iw-history-title-icon {
+  width: 15px;
+  height: 15px;
+  color: #f05a29;
+  flex-shrink: 0;
+}
+
+.iw-history-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.iw-history-clear-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-size: 12px !important;
+  font-weight: 600;
+  color: #6b7280;
+  white-space: nowrap;
+  min-height: 0 !important;
+  height: auto !important;
+  line-height: 1.2;
+}
+
+.iw-history-clear-btn:hover {
+  color: #dc2626;
+}
+
+#iwHistoryClearForm {
+  display: none;
+}
+
+.iw-history-account-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f05a29;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.iw-history-account-link:hover {
+  text-decoration: underline;
+}
+
+.iw-history-modal[hidden] {
+  display: none !important;
+}
+
+.iw-history-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(17, 24, 39, 0.5);
+}
+
+.iw-history-modal-card {
+  width: 100%;
+  max-width: 360px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+}
+
+.iw-history-modal-card h2 {
+  margin: 0 0 6px;
+  font-size: 18px !important;
+  font-weight: 650 !important;
+  color: #111827;
+  line-height: 1.3 !important;
+}
+
+.iw-history-modal-card p {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+
+.iw-history-modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.iw-history-modal-cancel,
+.iw-history-modal-confirm {
+  flex: 1;
+  height: 42px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.iw-history-modal-cancel {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+}
+
+.iw-history-modal-confirm {
+  background: #f05a29;
+  border: none;
+  color: #fff;
+}
+
+.iw-history-viewed {
+  margin-top: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.iw-history-home {
+  margin: 8px 0 24px;
+}
+
+.iw-history-home[hidden] {
+  display: none !important;
+}
+
+.iw-history-home-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 2px;
+  gap: 8px;
+}
+
+.iw-history-home-head h2 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #282828;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.iw-history-home-head a {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f05a29;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.iw-history-home-track {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.iw-history-home-track::-webkit-scrollbar {
+  height: 0;
+}
+
+.iw-history-home-item {
+  flex: 0 0 46%;
+  max-width: 180px;
+  min-width: 140px;
+  scroll-snap-align: start;
+}
+
+.iw-history-home-item .everful-card {
+  height: 100%;
+}
+
+@media (min-width: 1024px) {
+  .iw-history-home-track {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    overflow: visible;
+    scroll-snap-type: none;
+  }
+
+  .iw-history-home-item {
+    flex: none;
+    max-width: none;
+    min-width: 0;
   }
 }

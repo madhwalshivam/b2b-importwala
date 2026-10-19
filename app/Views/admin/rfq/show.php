@@ -165,6 +165,13 @@ $cleanPhone = preg_replace('/[^0-9]/', '', $rfq['phone']);
                 <div>
                     <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Mobile / WhatsApp</span>
                     <span class="text-xs font-semibold text-slate-900 block mt-0.5">+91 <?= htmlspecialchars($rfq['phone']) ?></span>
+                    <?php $rfqDial = preg_replace('/\D+/', '', (string)($rfq['phone'] ?? '')); $rfqDial = strlen($rfqDial) === 10 ? '91' . $rfqDial : $rfqDial; ?>
+                    <?php if ($rfqDial !== ''): ?>
+                        <span class="mt-1 flex gap-3">
+                            <a class="text-[#f05a29] font-semibold" href="tel:+<?= htmlspecialchars($rfqDial) ?>">Call</a>
+                            <a class="text-emerald-700 font-semibold" target="_blank" rel="noopener" href="https://wa.me/<?= htmlspecialchars($rfqDial) ?>">WhatsApp</a>
+                        </span>
+                    <?php endif; ?>
                 </div>
 
                 <div>

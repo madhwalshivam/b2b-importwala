@@ -57,7 +57,7 @@ $total = $total ?? (is_array($products) ? ($products['total'] ?? count($items)) 
         <?php else: ?>
 
             <!-- PRODUCT GRID -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-5">
                 <?php foreach ($items as $prod): ?>
                     <div class="robu-product-card p-3 sm:p-4 flex flex-col justify-between h-full relative group w-full bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-xs hover:shadow-md transition">
 

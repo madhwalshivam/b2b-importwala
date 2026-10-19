@@ -15,8 +15,7 @@ $listingPathChild = $listingPathChild ?? null;
 
 $activeCatId = (int) (!empty($activeCategory['id']) ? $activeCategory['id'] : ($filters['category_id'] ?? 0));
 $activeSubId = (int) (!empty($activeSubcategory['id']) ? $activeSubcategory['id'] : ($filters['subcategory_id'] ?? 0));
-$isMobileUA = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i', $_SERVER['HTTP_USER_AGENT'] ?? '');
-$defaultPerPage = $isMobileUA ? 24 : 25;
+$defaultPerPage = 24;
 $reqPerPage = (int) ($filters['per_page'] ?? $_GET['per_page'] ?? 0);
 if ($reqPerPage === 24 || $reqPerPage === 25 || $reqPerPage <= 0) {
   $currentPerPage = $defaultPerPage;
@@ -656,7 +655,7 @@ ob_start();
       </div>
 
       <!-- Main Product Cards Grid -->
-      <div id="shopProductGrid" class="product-grid <?= $sidebarOpenByDefault ? 'cols-4' : 'cols-5' ?>">
+      <div id="shopProductGrid" class="product-grid <?= $sidebarOpenByDefault ? 'cols-5' : 'cols-6' ?>">
 
         <?php if (!empty($results['items'])): ?>
           <?php foreach ($results['items'] as $product): ?>
@@ -1243,11 +1242,11 @@ ob_start();
   }
 
   .shop-main-layout.sidebar-is-open .product-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
 
   .shop-main-layout.sidebar-is-closed .product-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
   }
 
   @keyframes skeletonShimmer {

@@ -21,6 +21,9 @@ class CartController extends BaseController
 
     public function add(): void
     {
+        if (\App\Services\CustomerAccess::blockIncompleteCart()) {
+            return;
+        }
         if (!headers_sent()) {
             header('Content-Type: application/json');
         }
@@ -385,6 +388,7 @@ class CartController extends BaseController
 
     public function submitInquiry(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('cart', 'quote');
         header('Content-Type: application/json');
 
         $userId    = $this->getUserId();

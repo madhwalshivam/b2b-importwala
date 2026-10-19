@@ -938,6 +938,29 @@ body.vs-open #mobileBottomBar { display: none !important; }
     const PRODUCT_URL = <?= json_encode($canonicalUrl ?? '') ?>;
     const PRODUCT_ID = <?= (int)($product['id'] ?? 0) ?>;
     window.PRODUCT_ID = PRODUCT_ID;
+
+    // Recent products for the home-page feed (last 20, most recent first, 30 days).
+    (function () {
+        var id = parseInt(PRODUCT_ID, 10);
+        if (!id) return;
+        var name = 'iw_recent';
+        var raw = '';
+        var parts = document.cookie ? document.cookie.split(';') : [];
+        for (var i = 0; i < parts.length; i++) {
+            var piece = parts[i].replace(/^\s+/, '');
+            if (piece.indexOf(name + '=') === 0) {
+                raw = decodeURIComponent(piece.substring(name.length + 1));
+                break;
+            }
+        }
+        var ids = raw.split(',').map(function (n) { return parseInt(n, 10); }).filter(function (n) {
+            return n > 0 && n !== id;
+        });
+        ids.unshift(id);
+        if (ids.length > 20) ids = ids.slice(0, 20);
+        var expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toUTCString();
+        document.cookie = name + '=' + ids.join(',') + '; expires=' + expires + '; path=/; SameSite=Lax';
+    })();
     const WS_START = <?= (float)($wholesaleStartPrice ?? 0) ?>;
     const OP_START = <?= (float)($onePieceStartPrice ?? 0) ?>;
 

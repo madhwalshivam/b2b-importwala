@@ -1,0 +1,29 @@
+/* The Only Snacks — design tokens.
+   Loaded on the storefront after theme.css.
+   Accent colors (orange, green, teal, tomato) are product-card backgrounds only. */
+:root {
+  --primary: #FFD800;
+  --primary-dark: #E6C200;
+  --primary-soft: #FBEBA0;
+  --secondary: #7A1410;
+  --secondary-dark: #5C0E0B;
+  --cream: #EEEADF;
+  --bg: #EEEADF;
+  --text: #1A0A08;
+  --accent-orange: #F28C28;
+  --accent-green: #1F8A4C;
+  --accent-teal: #2BA3C0;
+  --accent-red: #D7261E;
+  --on-primary: #7A1410;
+  --on-secondary: #FFF8EE;
+  --orange: #F28C28;
+  --green: #1F8A4C;
+  --teal: #2BA3C0;
+  --tomato: #D7261E;
+
+  --tos-radius-card: 24px;
+  --tos-shadow: 0 10px 28px rgba(122, 20, 16, 0.08);
+  --tos-shadow-hover: 0 16px 36px rgba(122, 20, 16, 0.16);
+  --font-display: "Lilita One", "Fredoka", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="iw-card-img-js">
 
 <head>
   <meta charset="UTF-8">
@@ -342,12 +342,22 @@ style="margin-left:3px; display:inline-block; vertical-align:middle;">
 </div>
 */ ?>
 
-              <a href="<?= url('account') ?>" class="header-icon-item" title="Account">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </a>
+              <div class="header-account-wrap">
+                <a href="<?= url('account') ?>" class="header-icon-item" title="Account" aria-haspopup="true">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                      d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </a>
+                <?php if (!empty($_SESSION['user_id'])): ?>
+                  <div class="header-account-menu" role="menu">
+                    <a href="<?= url('account') ?>" role="menuitem">My Account</a>
+                    <a href="<?= url('account/history') ?>" role="menuitem">Recently Viewed</a>
+                    <a href="<?= url('wishlist') ?>" role="menuitem">Wishlist</a>
+                    <a href="<?= url('logout') ?>" role="menuitem">Logout</a>
+                  </div>
+                <?php endif; ?>
+              </div>
               <a href="<?= url('wishlist') ?>" class="header-icon-item" title="Wishlist">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
@@ -462,6 +472,8 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
               class="<?= str_contains($currentUri, 'factories') ? 'active' : '' ?>">Verified Factories</a></li>
           <li class="mobile-drawer-nav-item"><a href="<?= url('wishlist') ?>"
               class="<?= str_contains($currentUri, 'wishlist') ? 'active' : '' ?>">My Wishlist</a></li>
+          <li class="mobile-drawer-nav-item"><a href="<?= url('account/history') ?>"
+              class="<?= str_contains($currentUri, 'account/history') ? 'active' : '' ?>">Recently Viewed</a></li>
           <li class="mobile-drawer-nav-item"><a href="<?= url('inquiry') ?>"
               class="<?= str_contains($currentUri, 'inquiry') ? 'active' : '' ?>">My Inquiries / Custom Quotes</a></li>
           <li class="mobile-drawer-nav-item"><a href="<?= url('account') ?>"
@@ -3687,6 +3699,9 @@ d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 
       }
     }
   </style>
+  <?php include __DIR__ . '/partials/auth_gate.php'; ?>
+  <script>window.IW_CARD_PLACEHOLDER = <?= json_encode(asset('assets/images/placeholder.jpg')) ?>;</script>
+  <script src="<?= asset('js/card-images.js') ?>?v=<?= $assetVer('assets/js/card-images.js') ?>"></script>
 </body>
 
 </html>

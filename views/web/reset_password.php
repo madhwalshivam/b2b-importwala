@@ -21,6 +21,7 @@ ob_start();
       <form action="<?= url('reset-password') ?>" method="POST" style="display: flex; flex-direction: column; gap: 18px;">
         <?= csrf_field() ?>
         <input type="hidden" name="token" value="<?= htmlspecialchars($token ?? '') ?>">
+        <input type="hidden" name="email" value="<?= htmlspecialchars($email ?? '') ?>">
 
         <div>
           <label style="display: block; font-size: 12.5px; font-weight: 600; color: #374151; margin-bottom: 6px;">New Password</label>

@@ -15,7 +15,7 @@ class Product extends Model {
         return $items;
     }
 
-    public function getFilteredProducts(array $filters = [], int $page = 1, int $perPage = 25): array {
+    public function getFilteredProducts(array $filters = [], int $page = 1, int $perPage = 24): array {
         $whereConditions = ["p.status = 'active'"];
         $params = [];
 
@@ -302,6 +302,11 @@ class Product extends Model {
     }
 
     public function delete(mixed $id): bool {
+        try {
+            (new \App\Services\EmbeddingQueueService())->removeProductVector((int) $id);
+        } catch (\Throwable $e) {
+            error_log('[EmbeddingQueue] delete: ' . $e->getMessage());
+        }
         // Clean up linked records to prevent foreign key errors
         $this->db->prepare("DELETE FROM product_images WHERE product_id = ?")->execute([$id]);
         $this->db->prepare("DELETE FROM product_categories WHERE product_id = ?")->execute([$id]);

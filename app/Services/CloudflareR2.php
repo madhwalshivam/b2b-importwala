@@ -75,18 +75,69 @@ class CloudflareR2
         }
 
         try {
+            $contentType = $this->resolveContentType($localPath, $contentType);
+            $cacheControl = strncmp($contentType, 'image/', 6) === 0
+                ? 'public, max-age=31536000, immutable'
+                : 'public, max-age=31536000';
             $this->client->putObject([
                 'Bucket'       => $this->bucketName,
                 'Key'          => ltrim($r2Key, '/'),
                 'SourceFile'   => $localPath,
                 'ContentType'  => $contentType,
-                'CacheControl' => 'public, max-age=31536000'
+                'CacheControl' => $cacheControl
             ]);
             return true;
         } catch (AwsException $e) {
             error_log("R2 Upload Failed [{$r2Key}]: " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Prefer a detected image MIME type over a browser-supplied or generic type.
+     */
+    private function resolveContentType(string $localPath, string $contentType): string
+    {
+        $contentType = strtolower(trim(explode(';', $contentType, 2)[0]));
+        if ($contentType === 'image/jpg') {
+            $contentType = 'image/jpeg';
+        }
+
+        $passedIsImage = strncmp($contentType, 'image/', 6) === 0;
+        $passedIsGeneric = $contentType === ''
+            || $contentType === 'application/octet-stream'
+            || $contentType === 'binary/octet-stream';
+
+        if (!$passedIsImage && !$passedIsGeneric) {
+            return $contentType;
+        }
+
+        $detected = '';
+        if (function_exists('mime_content_type')) {
+            $detected = strtolower((string) @mime_content_type($localPath));
+        }
+        if ($detected === 'image/jpg') {
+            $detected = 'image/jpeg';
+        }
+        if (strncmp($detected, 'image/', 6) === 0) {
+            return $detected;
+        }
+
+        $ext = strtolower(pathinfo($localPath, PATHINFO_EXTENSION));
+        $map = [
+            'jpg'  => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'webp' => 'image/webp',
+            'avif' => 'image/avif',
+            'svg'  => 'image/svg+xml',
+        ];
+        if (isset($map[$ext])) {
+            return $map[$ext];
+        }
+
+        return $passedIsImage ? $contentType : 'image/jpeg';
     }
 
     /**

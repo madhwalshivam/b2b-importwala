@@ -32,6 +32,7 @@ class RfqApiController extends BaseController
      */
     public function submit(): void
     {
+        \App\Services\CustomerAccess::requireCommerce('inquiry', 'quote');
         // Only POST
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             $this->jsonResponse(['success' => false, 'message' => 'Method not allowed.'], 405);
@@ -261,6 +262,18 @@ class RfqApiController extends BaseController
 
         if (!$product) {
             $this->jsonResponse(['success' => false, 'message' => 'Product not found.'], 404);
+            return;
+        }
+
+        $gate = \App\Services\GuestProductViewService::consume((int)$product['id']);
+        if (!empty($gate['blocked'])) {
+            $this->jsonResponse([
+                'success' => false,
+                'code' => 'guest_view_limit',
+                'message' => 'Login to view more products.',
+                'count' => $gate['count'],
+                'limit' => $gate['limit'],
+            ], 403);
             return;
         }
 

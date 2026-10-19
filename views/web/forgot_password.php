@@ -11,10 +11,9 @@ ob_start();
       <p style="font-size: 13.5px; color: #6b7280;">Enter your email address to receive a password reset link.</p>
     </div>
 
-    <?php 
+    <?php
     $displayError = $error ?? (new App\Core\Session())->getFlash('error');
     $displaySuccess = $success ?? (new App\Core\Session())->getFlash('success');
-    $displayResetLink = $reset_link ?? (new App\Core\Session())->getFlash('reset_link');
     ?>
 
     <?php if (!empty($displayError)): ?>
@@ -26,16 +25,6 @@ ob_start();
     <?php if (!empty($displaySuccess)): ?>
       <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; margin-bottom: 20px;">
         <?= htmlspecialchars($displaySuccess) ?>
-      </div>
-    <?php endif; ?>
-
-    <?php if (!empty($displayResetLink)): ?>
-      <div style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; padding: 16px; border-radius: 10px; font-size: 13px; margin-bottom: 20px;">
-        <div style="font-weight: 700; margin-bottom: 6px;">Reset Link Generated:</div>
-        <p style="margin-bottom: 12px; font-size: 12px; color: #3b82f6;">Click below to reset your password:</p>
-        <a href="<?= htmlspecialchars($displayResetLink) ?>" style="display: block; text-align: center; background: #2563eb; color: #ffffff; font-weight: 600; padding: 10px 16px; border-radius: 8px; text-decoration: none; font-size: 13px;">
-          Reset Account Password &rarr;
-        </a>
       </div>
     <?php endif; ?>
 

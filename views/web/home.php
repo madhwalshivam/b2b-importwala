@@ -1,5 +1,7 @@
 <?php
 $title = "ImportWale Wholesale | Direct Global B2B Platform";
+// First six product cards in this page (above the fold) load their first image immediately.
+$GLOBALS['iw_home_eager_cards'] = true;
 ob_start();
 
 // Fallback high-converting hero banners if DB banners list is empty
@@ -475,7 +477,7 @@ usort($dealsRowSections, fn($a, $b) => $a['sort_order'] <=> $b['sort_order']);
             $displayPrice = $prod['sale_price'] ?: $prod['price'];
             $mainImg = asset($prod['main_image'] ?? 'assets/images/placeholder.jpg');
           ?>
-          <a href="<?= url('product/' . $pSlug) ?>" class="jumia-deals-card">
+          <a href="<?= url('product/' . $pSlug) ?>" class="jumia-deals-card" data-product-id="<?= (int)($prod['id'] ?? 0) ?>">
             
             <!-- Square Image Container (Full Bleed Image, Fill Entire Box) -->
             <div class="jumia-deals-img-box">
@@ -1135,6 +1137,85 @@ usort($dealsRowSections, fn($a, $b) => $a['sort_order'] <=> $b['sort_order']);
 </div><!-- /collection-cards-section -->
 <?php endif; // collectionCards ?>
 
+<?php if (!empty($_SESSION['user_id'])): ?>
+<section id="iw-recent-history-section" class="iw-history-home" hidden>
+  <div class="section-header-title">
+    <span>Recently Viewed</span>
+    <a href="<?= url('account/history') ?>" style="font-size:14px; color:#f05a29; font-weight:600;">View all &rarr;</a>
+  </div>
+  <div id="iw-recent-history-track" class="iw-history-home-track"></div>
+</section>
+<script>
+(function () {
+  var section = document.getElementById('iw-recent-history-section');
+  var track = document.getElementById('iw-recent-history-track');
+  if (!section || !track) return;
+  var placeholder = <?= json_encode(asset('assets/images/placeholder.jpg')) ?>;
+  fetch(<?= json_encode(url('api/history/recent')) ?>, {
+    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+    credentials: 'same-origin',
+    cache: 'no-store'
+  }).then(function (r) { return r.json(); }).then(function (data) {
+    var items = (data && data.items) ? data.items : [];
+    if (!items.length) return;
+    var frag = document.createDocumentFragment();
+    items.forEach(function (item) {
+      var wrap = document.createElement('div');
+      wrap.className = 'iw-history-home-item';
+      var card = document.createElement('a');
+      card.className = 'everful-card product-card';
+      card.href = item.url || '#';
+      card.setAttribute('data-product-id', String(item.id || 0));
+      var swipe = document.createElement('div');
+      swipe.className = 'ef-swipe-wrap';
+      var swipeTrack = document.createElement('div');
+      swipeTrack.className = 'ef-swipe-track';
+      var slide = document.createElement('span');
+      slide.className = 'ef-swipe-slide';
+      var img = document.createElement('img');
+      img.src = item.image || placeholder;
+      img.alt = '';
+      img.width = 400;
+      img.height = 400;
+      img.decoding = 'async';
+      img.loading = 'lazy';
+      img.className = 'iw-card-img';
+      img.onerror = function () { this.onerror = null; this.src = placeholder; this.classList.add('is-loaded'); };
+      slide.appendChild(img);
+      swipeTrack.appendChild(slide);
+      swipe.appendChild(swipeTrack);
+      var body = document.createElement('div');
+      body.className = 'ef-card-body';
+      var title = document.createElement('h3');
+      title.className = 'ef-product-title';
+      title.textContent = item.name || 'Product';
+      var priceLine = document.createElement('div');
+      priceLine.className = 'ef-price-line';
+      var priceWrap = document.createElement('div');
+      priceWrap.className = 'ef-price-wrap';
+      var price = document.createElement('span');
+      price.className = 'ef-price-amount';
+      price.textContent = item.price_label || '';
+      priceWrap.appendChild(price);
+      priceLine.appendChild(priceWrap);
+      var when = document.createElement('div');
+      when.className = 'iw-history-viewed';
+      when.textContent = item.viewed_label || '';
+      body.appendChild(title);
+      body.appendChild(priceLine);
+      body.appendChild(when);
+      card.appendChild(swipe);
+      card.appendChild(body);
+      wrap.appendChild(card);
+      frag.appendChild(wrap);
+    });
+    track.appendChild(frag);
+    section.hidden = false;
+  }).catch(function () {});
+})();
+</script>
+<?php endif; ?>
+
 <!-- Dynamic Admin-Managed Homepage Sections -->
 <?php if (!empty($homepageSections)): ?>
   <?php foreach ($homepageSections as $secKey => $sec): ?>
@@ -1202,6 +1283,201 @@ usort($dealsRowSections, fn($a, $b) => $a['sort_order'] <=> $b['sort_order']);
     </div>
   <?php endif; ?>
 <?php endif; ?>
+
+<!-- Recommended For You: personalized infinite product feed -->
+<section class="iw-home-feed" id="iwHomeFeed" aria-label="Recommended For You">
+  <div class="section-header-title">
+    <span>Recommended For You</span>
+  </div>
+  <div class="product-grid iw-home-feed-grid" id="iwHomeFeedGrid"></div>
+  <div class="iw-home-feed-status" id="iwHomeFeedStatus" hidden>
+    <span class="iw-home-feed-spinner" aria-hidden="true"></span>
+    <span class="iw-home-feed-status-text">Loading products</span>
+  </div>
+  <div class="iw-home-feed-sentinel" id="iwHomeFeedSentinel" aria-hidden="true"></div>
+</section>
+<style>
+  .iw-home-feed { margin: 8px 0 8px; }
+  .iw-home-feed-grid.product-grid { margin-bottom: 0 !important; }
+  @media (min-width: 1201px) {
+    .iw-home-feed .iw-home-feed-grid.product-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    }
+  }
+  @media (max-width: 1200px) and (min-width: 769px) {
+    .iw-home-feed .iw-home-feed-grid.product-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+  }
+  @media (max-width: 768px) {
+    .iw-home-feed .iw-home-feed-grid.product-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+  }
+  .iw-home-feed-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 36px;
+    margin: 8px 0 4px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .iw-home-feed-status[hidden] { display: none !important; }
+  .iw-home-feed-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #e2e8f0;
+    border-top-color: #f05a29;
+    border-radius: 50%;
+    animation: iwFeedSpin .7s linear infinite;
+    flex: 0 0 auto;
+  }
+  .iw-home-feed-sentinel {
+    width: 100%;
+    height: 1px;
+    margin: 0;
+    pointer-events: none;
+  }
+  @keyframes iwFeedSpin { to { transform: rotate(360deg); } }
+</style>
+<script>
+(function () {
+  var section = document.getElementById('iwHomeFeed');
+  var grid = document.getElementById('iwHomeFeedGrid');
+  var statusEl = document.getElementById('iwHomeFeedStatus');
+  var sentinel = document.getElementById('iwHomeFeedSentinel');
+  if (!section || !grid || !sentinel) return;
+
+  var endpoint = <?= json_encode(url('api/home-feed')) ?>;
+  var page = 0;
+  var loading = false;
+  var done = false;
+  var seen = Object.create(null);
+  var seed = (function () {
+    var key = 'iw_feed_seed';
+    var n = 0;
+    try {
+      n = parseInt(sessionStorage.getItem(key), 10);
+      if (!(n >= 1 && n <= 2147483647)) {
+        n = Math.floor(Math.random() * 2147483646) + 1;
+        sessionStorage.setItem(key, String(n));
+      }
+    } catch (e) {
+      n = Math.floor(Math.random() * 2147483646) + 1;
+    }
+    return n;
+  })();
+
+  function setLoading(on) {
+    if (!statusEl) return;
+    statusEl.hidden = !on;
+    section.setAttribute('aria-busy', on ? 'true' : 'false');
+  }
+
+  function appendHtml(html) {
+    var wrap = document.createElement('div');
+    wrap.innerHTML = html;
+    var meta = wrap.querySelector('.iw-feed-meta');
+    var hasMore = !!(meta && meta.getAttribute('data-has-more') === '1');
+    if (meta) meta.remove();
+    var scripts = [];
+    wrap.querySelectorAll('script').forEach(function (node) {
+      scripts.push(node.textContent || '');
+      node.remove();
+    });
+    var added = 0;
+    while (wrap.firstChild) {
+      var node = wrap.firstChild;
+      if (node.nodeType === 1) {
+        var id = node.getAttribute('data-product-id');
+        if (id) {
+          if (seen[id]) {
+            wrap.removeChild(node);
+            continue;
+          }
+          seen[id] = 1;
+          added++;
+        }
+      }
+      grid.appendChild(node);
+    }
+    scripts.forEach(function (code) {
+      if (!code || !code.trim()) return;
+      var s = document.createElement('script');
+      s.text = code;
+      document.body.appendChild(s);
+      s.parentNode.removeChild(s);
+    });
+    if (typeof window.applyUserProductStates === 'function') {
+      window.applyUserProductStates();
+    }
+    if (typeof window.iwHydrateCardImages === 'function') {
+      window.iwHydrateCardImages(grid);
+    }
+    return { hasMore: hasMore, added: added };
+  }
+
+  function loadNext() {
+    if (loading || done) return;
+    loading = true;
+    page += 1;
+    setLoading(true);
+    var url = endpoint + (endpoint.indexOf('?') === -1 ? '?' : '&')
+      + 'page=' + page + '&seed=' + seed;
+    fetch(url, { credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+      .then(function (res) {
+        if (!res.ok) throw new Error('feed');
+        return res.text();
+      })
+      .then(function (html) {
+        var result = appendHtml(html);
+        if (page === 1 && !grid.querySelector('[data-product-id]')) {
+          section.hidden = true;
+          done = true;
+          return;
+        }
+        if (!result.hasMore || result.added === 0) {
+          done = true;
+        }
+      })
+      .catch(function () {
+        page -= 1;
+        if (page < 0) page = 0;
+        done = true;
+        if (page === 0 && !grid.querySelector('[data-product-id]')) {
+          section.hidden = true;
+        }
+      })
+      .then(function () {
+        loading = false;
+        setLoading(false);
+        if (done) {
+          if (observer) observer.disconnect();
+          return;
+        }
+        var rect = sentinel.getBoundingClientRect();
+        if (rect.top <= (window.innerHeight + 600)) {
+          loadNext();
+        }
+      });
+  }
+
+  var observer = new IntersectionObserver(function (entries) {
+    for (var i = 0; i < entries.length; i++) {
+      if (entries[i].isIntersecting) {
+        loadNext();
+        break;
+      }
+    }
+  }, { root: null, rootMargin: '600px 0px', threshold: 0 });
+
+  loadNext();
+  observer.observe(sentinel);
+})();
+</script>
 
 <!-- ============================================================
      THE IMPORTWALE EXPERIENCE BANNER (Why Choose Us Section)

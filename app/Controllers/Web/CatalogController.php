@@ -666,10 +666,9 @@ class CatalogController extends BaseController
         $maxMoq = (isset($_GET['max_moq']) && $_GET['max_moq'] !== '') ? (int) $_GET['max_moq'] : null;
         $sort = $_GET['sort'] ?? 'relevance';
 
-        $isMobileUA = (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|IEMobile|BlackBerry|Opera Mini/i', $_SERVER['HTTP_USER_AGENT'] ?? '');
-        $defaultPerPage = $isMobileUA ? 24 : 25;
+        $defaultPerPage = 24;
 
-        // Selectable per-page size (default: 25 for desktop, 24 for 2-column mobile rows)
+        // Selectable per-page size (default: 24 so desktop is 4 full rows of 6)
         $allowedLimits = [12, 24, 25, 48, 50, 60, 100];
         $reqPerPage = (int) ($_GET['per_page'] ?? 0);
 

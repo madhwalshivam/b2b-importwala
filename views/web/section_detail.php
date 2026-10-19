@@ -66,7 +66,7 @@ ob_start();
   </div>
 
   <!-- Product Grid (Exact Shop 5-Col Grid Style) -->
-  <div class="product-grid" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px 12px; width: 100%;">
+  <div class="product-grid" style="display: grid; gap: 16px 12px; width: 100%;">
     <?php if (!empty($items)): ?>
       <?php foreach ($items as $product): ?>
         <?php require __DIR__ . '/partials/product_card.php'; ?>
